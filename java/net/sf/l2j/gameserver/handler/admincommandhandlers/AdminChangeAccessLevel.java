@@ -16,9 +16,7 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2World;
@@ -30,7 +28,6 @@ import net.sf.l2j.gameserver.network.SystemMessageId;
  */
 public class AdminChangeAccessLevel implements IAdminCommandHandler
 {
-	
 	private static final String[] ADMIN_COMMANDS =
 	{
 		"admin_changelvl"
@@ -38,23 +35,6 @@ public class AdminChangeAccessLevel implements IAdminCommandHandler
 	
 	@Override
 	public boolean useAdminCommand(String command, L2PcInstance activeChar)
-	{
-		handleChangeLevel(command, activeChar);
-		return true;
-	}
-	
-	@Override
-	public String[] getAdminCommandList()
-	{
-		return ADMIN_COMMANDS;
-	}
-	
-	/**
-	 * If no character name is specified, tries to change GM's target access level. Else if a character name is provided, will try to reach it either from L2World or from a database connection.
-	 * @param command
-	 * @param activeChar
-	 */
-	private static void handleChangeLevel(String command, L2PcInstance activeChar)
 	{
 		String[] parts = command.split(" ");
 		if (parts.length == 2)
@@ -94,14 +74,19 @@ public class AdminChangeAccessLevel implements IAdminCommandHandler
 					else
 						activeChar.sendMessage("Character's access level is now set to " + lvl);
 				}
-				catch (SQLException se)
+				catch (Exception e)
 				{
-					activeChar.sendMessage("SQLException while changing character's access level");
-					if (Config.DEBUG)
-						se.printStackTrace();
 				}
 			}
 		}
+		
+		return true;
+	}
+	
+	@Override
+	public String[] getAdminCommandList()
+	{
+		return ADMIN_COMMANDS;
 	}
 	
 	/**

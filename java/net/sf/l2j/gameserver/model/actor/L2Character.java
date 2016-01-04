@@ -26,8 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.GameTimeController;
-import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlEvent;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
@@ -37,6 +35,8 @@ import net.sf.l2j.gameserver.datatables.DoorTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
+import net.sf.l2j.gameserver.geoengine.GeoData;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.handler.SkillHandler;
 import net.sf.l2j.gameserver.instancemanager.DimensionalRiftManager;
@@ -95,8 +95,6 @@ import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.StopMove;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.TeleportToLocation;
-import net.sf.l2j.gameserver.pathfinding.AbstractNodeLoc;
-import net.sf.l2j.gameserver.pathfinding.PathFinding;
 import net.sf.l2j.gameserver.skills.AbnormalEffect;
 import net.sf.l2j.gameserver.skills.Calculator;
 import net.sf.l2j.gameserver.skills.Formulas;
@@ -117,12 +115,12 @@ import net.sf.l2j.gameserver.skills.funcs.FuncPAtkMod;
 import net.sf.l2j.gameserver.skills.funcs.FuncPAtkSpeed;
 import net.sf.l2j.gameserver.skills.funcs.FuncPDefMod;
 import net.sf.l2j.gameserver.taskmanager.AttackStanceTaskManager;
+import net.sf.l2j.gameserver.taskmanager.MovementTaskManager;
 import net.sf.l2j.gameserver.templates.skills.L2EffectFlag;
 import net.sf.l2j.gameserver.templates.skills.L2EffectType;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.util.Broadcast;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Point3D;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -226,7 +224,7 @@ public abstract class L2Character extends L2Object
 			if (!_skills.isEmpty())
 			{
 				for (L2Skill skill : getAllSkills())
-					addStatFuncs(skill.getStatFuncs(null, this));
+					addStatFuncs(skill.getStatFuncs(this));
 			}
 		}
 	}
@@ -606,18 +604,17 @@ public abstract class L2Character extends L2Object
 		if (weaponItemType == WeaponType.FISHINGROD)
 		{
 			// You can't make an attack with a fishing pole.
-			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANNOT_ATTACK_WITH_FISHING_POLE));
 			getAI().setIntention(CtrlIntention.IDLE);
-			
+			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANNOT_ATTACK_WITH_FISHING_POLE));
 			sendPacket(ActionFailed.STATIC_PACKET);
 			return;
 		}
 		
 		// GeoData Los Check here (or dz > 1000)
-		if (!GeoData.getInstance().canSeeTarget(this, target))
+		if (!PathFinding.getInstance().canSeeTarget(this, target))
 		{
-			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANT_SEE_TARGET));
 			getAI().setIntention(CtrlIntention.ACTIVE);
+			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANT_SEE_TARGET));
 			sendPacket(ActionFailed.STATIC_PACKET);
 			return;
 		}
@@ -633,48 +630,39 @@ public abstract class L2Character extends L2Object
 				{
 					// Cancel the action because the L2PcInstance have no arrow
 					getAI().setIntention(CtrlIntention.IDLE);
-					
-					sendPacket(ActionFailed.STATIC_PACKET);
 					sendPacket(SystemMessage.getSystemMessage(SystemMessageId.NOT_ENOUGH_ARROWS));
+					sendPacket(ActionFailed.STATIC_PACKET);
 					return;
 				}
 				
 				// Verify if the bow can be use
-				if (_disableBowAttackEndTime <= GameTimeController.getGameTicks())
-				{
-					// Verify if L2PcInstance owns enough MP
-					int saMpConsume = (int) getStat().calcStat(Stats.MP_CONSUME, 0, null, null);
-					int mpConsume = saMpConsume == 0 ? weaponItem.getMpConsume() : saMpConsume;
-					mpConsume = (int) calcStat(Stats.BOW_MP_CONSUME_RATE, mpConsume, null, null);
-					
-					if (getCurrentMp() < mpConsume)
-					{
-						// If L2PcInstance doesn't have enough MP, stop the attack
-						ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), 1000);
-						
-						sendPacket(SystemMessage.getSystemMessage(SystemMessageId.NOT_ENOUGH_MP));
-						sendPacket(ActionFailed.STATIC_PACKET);
-						return;
-					}
-					// If L2PcInstance have enough MP, the bow consummes it
-					if (mpConsume > 0)
-						getStatus().reduceMp(mpConsume);
-					
-					// Set the period of bow non re-use
-					_disableBowAttackEndTime = 5 * GameTimeController.TICKS_PER_SECOND + GameTimeController.getGameTicks();
-				}
-				else
+				final long timeToNextBowAttack = _disableBowAttackEndTime - System.currentTimeMillis();
+				if (timeToNextBowAttack > 0)
 				{
 					// Cancel the action because the bow can't be re-use at this moment
-					ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), 1000);
-					
+					ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), timeToNextBowAttack);
 					sendPacket(ActionFailed.STATIC_PACKET);
 					return;
 				}
+				
+				// Verify if L2PcInstance owns enough MP
+				final int mpConsume = weaponItem.getMpConsume();
+				if (getCurrentMp() < mpConsume)
+				{
+					// If L2PcInstance doesn't have enough MP, stop the attack
+					ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), 100);
+					sendPacket(SystemMessage.getSystemMessage(SystemMessageId.NOT_ENOUGH_MP));
+					sendPacket(ActionFailed.STATIC_PACKET);
+					return;
+				}
+				
+				// If L2PcInstance have enough MP, the bow consummes it
+				if (mpConsume > 0)
+					getStatus().reduceMp(mpConsume);
 			}
 			else if (this instanceof L2Npc)
 			{
-				if (_disableBowAttackEndTime > GameTimeController.getGameTicks())
+				if (_disableBowAttackEndTime > System.currentTimeMillis())
 					return;
 			}
 		}
@@ -689,21 +677,13 @@ public abstract class L2Character extends L2Object
 		boolean wasSSCharged = isChargedShot(ShotType.SOULSHOT);
 		
 		// Get the Attack Speed of the L2Character (delay (in milliseconds) before next attack)
-		int timeAtk = calculateTimeBetweenAttacks(target, weaponItem);
-		// the hit is calculated to happen halfway to the animation - might need further tuning e.g. in bow case
-		int timeToHit = timeAtk / 2;
-		_attackEndTime = GameTimeController.getGameTicks();
-		_attackEndTime += (timeAtk / GameTimeController.MILLIS_IN_TICK);
-		_attackEndTime -= 1;
-		
+		int timeAtk = calculateTimeBetweenAttacks(target, weaponItemType);
+		_attackEndTime = System.currentTimeMillis() + timeAtk;
 		// Create Attack
 		Attack attack = new Attack(this, wasSSCharged, (weaponItem != null) ? weaponItem.getCrystalType().getId() : 0);
 		
 		// Make sure that char is facing selected target
 		setHeading(Util.calculateHeadingFrom(this, target));
-		
-		// Get the Attack Reuse Delay of the Weapon
-		final int reuse = calculateReuseTime(target, weaponItem);
 		
 		boolean hitted;
 		
@@ -711,27 +691,27 @@ public abstract class L2Character extends L2Object
 		switch (weaponItemType)
 		{
 			case BOW:
-				hitted = doAttackHitByBow(attack, target, timeAtk, reuse);
+				hitted = doAttackHitByBow(attack, target, timeAtk, weaponItem);
 				break;
 			
 			case POLE:
-				hitted = doAttackHitByPole(attack, target, timeToHit);
+				hitted = doAttackHitByPole(attack, target, timeAtk / 2);
 				break;
 			
 			case DUAL:
 			case DUALFIST:
-				hitted = doAttackHitByDual(attack, target, timeToHit);
+				hitted = doAttackHitByDual(attack, target, timeAtk / 2);
 				break;
 			
 			case FIST:
 				if (getSecondaryWeaponItem() != null && getSecondaryWeaponItem() instanceof Armor)
-					hitted = doAttackHitSimple(attack, target, timeToHit);
+					hitted = doAttackHitSimple(attack, target, timeAtk / 2);
 				else
-					hitted = doAttackHitByDual(attack, target, timeToHit);
+					hitted = doAttackHitByDual(attack, target, timeAtk / 2);
 				break;
 			
 			default:
-				hitted = doAttackHitSimple(attack, target, timeToHit);
+				hitted = doAttackHitSimple(attack, target, timeAtk / 2);
 				break;
 		}
 		
@@ -798,7 +778,7 @@ public abstract class L2Character extends L2Object
 			broadcastPacket(attack);
 		
 		// Notify AI with EVT_READY_TO_ACT
-		ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), (weaponItemType == WeaponType.BOW) ? timeAtk : timeAtk + reuse);
+		ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), timeAtk);
 	}
 	
 	/**
@@ -819,10 +799,10 @@ public abstract class L2Character extends L2Object
 	 * @param attack Server->Client packet Attack in which the hit will be added
 	 * @param target The L2Character targeted
 	 * @param sAtk The Attack Speed of the attacker
-	 * @param reuse The reuse timer of the item.
+	 * @param weapon The weapon, which is attacker using
 	 * @return True if the hit isn't missed
 	 */
-	private boolean doAttackHitByBow(Attack attack, L2Character target, int sAtk, int reuse)
+	private boolean doAttackHitByBow(Attack attack, L2Character target, int sAtk, Weapon weapon)
 	{
 		int damage1 = 0;
 		byte shld1 = 0;
@@ -849,6 +829,11 @@ public abstract class L2Character extends L2Object
 			damage1 = (int) Formulas.calcPhysDam(this, target, null, shld1, crit1, attack.soulshot);
 		}
 		
+		// Get the Attack Reuse Delay of the Weapon
+		int reuse = weapon.getReuseDelay();
+		if (reuse != 0)
+			reuse = (reuse * 345) / getStat().getPAtkSpd();
+		
 		// Check if the L2Character is a L2PcInstance
 		if (this instanceof L2PcInstance)
 		{
@@ -863,7 +848,7 @@ public abstract class L2Character extends L2Object
 		ThreadPoolManager.getInstance().scheduleAi(new HitTask(target, damage1, crit1, miss1, attack.soulshot, shld1), sAtk);
 		
 		// Calculate and set the disable delay of the bow in function of the Attack Speed
-		_disableBowAttackEndTime = (sAtk + reuse) / GameTimeController.MILLIS_IN_TICK + GameTimeController.getGameTicks();
+		_disableBowAttackEndTime = System.currentTimeMillis() + (sAtk + reuse);
 		
 		// Add this hit to the Server-Client packet Attack
 		attack.hit(attack.createHit(target, damage1, miss1, crit1, shld1));
@@ -1247,7 +1232,7 @@ public abstract class L2Character extends L2Object
 		else
 		{
 			setIsCastingNow(true);
-			_castInterruptTime = -2 + GameTimeController.getGameTicks() + hitTime / GameTimeController.MILLIS_IN_TICK;
+			_castInterruptTime = System.currentTimeMillis() + hitTime / 2;
 			setLastSkillCast(skill);
 		}
 		
@@ -1465,7 +1450,7 @@ public abstract class L2Character extends L2Object
 			
 			if (skill.getTargetType() == SkillTargetType.TARGET_GROUND && this instanceof L2PcInstance)
 			{
-				Point3D wp = ((L2PcInstance) this).getCurrentSkillWorldPosition();
+				Location wp = ((L2PcInstance) this).getCurrentSkillWorldPosition();
 				if (!region.checkEffectRangeInsidePeaceZone(skill, wp.getX(), wp.getY(), wp.getZ()))
 				{
 					sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_CANNOT_BE_USED).addSkillName(skill));
@@ -1832,7 +1817,7 @@ public abstract class L2Character extends L2Object
 	 */
 	public boolean isAttackingDisabled()
 	{
-		return isFlying() || isStunned() || isImmobileUntilAttacked() || isSleeping() || _attackEndTime > GameTimeController.getGameTicks() || isParalyzed() || isAlikeDead() || isCoreAIDisabled();
+		return isFlying() || isStunned() || isImmobileUntilAttacked() || isSleeping() || _attackEndTime > System.currentTimeMillis() || isParalyzed() || isAlikeDead() || isCoreAIDisabled();
 	}
 	
 	public final Calculator[] getCalculators()
@@ -2415,7 +2400,7 @@ public abstract class L2Character extends L2Object
 		
 		// if this is a player instance, start the grace period for this character (grace from mobs only)!
 		player.setIsFakeDeath(false);
-		player.setRecentFakeDeath(true);
+		player.setRecentFakeDeath();
 		
 		broadcastPacket(new ChangeWaitType(this, ChangeWaitType.WT_STOP_FAKEDEATH));
 		broadcastPacket(new Revive(this));
@@ -2901,8 +2886,8 @@ public abstract class L2Character extends L2Object
 		// when we retrieve x/y/z we use GameTimeControl.getGameTicks()
 		// if we are moving, but move timestamp==gameticks, we don't need
 		// to recalculate position
-		public int _moveStartTime;
-		public int _moveTimestamp; // last update
+		public long _moveStartTime;
+		public long _moveTimestamp; // last update
 		public int _xDestination;
 		public int _yDestination;
 		public int _zDestination;
@@ -2913,7 +2898,7 @@ public abstract class L2Character extends L2Object
 		
 		public boolean disregardingGeodata;
 		public int onGeodataPathIndex;
-		public List<AbstractNodeLoc> geoPath;
+		public List<Location> geoPath;
 		public int geoPathAccurateTx;
 		public int geoPathAccurateTy;
 		public int geoPathGtx;
@@ -2934,9 +2919,9 @@ public abstract class L2Character extends L2Object
 	private L2Object _target;
 	
 	// set by the start of attack, in game ticks
-	private int _attackEndTime;
-	private int _disableBowAttackEndTime;
-	private int _castInterruptTime;
+	private long _attackEndTime;
+	private long _disableBowAttackEndTime;
+	private long _castInterruptTime;
 	
 	protected L2CharacterAI _ai;
 	
@@ -3157,10 +3142,13 @@ public abstract class L2Character extends L2Object
 		MoveData m = _move;
 		if (m == null)
 			return false;
+		
 		if (m.onGeodataPathIndex == -1)
 			return false;
+		
 		if (m.onGeodataPathIndex == m.geoPath.size() - 1)
 			return false;
+		
 		return true;
 	}
 	
@@ -3192,7 +3180,7 @@ public abstract class L2Character extends L2Object
 	 */
 	public final boolean canAbortCast()
 	{
-		return _castInterruptTime > GameTimeController.getGameTicks();
+		return _castInterruptTime > System.currentTimeMillis();
 	}
 	
 	/**
@@ -3200,7 +3188,7 @@ public abstract class L2Character extends L2Object
 	 */
 	public boolean isAttackingNow()
 	{
-		return _attackEndTime > GameTimeController.getGameTicks();
+		return _attackEndTime > System.currentTimeMillis();
 	}
 	
 	/**
@@ -3272,10 +3260,9 @@ public abstract class L2Character extends L2Object
 	 * <BR>
 	 * <FONT COLOR=#FF0000><B> <U>Caution</U> : The current Z position is obtained FROM THE CLIENT by the Client->Server ValidatePosition Packet. But x and y positions must be calculated to avoid that players try to modify their movement speed.</B></FONT><BR>
 	 * <BR>
-	 * @param gameTicks Nb of ticks since the server start
 	 * @return True if the movement is finished
 	 */
-	public boolean updatePosition(int gameTicks)
+	public boolean updatePosition()
 	{
 		// Get movement data
 		MoveData m = _move;
@@ -3297,8 +3284,11 @@ public abstract class L2Character extends L2Object
 			m._yAccurate = getY();
 		}
 		
+		// get current time
+		final long time = System.currentTimeMillis();
+		
 		// Check if the position has already been calculated
-		if (m._moveTimestamp == gameTicks)
+		if (m._moveTimestamp > time)
 			return false;
 		
 		int xPrev = getX();
@@ -3307,33 +3297,37 @@ public abstract class L2Character extends L2Object
 		
 		double dx, dy, dz;
 		if (Config.COORD_SYNCHRONIZE == 1)
-		// the only method that can modify x,y while moving (otherwise _move would/should be set null)
 		{
+			// the only method that can modify x,y while moving (otherwise _move would/should be set null)
 			dx = m._xDestination - xPrev;
 			dy = m._yDestination - yPrev;
 		}
 		else
-		// otherwise we need saved temporary values to avoid rounding errors
 		{
+			// otherwise we need saved temporary values to avoid rounding errors
 			dx = m._xDestination - m._xAccurate;
 			dy = m._yDestination - m._yAccurate;
 		}
 		
 		final boolean isFloating = isFlying() || isInsideZone(ZoneId.WATER);
 		
-		// Z coordinate will follow geodata or client values
-		if (Config.GEODATA > 0 && Config.COORD_SYNCHRONIZE == 2 && !isFloating && !m.disregardingGeodata && GameTimeController.getGameTicks() % 10 == 0 // once a second to reduce possible cpu load
-			&& GeoData.getInstance().hasGeo(xPrev, yPrev))
+		// Z coordinate will follow geodata or client values once a second to reduce possible cpu load
+		if (Config.GEODATA > 0 && Config.COORD_SYNCHRONIZE == 2 && !isFloating && !m.disregardingGeodata && Rnd.get(10) == 0 && GeoData.getInstance().hasGeo(xPrev, yPrev))
 		{
-			short geoHeight = GeoData.getInstance().getSpawnHeight(xPrev, yPrev, zPrev - 30, zPrev + 30, null);
+			short geoHeight = GeoData.getInstance().getHeight(xPrev, yPrev, zPrev);
 			dz = m._zDestination - geoHeight;
 			// quite a big difference, compare to validatePosition packet
 			if (this instanceof L2PcInstance && Math.abs(((L2PcInstance) this).getClientZ() - geoHeight) > 200 && Math.abs(((L2PcInstance) this).getClientZ() - geoHeight) < 1500)
 			{
-				dz = m._zDestination - zPrev; // allow diff
+				// allow diff
+				dz = m._zDestination - zPrev;
 			}
-			else if (isInCombat() && Math.abs(dz) > 200 && (dx * dx + dy * dy) < 40000) // allow mob to climb up to pcinstance
-				dz = m._zDestination - zPrev; // climbing
+			// allow mob to climb up to pcinstance
+			else if (isInCombat() && Math.abs(dz) > 200 && (dx * dx + dy * dy) < 40000)
+			{
+				// climbing
+				dz = m._zDestination - zPrev;
+			}
 			else
 				zPrev = geoHeight;
 		}
@@ -3341,8 +3335,9 @@ public abstract class L2Character extends L2Object
 			dz = m._zDestination - zPrev;
 		
 		double delta = dx * dx + dy * dy;
-		if (delta < 10000 && (dz * dz > 2500) // close enough, allows error between client and server geodata if it cannot be avoided
-			&& !isFloating) // should not be applied on vertical movements in water or during flight
+		// close enough, allows error between client and server geodata if it cannot be avoided
+		// should not be applied on vertical movements in water or during flight
+		if (delta < 10000 && (dz * dz > 2500) && !isFloating)
 			delta = Math.sqrt(delta);
 		else
 			delta = Math.sqrt(delta + dz * dz);
@@ -3350,12 +3345,12 @@ public abstract class L2Character extends L2Object
 		double distFraction = Double.MAX_VALUE;
 		if (delta > 1)
 		{
-			final double distPassed = getStat().getMoveSpeed() * (gameTicks - m._moveTimestamp) / GameTimeController.TICKS_PER_SECOND;
+			final double distPassed = (getStat().getMoveSpeed() * (time - m._moveTimestamp)) / 1000;
 			distFraction = distPassed / delta;
 		}
 		
-		if (distFraction > 1) // already there
-			// Set the position of the L2Character to the destination
+		// already there, Set the position of the L2Character to the destination
+		if (distFraction > 1)
 			super.getPosition().setXYZ(m._xDestination, m._yDestination, m._zDestination);
 		else
 		{
@@ -3368,7 +3363,7 @@ public abstract class L2Character extends L2Object
 		revalidateZone(false);
 		
 		// Set the timer of last position update to now
-		m._moveTimestamp = gameTicks;
+		m._moveTimestamp = time;
 		
 		return (distFraction > 1);
 	}
@@ -3524,29 +3519,30 @@ public abstract class L2Character extends L2Object
 	 */
 	protected void moveToLocation(int x, int y, int z, int offset)
 	{
-		// Get the Move Speed of the L2Charcater
+		// get movement speed of character
 		float speed = getStat().getMoveSpeed();
 		if (speed <= 0 || isMovementDisabled())
 			return;
 		
-		// Get current position of the L2Character
+		// get current position of character
 		final int curX = super.getX();
 		final int curY = super.getY();
 		final int curZ = super.getZ();
 		
-		// Calculate distance (dx,dy) between current position and destination
+		// calculate distance (dx, dy, dz) between current position and new destination
 		// TODO: improve Z axis move/follow support when dx,dy are small compared to dz
 		double dx = (x - curX);
 		double dy = (y - curY);
 		double dz = (z - curZ);
 		double distance = Math.sqrt(dx * dx + dy * dy);
 		
+		// check vertical movement
 		final boolean verticalMovementOnly = isFlying() && distance == 0 && dz != 0;
 		if (verticalMovementOnly)
 			distance = Math.abs(dz);
 		
-		// make water move short and use no geodata checks for swimming chars
-		// distance in a click can easily be over 3000
+		// TODO: really necessary?
+		// adjust target XYZ when swiming in water (can be easily over 3000)
 		if (Config.GEODATA > 0 && isInsideZone(ZoneId.WATER) && distance > 700)
 		{
 			double divider = 700 / distance;
@@ -3559,18 +3555,9 @@ public abstract class L2Character extends L2Object
 			distance = Math.sqrt(dx * dx + dy * dy);
 		}
 		
+		// debug distance
 		if (Config.DEBUG)
 			_log.fine("distance to target:" + distance);
-		
-		// Define movement angles needed
-		// ^
-		// | X (x,y)
-		// | /
-		// | /distance
-		// | /
-		// |/ angle
-		// X ---------->
-		// (curx,cury)
 		
 		double cos;
 		double sin;
@@ -3609,36 +3596,34 @@ public abstract class L2Character extends L2Object
 			cos = dx / distance;
 		}
 		
-		// Create and Init a MoveData object
-		MoveData m = new MoveData();
+		// get new MoveData
+		MoveData newMd = new MoveData();
 		
-		// GEODATA MOVEMENT CHECKS AND PATHFINDING
-		m.onGeodataPathIndex = -1; // Initialize not on geodata path
-		m.disregardingGeodata = false;
+		// initialize new MoveData
+		newMd.onGeodataPathIndex = -1;
+		newMd.disregardingGeodata = false;
 		
-		if (Config.GEODATA > 0 && !isFlying() // flying chars not checked - even canSeeTarget doesn't work yet
-			&& (!isInsideZone(ZoneId.WATER) || isInsideZone(ZoneId.SIEGE)) // swimming also not checked unless in siege zone - but distance is limited
-			&& !(this instanceof L2NpcWalkerInstance)) // npc walkers not checked
+		// flying chars not checked - even canSeeTarget doesn't work yet
+		// swimming also not checked unless in siege zone - but distance is limited
+		// npc walkers not checked
+		if (Config.GEODATA > 0 && !isFlying() && (!isInsideZone(ZoneId.WATER) || isInsideZone(ZoneId.SIEGE)) && !(this instanceof L2NpcWalkerInstance))
 		{
 			final boolean isInVehicle = this instanceof L2PcInstance && ((L2PcInstance) this).getVehicle() != null;
 			if (isInVehicle)
-				m.disregardingGeodata = true;
+				newMd.disregardingGeodata = true;
 			
 			double originalDistance = distance;
 			int originalX = x;
 			int originalY = y;
 			int originalZ = z;
-			int gtx = (originalX - L2World.MAP_MIN_X) >> 4;
-			int gty = (originalY - L2World.MAP_MIN_Y) >> 4;
+			int gtx = (originalX - L2World.WORLD_X_MIN) >> 4;
+			int gty = (originalY - L2World.WORLD_Y_MIN) >> 4;
 			
 			// Movement checks:
 			// when geodata == 2, for all characters except mobs returning home (could be changed later to teleport if pathfinding fails)
 			// when geodata == 1, for l2playableinstance and l2riftinstance only
-			if ((Config.GEODATA == 2 && !(this instanceof L2Attackable && ((L2Attackable) this).isReturningToSpawnPoint())) || (this instanceof L2PcInstance && !(isInVehicle && distance > 1500)) || (this instanceof L2Summon && !(getAI().getIntention() == CtrlIntention.FOLLOW)) // assuming
-				// intention_follow
-				// only when
-				// following owner
-				|| isAfraid() || this instanceof L2RiftInvaderInstance)
+			// assuming intention_follow only when following owner
+			if ((Config.GEODATA == 2 && !(this instanceof L2Attackable && ((L2Attackable) this).isReturningToSpawnPoint())) || (this instanceof L2PcInstance && !(isInVehicle && distance > 1500)) || (this instanceof L2Summon && !(getAI().getIntention() == CtrlIntention.FOLLOW)) || isAfraid() || this instanceof L2RiftInvaderInstance)
 			{
 				if (isOnGeodataPath())
 				{
@@ -3655,7 +3640,7 @@ public abstract class L2Character extends L2Object
 					}
 				}
 				
-				if (curX < L2World.MAP_MIN_X || curX > L2World.MAP_MAX_X || curY < L2World.MAP_MIN_Y || curY > L2World.MAP_MAX_Y)
+				if (curX < L2World.WORLD_X_MIN || curX > L2World.WORLD_X_MAX || curY < L2World.WORLD_Y_MIN || curY > L2World.WORLD_Y_MAX)
 				{
 					// Temporary fix for character outside world region errors
 					_log.warning("Character " + getName() + " outside world area, in coordinates x:" + curX + " y:" + curY);
@@ -3670,8 +3655,9 @@ public abstract class L2Character extends L2Object
 					
 					return;
 				}
-				Location destiny = GeoData.getInstance().moveCheck(curX, curY, curZ, x, y, z);
+				
 				// location different if destination wasn't reached (or just z coord is different)
+				Location destiny = PathFinding.getInstance().canMoveToTargetLoc(curX, curY, curZ, x, y, z);
 				x = destiny.getX();
 				y = destiny.getY();
 				z = destiny.getZ();
@@ -3680,32 +3666,26 @@ public abstract class L2Character extends L2Object
 				dz = z - curZ;
 				distance = verticalMovementOnly ? Math.abs(dz * dz) : Math.sqrt(dx * dx + dy * dy);
 			}
-			// Pathfinding checks. Only when geodata setting is 2, the LoS check gives shorter result
-			// than the original movement was and the LoS gives a shorter distance than 2000
+			
+			// Pathfinding checks. Only when geodata setting is 2, the LoS check gives shorter result than the original movement was and the LoS gives a shorter distance than 2000
 			// This way of detecting need for pathfinding could be changed.
 			if (Config.GEODATA == 2 && originalDistance - distance > 30 && distance < 2000 && !isAfraid())
 			{
 				// Path calculation -- overrides previous movement check
 				if ((this instanceof L2Playable && !isInVehicle) || isMinion() || isInCombat())
 				{
-					m.geoPath = PathFinding.getInstance().findPath(curX, curY, curZ, originalX, originalY, originalZ, this instanceof L2Playable);
-					if (m.geoPath == null || m.geoPath.size() < 2) // No path found
+					newMd.geoPath = PathFinding.getInstance().findPath(curX, curY, curZ, originalX, originalY, originalZ, this instanceof L2Playable);
+					if (newMd.geoPath == null || newMd.geoPath.size() < 2)
 					{
-						// * Even though there's no path found (remember geonodes aren't perfect),
-						// the mob is attacking and right now we set it so that the mob will go
-						// after target anyway, is dz is small enough.
-						// * With cellpathfinding this approach could be changed but would require taking
-						// off the geonodes and some more checks.
-						// * Summons will follow their masters no matter what.
-						// * Currently minions also must move freely since L2AttackableAI commands
-						// them to move along with their leader
+						// No path found
+						// Even though there's no path found (remember geonodes aren't perfect), the mob is attacking and right now we set it so that the mob will go after target anyway, is dz is small enough.
+						// With cellpathfinding this approach could be changed but would require taking off the geonodes and some more checks.
+						// Summons will follow their masters no matter what.
+						// Currently minions also must move freely since L2AttackableAI commands them to move along with their leader
 						if (this instanceof L2PcInstance || (!(this instanceof L2Playable) && !isMinion() && Math.abs(z - curZ) > 140) || (this instanceof L2Summon && !((L2Summon) this).getFollowStatus()))
-						{
-							getAI().setIntention(CtrlIntention.IDLE);
 							return;
-						}
 						
-						m.disregardingGeodata = true;
+						newMd.disregardingGeodata = true;
 						x = originalX;
 						y = originalY;
 						z = originalZ;
@@ -3713,28 +3693,29 @@ public abstract class L2Character extends L2Object
 					}
 					else
 					{
-						m.onGeodataPathIndex = 0; // on first segment
-						m.geoPathGtx = gtx;
-						m.geoPathGty = gty;
-						m.geoPathAccurateTx = originalX;
-						m.geoPathAccurateTy = originalY;
+						newMd.onGeodataPathIndex = 0; // on first segment
+						newMd.geoPathGtx = gtx;
+						newMd.geoPathGty = gty;
+						newMd.geoPathAccurateTx = originalX;
+						newMd.geoPathAccurateTy = originalY;
 						
-						x = m.geoPath.get(m.onGeodataPathIndex).getX();
-						y = m.geoPath.get(m.onGeodataPathIndex).getY();
-						z = m.geoPath.get(m.onGeodataPathIndex).getZ();
+						x = newMd.geoPath.get(newMd.onGeodataPathIndex).getX();
+						y = newMd.geoPath.get(newMd.onGeodataPathIndex).getY();
+						z = newMd.geoPath.get(newMd.onGeodataPathIndex).getZ();
 						
 						// check for doors in the route
 						if (DoorTable.getInstance().checkIfDoorsBetween(curX, curY, curZ, x, y, z))
 						{
-							m.geoPath = null;
+							newMd.geoPath = null;
 							getAI().setIntention(CtrlIntention.IDLE);
 							return;
 						}
-						for (int i = 0; i < m.geoPath.size() - 1; i++)
+						
+						for (int i = 0; i < newMd.geoPath.size() - 1; i++)
 						{
-							if (DoorTable.getInstance().checkIfDoorsBetween(m.geoPath.get(i), m.geoPath.get(i + 1)))
+							if (DoorTable.getInstance().checkIfDoorsBetween(newMd.geoPath.get(i), newMd.geoPath.get(i + 1)))
 							{
-								m.geoPath = null;
+								newMd.geoPath = null;
 								getAI().setIntention(CtrlIntention.IDLE);
 								return;
 							}
@@ -3749,11 +3730,13 @@ public abstract class L2Character extends L2Object
 					}
 				}
 			}
+			
 			// If no distance to go through, the movement is canceled
 			if (distance < 1 && (Config.GEODATA == 2 || this instanceof L2Playable || this instanceof L2RiftInvaderInstance || isAfraid()))
 			{
 				if (this instanceof L2Summon)
 					((L2Summon) this).setFollowStatus(false);
+				
 				getAI().setIntention(CtrlIntention.IDLE);
 				return;
 			}
@@ -3763,90 +3746,89 @@ public abstract class L2Character extends L2Object
 		if ((isFlying() || isInsideZone(ZoneId.WATER)) && !verticalMovementOnly)
 			distance = Math.sqrt(distance * distance + dz * dz);
 		
-		m._xDestination = x;
-		m._yDestination = y;
-		m._zDestination = z;
+		// Caclulate the Nb of ticks between the current position and the destination
+		newMd._xDestination = x;
+		newMd._yDestination = y;
+		newMd._zDestination = z;
 		
 		// Calculate and set the heading of the L2Character
-		m._heading = 0; // initial value for coordinate sync
+		newMd._heading = 0;
+		
+		newMd._moveStartTime = System.currentTimeMillis();
+		
+		// set new MoveData as character MoveData
+		_move = newMd;
+		
 		// Does not broke heading on vertical movements
 		if (!verticalMovementOnly)
 			setHeading(Util.calculateHeadingFrom(cos, sin));
 		
-		m._moveStartTime = GameTimeController.getGameTicks();
-		
-		// Set the L2Character _move object to MoveData object
-		_move = m;
-		
-		// Add the L2Character to movingObjects of the GameTimeController
-		GameTimeController.getInstance().registerMovingObject(this);
+		// add the character to moving objects of the GameTimeController
+		MovementTaskManager.getInstance().add(this);
 	}
 	
 	public boolean moveToNextRoutePoint()
 	{
+		// character is not on geodata path, return
 		if (!isOnGeodataPath())
 		{
-			// Cancel the move action
 			_move = null;
 			return false;
 		}
 		
-		// Get the Move Speed of the L2Charcater
-		float speed = getStat().getMoveSpeed();
-		if (speed <= 0 || isMovementDisabled())
+		// character movement is not allowed, return
+		if (getStat().getMoveSpeed() <= 0 || isMovementDisabled())
 		{
-			// Cancel the move action
 			_move = null;
 			return false;
 		}
 		
-		MoveData md = _move;
-		if (md == null)
-			return false;
+		// get current MoveData
+		MoveData oldMd = _move;
 		
-		// Create and Init a MoveData object
-		MoveData m = new MoveData();
+		// get new MoveData
+		MoveData newMd = new MoveData();
 		
-		// Update MoveData object
-		m.onGeodataPathIndex = md.onGeodataPathIndex + 1; // next segment
-		m.geoPath = md.geoPath;
-		m.geoPathGtx = md.geoPathGtx;
-		m.geoPathGty = md.geoPathGty;
-		m.geoPathAccurateTx = md.geoPathAccurateTx;
-		m.geoPathAccurateTy = md.geoPathAccurateTy;
+		// initialize new MoveData
+		newMd.onGeodataPathIndex = oldMd.onGeodataPathIndex + 1;
+		newMd.geoPath = oldMd.geoPath;
+		newMd.geoPathGtx = oldMd.geoPathGtx;
+		newMd.geoPathGty = oldMd.geoPathGty;
+		newMd.geoPathAccurateTx = oldMd.geoPathAccurateTx;
+		newMd.geoPathAccurateTy = oldMd.geoPathAccurateTy;
 		
-		if (md.onGeodataPathIndex == md.geoPath.size() - 2)
+		if (oldMd.onGeodataPathIndex == oldMd.geoPath.size() - 2)
 		{
-			m._xDestination = md.geoPathAccurateTx;
-			m._yDestination = md.geoPathAccurateTy;
-			m._zDestination = md.geoPath.get(m.onGeodataPathIndex).getZ();
+			newMd._xDestination = oldMd.geoPathAccurateTx;
+			newMd._yDestination = oldMd.geoPathAccurateTy;
+			newMd._zDestination = oldMd.geoPath.get(newMd.onGeodataPathIndex).getZ();
 		}
 		else
 		{
-			m._xDestination = md.geoPath.get(m.onGeodataPathIndex).getX();
-			m._yDestination = md.geoPath.get(m.onGeodataPathIndex).getY();
-			m._zDestination = md.geoPath.get(m.onGeodataPathIndex).getZ();
+			newMd._xDestination = oldMd.geoPath.get(newMd.onGeodataPathIndex).getX();
+			newMd._yDestination = oldMd.geoPath.get(newMd.onGeodataPathIndex).getY();
+			newMd._zDestination = oldMd.geoPath.get(newMd.onGeodataPathIndex).getZ();
 		}
 		
-		double dx = (m._xDestination - super.getX());
-		double dy = (m._yDestination - super.getY());
+		newMd._heading = 0;
+		newMd._moveStartTime = System.currentTimeMillis();
+		
+		// set new MoveData as character MoveData
+		_move = newMd;
+		
+		// get travel distance
+		double dx = (_move._xDestination - super.getX());
+		double dy = (_move._yDestination - super.getY());
 		double distance = Math.sqrt(dx * dx + dy * dy);
 		
-		// Calculate and set the heading of the L2Character
+		// set character heading
 		if (distance != 0)
-			setHeading(Util.calculateHeadingFrom(getX(), getY(), m._xDestination, m._yDestination));
+			setHeading(Util.calculateHeadingFrom(dx, dy));
 		
-		m._heading = 0; // initial value for coordinate sync
-		m._moveStartTime = GameTimeController.getGameTicks();
+		// add the character to moving objects of the GameTimeController
+		MovementTaskManager.getInstance().add(this);
 		
-		// Set the L2Character _move object to MoveData object
-		_move = m;
-		
-		// Add the L2Character to movingObjects of the GameTimeController
-		// The GameTimeController manage objects movement
-		GameTimeController.getInstance().registerMovingObject(this);
-		
-		// Send MoveToLocation to the actor and all L2PcInstance in its _knownPlayers
+		// send MoveToLocation packet to known objects
 		broadcastPacket(new MoveToLocation(this));
 		
 		return true;
@@ -4135,16 +4117,16 @@ public abstract class L2Character extends L2Object
 			// Maybe launch chance skills on us
 			if (_chanceSkills != null)
 			{
-				_chanceSkills.onHit(target, damage, false, crit);
+				_chanceSkills.onHit(target, false, crit);
 				
 				// Reflect triggers onHit
 				if (reflectedDamage > 0)
-					_chanceSkills.onHit(target, damage, true, false);
+					_chanceSkills.onHit(target, true, false);
 			}
 			
 			// Maybe launch chance skills on target
 			if (target.getChanceSkills() != null)
-				target.getChanceSkills().onHit(this, damage, true, crit);
+				target.getChanceSkills().onHit(this, true, crit);
 		}
 		
 		// Launch weapon Special ability effect if available
@@ -4246,7 +4228,7 @@ public abstract class L2Character extends L2Object
 		}
 		
 		// GeoData Los Check or dz > 1000
-		if (!GeoData.getInstance().canSeeTarget(player, this))
+		if (!PathFinding.getInstance().canSeeTarget(player, this))
 		{
 			player.sendPacket(SystemMessageId.CANT_SEE_TARGET);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
@@ -4353,53 +4335,18 @@ public abstract class L2Character extends L2Object
 	
 	/**
 	 * @param target The target to test.
-	 * @param weapon The wepaon to test.
+	 * @param weaponType The weapon type to test.
 	 * @return The Attack Speed of the L2Character (delay (in milliseconds) before next attack).
 	 */
-	public int calculateTimeBetweenAttacks(L2Character target, Weapon weapon)
+	public int calculateTimeBetweenAttacks(L2Character target, WeaponType weaponType)
 	{
-		double atkSpd = 0;
-		if (weapon != null)
-		{
-			switch (weapon.getItemType())
-			{
-				case BOW:
-					atkSpd = getStat().getPAtkSpd();
-					return (int) (1500 * 345 / atkSpd);
-					
-				case DAGGER:
-					atkSpd = getStat().getPAtkSpd();
-					break;
-				
-				default:
-					atkSpd = getStat().getPAtkSpd();
-			}
-		}
-		else
-			atkSpd = getPAtkSpd();
-		
-		return Formulas.calcPAtkSpd(this, target, atkSpd);
-	}
-	
-	public int calculateReuseTime(L2Character target, Weapon weapon)
-	{
-		if (weapon == null)
-			return 0;
-		
-		// only bows should continue for now
-		int reuse = weapon.getReuseDelay();
-		if (reuse == 0)
-			return 0;
-		
-		reuse *= getStat().getWeaponReuseModifier(target);
-		double atkSpd = getStat().getPAtkSpd();
-		switch (weapon.getItemType())
+		switch (weaponType)
 		{
 			case BOW:
-				return (int) (reuse * 345 / atkSpd);
+				return 1500 * 345 / getStat().getPAtkSpd();
 				
 			default:
-				return (int) (reuse * 312 / atkSpd);
+				return Formulas.calcPAtkSpd(this, target, getStat().getPAtkSpd());
 		}
 	}
 	
@@ -4454,7 +4401,7 @@ public abstract class L2Character extends L2Object
 				removeStatsByOwner(oldSkill);
 			}
 			// Add Func objects of newSkill to the calculator set of the L2Character
-			addStatFuncs(newSkill.getStatFuncs(null, this));
+			addStatFuncs(newSkill.getStatFuncs(this));
 			
 			if (oldSkill != null && _chanceSkills != null)
 				removeChanceSkill(oldSkill.getId());
@@ -4712,7 +4659,7 @@ public abstract class L2Character extends L2Object
 						continue;
 					}
 					
-					if (skill.getSkillRadius() > 0 && skill.isOffensive() && Config.GEODATA > 0 && !GeoData.getInstance().canSeeTarget(this, target))
+					if (skill.getSkillRadius() > 0 && skill.isOffensive() && !PathFinding.getInstance().canSeeTarget(this, target))
 					{
 						_skipgeo++;
 						continue;
@@ -4827,7 +4774,7 @@ public abstract class L2Character extends L2Object
 		boolean isSendStatus = false;
 		
 		// Consume MP of the L2Character and Send the Server->Client packet StatusUpdate with current HP and MP to all other L2PcInstance to inform
-		double mpConsume = getStat().getMpConsume(skill);
+		final double mpConsume = getStat().getMpConsume(skill);
 		if (mpConsume > 0)
 		{
 			if (mpConsume > getCurrentMp())
@@ -4843,9 +4790,9 @@ public abstract class L2Character extends L2Object
 		}
 		
 		// Consume HP if necessary and Send the Server->Client packet StatusUpdate with current HP and MP to all other L2PcInstance to inform
-		if (skill.getHpConsume() > 0)
+		final double hpConsume = skill.getHpConsume();
+		if (hpConsume > 0)
 		{
-			final double hpConsume = calcStat(Stats.HP_CONSUME_RATE, skill.getHpConsume(), null, null);
 			if (hpConsume > getCurrentHp())
 			{
 				sendPacket(SystemMessage.getSystemMessage(SystemMessageId.NOT_ENOUGH_HP));
@@ -4981,7 +4928,7 @@ public abstract class L2Character extends L2Object
 		if (skill == null || _disabledSkills == null)
 			return;
 		
-		_disabledSkills.remove(Integer.valueOf(skill.getReuseHashCode()));
+		_disabledSkills.remove(skill.getReuseHashCode());
 	}
 	
 	/**
@@ -4997,7 +4944,7 @@ public abstract class L2Character extends L2Object
 		if (_disabledSkills == null)
 			_disabledSkills = new ConcurrentHashMap<>();
 		
-		_disabledSkills.put(Integer.valueOf(skill.getReuseHashCode()), delay > 10 ? System.currentTimeMillis() + delay : Long.MAX_VALUE);
+		_disabledSkills.put(skill.getReuseHashCode(), (delay > 10) ? System.currentTimeMillis() + delay : Long.MAX_VALUE);
 	}
 	
 	/**
@@ -5034,13 +4981,13 @@ public abstract class L2Character extends L2Object
 		if (_disabledSkills == null)
 			return false;
 		
-		final Long timeStamp = _disabledSkills.get(Integer.valueOf(reuseHashcode));
+		final Long timeStamp = _disabledSkills.get(reuseHashcode);
 		if (timeStamp == null)
 			return false;
 		
 		if (timeStamp < System.currentTimeMillis())
 		{
-			_disabledSkills.remove(Integer.valueOf(reuseHashcode));
+			_disabledSkills.remove(reuseHashcode);
 			return false;
 		}
 		
@@ -5134,11 +5081,11 @@ public abstract class L2Character extends L2Object
 						
 						// Maybe launch chance skills on us
 						if (_chanceSkills != null)
-							_chanceSkills.onSkillHit(target, false, skill.isMagic(), skill.isOffensive(), skill.getElement());
+							_chanceSkills.onSkillHit(target, false, skill.isMagic(), skill.isOffensive());
 						
 						// Maybe launch chance skills on target
 						if (target.getChanceSkills() != null)
-							target.getChanceSkills().onSkillHit(this, true, skill.isMagic(), skill.isOffensive(), skill.getElement());
+							target.getChanceSkills().onSkillHit(this, true, skill.isMagic(), skill.isOffensive());
 				}
 			}
 			
@@ -5372,17 +5319,6 @@ public abstract class L2Character extends L2Object
 	}
 	
 	/**
-	 * Sets _isCastingNow to true and _castInterruptTime is calculated from end time (ticks)
-	 * @param newSkillCastEndTick
-	 */
-	public final void forceIsCasting(int newSkillCastEndTick)
-	{
-		setIsCastingNow(true);
-		// for interrupt -400 ms
-		_castInterruptTime = newSkillCastEndTick - 4;
-	}
-	
-	/**
 	 * @param target Target to check.
 	 * @return a Random Damage in function of the weapon.
 	 */
@@ -5401,7 +5337,7 @@ public abstract class L2Character extends L2Object
 		return "mob " + getObjectId();
 	}
 	
-	public int getAttackEndTime()
+	public long getAttackEndTime()
 	{
 		return _attackEndTime;
 	}

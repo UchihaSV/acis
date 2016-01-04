@@ -140,7 +140,7 @@ public final class ChanceCondition
 		return null;
 	}
 	
-	public boolean trigger(int event, int damage)
+	public boolean trigger(int event)
 	{
 		return _triggerType.check(event) && (_chance < 0 || Rnd.get(100) < _chance);
 	}

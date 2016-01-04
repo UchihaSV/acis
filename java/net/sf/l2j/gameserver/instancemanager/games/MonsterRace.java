@@ -53,7 +53,7 @@ public class MonsterRace
 		WAITING,
 		STARTING_RACE,
 		RACE_END
-	};
+	}
 	
 	protected static final PlaySound _sound1 = new PlaySound(1, "S_Race", 0, 0, 0, 0, 0);
 	protected static final PlaySound _sound2 = new PlaySound(0, "ItemSound2.race_start", 1, 121209259, 12125, 182487, -3559);

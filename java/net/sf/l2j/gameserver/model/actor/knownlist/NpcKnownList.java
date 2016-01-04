@@ -18,7 +18,6 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
-import net.sf.l2j.gameserver.model.actor.instance.L2CabaleBufferInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2FestivalGuideInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2NpcInstance;
 
@@ -30,32 +29,29 @@ public class NpcKnownList extends CharKnownList
 	}
 	
 	@Override
-	public L2Npc getActiveChar()
+	public int getDistanceToWatchObject(L2Object object)
 	{
-		return (L2Npc) super.getActiveChar();
+		// object is not L2Character or object is L2NpcInstance, skip
+		if (object instanceof L2NpcInstance || !(object instanceof L2Character))
+			return 0;
+		
+		if (object instanceof L2Playable)
+		{
+			// known list owner if L2FestivalGuide, use extended range
+			if (_activeObject instanceof L2FestivalGuideInstance)
+				return 4000;
+			
+			// default range to keep players
+			return 1500;
+		}
+		
+		return 500;
 	}
 	
 	@Override
 	public int getDistanceToForgetObject(L2Object object)
 	{
+		// distance to watch + 50%
 		return (int) Math.round(1.5 * getDistanceToWatchObject(object));
-	}
-	
-	@Override
-	public int getDistanceToWatchObject(L2Object object)
-	{
-		if (object instanceof L2FestivalGuideInstance)
-			return 4000;
-		
-		if (object instanceof L2CabaleBufferInstance)
-			return 900;
-		
-		if (object instanceof L2NpcInstance || !(object instanceof L2Character))
-			return 0;
-		
-		if (object instanceof L2Playable)
-			return 1500;
-		
-		return 500;
 	}
 }

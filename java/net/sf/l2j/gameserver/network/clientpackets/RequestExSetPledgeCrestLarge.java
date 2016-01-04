@@ -85,7 +85,7 @@ public final class RequestExSetPledgeCrestLarge extends L2GameClientPacket
 				}
 				
 				crestLargeId = IdFactory.getInstance().getNextId();
-				if (!CrestCache.saveCrest(CrestType.PLEDGE_LARGE, crestLargeId, _data))
+				if (!CrestCache.getInstance().saveCrest(CrestType.PLEDGE_LARGE, crestLargeId, _data))
 				{
 					_log.log(Level.INFO, "Error saving large crest for clan " + clan.getName() + " [" + clan.getClanId() + "]");
 					return;

@@ -461,11 +461,10 @@ public class Hero
 	{
 		if (!_heroes.isEmpty())
 		{
-			for (Integer heroId : _heroes.keySet())
+			for (Map.Entry<Integer, StatsSet> heroEntry : _heroes.entrySet())
 			{
-				StatsSet hero = _heroes.get(heroId);
-				if (hero.getInteger(Olympiad.CLASS_ID) == classid)
-					return heroId;
+				if (heroEntry.getValue().getInteger(Olympiad.CLASS_ID) == classid)
+					return heroEntry.getKey();
 			}
 		}
 		return 0;
@@ -724,9 +723,10 @@ public class Hero
 			}
 			else
 			{
-				for (Integer heroId : _heroes.keySet())
+				for (Map.Entry<Integer, StatsSet> heroEntry : _heroes.entrySet())
 				{
-					StatsSet hero = _heroes.get(heroId);
+					final int heroId = heroEntry.getKey();
+					final StatsSet hero = heroEntry.getValue();
 					
 					if (_completeHeroes == null || !_completeHeroes.containsKey(heroId))
 					{

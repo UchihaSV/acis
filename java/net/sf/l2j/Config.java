@@ -29,7 +29,9 @@ import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
 import net.sf.l2j.commons.config.ExProperties;
+import net.sf.l2j.gameserver.geoengine.geodata.GeoFormat;
 import net.sf.l2j.gameserver.model.holder.BuffSkillHolder;
+import net.sf.l2j.gameserver.model.holder.ItemHolder;
 import net.sf.l2j.gameserver.util.FloodProtectorConfig;
 import net.sf.l2j.util.StringUtil;
 
@@ -42,10 +44,10 @@ public final class Config
 {
 	protected static final Logger _log = Logger.getLogger(Config.class.getName());
 	
-	public static final String BANNED_IP_XML = "./config/banned.xml";
 	public static final String CLANS_FILE = "./config/clans.properties";
 	public static final String EVENTS_FILE = "./config/events.properties";
 	public static final String FLOOD_PROTECTOR_FILE = "./config/floodprotector.properties";
+	public static final String GEOENGINE_FILE = "./config/geoengine.properties";
 	public static final String HEXID_FILE = "./config/hexid.txt";
 	public static final String LOGIN_CONFIGURATION_FILE = "./config/loginserver.properties";
 	public static final String NPCS_FILE = "./config/npcs.properties";
@@ -153,7 +155,6 @@ public final class Config
 	public static int ALT_OLY_NONCLASSED;
 	public static int[][] ALT_OLY_CLASSED_REWARD;
 	public static int[][] ALT_OLY_NONCLASSED_REWARD;
-	public static int ALT_OLY_COMP_RITEM;
 	public static int ALT_OLY_GP_PER_POINT;
 	public static int ALT_OLY_HERO_POINTS;
 	public static int ALT_OLY_RANK1_POINTS;
@@ -167,7 +168,6 @@ public final class Config
 	public static boolean ALT_OLY_ANNOUNCE_GAMES;
 	
 	/** SevenSigns Festival */
-	public static boolean ALT_GAME_REQUIRE_CLAN_CASTLE;
 	public static boolean ALT_GAME_CASTLE_DAWN;
 	public static boolean ALT_GAME_CASTLE_DUSK;
 	public static int ALT_FESTIVAL_MIN_PLAYER;
@@ -184,7 +184,6 @@ public final class Config
 	
 	/** Four Sepulchers */
 	public static int FS_TIME_ATTACK;
-	public static int FS_TIME_COOLDOWN;
 	public static int FS_TIME_ENTRY;
 	public static int FS_TIME_WARMUP;
 	public static int FS_PARTY_MEMBER_COUNT;
@@ -227,6 +226,29 @@ public final class Config
 	public static int ALT_FISH_CHAMPIONSHIP_REWARD_5;
 	
 	// --------------------------------------------------
+	// GeoEngine
+	// --------------------------------------------------
+	
+	/** Geodata */
+	public static int GEODATA;
+	public static String GEODATA_PATH;
+	public static GeoFormat GEODATA_FORMAT;
+	public static int COORD_SYNCHRONIZE;
+	
+	/** Path checking */
+	public static int PART_OF_CHARACTER_HEIGHT;
+	public static int MAX_OBSTACLE_HEIGHT;
+	
+	/** Path finding */
+	public static String PATHFIND_BUFFERS;
+	public static int BASE_WEIGHT;
+	public static int DIAGONAL_WEIGHT;
+	public static int HEURISTIC_WEIGHT;
+	public static int OBSTACLE_MULTIPLIER;
+	public static int MAX_ITERATIONS;
+	public static boolean DEBUG_PATH;
+	
+	// --------------------------------------------------
 	// HexID
 	// --------------------------------------------------
 	
@@ -265,8 +287,6 @@ public final class Config
 	public static boolean LOG_LOGIN_CONTROLLER;
 	
 	public static boolean SHOW_LICENCE;
-	public static int IP_UPDATE_TIME;
-	public static boolean FORCE_GGAUTH;
 	
 	public static boolean AUTO_CREATE_ACCOUNTS;
 	
@@ -454,6 +474,7 @@ public final class Config
 	public static double PARTY_XP_CUTOFF_PERCENT;
 	public static int ALT_PARTY_RANGE;
 	public static int ALT_PARTY_RANGE2;
+	public static boolean ALT_LEAVE_PARTY_LEADER;
 	
 	/** GMs & Admin Stuff */
 	public static boolean EVERYBODY_HAS_ADMIN_RIGHTS;
@@ -515,7 +536,6 @@ public final class Config
 	public static boolean SERVER_LIST_CLOCK;
 	public static boolean SERVER_LIST_TESTSERVER;
 	public static boolean SERVER_GMONLY;
-	public static boolean TEST_SERVER;
 	
 	/** clients related */
 	public static int DELETE_DAYS;
@@ -524,7 +544,6 @@ public final class Config
 	public static int MAX_PROTOCOL_REVISION;
 	
 	/** Jail & Punishements **/
-	public static boolean JAIL_IS_PVP;
 	public static int DEFAULT_PUNISH;
 	public static int DEFAULT_PUNISH_PARAM;
 	
@@ -536,18 +555,12 @@ public final class Config
 	/** Items Management */
 	public static boolean ALLOW_DISCARDITEM;
 	public static boolean MULTIPLE_ITEM_DROP;
-	public static int ITEM_AUTO_DESTROY_TIME;
 	public static int HERB_AUTO_DESTROY_TIME;
-	public static String PROTECTED_ITEMS;
-	
-	public static List<Integer> LIST_PROTECTED_ITEMS;
-	
-	public static boolean DESTROY_DROPPED_PLAYER_ITEM;
-	public static boolean DESTROY_EQUIPABLE_PLAYER_ITEM;
+	public static int ITEM_AUTO_DESTROY_TIME;
+	public static int EQUIPABLE_ITEM_AUTO_DESTROY_TIME;
+	public static Map<Integer, Integer> SPECIAL_ITEM_DESTROY_TIME;
+	public static int PLAYER_DROPPED_ITEM_MULTIPLIER;
 	public static boolean SAVE_DROPPED_ITEM;
-	public static boolean EMPTY_DROPPED_ITEM_TABLE_AFTER_LOAD;
-	public static int SAVE_DROPPED_ITEM_INTERVAL;
-	public static boolean CLEAR_DROPPED_ITEM_TABLE;
 	
 	/** Rate control */
 	public static double RATE_XP;
@@ -598,7 +611,6 @@ public final class Config
 	public static int WEAR_DELAY;
 	public static int WEAR_PRICE;
 	public static boolean ALLOW_LOTTERY;
-	public static boolean ALLOW_RACE;
 	public static boolean ALLOW_WATER;
 	public static boolean ALLOWFISHING;
 	public static boolean ALLOW_BOAT;
@@ -627,25 +639,9 @@ public final class Config
 	public static boolean ENABLE_COMMUNITY_BOARD;
 	public static String BBS_DEFAULT;
 	
-	/** Geodata */
-	public static int COORD_SYNCHRONIZE;
-	public static int GEODATA;
-	public static boolean FORCE_GEODATA;
-	
-	public static boolean GEODATA_CELLFINDING;
-	public static String PATHFIND_BUFFERS;
-	public static double LOW_WEIGHT;
-	public static double MEDIUM_WEIGHT;
-	public static double HIGH_WEIGHT;
-	public static boolean ADVANCED_DIAGONAL_STRATEGY;
-	public static double DIAGONAL_WEIGHT;
-	public static int MAX_POSTFILTER_PASSES;
-	public static boolean DEBUG_PATH;
-	
 	/** Misc */
 	public static boolean L2WALKER_PROTECTION;
 	public static boolean AUTODELETE_INVALID_QUEST_DATA;
-	public static boolean GAMEGUARD_ENFORCE;
 	public static boolean SERVER_NEWS;
 	public static int ZONE_TOWN;
 	public static boolean DISABLE_TUTORIAL;
@@ -662,19 +658,6 @@ public final class Config
 	public static int IO_PACKET_THREAD_CORE_SIZE = 2; // default 2
 	public static int GENERAL_THREAD_CORE_SIZE = 4; // default 4
 	public static int AI_MAX_THREAD = 10; // default 10
-	
-	/** Packet information */
-	public static boolean COUNT_PACKETS = false; // default false
-	public static boolean DUMP_PACKET_COUNTS = false; // default false
-	public static int DUMP_INTERVAL_SECONDS = 60; // default 60
-	
-	/** IA settings */
-	public static int MINIMUM_UPDATE_DISTANCE = 50; // default 50
-	public static int MINIMUN_UPDATE_TIME = 500; // default 500
-	public static int KNOWNLIST_FORGET_DELAY = 10000; // default 10000
-	
-	/** Time after which a packet is considered as lost */
-	public static int PACKET_LIFETIME = 0; // default 0 (unlimited)
 	
 	/** Reserve Host on LoginServerThread */
 	public static boolean RESERVE_HOST_ON_LOGIN = false; // default false
@@ -812,7 +795,6 @@ public final class Config
 			ALT_OLY_NONCLASSED = events.getProperty("AltOlyNonClassedParticipants", 9);
 			ALT_OLY_CLASSED_REWARD = parseItemsList(events.getProperty("AltOlyClassedReward", "6651,50"));
 			ALT_OLY_NONCLASSED_REWARD = parseItemsList(events.getProperty("AltOlyNonClassedReward", "6651,30"));
-			ALT_OLY_COMP_RITEM = events.getProperty("AltOlyCompRewItem", 6651);
 			ALT_OLY_GP_PER_POINT = events.getProperty("AltOlyGPPerPoint", 1000);
 			ALT_OLY_HERO_POINTS = events.getProperty("AltOlyHeroPoints", 300);
 			ALT_OLY_RANK1_POINTS = events.getProperty("AltOlyRank1Points", 100);
@@ -825,7 +807,6 @@ public final class Config
 			ALT_OLY_DIVIDER_NON_CLASSED = events.getProperty("AltOlyDividerNonClassed", 3);
 			ALT_OLY_ANNOUNCE_GAMES = events.getProperty("AltOlyAnnounceGames", true);
 			
-			ALT_GAME_REQUIRE_CLAN_CASTLE = events.getProperty("AltRequireClanCastle", false);
 			ALT_GAME_CASTLE_DAWN = events.getProperty("AltCastleForDawn", true);
 			ALT_GAME_CASTLE_DUSK = events.getProperty("AltCastleForDusk", true);
 			ALT_FESTIVAL_MIN_PLAYER = events.getProperty("AltFestivalMinPlayer", 5);
@@ -841,7 +822,6 @@ public final class Config
 			ALT_SEVENSIGNS_LAZY_UPDATE = events.getProperty("AltSevenSignsLazyUpdate", true);
 			
 			FS_TIME_ATTACK = events.getProperty("TimeOfAttack", 50);
-			FS_TIME_COOLDOWN = events.getProperty("TimeOfCoolDown", 5);
 			FS_TIME_ENTRY = events.getProperty("TimeOfEntry", 3);
 			FS_TIME_WARMUP = events.getProperty("TimeOfWarmUp", 2);
 			FS_PARTY_MEMBER_COUNT = events.getProperty("NumberOfNecessaryPartyMembers", 4);
@@ -891,6 +871,24 @@ public final class Config
 			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_MANOR, "Manor", "30");
 			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_SENDMAIL, "SendMail", "100");
 			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_CHARACTER_SELECT, "CharacterSelect", "30");
+			
+			// Geoengine
+			ExProperties geoengine = load(GEOENGINE_FILE);
+			GEODATA = geoengine.getProperty("GeoData", 0);
+			GEODATA_PATH = geoengine.getProperty("GeoDataPath", "./data/geodata/");
+			GEODATA_FORMAT = Enum.valueOf(GeoFormat.class, geoengine.getProperty("GeoDataFormat", GeoFormat.L2J.toString()));
+			COORD_SYNCHRONIZE = geoengine.getProperty("CoordSynchronize", -1);
+			
+			PART_OF_CHARACTER_HEIGHT = geoengine.getProperty("PartOfCharacterHeight", 75);
+			MAX_OBSTACLE_HEIGHT = geoengine.getProperty("MaxObstacleHeight", 32);
+			
+			PATHFIND_BUFFERS = geoengine.getProperty("PathFindBuffers", "100x6;128x6;192x6;256x4;320x4;384x4;500x2");
+			BASE_WEIGHT = geoengine.getProperty("BaseWeight", 10);
+			DIAGONAL_WEIGHT = geoengine.getProperty("DiagonalWeight", 14);
+			OBSTACLE_MULTIPLIER = geoengine.getProperty("ObstacleMultiplier", 10);
+			HEURISTIC_WEIGHT = geoengine.getProperty("HeuristicWeight", 20);
+			MAX_ITERATIONS = geoengine.getProperty("MaxIterations", 3500);
+			DEBUG_PATH = geoengine.getProperty("DebugPath", false);
 			
 			// HexID
 			ExProperties hexid = load(HEXID_FILE);
@@ -1078,6 +1076,7 @@ public final class Config
 			PARTY_XP_CUTOFF_LEVEL = players.getProperty("PartyXpCutoffLevel", 20);
 			ALT_PARTY_RANGE = players.getProperty("AltPartyRange", 1600);
 			ALT_PARTY_RANGE2 = players.getProperty("AltPartyRange2", 1400);
+			ALT_LEAVE_PARTY_LEADER = players.getProperty("AltLeavePartyLeader", false);
 			
 			EVERYBODY_HAS_ADMIN_RIGHTS = players.getProperty("EverybodyHasAdminRights", false);
 			MASTERACCESS_LEVEL = players.getProperty("MasterAccessLevel", 127);
@@ -1135,7 +1134,6 @@ public final class Config
 			SERVER_LIST_BRACKET = server.getProperty("ServerListBrackets", false);
 			SERVER_LIST_CLOCK = server.getProperty("ServerListClock", false);
 			SERVER_GMONLY = server.getProperty("ServerGMOnly", false);
-			TEST_SERVER = server.getProperty("TestServer", false);
 			SERVER_LIST_TESTSERVER = server.getProperty("TestServer", false);
 			
 			DELETE_DAYS = server.getProperty("DeleteCharAfterDays", 7);
@@ -1145,7 +1143,6 @@ public final class Config
 			if (MIN_PROTOCOL_REVISION > MAX_PROTOCOL_REVISION)
 				throw new Error("MinProtocolRevision is bigger than MaxProtocolRevision in server.properties.");
 			
-			JAIL_IS_PVP = server.getProperty("JailIsPvp", true);
 			DEFAULT_PUNISH = server.getProperty("DefaultPunish", 2);
 			DEFAULT_PUNISH_PARAM = server.getProperty("DefaultPunishParam", 0);
 			
@@ -1155,20 +1152,21 @@ public final class Config
 			
 			ALLOW_DISCARDITEM = server.getProperty("AllowDiscardItem", true);
 			MULTIPLE_ITEM_DROP = server.getProperty("MultipleItemDrop", true);
-			ITEM_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyItemTime", 0) * 1000;
 			HERB_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyHerbTime", 15) * 1000;
-			PROTECTED_ITEMS = server.getProperty("ListOfProtectedItems");
-			
-			LIST_PROTECTED_ITEMS = new ArrayList<>();
-			for (String id : PROTECTED_ITEMS.split(","))
-				LIST_PROTECTED_ITEMS.add(Integer.parseInt(id));
-			
-			DESTROY_DROPPED_PLAYER_ITEM = server.getProperty("DestroyPlayerDroppedItem", false);
-			DESTROY_EQUIPABLE_PLAYER_ITEM = server.getProperty("DestroyEquipableItem", false);
+			ITEM_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyItemTime", 600) * 1000;
+			EQUIPABLE_ITEM_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyEquipableItemTime", 0) * 1000;
+			SPECIAL_ITEM_DESTROY_TIME = new HashMap<>();
+			String[] data = server.getProperty("AutoDestroySpecialItemTime", (String[]) null, ",");
+			if (data != null)
+			{
+				for (String itemData : data)
+				{
+					String[] item = itemData.split("-");
+					SPECIAL_ITEM_DESTROY_TIME.put(Integer.parseInt(item[0]), Integer.parseInt(item[1]) * 1000);
+				}
+			}
+			PLAYER_DROPPED_ITEM_MULTIPLIER = server.getProperty("PlayerDroppedItemMultiplier", 1);
 			SAVE_DROPPED_ITEM = server.getProperty("SaveDroppedItem", false);
-			EMPTY_DROPPED_ITEM_TABLE_AFTER_LOAD = server.getProperty("EmptyDroppedItemTableAfterLoad", false);
-			SAVE_DROPPED_ITEM_INTERVAL = server.getProperty("SaveDroppedItemInterval", 0) * 60000;
-			CLEAR_DROPPED_ITEM_TABLE = server.getProperty("ClearDroppedItemTable", false);
 			
 			RATE_XP = server.getProperty("RateXp", 1.);
 			RATE_SP = server.getProperty("RateSp", 1.);
@@ -1211,7 +1209,6 @@ public final class Config
 			WEAR_DELAY = server.getProperty("WearDelay", 5);
 			WEAR_PRICE = server.getProperty("WearPrice", 10);
 			ALLOW_LOTTERY = server.getProperty("AllowLottery", true);
-			ALLOW_RACE = server.getProperty("AllowRace", true);
 			ALLOW_WATER = server.getProperty("AllowWater", true);
 			ALLOWFISHING = server.getProperty("AllowFishing", false);
 			ALLOW_MANOR = server.getProperty("AllowManor", true);
@@ -1238,23 +1235,8 @@ public final class Config
 			ENABLE_COMMUNITY_BOARD = server.getProperty("EnableCommunityBoard", false);
 			BBS_DEFAULT = server.getProperty("BBSDefault", "_bbshome");
 			
-			COORD_SYNCHRONIZE = server.getProperty("CoordSynchronize", -1);
-			GEODATA = server.getProperty("GeoData", 0);
-			FORCE_GEODATA = server.getProperty("ForceGeoData", true);
-			
-			GEODATA_CELLFINDING = server.getProperty("CellPathFinding", false);
-			PATHFIND_BUFFERS = server.getProperty("PathFindBuffers", "100x6;128x6;192x6;256x4;320x4;384x4;500x2");
-			LOW_WEIGHT = server.getProperty("LowWeight", 0.5);
-			MEDIUM_WEIGHT = server.getProperty("MediumWeight", 2);
-			HIGH_WEIGHT = server.getProperty("HighWeight", 3);
-			ADVANCED_DIAGONAL_STRATEGY = server.getProperty("AdvancedDiagonalStrategy", true);
-			DIAGONAL_WEIGHT = server.getProperty("DiagonalWeight", 0.707);
-			MAX_POSTFILTER_PASSES = server.getProperty("MaxPostfilterPasses", 3);
-			DEBUG_PATH = server.getProperty("DebugPath", false);
-			
 			L2WALKER_PROTECTION = server.getProperty("L2WalkerProtection", false);
 			AUTODELETE_INVALID_QUEST_DATA = server.getProperty("AutoDeleteInvalidQuestData", false);
-			GAMEGUARD_ENFORCE = server.getProperty("GameGuardEnforce", false);
 			ZONE_TOWN = server.getProperty("ZoneTown", 0);
 			SERVER_NEWS = server.getProperty("ShowServerNews", false);
 			DISABLE_TUTORIAL = server.getProperty("DisableTutorial", false);
@@ -1292,8 +1274,6 @@ public final class Config
 			DATABASE_MAX_IDLE_TIME = server.getProperty("MaximumDbIdleTime", 0);
 			
 			SHOW_LICENCE = server.getProperty("ShowLicence", true);
-			IP_UPDATE_TIME = server.getProperty("IpUpdateTime", 15);
-			FORCE_GGAUTH = server.getProperty("ForceGGAuth", false);
 			
 			AUTO_CREATE_ACCOUNTS = server.getProperty("AutoCreateAccounts", true);
 			
@@ -1356,15 +1336,15 @@ public final class Config
 	
 	public static class ClassMasterSettings
 	{
-		private final Map<Integer, HashMap<Integer, Integer>> _claimItems;
-		private final Map<Integer, HashMap<Integer, Integer>> _rewardItems;
 		private final Map<Integer, Boolean> _allowedClassChange;
+		private final Map<Integer, List<ItemHolder>> _claimItems;
+		private final Map<Integer, List<ItemHolder>> _rewardItems;
 		
 		public ClassMasterSettings(String configLine)
 		{
+			_allowedClassChange = new HashMap<>(3);
 			_claimItems = new HashMap<>(3);
 			_rewardItems = new HashMap<>(3);
-			_allowedClassChange = new HashMap<>(3);
 			
 			if (configLine != null)
 				parseConfigLine(configLine.trim());
@@ -1373,47 +1353,42 @@ public final class Config
 		private void parseConfigLine(String configLine)
 		{
 			StringTokenizer st = new StringTokenizer(configLine, ";");
-			
 			while (st.hasMoreTokens())
 			{
-				// get allowed class change
+				// Get allowed class change.
 				int job = Integer.parseInt(st.nextToken());
 				
 				_allowedClassChange.put(job, true);
 				
-				HashMap<Integer, Integer> _items = new HashMap<>();
-				// parse items needed for class change
+				List<ItemHolder> items = new ArrayList<>();
+				
+				// Parse items needed for class change.
 				if (st.hasMoreTokens())
 				{
 					StringTokenizer st2 = new StringTokenizer(st.nextToken(), "[],");
-					
 					while (st2.hasMoreTokens())
 					{
 						StringTokenizer st3 = new StringTokenizer(st2.nextToken(), "()");
-						int _itemId = Integer.parseInt(st3.nextToken());
-						int _quantity = Integer.parseInt(st3.nextToken());
-						_items.put(_itemId, _quantity);
+						items.add(new ItemHolder(Integer.parseInt(st3.nextToken()), Integer.parseInt(st3.nextToken())));
 					}
 				}
 				
-				_claimItems.put(job, _items);
+				// Feed the map, and clean the list.
+				_claimItems.put(job, items);
+				items = new ArrayList<>();
 				
-				_items.clear();
-				// parse gifts after class change
+				// Parse gifts after class change.
 				if (st.hasMoreTokens())
 				{
 					StringTokenizer st2 = new StringTokenizer(st.nextToken(), "[],");
-					
 					while (st2.hasMoreTokens())
 					{
 						StringTokenizer st3 = new StringTokenizer(st2.nextToken(), "()");
-						int _itemId = Integer.parseInt(st3.nextToken());
-						int _quantity = Integer.parseInt(st3.nextToken());
-						_items.put(_itemId, _quantity);
+						items.add(new ItemHolder(Integer.parseInt(st3.nextToken()), Integer.parseInt(st3.nextToken())));
 					}
 				}
 				
-				_rewardItems.put(job, _items);
+				_rewardItems.put(job, items);
 			}
 		}
 		
@@ -1428,12 +1403,12 @@ public final class Config
 			return false;
 		}
 		
-		public Map<Integer, Integer> getRewardItems(int job)
+		public List<ItemHolder> getRewardItems(int job)
 		{
 			return _rewardItems.get(job);
 		}
 		
-		public Map<Integer, Integer> getRequiredItems(int job)
+		public List<ItemHolder> getRequiredItems(int job)
 		{
 			return _claimItems.get(job);
 		}

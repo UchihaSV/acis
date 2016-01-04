@@ -74,18 +74,18 @@ public class AdminZone implements IAdminCommandHandler
 	
 	private static void showHtml(L2PcInstance activeChar)
 	{
-		int worldX = activeChar.getX();
-		int worldY = activeChar.getY();
-		int geoX = ((((worldX - (-327680)) >> 4) >> 11) + 10);
-		int geoY = ((((worldY - (-262144)) >> 4) >> 11) + 10);
+		int x = activeChar.getX();
+		int y = activeChar.getY();
+		int rx = (x - L2World.WORLD_X_MIN) / L2World.TILE_SIZE + L2World.TILE_X_MIN;
+		int ry = (y - L2World.WORLD_Y_MIN) / L2World.TILE_SIZE + L2World.TILE_Y_MIN;
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setFile("data/html/admin/zone.htm");
 		
-		adminReply.replace("%MAPREGION%", "[x:" + MapRegionTable.getMapRegionX(activeChar.getX()) + " y:" + MapRegionTable.getMapRegionX(activeChar.getY()) + "]");
-		adminReply.replace("%GEOREGION%", geoX + "_" + geoY);
-		adminReply.replace("%CLOSESTTOWN%", MapRegionTable.getInstance().getClosestTownName(activeChar.getX(), activeChar.getY()));
-		adminReply.replace("%CURRENTLOC%", activeChar.getX() + ", " + activeChar.getY() + ", " + activeChar.getZ());
+		adminReply.replace("%MAPREGION%", "[x:" + MapRegionTable.getMapRegionX(x) + " y:" + MapRegionTable.getMapRegionY(y) + "]");
+		adminReply.replace("%GEOREGION%", rx + "_" + ry);
+		adminReply.replace("%CLOSESTTOWN%", MapRegionTable.getInstance().getClosestTownName(x, y));
+		adminReply.replace("%CURRENTLOC%", x + ", " + y + ", " + activeChar.getZ());
 		
 		adminReply.replace("%PVP%", (activeChar.isInsideZone(ZoneId.PVP) ? "<font color=\"LEVEL\">YES</font>" : "NO"));
 		adminReply.replace("%PEACE%", (activeChar.isInsideZone(ZoneId.PEACE) ? "<font color=\"LEVEL\">YES</font>" : "NO"));
@@ -107,7 +107,7 @@ public class AdminZone implements IAdminCommandHandler
 		adminReply.replace("%NORESTART%", (activeChar.isInsideZone(ZoneId.NO_RESTART) ? "<font color=\"LEVEL\">YES</font>" : "NO"));
 		
 		StringBuilder zones = new StringBuilder(100);
-		L2WorldRegion region = L2World.getInstance().getRegion(activeChar.getX(), activeChar.getY());
+		L2WorldRegion region = L2World.getInstance().getRegion(x, y);
 		for (L2ZoneType zone : region.getZones())
 		{
 			if (zone.isCharacterInZone(activeChar))

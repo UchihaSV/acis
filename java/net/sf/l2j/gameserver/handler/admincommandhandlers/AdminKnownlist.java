@@ -21,6 +21,7 @@ import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.knownlist.ObjectKnownList;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.util.StringUtil;
 
@@ -69,20 +70,21 @@ public class AdminKnownlist implements IAdminCommandHandler
 					target = activeChar;
 			}
 			
-			final Collection<L2Object> knownlist = target.getKnownList().getKnownObjects();
+			final ObjectKnownList knownlist = target.getKnownList();
+			final Collection<L2Object> list = knownlist.getKnownObjects();
+			
+			// Generate data.
+			final StringBuilder replyMSG = new StringBuilder(list.size() * 200);
+			for (L2Object object : list)
+			{
+				StringUtil.append(replyMSG, "<tr><td>" + object.getName() + "</td><td>" + object.getClass().getSimpleName() + "</td></tr>");
+			}
 			
 			NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 			adminReply.setFile("data/html/admin/knownlist.htm");
-			
-			// Generate data.
-			final StringBuilder replyMSG = new StringBuilder(knownlist.size() * 200);
-			
-			for (L2Object object : knownlist)
-			{
-				StringUtil.append(replyMSG, "<tr><td>" + object.getName() + " [" + object.getClass().getSimpleName() + "]</td></tr>");
-			}
 			adminReply.replace("%target%", target.getName());
-			adminReply.replace("%size%", knownlist.size());
+			adminReply.replace("%type%", knownlist.getClass().getSimpleName());
+			adminReply.replace("%size%", list.size());
 			adminReply.replace("%knownlist%", replyMSG.toString());
 			activeChar.sendPacket(adminReply);
 		}

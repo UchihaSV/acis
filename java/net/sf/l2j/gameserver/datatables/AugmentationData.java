@@ -116,9 +116,16 @@ public class AugmentationData
 		load();
 		
 		// Use size*4: since theres 4 blocks of stat-data with equivalent size
-		_log.info("AugmentationData: Loaded: " + (_augStats[0].size() * 4) + " augmentation stats.");
+		_log.info("AugmentationData: Loaded " + _augStats.length + " sets of " + (_augStats[0].size() * 4) + " augmentation stats.");
+		
+		int blue = 0, purple = 0, red = 0;
 		for (int i = 0; i < 10; i++)
-			_log.info("AugmentationData: Loaded " + _blueSkills[i].size() + " blue, " + _purpleSkills[i].size() + " purple and " + _redSkills[i].size() + " red skills for LS lvl " + i + ".");
+		{
+			blue += _blueSkills[i].size();
+			purple += _purpleSkills[i].size();
+			red += _redSkills[i].size();
+		}
+		_log.info("AugmentationData: Loaded " + blue + " blue, " + purple + " purple and " + red + " red Life-Stone skills.");
 	}
 	
 	public static class AugmentationSkill

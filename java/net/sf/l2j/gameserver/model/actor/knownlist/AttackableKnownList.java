@@ -35,27 +35,18 @@ public class AttackableKnownList extends NpcKnownList
 		if (!super.removeKnownObject(object))
 			return false;
 		
-		// Remove the L2Object from the _aggrolist of the L2Attackable
-		if (object instanceof L2Character)
-			getActiveChar().getAggroList().remove(object);
+		// get attackable
+		final L2Attackable attackable = (L2Attackable) _activeObject;
 		
-		// Set the L2Attackable Intention to IDLE
-		if (getActiveChar().hasAI() && getKnownType(L2PcInstance.class).isEmpty())
-			getActiveChar().getAI().setIntention(CtrlIntention.IDLE, null);
+		// remove object from agro list
+		if (object instanceof L2Character)
+			attackable.getAggroList().remove(object);
+		
+		// check AI for players and set AI to idle
+		if (attackable.hasAI() && getKnownType(L2PcInstance.class).isEmpty())
+			attackable.getAI().setIntention(CtrlIntention.IDLE, null);
 		
 		return true;
-	}
-	
-	@Override
-	public L2Attackable getActiveChar()
-	{
-		return (L2Attackable) super.getActiveChar();
-	}
-	
-	@Override
-	public int getDistanceToForgetObject(L2Object object)
-	{
-		return (int) Math.round(1.5 * getDistanceToWatchObject(object));
 	}
 	
 	@Override
@@ -67,6 +58,9 @@ public class AttackableKnownList extends NpcKnownList
 		if (object instanceof L2Playable)
 			return object.getKnownList().getDistanceToWatchObject(_activeObject);
 		
-		return Math.max(300, Math.max(getActiveChar().getAggroRange(), getActiveChar().getClanRange()));
+		// get attackable
+		final L2Attackable attackable = (L2Attackable) _activeObject;
+		
+		return Math.max(300, Math.max(attackable.getAggroRange(), attackable.getClanRange()));
 	}
 }

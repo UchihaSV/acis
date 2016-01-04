@@ -40,9 +40,6 @@ public class ClanPenalty implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (id != COMMAND_IDS[0])
-			return false;
-		
 		final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 		StringBuilder content = new StringBuilder();
 		

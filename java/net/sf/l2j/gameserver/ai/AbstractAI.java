@@ -17,7 +17,6 @@ package net.sf.l2j.gameserver.ai;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -48,14 +47,6 @@ abstract class AbstractAI implements Ctrl
 	private NextAction _nextAction;
 	
 	/**
-	 * @return the _nextAction
-	 */
-	public NextAction getNextAction()
-	{
-		return _nextAction;
-	}
-	
-	/**
 	 * @param nextAction the _nextAction to set
 	 */
 	public void setNextAction(NextAction nextAction)
@@ -79,31 +70,20 @@ abstract class AbstractAI implements Ctrl
 		@Override
 		public void run()
 		{
-			if (_followTask == null)
-				return;
+			// get target
+			L2Character followTarget = _followTarget;
 			
-			L2Character followTarget = _followTarget; // copy to prevent NPE
-			if (followTarget == null)
+			// target does not exist or is out of max follow/attack/cast range
+			if (followTarget == null || !_actor.isInsideRadius(followTarget, 3000, true, false))
 			{
-				if (_actor instanceof L2Summon)
-					((L2Summon) _actor).setFollowStatus(false);
-				
 				setIntention(CtrlIntention.IDLE);
+				clientActionFailed();
 				return;
 			}
 			
+			// target is not in range, trigger proper AI
 			if (!_actor.isInsideRadius(followTarget, _range, true, false))
 			{
-				if (!_actor.isInsideRadius(followTarget, 3000, true, false))
-				{
-					// if the target is too far (maybe also teleported)
-					if (_actor instanceof L2Summon)
-						((L2Summon) _actor).setFollowStatus(false);
-					
-					setIntention(CtrlIntention.IDLE);
-					return;
-				}
-				
 				if (getIntention() == CtrlIntention.ATTACK || getIntention() == CtrlIntention.CAST)
 					onEvtThink();
 				else
@@ -135,7 +115,7 @@ abstract class AbstractAI implements Ctrl
 	protected L2Skill _skill;
 	
 	/** Different internal state flags */
-	private int _moveToPawnTimeout;
+	private long _moveToPawnTimeout;
 	
 	protected Future<?> _followTask = null;
 	private static final int FOLLOW_INTERVAL = 1000;
@@ -278,9 +258,8 @@ abstract class AbstractAI implements Ctrl
 		}
 		
 		// If do move or follow intention drop next action.
-		if (_nextAction != null)
-			if (_nextAction.getIntentions().contains(intention))
-				_nextAction = null;
+		if (_nextAction != null && _nextAction.getIntention() == intention)
+			_nextAction = null;
 	}
 	
 	/**
@@ -393,9 +372,8 @@ abstract class AbstractAI implements Ctrl
 		}
 		
 		// Do next action.
-		if (_nextAction != null)
-			if (_nextAction.getEvents().contains(evt))
-				_nextAction.doAction();
+		if (_nextAction != null && _nextAction.getEvent() == evt)
+			_nextAction.run();
 	}
 	
 	protected abstract void onIntentionIdle();
@@ -476,17 +454,16 @@ abstract class AbstractAI implements Ctrl
 	 */
 	protected void moveToPawn(L2Object pawn, int offset)
 	{
-		if (_clientMoving && _target == pawn && _actor.isOnGeodataPath() && GameTimeController.getGameTicks() < _moveToPawnTimeout)
+		if (_clientMoving && _target == pawn && _actor.isOnGeodataPath() && System.currentTimeMillis() < _moveToPawnTimeout)
 			return;
 		
 		_target = pawn;
 		if (_target == null)
 			return;
 		
-		_moveToPawnTimeout = GameTimeController.getGameTicks() + 20;
+		_moveToPawnTimeout = System.currentTimeMillis() + 2000;
 		
-		moveTo(_target.getX(), _target.getY(), _target.getZ(), offset = offset < 10 ? 10 : offset);
-		
+		moveTo(_target.getX(), _target.getY(), _target.getZ(), (offset < 10) ? 10 : offset);
 	}
 	
 	/**
@@ -631,7 +608,7 @@ abstract class AbstractAI implements Ctrl
 		
 		if (_actor instanceof L2PcInstance)
 		{
-			if (!AttackStanceTaskManager.getInstance().get(_actor) && isAutoAttacking())
+			if (!AttackStanceTaskManager.getInstance().isInAttackStance(_actor) && isAutoAttacking())
 				AttackStanceTaskManager.getInstance().add(_actor);
 		}
 		else if (isAutoAttacking())

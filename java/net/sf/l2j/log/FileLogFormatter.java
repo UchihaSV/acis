@@ -24,12 +24,12 @@ import net.sf.l2j.util.StringUtil;
 public class FileLogFormatter extends Formatter
 {
 	private static final String CRLF = "\r\n";
-	private static final String _ = "\t";
+	private static final String SPACE = "\t";
 	private final SimpleDateFormat dateFmt = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss,SSS");
 	
 	@Override
 	public String format(LogRecord record)
 	{
-		return StringUtil.concat(dateFmt.format(new Date(record.getMillis())), _, record.getLevel().getName(), _, String.valueOf(record.getThreadID()), _, record.getLoggerName(), _, record.getMessage(), CRLF);
+		return StringUtil.concat(dateFmt.format(new Date(record.getMillis())), SPACE, record.getLevel().getName(), SPACE, String.valueOf(record.getThreadID()), SPACE, record.getLoggerName(), SPACE, record.getMessage(), CRLF);
 	}
 }

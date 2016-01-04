@@ -38,6 +38,7 @@ import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2Party;
+import net.sf.l2j.gameserver.model.L2Party.MessageType;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.SpawnListener;
@@ -3815,7 +3816,7 @@ public class SevenSignsFestival implements SpawnListener
 			if (festivalParty != null && festivalParty.getMemberCount() < Config.ALT_FESTIVAL_MIN_PLAYER)
 			{
 				updateParticipants(player, null); // under minimum count
-				festivalParty.removePartyMember(player, true);
+				festivalParty.removePartyMember(player, MessageType.Expelled);
 			}
 		}
 	}

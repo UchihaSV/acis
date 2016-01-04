@@ -16,7 +16,6 @@ package net.sf.l2j.gameserver.model.quest;
 
 /**
  * @author Hasha
- *
  */
 public enum QuestEventType
 {

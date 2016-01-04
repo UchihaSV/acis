@@ -22,7 +22,7 @@ import net.sf.l2j.gameserver.instancemanager.SevenSigns;
  */
 public class SignsSky extends L2GameServerPacket
 {
-	private static int _state = 0;
+	private int _state = 0;
 	
 	public SignsSky()
 	{

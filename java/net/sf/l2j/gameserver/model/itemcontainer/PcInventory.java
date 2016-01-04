@@ -34,10 +34,10 @@ import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.model.itemcontainer.listeners.ArmorSetListener;
 import net.sf.l2j.gameserver.model.itemcontainer.listeners.BowRodListener;
 import net.sf.l2j.gameserver.model.itemcontainer.listeners.ItemPassiveSkillsListener;
-import net.sf.l2j.gameserver.model.itemcontainer.listeners.ShadowWeaponListener;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
+import net.sf.l2j.gameserver.taskmanager.ShadowItemTaskManager;
 import net.sf.l2j.gameserver.util.Util;
 
 public class PcInventory extends Inventory
@@ -70,7 +70,7 @@ public class PcInventory extends Inventory
 		addPaperdollListener(ArmorSetListener.getInstance());
 		addPaperdollListener(BowRodListener.getInstance());
 		addPaperdollListener(ItemPassiveSkillsListener.getInstance());
-		addPaperdollListener(ShadowWeaponListener.getInstance());
+		addPaperdollListener(ShadowItemTaskManager.getInstance());
 	}
 	
 	@Override
@@ -655,19 +655,6 @@ public class PcInventory extends Inventory
 		super.restore();
 		_adena = getItemByItemId(ADENA_ID);
 		_ancientAdena = getItemByItemId(ANCIENT_ADENA_ID);
-	}
-	
-	/**
-	 * Method used only while logout.<br>
-	 * For every equipped shadow item, stop associated timer.
-	 */
-	public void stopShadowTimers()
-	{
-		for (ItemInstance item : getPaperdollItems())
-		{
-			if (item.isShadowItem())
-				item.stopTimer();
-		}
 	}
 	
 	public static int[][] restoreVisibleInventory(int objectId)

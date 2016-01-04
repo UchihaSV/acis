@@ -30,8 +30,7 @@ public class L2Request
 	
 	protected L2PcInstance _player;
 	protected L2PcInstance _partner;
-	protected boolean _isRequestor;
-	protected boolean _isAnswerer;
+	
 	protected L2GameClientPacket _requestPacket;
 	
 	public L2Request(L2PcInstance player)
@@ -43,8 +42,6 @@ public class L2Request
 	{
 		_partner = null;
 		_requestPacket = null;
-		_isRequestor = false;
-		_isAnswerer = false;
 	}
 	
 	/**
@@ -118,8 +115,6 @@ public class L2Request
 	
 	private void setOnRequestTimer(boolean isRequestor)
 	{
-		_isRequestor = isRequestor ? true : false;
-		_isAnswerer = isRequestor ? false : true;
 		ThreadPoolManager.getInstance().scheduleGeneral(new Runnable()
 		{
 			@Override

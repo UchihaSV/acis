@@ -29,11 +29,8 @@ public class DisMount implements IUserCommandHandler
 	};
 	
 	@Override
-	public synchronized boolean useUserCommand(int id, L2PcInstance activeChar)
+	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (id != COMMAND_IDS[0])
-			return false;
-		
 		if (activeChar.isMounted())
 			activeChar.dismount();
 		

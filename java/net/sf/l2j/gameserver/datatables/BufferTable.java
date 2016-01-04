@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,8 +159,8 @@ public class BufferTable
 	 */
 	public List<Integer> getScheme(int playerId, String schemeName)
 	{
-		if (_schemesTable.get(playerId) == null)
-			return null;
+		if (_schemesTable.get(playerId) == null || _schemesTable.get(playerId).get(schemeName) == null)
+			return Collections.emptyList();
 		
 		return _schemesTable.get(playerId).get(schemeName);
 	}
@@ -173,7 +174,7 @@ public class BufferTable
 	public boolean getSchemeContainsSkill(int playerId, String schemeName, int skillId)
 	{
 		final List<Integer> skills = getScheme(playerId, schemeName);
-		if (skills == null)
+		if (skills.isEmpty())
 			return false;
 		
 		for (int id : skills)

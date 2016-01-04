@@ -15,16 +15,16 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.instancemanager.BoatManager;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2BoatInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.GetOnVehicle;
-import net.sf.l2j.util.Point3D;
 
 public final class RequestGetOnVehicle extends L2GameClientPacket
 {
 	private int _boatId;
-	private Point3D _pos;
+	private Location _pos;
 	
 	@Override
 	protected void readImpl()
@@ -34,7 +34,7 @@ public final class RequestGetOnVehicle extends L2GameClientPacket
 		x = readD();
 		y = readD();
 		z = readD();
-		_pos = new Point3D(x, y, z);
+		_pos = new Location(x, y, z);
 	}
 	
 	@Override

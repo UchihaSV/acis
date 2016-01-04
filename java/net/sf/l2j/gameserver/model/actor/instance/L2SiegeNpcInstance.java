@@ -28,7 +28,7 @@ public class L2SiegeNpcInstance extends L2NpcInstance
 	@Override
 	public void showChatWindow(L2PcInstance player)
 	{
-		if (validateCondition(player))
+		if (validateCondition())
 			getCastle().getSiege().listRegisterClan(player);
 		else
 		{
@@ -41,7 +41,7 @@ public class L2SiegeNpcInstance extends L2NpcInstance
 		}
 	}
 	
-	private boolean validateCondition(L2PcInstance player)
+	private boolean validateCondition()
 	{
 		if (getCastle().getSiege().isInProgress())
 			return false; // Busy because of siege

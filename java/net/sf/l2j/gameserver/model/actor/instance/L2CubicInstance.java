@@ -383,7 +383,7 @@ public class L2CubicInstance
 					return;
 				}
 				
-				if (!AttackStanceTaskManager.getInstance().get(_owner))
+				if (!AttackStanceTaskManager.getInstance().isInAttackStance(_owner))
 				{
 					stopAction();
 					return;

@@ -90,7 +90,7 @@ public final class RequestSetPledgeCrest extends L2GameClientPacket
 				}
 				
 				crestId = IdFactory.getInstance().getNextId();
-				if (!CrestCache.saveCrest(CrestType.PLEDGE, crestId, _data))
+				if (!CrestCache.getInstance().saveCrest(CrestType.PLEDGE, crestId, _data))
 				{
 					_log.log(Level.INFO, "Error saving crest for clan " + clan.getName() + " [" + clan.getClanId() + "]");
 					return;

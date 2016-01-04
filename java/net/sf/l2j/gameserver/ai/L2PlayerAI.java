@@ -34,7 +34,7 @@ public class L2PlayerAI extends L2PlayableAI
 		super(accessor);
 	}
 	
-	void saveNextIntention(CtrlIntention intention, Object arg0, Object arg1)
+	void setNextIntention(CtrlIntention intention, Object arg0, Object arg1)
 	{
 		_nextIntention = new IntentionCommand(intention, arg0, arg1);
 	}
@@ -76,7 +76,7 @@ public class L2PlayerAI extends L2PlayableAI
 		}
 		
 		// save current intention so it can be used after cast
-		saveNextIntention(_intention, _intentionArg0, _intentionArg1);
+		setNextIntention(_intention, _intentionArg0, _intentionArg1);
 		super.changeIntention(intention, arg0, arg1);
 	}
 	
@@ -161,7 +161,7 @@ public class L2PlayerAI extends L2PlayableAI
 		if (_actor.isAllSkillsDisabled() || _actor.isCastingNow() || _actor.isAttackingNow())
 		{
 			clientActionFailed();
-			saveNextIntention(CtrlIntention.MOVE_TO, pos, null);
+			setNextIntention(CtrlIntention.MOVE_TO, pos, null);
 			return;
 		}
 		

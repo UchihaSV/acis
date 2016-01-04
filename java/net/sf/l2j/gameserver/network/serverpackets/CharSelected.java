@@ -14,8 +14,8 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.taskmanager.GameTimeTaskManager;
 
 public class CharSelected extends L2GameServerPacket
 {
@@ -72,7 +72,7 @@ public class CharSelected extends L2GameServerPacket
 		writeD(0x00); // c3 work
 		writeD(0x00); // c3 work
 		
-		writeD(GameTimeController.getInstance().getGameTime());
+		writeD(GameTimeTaskManager.getInstance().getGameTime());
 		
 		writeD(0x00); // c3
 		

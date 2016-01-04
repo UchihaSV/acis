@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -42,7 +41,6 @@ import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 public class CharEffectList
 {
-	protected static final Logger _log = Logger.getLogger(CharEffectList.class.getName());
 	private static final L2Effect[] EMPTY_EFFECTS = new L2Effect[0];
 	
 	private List<L2Effect> _buffs;

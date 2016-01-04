@@ -27,11 +27,10 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.ItemTable;
-import net.sf.l2j.gameserver.instancemanager.ItemsOnGroundManager;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.instancemanager.MercTicketManager;
 import net.sf.l2j.gameserver.model.DropProtection;
 import net.sf.l2j.gameserver.model.L2Augmentation;
@@ -57,6 +56,7 @@ import net.sf.l2j.gameserver.network.serverpackets.GetItem;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SpawnItem;
 import net.sf.l2j.gameserver.skills.basefuncs.Func;
+import net.sf.l2j.gameserver.taskmanager.ItemsOnGroundTaskManager;
 
 /**
  * This class manages items.
@@ -109,9 +109,7 @@ public final class ItemInstance extends L2Object
 	private int _type1;
 	private int _type2;
 	
-	private long _dropTime;
-	
-	private boolean _protected;
+	private boolean _destroyProtected;
 	
 	public static final int UNCHANGED = 0;
 	public static final int ADDED = 1;
@@ -128,8 +126,6 @@ public final class ItemInstance extends L2Object
 	private final DropProtection _dropProtection = new DropProtection();
 	
 	private int _shotsMask = 0;
-	
-	private ScheduledFuture<?> _timerTask; // Used for shadow weapons.
 	
 	/**
 	 * Constructor of the ItemInstance from the objectId and the itemId.
@@ -150,8 +146,7 @@ public final class ItemInstance extends L2Object
 		_loc = ItemLocation.VOID;
 		_type1 = 0;
 		_type2 = 0;
-		_dropTime = 0;
-		_mana = _item.getDuration();
+		_mana = _item.getDuration() * 60;
 	}
 	
 	/**
@@ -165,13 +160,11 @@ public final class ItemInstance extends L2Object
 		_itemId = item.getItemId();
 		_item = item;
 		
-		if (_itemId == 0 || _item == null)
-			throw new IllegalArgumentException();
-		
-		super.setName(_item.getName());
+		setName(_item.getName());
 		setCount(1);
+		
 		_loc = ItemLocation.VOID;
-		_mana = _item.getDuration();
+		_mana = _item.getDuration() * 60;
 	}
 	
 	/**
@@ -374,16 +367,6 @@ public final class ItemInstance extends L2Object
 	public void setCustomType2(int newtype)
 	{
 		_type2 = newtype;
-	}
-	
-	public void setDropTime(long time)
-	{
-		_dropTime = time;
-	}
-	
-	public long getDropTime()
-	{
-		return _dropTime;
 	}
 	
 	public boolean isOlyRestrictedItem()
@@ -789,14 +772,15 @@ public final class ItemInstance extends L2Object
 	}
 	
 	/**
-	 * Sets the mana for this shadow item.<BR>
-	 * <b>NOTE</b>: does not send an inventory update packet
-	 * @param mana
+	 * Sets the mana for this shadow item.
+	 * @param period
+	 * @return return remaining mana of this shadow item
 	 */
-	public void setMana(int mana)
+	public int decreaseMana(int period)
 	{
-		_mana = mana;
 		_storedInDb = false;
+		
+		return _mana -= period;
 	}
 	
 	/**
@@ -804,7 +788,7 @@ public final class ItemInstance extends L2Object
 	 */
 	public int getMana()
 	{
-		return _mana;
+		return _mana / 60;
 	}
 	
 	/**
@@ -964,7 +948,7 @@ public final class ItemInstance extends L2Object
 			
 			if (Config.GEODATA > 0 && _dropper != null)
 			{
-				Location dropDest = GeoData.getInstance().moveCheck(_dropper.getX(), _dropper.getY(), _dropper.getZ(), _x, _y, _z);
+				Location dropDest = PathFinding.getInstance().canMoveToTargetLoc(_dropper.getX(), _dropper.getY(), _dropper.getZ(), _x, _y, _z);
 				_x = dropDest.getX();
 				_y = dropDest.getY();
 				_z = dropDest.getZ();
@@ -979,14 +963,12 @@ public final class ItemInstance extends L2Object
 			}
 			
 			_itm.getPosition().getWorldRegion().addVisibleObject(_itm);
-			_itm.setDropTime(System.currentTimeMillis());
 			_itm.setDropperObjectId(_dropper != null ? _dropper.getObjectId() : 0); // Set the dropper Id for the knownlist packets in sendInfo
 			
 			// Add the ItemInstance dropped in the world as a visible object
 			L2World.getInstance().addVisibleObject(_itm, _itm.getPosition().getWorldRegion());
 			
-			if (Config.SAVE_DROPPED_ITEM)
-				ItemsOnGroundManager.getInstance().save(_itm);
+			ItemsOnGroundTaskManager.getInstance().add(_itm, _dropper);
 			
 			_itm.setDropperObjectId(0); // Set the dropper Id back to 0 so it no longer shows the drop packet
 		}
@@ -1019,10 +1001,7 @@ public final class ItemInstance extends L2Object
 		int itemId = getItemId();
 		
 		if (MercTicketManager.getTicketCastleId(itemId) > 0)
-		{
 			MercTicketManager.getInstance().removeTicket(this);
-			ItemsOnGroundManager.getInstance().removeObject(this);
-		}
 		
 		if (!Config.DISABLE_TUTORIAL && (itemId == 57 || itemId == 6353))
 		{
@@ -1059,7 +1038,7 @@ public final class ItemInstance extends L2Object
 			statement.setInt(5, getEnchantLevel());
 			statement.setInt(6, getCustomType1());
 			statement.setInt(7, getCustomType2());
-			statement.setInt(8, getMana());
+			statement.setInt(8, _mana);
 			statement.setLong(9, getTime());
 			statement.setInt(10, getObjectId());
 			statement.executeUpdate();
@@ -1092,7 +1071,7 @@ public final class ItemInstance extends L2Object
 			statement.setInt(7, getObjectId());
 			statement.setInt(8, _type1);
 			statement.setInt(9, _type2);
-			statement.setInt(10, getMana());
+			statement.setInt(10, _mana);
 			statement.setLong(11, getTime());
 			
 			statement.executeUpdate();
@@ -1163,14 +1142,14 @@ public final class ItemInstance extends L2Object
 		return _itemLootShedule;
 	}
 	
-	public void setProtected(boolean is_protected)
+	public void setDestroyProtected(boolean destroyProtected)
 	{
-		_protected = is_protected;
+		_destroyProtected = destroyProtected;
 	}
 	
-	public boolean isProtected()
+	public boolean isDestroyProtected()
 	{
-		return _protected;
+		return _destroyProtected;
 	}
 	
 	public boolean isNightLure()
@@ -1255,8 +1234,7 @@ public final class ItemInstance extends L2Object
 	@Override
 	public void decayMe()
 	{
-		if (Config.SAVE_DROPPED_ITEM)
-			ItemsOnGroundManager.getInstance().removeObject(this);
+		ItemsOnGroundTaskManager.getInstance().remove(this);
 		
 		super.decayMe();
 	}
@@ -1303,19 +1281,5 @@ public final class ItemInstance extends L2Object
 	public void unChargeAllShots()
 	{
 		_shotsMask = 0;
-	}
-	
-	public void startTimer(Runnable r)
-	{
-		_timerTask = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(r, 0, 60000L);
-	}
-	
-	public void stopTimer()
-	{
-		if (_timerTask != null)
-		{
-			_timerTask.cancel(false);
-			_timerTask = null;
-		}
 	}
 }

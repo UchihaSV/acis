@@ -637,7 +637,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		activeChar.sendPacket(adminReply);
 	}
 	
-	private static void showCharacterInfo(L2PcInstance activeChar, L2PcInstance player)
+	public static void showCharacterInfo(L2PcInstance activeChar, L2PcInstance player)
 	{
 		if (player == null)
 		{

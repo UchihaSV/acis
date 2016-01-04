@@ -54,6 +54,7 @@ public class Couple
 				_player2Id = rs.getInt("player2Id");
 				_maried = rs.getBoolean("married");
 			}
+			rs.close();
 			statement.close();
 		}
 		catch (Exception e)
@@ -111,6 +112,7 @@ public class Couple
 			PreparedStatement statement = con.prepareStatement("DELETE FROM mods_wedding WHERE id = ?");
 			statement.setInt(1, _Id);
 			statement.execute();
+			statement.close();
 		}
 		catch (Exception e)
 		{

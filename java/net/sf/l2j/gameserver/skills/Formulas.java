@@ -17,7 +17,6 @@ package net.sf.l2j.gameserver.skills;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
@@ -42,6 +41,7 @@ import net.sf.l2j.gameserver.model.zone.type.L2MotherTreeZone;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.skills.effects.EffectTemplate;
+import net.sf.l2j.gameserver.taskmanager.GameTimeTaskManager;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.util.Rnd;
@@ -67,13 +67,6 @@ public final class Formulas
 	private static final byte MELEE_ATTACK_RANGE = 40;
 	
 	public static final int MAX_STAT_VALUE = 100;
-	
-	public static final int BASENPCSTR = 40;
-	public static final int BASENPCCON = 43;
-	public static final int BASENPCDEX = 30;
-	public static final int BASENPCINT = 21;
-	public static final int BASENPCWIT = 20;
-	public static final int BASENPCMEN = 20;
 	
 	private static final double[] STRCompute = new double[]
 	{
@@ -1001,7 +994,7 @@ public final class Formulas
 			modifier -= 3;
 		
 		// Get weather bonus. TODO: rain support (-3%).
-		if (GameTimeController.getInstance().isNowNight())
+		if (GameTimeTaskManager.getInstance().isNight())
 			modifier -= 10;
 		
 		// Get position bonus.

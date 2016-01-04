@@ -571,5 +571,5 @@ public class Auction
 	public final Map<Integer, Bidder> getBidders()
 	{
 		return _bidders;
-	};
+	}
 }

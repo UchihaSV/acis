@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.mmocore.network.IAcceptFilter;
+import net.sf.l2j.commons.mmocore.IAcceptFilter;
 
 /**
  * Formatted Forsaiken's IPv4 filter [DrHouse]

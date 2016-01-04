@@ -23,18 +23,23 @@ import net.sf.l2j.gameserver.instancemanager.RaidBossPointsManager;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.taskmanager.TaskManager;
 import net.sf.l2j.gameserver.taskmanager.TaskManager.ExecutedTask;
-import net.sf.l2j.gameserver.taskmanager.models.Task;
-import net.sf.l2j.gameserver.taskmanager.models.TaskTypes;
 
-public class TaskRaidPointsReset extends Task
+public final class TaskRaidPointsReset extends ATask
 {
 	private static final Logger _log = Logger.getLogger(TaskRaidPointsReset.class.getName());
-	public static final String NAME = "raid_points_reset";
+	
+	private static final String NAME = "raid_points_reset";
 	
 	@Override
 	public String getName()
 	{
 		return NAME;
+	}
+	
+	@Override
+	public void initializate()
+	{
+		TaskManager.addUniqueTask(NAME, TaskType.TYPE_GLOBAL_TASK, "1", "00:10:00", "", 0);
 	}
 	
 	@Override
@@ -100,12 +105,5 @@ public class TaskRaidPointsReset extends Task
 			RaidBossPointsManager.getInstance().cleanUp();
 			_log.info("Raid Points Reset Global Task: launched.");
 		}
-	}
-	
-	@Override
-	public void initializate()
-	{
-		super.initializate();
-		TaskManager.addUniqueTask(NAME, TaskTypes.TYPE_GLOBAL_TASK, "1", "00:10:00", "");
 	}
 }

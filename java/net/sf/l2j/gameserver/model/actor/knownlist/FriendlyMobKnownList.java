@@ -34,8 +34,16 @@ public class FriendlyMobKnownList extends AttackableKnownList
 		if (!super.addKnownObject(object))
 			return false;
 		
-		if (object instanceof L2PcInstance && getActiveChar().getAI().getIntention() == CtrlIntention.IDLE)
-			getActiveChar().getAI().setIntention(CtrlIntention.ACTIVE, null);
+		// object is player
+		if (object instanceof L2PcInstance)
+		{
+			// get friendly monster
+			final L2FriendlyMobInstance monster = (L2FriendlyMobInstance) _activeObject;
+			
+			// AI is idle, set AI
+			if (monster.getAI().getIntention() == CtrlIntention.IDLE)
+				monster.getAI().setIntention(CtrlIntention.ACTIVE, null);
+		}
 		
 		return true;
 	}
@@ -49,25 +57,23 @@ public class FriendlyMobKnownList extends AttackableKnownList
 		if (!(object instanceof L2Character))
 			return true;
 		
-		if (getActiveChar().hasAI())
+		// get friendly monster
+		final L2FriendlyMobInstance monster = (L2FriendlyMobInstance) _activeObject;
+		
+		if (monster.hasAI())
 		{
-			getActiveChar().getAI().notifyEvent(CtrlEvent.EVT_FORGET_OBJECT, object);
-			if (getActiveChar().getTarget() == (L2Character) object)
-				getActiveChar().setTarget(null);
+			monster.getAI().notifyEvent(CtrlEvent.EVT_FORGET_OBJECT, object);
+			if (monster.getTarget() == (L2Character) object)
+				monster.setTarget(null);
 		}
 		
-		if (getActiveChar().isVisible() && getKnownType(L2PcInstance.class).isEmpty())
+		if (monster.isVisible() && getKnownType(L2PcInstance.class).isEmpty())
 		{
-			getActiveChar().clearAggroList();
-			if (getActiveChar().hasAI())
-				getActiveChar().getAI().setIntention(CtrlIntention.IDLE, null);
+			monster.clearAggroList();
+			if (monster.hasAI())
+				monster.getAI().setIntention(CtrlIntention.IDLE, null);
 		}
+		
 		return true;
-	}
-	
-	@Override
-	public final L2FriendlyMobInstance getActiveChar()
-	{
-		return (L2FriendlyMobInstance) super.getActiveChar();
 	}
 }

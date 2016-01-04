@@ -15,8 +15,8 @@
 package net.sf.l2j.gameserver.skills.effects;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -75,7 +75,7 @@ public class EffectWarp extends L2Effect
 		
 		if (Config.GEODATA > 0)
 		{
-			Location destiny = GeoData.getInstance().moveCheck(_actor.getX(), _actor.getY(), _actor.getZ(), x, y, z);
+			Location destiny = PathFinding.getInstance().canMoveToTargetLoc(_actor.getX(), _actor.getY(), _actor.getZ(), x, y, z);
 			x = destiny.getX();
 			y = destiny.getY();
 			z = destiny.getZ();

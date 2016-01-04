@@ -63,15 +63,12 @@ public class FourSepulchersManager
 	
 	protected boolean _firstTimeRun;
 	protected boolean _inEntryTime = false;
-	protected boolean _inWarmUpTime = false;
 	protected boolean _inAttackTime = false;
-	protected boolean _inCoolDownTime = false;
 	
 	protected ScheduledFuture<?> _changeCoolDownTimeTask = null;
 	protected ScheduledFuture<?> _changeEntryTimeTask = null;
 	protected ScheduledFuture<?> _changeWarmUpTimeTask = null;
 	protected ScheduledFuture<?> _changeAttackTimeTask = null;
-	protected ScheduledFuture<?> _onPartyAnnihilatedTask = null;
 	
 	private final int[][] _startHallSpawn =
 	{
@@ -289,9 +286,7 @@ public class FourSepulchersManager
 		}
 		
 		_inEntryTime = false;
-		_inWarmUpTime = false;
 		_inAttackTime = false;
-		_inCoolDownTime = false;
 		_firstTimeRun = true;
 		
 		initFixedInfo();
@@ -1652,9 +1647,7 @@ public class FourSepulchersManager
 		{
 			// _log.info("FourSepulchersManager:In Entry Time");
 			_inEntryTime = true;
-			_inWarmUpTime = false;
 			_inAttackTime = false;
-			_inCoolDownTime = false;
 			
 			long interval = 0;
 			// if this is first launch - search time when entry time will be ended:
@@ -1684,9 +1677,7 @@ public class FourSepulchersManager
 		{
 			// _log.info("FourSepulchersManager:In Warm-Up Time");
 			_inEntryTime = true;
-			_inWarmUpTime = false;
 			_inAttackTime = false;
-			_inCoolDownTime = false;
 			
 			long interval = 0;
 			// searching time when warmup time will be ended:
@@ -1714,9 +1705,7 @@ public class FourSepulchersManager
 		{
 			// _log.info("FourSepulchersManager:In Attack Time");
 			_inEntryTime = false;
-			_inWarmUpTime = false;
 			_inAttackTime = true;
-			_inCoolDownTime = false;
 			
 			locationShadowSpawns();
 			
@@ -1773,9 +1762,7 @@ public class FourSepulchersManager
 		{
 			// _log.info("FourSepulchersManager:In Cool-Down Time");
 			_inEntryTime = false;
-			_inWarmUpTime = false;
 			_inAttackTime = false;
-			_inCoolDownTime = true;
 			
 			clean();
 			

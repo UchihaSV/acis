@@ -177,7 +177,7 @@ public class L2SummonInstance extends L2Summon
 		if (isPhoenixBlessed())
 			getOwner().reviveRequest(getOwner(), null, true);
 		
-		DecayTaskManager.getInstance().add(this);
+		DecayTaskManager.getInstance().add(this, getTemplate().getCorpseTime());
 		
 		if (_summonLifeTask != null)
 		{

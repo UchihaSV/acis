@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Party;
+import net.sf.l2j.gameserver.model.L2Party.MessageType;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -143,7 +144,7 @@ public abstract class AbstractOlympiadGame
 		
 		try
 		{
-			player.setLastCords(player.getX(), player.getY(), player.getZ());
+			player.getSavedLocation().setXYZ(player.getX(), player.getY(), player.getZ());
 			
 			player.forceStandUp();
 			player.setTarget(null);
@@ -219,7 +220,7 @@ public abstract class AbstractOlympiadGame
 			{
 				final L2Party party = player.getParty();
 				if (party != null)
-					party.removePartyMember(player, true);
+					party.removePartyMember(player, MessageType.Expelled);
 			}
 			
 			player.checkItemRestriction();
@@ -352,11 +353,12 @@ public abstract class AbstractOlympiadGame
 		if (player == null)
 			return;
 		
-		if (player.getLastX() == 0 && player.getLastY() == 0)
+		final Location loc = player.getSavedLocation();
+		if (loc.equals(0, 0, 0))
 			return;
 		
-		player.teleToLocation(player.getLastX(), player.getLastY(), player.getLastZ(), 0);
-		player.setLastCords(0, 0, 0);
+		player.teleToLocation(loc, 0);
+		player.getSavedLocation().setXYZ(player.getX(), player.getY(), player.getZ());
 	}
 	
 	public static final void rewardParticipant(L2PcInstance player, int[][] reward)

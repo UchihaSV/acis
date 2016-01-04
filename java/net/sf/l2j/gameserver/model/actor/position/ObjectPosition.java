@@ -19,16 +19,15 @@ import java.util.logging.Logger;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.L2WorldRegion;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
-import net.sf.l2j.util.Point3D;
 
 public class ObjectPosition
 {
 	private static final Logger _log = Logger.getLogger(ObjectPosition.class.getName());
 	
 	private final L2Object _activeObject;
-	private int _heading = 0;
-	private Point3D _worldPosition;
+	private Location _worldPosition;
 	private L2WorldRegion _worldRegion; // Object localization : Used for items/chars that are seen in the world
 	
 	public ObjectPosition(L2Object activeObject)
@@ -81,14 +80,14 @@ public class ObjectPosition
 	{
 		assert getWorldRegion() == null;
 		
-		if (x > L2World.MAP_MAX_X)
-			x = L2World.MAP_MAX_X - 5000;
-		if (x < L2World.MAP_MIN_X)
-			x = L2World.MAP_MIN_X + 5000;
-		if (y > L2World.MAP_MAX_Y)
-			y = L2World.MAP_MAX_Y - 5000;
-		if (y < L2World.MAP_MIN_Y)
-			y = L2World.MAP_MIN_Y + 5000;
+		if (x > L2World.WORLD_X_MAX)
+			x = L2World.WORLD_X_MAX - 5000;
+		if (x < L2World.WORLD_X_MIN)
+			x = L2World.WORLD_X_MIN + 5000;
+		if (y > L2World.WORLD_Y_MAX)
+			y = L2World.WORLD_Y_MAX - 5000;
+		if (y < L2World.WORLD_Y_MIN)
+			y = L2World.WORLD_Y_MIN + 5000;
 		
 		setWorldPosition(x, y, z);
 		getActiveObject().setIsVisible(false);
@@ -119,27 +118,12 @@ public class ObjectPosition
 		return _activeObject;
 	}
 	
-	public final int getHeading()
-	{
-		return _heading;
-	}
-	
-	public final void setHeading(int value)
-	{
-		_heading = value;
-	}
-	
 	/**
 	 * @return the x position of the L2Object.
 	 */
 	public final int getX()
 	{
 		return getWorldPosition().getX();
-	}
-	
-	public final void setX(int value)
-	{
-		getWorldPosition().setX(value);
 	}
 	
 	/**
@@ -150,11 +134,6 @@ public class ObjectPosition
 		return getWorldPosition().getY();
 	}
 	
-	public final void setY(int value)
-	{
-		getWorldPosition().setY(value);
-	}
-	
 	/**
 	 * @return the z position of the L2Object.
 	 */
@@ -163,15 +142,10 @@ public class ObjectPosition
 		return getWorldPosition().getZ();
 	}
 	
-	public final void setZ(int value)
-	{
-		getWorldPosition().setZ(value);
-	}
-	
-	public final Point3D getWorldPosition()
+	public final Location getWorldPosition()
 	{
 		if (_worldPosition == null)
-			_worldPosition = new Point3D(0, 0, 0);
+			_worldPosition = new Location(0, 0, 0);
 		
 		return _worldPosition;
 	}
@@ -181,7 +155,7 @@ public class ObjectPosition
 		getWorldPosition().setXYZ(x, y, z);
 	}
 	
-	public final void setWorldPosition(Point3D newPosition)
+	public final void setWorldPosition(Location newPosition)
 	{
 		setWorldPosition(newPosition.getX(), newPosition.getY(), newPosition.getZ());
 	}

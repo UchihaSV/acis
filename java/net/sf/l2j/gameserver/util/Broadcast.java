@@ -199,4 +199,9 @@ public final class Broadcast
 	{
 		toAllOnlinePlayers(new CreatureSay(0, Say2.ANNOUNCEMENT, "", text));
 	}
+	
+	public static void announceToOnlinePlayers(String text, boolean critical)
+	{
+		toAllOnlinePlayers(new CreatureSay(0, (critical) ? Say2.CRITICAL_ANNOUNCE : Say2.ANNOUNCEMENT, "", text));
+	}
 }

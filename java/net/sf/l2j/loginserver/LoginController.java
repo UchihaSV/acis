@@ -24,6 +24,7 @@ import java.security.spec.RSAKeyGenParameterSpec;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,6 @@ import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 
-import net.sf.l2j.Base64;
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.log.Log;
@@ -172,7 +172,7 @@ public class LoginController
 		ALREADY_ON_LS,
 		ALREADY_ON_GS,
 		AUTH_SUCCESS
-	};
+	}
 	
 	public AuthLoginResult tryAuthLogin(String account, String password, L2LoginClient client)
 	{
@@ -390,7 +390,7 @@ public class LoginController
 			ResultSet rset = statement.executeQuery();
 			if (rset.next())
 			{
-				expected = Base64.decode(rset.getString("password"));
+				expected = Base64.getDecoder().decode(rset.getString("password"));
 				access = rset.getInt("access_level");
 				lastServer = rset.getInt("lastServer");
 				if (lastServer <= 0)
@@ -408,7 +408,7 @@ public class LoginController
 					{
 						statement = con.prepareStatement("INSERT INTO accounts (login,password,lastactive,access_level) values(?,?,?,?)");
 						statement.setString(1, user);
-						statement.setString(2, Base64.encodeBytes(hash));
+						statement.setString(2, Base64.getEncoder().encodeToString(hash));
 						statement.setLong(3, System.currentTimeMillis());
 						statement.setInt(4, 0);
 						statement.execute();

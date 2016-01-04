@@ -67,8 +67,8 @@ public final class RequestPartyMatchDetail extends L2GameClientPacket
 			
 			_activeChar.setPartyRoom(_roomid);
 			
-			_activeChar.sendPacket(new PartyMatchDetail(_activeChar, _room));
-			_activeChar.sendPacket(new ExPartyRoomMember(_activeChar, _room, 0));
+			_activeChar.sendPacket(new PartyMatchDetail(_room));
+			_activeChar.sendPacket(new ExPartyRoomMember(_room, 0));
 			
 			for (L2PcInstance _member : _room.getPartyMembers())
 			{

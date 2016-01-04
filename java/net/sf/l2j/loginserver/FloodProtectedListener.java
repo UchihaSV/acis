@@ -144,7 +144,7 @@ public abstract class FloodProtectedListener extends Thread
 		{
 			fConnection.connectionNumber -= 1;
 			if (fConnection.connectionNumber == 0)
-				_floodProtection.remove(fConnection);
+				_floodProtection.remove(ip);
 		}
 		else
 			_log.warning("Removing a flood protection for a GameServer that was not in the connection map??? :" + ip);

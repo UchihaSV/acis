@@ -288,9 +288,4 @@ public class MinionList
 		}
 		return count;
 	}
-	
-	public final int countSpawnedMinions()
-	{
-		return _minionReferences.size();
-	}
 }

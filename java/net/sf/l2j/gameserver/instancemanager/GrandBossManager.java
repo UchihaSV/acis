@@ -112,7 +112,7 @@ public class GrandBossManager
 					zone = getZoneById(currentZoneId);
 				
 				if (zone != null)
-					zone.addAllowedPlayer(rset.getInt("player_id"));
+					zone.allowPlayerEntry(rset.getInt("player_id"));
 			}
 			
 			rset.close();
@@ -233,10 +233,13 @@ public class GrandBossManager
 			
 			PreparedStatement updateStatement1 = con.prepareStatement(UPDATE_GRAND_BOSS_DATA2);
 			PreparedStatement updateStatement2 = con.prepareStatement(UPDATE_GRAND_BOSS_DATA);
-			for (int bossId : _storedInfo.keySet())
+			
+			for (Map.Entry<Integer, StatsSet> infoEntry : _storedInfo.entrySet())
 			{
+				final int bossId = infoEntry.getKey();
+				
 				L2GrandBossInstance boss = _bosses.get(bossId);
-				StatsSet info = _storedInfo.get(bossId);
+				StatsSet info = infoEntry.getValue();
 				if (boss == null || info == null)
 				{
 					updateStatement1.setInt(1, _bossStatus.get(bossId));

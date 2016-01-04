@@ -111,22 +111,4 @@ public final class SubClass
 		
 		_level = levelValue;
 	}
-	
-	public void incLevel()
-	{
-		if (getLevel() == (Experience.MAX_LEVEL - 1))
-			return;
-		
-		_level++;
-		setExp(Experience.LEVEL[getLevel()]);
-	}
-	
-	public void decLevel()
-	{
-		if (getLevel() == 40)
-			return;
-		
-		_level--;
-		setExp(Experience.LEVEL[getLevel()]);
-	}
 }

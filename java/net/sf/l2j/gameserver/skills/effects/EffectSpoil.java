@@ -54,7 +54,7 @@ public class EffectSpoil extends L2Effect
 		if (target.isDead())
 			return false;
 		
-		if (target.getIsSpoiledBy() != 0)
+		if (target.getSpoilerId() != 0)
 		{
 			getEffector().sendPacket(SystemMessage.getSystemMessage(SystemMessageId.ALREADY_SPOILED));
 			return false;
@@ -62,7 +62,7 @@ public class EffectSpoil extends L2Effect
 		
 		if (Formulas.calcMagicSuccess(getEffector(), target, getSkill()))
 		{
-			target.setIsSpoiledBy(getEffector().getObjectId());
+			target.setSpoilerId(getEffector().getObjectId());
 			getEffector().sendPacket(SystemMessage.getSystemMessage(SystemMessageId.SPOIL_SUCCESS));
 		}
 		target.getAI().notifyEvent(CtrlEvent.EVT_ATTACKED, getEffector());

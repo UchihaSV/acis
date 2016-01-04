@@ -14,10 +14,6 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
-import static net.sf.l2j.gameserver.taskmanager.models.TaskTypes.TYPE_NONE;
-import static net.sf.l2j.gameserver.taskmanager.models.TaskTypes.TYPE_SHEDULED;
-import static net.sf.l2j.gameserver.taskmanager.models.TaskTypes.TYPE_TIME;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,8 +31,8 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.ThreadPoolManager;
-import net.sf.l2j.gameserver.taskmanager.models.Task;
-import net.sf.l2j.gameserver.taskmanager.models.TaskTypes;
+import net.sf.l2j.gameserver.taskmanager.tasks.ATask;
+import net.sf.l2j.gameserver.taskmanager.tasks.ATask.TaskType;
 import net.sf.l2j.gameserver.taskmanager.tasks.TaskClansLadder;
 import net.sf.l2j.gameserver.taskmanager.tasks.TaskCleanUp;
 import net.sf.l2j.gameserver.taskmanager.tasks.TaskOlympiadSave;
@@ -54,119 +50,106 @@ public final class TaskManager
 {
 	protected static final Logger _log = Logger.getLogger(TaskManager.class.getName());
 	
-	protected static final String[] SQL_STATEMENTS =
-	{
-		"SELECT id,task,type,last_activation,param1,param2,param3 FROM global_tasks",
-		"UPDATE global_tasks SET last_activation=? WHERE id=?",
-		"SELECT id FROM global_tasks WHERE task=?",
-		"INSERT INTO global_tasks (task,type,last_activation,param1,param2,param3) VALUES(?,?,?,?,?,?)"
-	};
+	private static final String LOAD_TASKS = "SELECT id,task,type,last_activation,param1,param2,param3 FROM global_tasks";
+	private static final String UPDATE_TASK = "UPDATE global_tasks SET last_activation=? WHERE id=?";
+	private static final String LOAD_TASK = "SELECT id FROM global_tasks WHERE task=?";
+	private static final String SAVE_TASK = "INSERT INTO global_tasks (task,type,last_activation,param1,param2,param3) VALUES(?,?,?,?,?,?)";
 	
-	private final Map<Integer, Task> _tasks = new HashMap<>();
+	private final Map<Integer, ATask> _tasks = new HashMap<>();
 	protected final List<ExecutedTask> _currentTasks = new ArrayList<>();
 	
 	public class ExecutedTask implements Runnable
 	{
-		int id;
-		long lastActivation;
-		Task task;
-		TaskTypes type;
-		String[] params;
-		ScheduledFuture<?> scheduled;
+		private final int _id;
+		private final ATask _task;
+		private final TaskType _type;
+		private final String[] _params;
 		
-		public ExecutedTask(Task ptask, TaskTypes ptype, ResultSet rset) throws SQLException
+		private long _lastActivation;
+		ScheduledFuture<?> _scheduled;
+		
+		public ExecutedTask(int id, ATask task, TaskType type, String[] params, long lastActivation)
 		{
-			task = ptask;
-			type = ptype;
-			id = rset.getInt("id");
-			lastActivation = rset.getLong("last_activation");
-			params = new String[]
-			{
-				rset.getString("param1"),
-				rset.getString("param2"),
-				rset.getString("param3")
-			};
+			_id = id;
+			_task = task;
+			_type = type;
+			_params = params;
+			
+			_lastActivation = lastActivation;
 		}
 		
 		@Override
 		public void run()
 		{
-			task.onTimeElapsed(this);
-			lastActivation = System.currentTimeMillis();
+			_task.onTimeElapsed(this);
+			_lastActivation = System.currentTimeMillis();
 			
 			try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 			{
-				PreparedStatement statement = con.prepareStatement(SQL_STATEMENTS[1]);
-				statement.setLong(1, lastActivation);
-				statement.setInt(2, id);
+				PreparedStatement statement = con.prepareStatement(UPDATE_TASK);
+				statement.setLong(1, _lastActivation);
+				statement.setInt(2, _id);
 				statement.executeUpdate();
 				statement.close();
 			}
 			catch (SQLException e)
 			{
-				_log.log(Level.WARNING, "Cannot updated the Global Task " + id + ": " + e.getMessage(), e);
+				_log.log(Level.WARNING, "Cannot updated the Global Task " + _id + ": " + e.getMessage(), e);
 			}
 			
-			if (type == TYPE_SHEDULED || type == TYPE_TIME)
+			if (_type == TaskType.TYPE_SHEDULED || _type == TaskType.TYPE_TIME)
 				stopTask();
 		}
 		
 		@Override
 		public boolean equals(Object object)
 		{
-			return id == ((ExecutedTask) object).id;
-		}
-		
-		public Task getTask()
-		{
-			return task;
-		}
-		
-		public TaskTypes getType()
-		{
-			return type;
+			return _id == ((ExecutedTask) object)._id;
 		}
 		
 		public int getId()
 		{
-			return id;
+			return _id;
+		}
+		
+		public ATask getTask()
+		{
+			return _task;
+		}
+		
+		public TaskType getType()
+		{
+			return _type;
 		}
 		
 		public String[] getParams()
 		{
-			return params;
+			return _params;
 		}
 		
 		public long getLastActivation()
 		{
-			return lastActivation;
+			return _lastActivation;
 		}
 		
 		public void stopTask()
 		{
-			task.onDestroy();
-			
-			if (scheduled != null)
-				scheduled.cancel(true);
+			if (_scheduled != null)
+				_scheduled.cancel(true);
 			
 			_currentTasks.remove(this);
 		}
 		
 	}
 	
-	public static TaskManager getInstance()
+	public static final TaskManager getInstance()
 	{
 		return SingletonHolder._instance;
 	}
 	
 	protected TaskManager()
 	{
-		initializate();
-		startAllTasks();
-	}
-	
-	private void initializate()
-	{
+		// initialize all tasks
 		registerTask(new TaskClansLadder());
 		registerTask(new TaskCleanUp());
 		registerTask(new TaskScript());
@@ -176,35 +159,30 @@ public final class TaskManager
 		registerTask(new TaskRestart());
 		registerTask(new TaskSevenSignsUpdate());
 		registerTask(new TaskShutdown());
-	}
-	
-	public void registerTask(Task task)
-	{
-		int key = task.getName().hashCode();
-		if (!_tasks.containsKey(key))
-		{
-			_tasks.put(key, task);
-			task.initializate();
-		}
-	}
-	
-	private void startAllTasks()
-	{
+		
+		// load data and start all tasks
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement = con.prepareStatement(SQL_STATEMENTS[0]);
+			PreparedStatement statement = con.prepareStatement(LOAD_TASKS);
 			ResultSet rset = statement.executeQuery();
 			
 			while (rset.next())
 			{
-				Task task = _tasks.get(rset.getString("task").trim().toLowerCase().hashCode());
+				ATask task = _tasks.get(rset.getString("task").trim().toLowerCase().hashCode());
 				if (task == null)
 					continue;
 				
-				TaskTypes type = TaskTypes.valueOf(rset.getString("type"));
-				if (type != TYPE_NONE)
+				TaskType type = TaskType.valueOf(rset.getString("type"));
+				if (type != TaskType.TYPE_NONE)
 				{
-					ExecutedTask current = new ExecutedTask(task, type, rset);
+					String[] params = new String[]
+					{
+						rset.getString("param1"),
+						rset.getString("param2"),
+						rset.getString("param3")
+					};
+					
+					ExecutedTask current = new ExecutedTask(rset.getInt("id"), task, type, params, rset.getLong("last_activation"));
 					if (launchTask(current))
 						_currentTasks.add(current);
 				}
@@ -218,10 +196,16 @@ public final class TaskManager
 		}
 	}
 	
-	private static boolean launchTask(ExecutedTask task)
+	private final void registerTask(ATask task)
+	{
+		_tasks.put(task.getName().hashCode(), task);
+		task.initializate();
+	}
+	
+	private static final boolean launchTask(ExecutedTask task)
 	{
 		final ThreadPoolManager scheduler = ThreadPoolManager.getInstance();
-		final TaskTypes type = task.getType();
+		final TaskType type = task.getType();
 		long delay, interval;
 		
 		switch (type)
@@ -229,15 +213,18 @@ public final class TaskManager
 			case TYPE_STARTUP:
 				task.run();
 				return false;
+				
 			case TYPE_SHEDULED:
 				delay = Long.valueOf(task.getParams()[0]);
-				task.scheduled = scheduler.scheduleGeneral(task, delay);
+				task._scheduled = scheduler.scheduleGeneral(task, delay);
 				return true;
+				
 			case TYPE_FIXED_SHEDULED:
 				delay = Long.valueOf(task.getParams()[0]);
 				interval = Long.valueOf(task.getParams()[1]);
-				task.scheduled = scheduler.scheduleGeneralAtFixedRate(task, delay, interval);
+				task._scheduled = scheduler.scheduleGeneralAtFixedRate(task, delay, interval);
 				return true;
+				
 			case TYPE_TIME:
 				try
 				{
@@ -245,23 +232,26 @@ public final class TaskManager
 					long diff = desired.getTime() - System.currentTimeMillis();
 					if (diff >= 0)
 					{
-						task.scheduled = scheduler.scheduleGeneral(task, diff);
+						task._scheduled = scheduler.scheduleGeneral(task, diff);
 						return true;
 					}
 					_log.info("Task " + task.getId() + " is obsoleted.");
+					return false;
 				}
 				catch (Exception e)
 				{
+					return false;
 				}
-				break;
+				
 			case TYPE_SPECIAL:
 				ScheduledFuture<?> result = task.getTask().launchSpecial(task);
 				if (result != null)
 				{
-					task.scheduled = result;
+					task._scheduled = result;
 					return true;
 				}
-				break;
+				return false;
+				
 			case TYPE_GLOBAL_TASK:
 				interval = Long.valueOf(task.getParams()[0]) * 86400000L;
 				String[] hour = task.getParams()[1].split(":");
@@ -293,30 +283,25 @@ public final class TaskManager
 				if (check.after(min) || delay < 0)
 					delay += interval;
 				
-				task.scheduled = scheduler.scheduleGeneralAtFixedRate(task, delay, interval);
-				return true;
+				task._scheduled = scheduler.scheduleGeneralAtFixedRate(task, delay, interval);
+				return false;
+				
 			default:
 				return false;
 		}
-		return false;
 	}
 	
-	public static boolean addUniqueTask(String task, TaskTypes type, String param1, String param2, String param3)
-	{
-		return addUniqueTask(task, type, param1, param2, param3, 0);
-	}
-	
-	public static boolean addUniqueTask(String task, TaskTypes type, String param1, String param2, String param3, long lastActivation)
+	public static boolean addUniqueTask(String task, TaskType type, String param1, String param2, String param3, long lastActivation)
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement = con.prepareStatement(SQL_STATEMENTS[2]);
+			PreparedStatement statement = con.prepareStatement(LOAD_TASK);
 			statement.setString(1, task);
 			ResultSet rset = statement.executeQuery();
 			
 			if (!rset.next())
 			{
-				statement = con.prepareStatement(SQL_STATEMENTS[3]);
+				statement = con.prepareStatement(SAVE_TASK);
 				statement.setString(1, task);
 				statement.setString(2, type.toString());
 				statement.setLong(3, lastActivation);
@@ -339,16 +324,11 @@ public final class TaskManager
 		return false;
 	}
 	
-	public static boolean addTask(String task, TaskTypes type, String param1, String param2, String param3)
-	{
-		return addTask(task, type, param1, param2, param3, 0);
-	}
-	
-	public static boolean addTask(String task, TaskTypes type, String param1, String param2, String param3, long lastActivation)
+	public static boolean addTask(String task, TaskType type, String param1, String param2, String param3, long lastActivation)
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement = con.prepareStatement(SQL_STATEMENTS[3]);
+			PreparedStatement statement = con.prepareStatement(SAVE_TASK);
 			statement.setString(1, task);
 			statement.setString(2, type.toString());
 			statement.setLong(3, lastActivation);

@@ -15,14 +15,13 @@
 package net.sf.l2j.gameserver.taskmanager.tasks;
 
 import net.sf.l2j.gameserver.taskmanager.TaskManager.ExecutedTask;
-import net.sf.l2j.gameserver.taskmanager.models.Task;
 
 /**
  * @author Tempy
  */
-public final class TaskCleanUp extends Task
+public final class TaskCleanUp extends ATask
 {
-	public static final String NAME = "CleanUp";
+	private static final String NAME = "CleanUp";
 	
 	@Override
 	public String getName()

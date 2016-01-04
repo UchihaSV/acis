@@ -33,9 +33,6 @@ public class OlympiadStat implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (id != COMMAND_IDS[0])
-			return false;
-		
 		if (!activeChar.isNoble())
 		{
 			activeChar.sendPacket(SystemMessageId.NOBLESSE_ONLY);

@@ -17,7 +17,6 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.Announcements;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
@@ -33,6 +32,7 @@ import net.sf.l2j.gameserver.network.serverpackets.ConfirmDlg;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.util.Broadcast;
 
 /**
  * @author evill33t & squeezed, rework Tryskell
@@ -250,7 +250,7 @@ public class L2WeddingManagerInstance extends L2NpcInstance
 		player.doCast(skill);
 		ptarget.doCast(skill);
 		
-		Announcements.announceToAll("Congratulations to " + player.getName() + " and " + ptarget.getName() + "! They have been married.");
+		Broadcast.announceToOnlinePlayers("Congratulations to " + player.getName() + " and " + ptarget.getName() + "! They have been married.");
 	}
 	
 	private void sendHtmlMessage(L2PcInstance player, String file)

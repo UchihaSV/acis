@@ -35,6 +35,7 @@ import net.sf.l2j.gameserver.skills.conditions.Condition;
 import net.sf.l2j.gameserver.skills.conditions.ConditionGameChance;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
+import net.sf.l2j.util.Rnd;
 import net.sf.l2j.util.StringUtil;
 
 /**
@@ -47,6 +48,8 @@ public final class Weapon extends Item
 	private final int _soulShotCount;
 	private final int _spiritShotCount;
 	private final int _mpConsume;
+	private final int _mpConsumeReduceRate;
+	private final int _mpConsumeReduceValue;
 	private final boolean _isMagical;
 	
 	private SkillHolder _enchant4Skill = null; // skill that activates when item is enchanted +4 (for duals)
@@ -90,6 +93,9 @@ public final class Weapon extends Item
 		_spiritShotCount = set.getInteger("spiritshots", 0);
 		_rndDam = set.getInteger("random_damage", 0);
 		_mpConsume = set.getInteger("mp_consume", 0);
+		String[] reduce = set.getString("mp_consume_reduce", "0,0").split(",");
+		_mpConsumeReduceRate = Integer.parseInt(reduce[0]);
+		_mpConsumeReduceValue = Integer.parseInt(reduce[1]);
 		_reuseDelay = set.getInteger("reuse_delay", 0);
 		_isMagical = set.getBool("is_magical", false);
 		
@@ -263,6 +269,9 @@ public final class Weapon extends Item
 	 */
 	public int getMpConsume()
 	{
+		if (_mpConsumeReduceRate > 0 && Rnd.get(100) < _mpConsumeReduceRate)
+			return _mpConsumeReduceValue;
+		
 		return _mpConsume;
 	}
 	

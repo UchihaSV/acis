@@ -21,6 +21,7 @@ import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
 import net.sf.l2j.gameserver.model.L2Party;
+import net.sf.l2j.gameserver.model.L2Party.MessageType;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -361,7 +362,7 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 					else
 					{
 						SevenSignsFestival.getInstance().updateParticipants(player, playerParty);
-						playerParty.removePartyMember(player);
+						playerParty.removePartyMember(player, MessageType.Expelled);
 					}
 					break;
 				case 0: // Distribute Accumulated Bonus

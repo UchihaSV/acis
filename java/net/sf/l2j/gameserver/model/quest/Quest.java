@@ -37,7 +37,7 @@ import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Spawn;
-import net.sf.l2j.gameserver.model.Location;
+import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -624,7 +624,7 @@ public class Quest extends ManagedScript
 	 * @param isSummonSpawn if true, spawn with animation (if any exists).
 	 * @return instance of the newly spawned npc with summon animation.
 	 */
-	public L2Npc addSpawn(int npcId, Location loc, boolean randomOffset, long despawnDelay, boolean isSummonSpawn)
+	public L2Npc addSpawn(int npcId, SpawnLocation loc, boolean randomOffset, long despawnDelay, boolean isSummonSpawn)
 	{
 		return addSpawn(npcId, loc.getX(), loc.getY(), loc.getZ(), loc.getHeading(), randomOffset, despawnDelay, isSummonSpawn);
 	}
@@ -1473,14 +1473,12 @@ public class Quest extends ManagedScript
 	@Override
 	public boolean equals(Object o)
 	{
-		Quest q = (Quest) o;
+		if (o instanceof Quest)
+		{
+			Quest q = (Quest) o;
+			return _id == q._id && _name.equals(q._name);
+		}
 		
-		if (_id != q._id)
-			return false;
-		
-		if (!_name.equals(q._name))
-			return false;
-		
-		return true;
+		return false;
 	}
 }

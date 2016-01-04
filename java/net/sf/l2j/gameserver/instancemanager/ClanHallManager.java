@@ -109,7 +109,9 @@ public class ClanHallManager
 				if (auc == null && lease > 0)
 					AuctionManager.getInstance().initNPC(id);
 			}
+			rs.close();
 			statement.close();
+			
 			_log.info("ClanHallManager: Loaded " + getClanHalls().size() + " clan halls.");
 			_log.info("ClanHallManager: Loaded " + getFreeClanHalls().size() + " free clan halls.");
 			_loaded = true;

@@ -397,15 +397,6 @@ public class CharStat
 	}
 	
 	/**
-	 * @param target
-	 * @return the weapon reuse modifier
-	 */
-	public final double getWeaponReuseModifier(L2Character target)
-	{
-		return calcStat(Stats.ATK_REUSE, 1, target, null);
-	}
-	
-	/**
 	 * @return the WalkSpeed (base+modifier) of the L2Character.
 	 */
 	public int getWalkSpeed()
@@ -449,14 +440,13 @@ public class CharStat
 				mpConsume += _activeChar.getDanceCount() * skill.getNextDanceMpCost();
 		}
 		
-		mpConsume = calcStat(Stats.MP_CONSUME, mpConsume, null, skill);
-		
 		if (skill.isDance())
 			return (int) calcStat(Stats.DANCE_MP_CONSUME_RATE, mpConsume, null, null);
-		else if (skill.isMagic())
+		
+		if (skill.isMagic())
 			return (int) calcStat(Stats.MAGICAL_MP_CONSUME_RATE, mpConsume, null, null);
-		else
-			return (int) calcStat(Stats.PHYSICAL_MP_CONSUME_RATE, mpConsume, null, null);
+		
+		return (int) calcStat(Stats.PHYSICAL_MP_CONSUME_RATE, mpConsume, null, null);
 	}
 	
 	/**
@@ -468,14 +458,15 @@ public class CharStat
 		if (skill == null)
 			return 1;
 		
-		double mpConsume = calcStat(Stats.MP_CONSUME, skill.getMpInitialConsume(), null, skill);
+		double mpConsume = skill.getMpInitialConsume();
 		
 		if (skill.isDance())
 			return (int) calcStat(Stats.DANCE_MP_CONSUME_RATE, mpConsume, null, null);
-		else if (skill.isMagic())
+		
+		if (skill.isMagic())
 			return (int) calcStat(Stats.MAGICAL_MP_CONSUME_RATE, mpConsume, null, null);
-		else
-			return (int) calcStat(Stats.PHYSICAL_MP_CONSUME_RATE, mpConsume, null, null);
+		
+		return (int) calcStat(Stats.PHYSICAL_MP_CONSUME_RATE, mpConsume, null, null);
 	}
 	
 	public int getAttackElementValue(byte attackAttribute)

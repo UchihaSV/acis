@@ -28,10 +28,9 @@ import java.util.logging.Logger;
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.Server;
+import net.sf.l2j.commons.mmocore.SelectorConfig;
+import net.sf.l2j.commons.mmocore.SelectorThread;
 import net.sf.l2j.util.Util;
-
-import org.mmocore.network.SelectorConfig;
-import org.mmocore.network.SelectorThread;
 
 /**
  * @author KenM

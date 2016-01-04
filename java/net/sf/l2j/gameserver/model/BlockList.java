@@ -99,20 +99,18 @@ public class BlockList
 		{
 			PreparedStatement statement;
 			
-			if (state) // add
+			if (state)
 			{
 				statement = con.prepareStatement("INSERT INTO character_friends (char_id, friend_id, relation) VALUES (?, ?, 1)");
 				statement.setInt(1, _owner.getObjectId());
 				statement.setInt(2, targetId);
 			}
 			else
-			// remove
 			{
 				statement = con.prepareStatement("DELETE FROM character_friends WHERE char_id = ? AND friend_id = ? AND relation = 1");
 				statement.setInt(1, _owner.getObjectId());
 				statement.setInt(2, targetId);
 			}
-			
 			statement.execute();
 			statement.close();
 		}

@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.L2SummonAI;
 import net.sf.l2j.gameserver.model.L2CharPosition;
@@ -171,7 +170,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				
 				if (pet.isAttackingDisabled())
 				{
-					if (pet.getAttackEndTime() <= GameTimeController.getGameTicks())
+					if (pet.getAttackEndTime() <= System.currentTimeMillis())
 						return;
 					
 					pet.getAI().setIntention(CtrlIntention.ATTACK, target);

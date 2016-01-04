@@ -14,6 +14,7 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,80 +27,100 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.AutoAttackStop;
 
 /**
- * @author Luca Baldi
+ * Turns off attack stance of {@link L2Character} after PERIOD ms.
+ * @author Luca Baldi, Hasha
  */
-public class AttackStanceTaskManager
+public final class AttackStanceTaskManager implements Runnable
 {
-	protected Map<L2Character, Long> _attackStanceTasks = new ConcurrentHashMap<>();
+	private static final long ATTACK_STANCE_PERIOD = 15000; // 15 seconds
 	
-	public AttackStanceTaskManager()
-	{
-		ThreadPoolManager.getInstance().scheduleAiAtFixedRate(new FightModeScheduler(), 0, 1000);
-	}
+	private final Map<L2Character, Long> _characters = new ConcurrentHashMap<>();
 	
-	public static AttackStanceTaskManager getInstance()
+	public final static AttackStanceTaskManager getInstance()
 	{
 		return SingletonHolder._instance;
 	}
 	
-	public void add(L2Character actor)
+	protected AttackStanceTaskManager()
 	{
-		if (actor instanceof L2Playable)
+		// Run task each second.
+		ThreadPoolManager.getInstance().scheduleAiAtFixedRate(this, 1000, 1000);
+	}
+	
+	/**
+	 * Adds {@link L2Character} to the AttackStanceTask.
+	 * @param character : {@link L2Character} to be added and checked.
+	 */
+	public final void add(L2Character character)
+	{
+		if (character instanceof L2Playable)
 		{
-			for (L2CubicInstance cubic : actor.getActingPlayer().getCubics().values())
+			for (L2CubicInstance cubic : character.getActingPlayer().getCubics().values())
 				if (cubic.getId() != L2CubicInstance.LIFE_CUBIC)
 					cubic.doAction();
 		}
-		_attackStanceTasks.put(actor, System.currentTimeMillis());
-	}
-	
-	public void remove(L2Character actor)
-	{
-		if (actor instanceof L2Summon)
-			actor = actor.getActingPlayer();
 		
-		_attackStanceTasks.remove(actor);
+		_characters.put(character, System.currentTimeMillis() + ATTACK_STANCE_PERIOD);
 	}
 	
-	public boolean get(L2Character actor)
+	/**
+	 * Removes {@link L2Character} from the AttackStanceTask.
+	 * @param character : {@link L2Character} to be removed.
+	 */
+	public final void remove(L2Character character)
 	{
-		if (actor instanceof L2Summon)
-			actor = actor.getActingPlayer();
+		if (character instanceof L2Summon)
+			character = character.getActingPlayer();
 		
-		return _attackStanceTasks.containsKey(actor);
+		_characters.remove(character);
 	}
 	
-	private class FightModeScheduler implements Runnable
+	/**
+	 * Tests if {@link L2Character} is in AttackStanceTask.
+	 * @param character : {@link L2Character} to be removed.
+	 * @return boolean : True when {@link L2Character} is in attack stance.
+	 */
+	public final boolean isInAttackStance(L2Character character)
 	{
-		protected FightModeScheduler()
+		if (character instanceof L2Summon)
+			character = character.getActingPlayer();
+		
+		return _characters.containsKey(character);
+	}
+	
+	@Override
+	public final void run()
+	{
+		// List is empty, skip.
+		if (_characters.isEmpty())
+			return;
+		
+		// Get current time.
+		final long time = System.currentTimeMillis();
+		
+		// Loop all characters.
+		for (Iterator<Map.Entry<L2Character, Long>> iterator = _characters.entrySet().iterator(); iterator.hasNext();)
 		{
-			// Do nothing
-		}
-		
-		@Override
-		public void run()
-		{
-			if (!_attackStanceTasks.isEmpty())
-			{
-				Long current = System.currentTimeMillis();
-				synchronized (this)
-				{
-					for (L2Character actor : _attackStanceTasks.keySet())
-					{
-						if ((current - _attackStanceTasks.get(actor)) > 15000)
-						{
-							actor.broadcastPacket(new AutoAttackStop(actor.getObjectId()));
-							
-							// Stop pet attackstance animation
-							if (actor instanceof L2PcInstance && ((L2PcInstance) actor).getPet() != null)
-								((L2PcInstance) actor).getPet().broadcastPacket(new AutoAttackStop(((L2PcInstance) actor).getPet().getObjectId()));
-							
-							actor.getAI().setAutoAttacking(false);
-							_attackStanceTasks.remove(actor);
-						}
-					}
-				}
-			}
+			// Get entry of current iteration.
+			Map.Entry<L2Character, Long> entry = iterator.next();
+			
+			// Time hasn't passed yet, skip.
+			if (time < entry.getValue())
+				continue;
+			
+			// Get character.
+			final L2Character character = entry.getKey();
+			
+			// Stop character attack stance animation.
+			character.broadcastPacket(new AutoAttackStop(character.getObjectId()));
+			
+			// Stop pet attack stance animation.
+			if (character instanceof L2PcInstance && ((L2PcInstance) character).getPet() != null)
+				((L2PcInstance) character).getPet().broadcastPacket(new AutoAttackStop(((L2PcInstance) character).getPet().getObjectId()));
+			
+			// Inform character AI and remove task.
+			character.getAI().setAutoAttacking(false);
+			iterator.remove();
 		}
 	}
 	

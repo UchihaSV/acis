@@ -14,37 +14,24 @@
  */
 package net.sf.l2j.gameserver.skills.conditions;
 
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.skills.Env;
+import net.sf.l2j.gameserver.taskmanager.GameTimeTaskManager;
 
 /**
  * @author mkizub
  */
 public class ConditionGameTime extends Condition
 {
+	private final boolean _night;
 	
-	public enum CheckGameTime
+	public ConditionGameTime(boolean night)
 	{
-		NIGHT
-	}
-	
-	private final CheckGameTime _check;
-	private final boolean _required;
-	
-	public ConditionGameTime(CheckGameTime check, boolean required)
-	{
-		_check = check;
-		_required = required;
+		_night = night;
 	}
 	
 	@Override
 	public boolean testImpl(Env env)
 	{
-		switch (_check)
-		{
-			case NIGHT:
-				return GameTimeController.getInstance().isNowNight() == _required;
-		}
-		return !_required;
+		return GameTimeTaskManager.getInstance().isNight() == _night;
 	}
 }

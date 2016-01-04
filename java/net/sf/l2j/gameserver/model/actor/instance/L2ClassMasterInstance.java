@@ -14,11 +14,14 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
+import java.util.List;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.base.ClassId;
+import net.sf.l2j.gameserver.model.holder.ItemHolder;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
@@ -221,11 +224,12 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 			}
 		}
 		
+		final List<ItemHolder> neededItems = Config.CLASS_MASTER_SETTINGS.getRequiredItems(newJobLevel);
+		
 		// check if player have all required items for class transfer
-		for (int _itemId : Config.CLASS_MASTER_SETTINGS.getRequiredItems(newJobLevel).keySet())
+		for (ItemHolder item : neededItems)
 		{
-			int _count = Config.CLASS_MASTER_SETTINGS.getRequiredItems(newJobLevel).get(_itemId);
-			if (player.getInventory().getInventoryItemCount(_itemId, -1) < _count)
+			if (player.getInventory().getInventoryItemCount(item.getId(), -1) < item.getCount())
 			{
 				player.sendPacket(SystemMessageId.NOT_ENOUGH_ITEMS);
 				return false;
@@ -233,19 +237,15 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 		}
 		
 		// get all required items for class transfer
-		for (int _itemId : Config.CLASS_MASTER_SETTINGS.getRequiredItems(newJobLevel).keySet())
+		for (ItemHolder item : neededItems)
 		{
-			int _count = Config.CLASS_MASTER_SETTINGS.getRequiredItems(newJobLevel).get(_itemId);
-			if (!player.destroyItemByItemId("ClassMaster", _itemId, _count, player, true))
+			if (!player.destroyItemByItemId("ClassMaster", item.getId(), item.getCount(), player, true))
 				return false;
 		}
 		
 		// reward player with items
-		for (int _itemId : Config.CLASS_MASTER_SETTINGS.getRewardItems(newJobLevel).keySet())
-		{
-			int _count = Config.CLASS_MASTER_SETTINGS.getRewardItems(newJobLevel).get(_itemId);
-			player.addItem("ClassMaster", _itemId, _count, player, true);
-		}
+		for (ItemHolder item : Config.CLASS_MASTER_SETTINGS.getRewardItems(newJobLevel))
+			player.addItem("ClassMaster", item.getId(), item.getCount(), player, true);
 		
 		player.setClassId(val);
 		
@@ -318,15 +318,14 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 	
 	private static String getRequiredItems(int level)
 	{
-		if (Config.CLASS_MASTER_SETTINGS.getRequiredItems(level) == null || Config.CLASS_MASTER_SETTINGS.getRequiredItems(level).isEmpty())
+		final List<ItemHolder> neededItems = Config.CLASS_MASTER_SETTINGS.getRequiredItems(level);
+		if (neededItems == null || neededItems.isEmpty())
 			return "<tr><td>none</td></r>";
 		
 		StringBuilder sb = new StringBuilder();
-		for (int _itemId : Config.CLASS_MASTER_SETTINGS.getRequiredItems(level).keySet())
-		{
-			int _count = Config.CLASS_MASTER_SETTINGS.getRequiredItems(level).get(_itemId);
-			sb.append("<tr><td><font color=\"LEVEL\">" + _count + "</font></td><td>" + ItemTable.getInstance().getTemplate(_itemId).getName() + "</td></tr>");
-		}
+		for (ItemHolder item : neededItems)
+			sb.append("<tr><td><font color=\"LEVEL\">" + item.getCount() + "</font></td><td>" + ItemTable.getInstance().getTemplate(item.getId()).getName() + "</td></tr>");
+		
 		return sb.toString();
 	}
 }

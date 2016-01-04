@@ -15,7 +15,7 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.network.serverpackets.BeginRotation;
+import net.sf.l2j.gameserver.network.serverpackets.StartRotation;
 
 public final class StartRotating extends L2GameClientPacket
 {
@@ -36,6 +36,6 @@ public final class StartRotating extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		activeChar.broadcastPacket(new BeginRotation(activeChar, _degree, _side));
+		activeChar.broadcastPacket(new StartRotation(activeChar.getObjectId(), _degree, _side, 0));
 	}
 }

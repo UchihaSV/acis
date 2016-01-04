@@ -46,14 +46,12 @@ import net.sf.l2j.gameserver.model.holder.ItemHolder;
 import net.sf.l2j.gameserver.model.item.DropCategory;
 import net.sf.l2j.gameserver.model.item.DropData;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
-import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.model.quest.QuestEventType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.clientpackets.Say2;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.taskmanager.ItemsAutoDestroyTaskManager;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.util.Rnd;
 
@@ -608,10 +606,10 @@ public class L2Attackable extends L2Npc
 					}
 					
 					// Set new karma.
-					attacker.updateKarmaLoss(Math.round(exp));
+					attacker.updateKarmaLoss(exp);
 					
 					// Distribute the Exp and SP between the L2PcInstance and its L2Summon.
-					attacker.addExpAndSp(Math.round(exp), sp);
+					attacker.addExpAndSp(exp, sp);
 				}
 			}
 			// Share with party members.
@@ -803,14 +801,8 @@ public class L2Attackable extends L2Npc
 				return;
 			}
 			
-			for (L2Character aggroed : _aggroList.keySet())
-			{
-				AggroInfo ai = _aggroList.get(aggroed);
-				if (ai == null)
-					return;
-				
+			for (AggroInfo ai : _aggroList.values())
 				ai.addHate(-amount);
-			}
 			
 			amount = getHating(mostHated);
 			
@@ -1141,7 +1133,7 @@ public class L2Attackable extends L2Npc
 		return 0;
 	}
 	
-	private static ItemHolder calculateCategorizedHerbItem(L2PcInstance lastAttacker, DropCategory categoryDrops, int levelModifier)
+	private static ItemHolder calculateCategorizedHerbItem(DropCategory categoryDrops, int levelModifier)
 	{
 		if (categoryDrops == null)
 			return null;
@@ -1272,7 +1264,7 @@ public class L2Attackable extends L2Npc
 			ItemHolder item = null;
 			if (cat.isSweep())
 			{
-				if (getIsSpoiledBy() != 0)
+				if (getSpoilerId() != 0)
 				{
 					for (DropData drop : cat.getAllDrops())
 					{
@@ -1341,7 +1333,7 @@ public class L2Attackable extends L2Npc
 		{
 			for (DropCategory cat : HerbDropTable.getInstance().getHerbDroplist(getTemplate().getDropHerbGroup()))
 			{
-				final ItemHolder item = calculateCategorizedHerbItem(player, cat, levelModifier);
+				final ItemHolder item = calculateCategorizedHerbItem(cat, levelModifier);
 				if (item != null)
 				{
 					if (Config.AUTO_LOOT_HERBS)
@@ -1389,14 +1381,6 @@ public class L2Attackable extends L2Npc
 				ditem.getDropProtection().protect(mainDamageDealer);
 				ditem.dropMe(this, newX, newY, newZ);
 				
-				// Add drop to auto destroy item task
-				if (!Config.LIST_PROTECTED_ITEMS.contains(item.getId()))
-				{
-					if ((Config.ITEM_AUTO_DESTROY_TIME > 0 && ditem.getItemType() != EtcItemType.HERB) || (Config.HERB_AUTO_DESTROY_TIME > 0 && ditem.getItemType() == EtcItemType.HERB))
-						ItemsAutoDestroyTaskManager.getInstance().addItem(ditem);
-				}
-				ditem.setProtected(false);
-				
 				// If stackable, end loop as entire count is included in 1 instance of item
 				if (ditem.isStackable() || !Config.MULTIPLE_ITEM_DROP)
 					break;
@@ -1405,11 +1389,6 @@ public class L2Attackable extends L2Npc
 				_log.log(Level.SEVERE, "Item doesn't exist so cannot be dropped. Item ID: " + item.getId());
 		}
 		return ditem;
-	}
-	
-	public ItemInstance dropItem(L2PcInstance lastAttacker, int itemId, int itemCount)
-	{
-		return dropItem(lastAttacker, new ItemHolder(itemId, itemCount));
 	}
 	
 	/**
@@ -1646,7 +1625,7 @@ public class L2Attackable extends L2Npc
 		super.onSpawn();
 		
 		// Clear mob spoil/seed state
-		setIsSpoiledBy(0);
+		setSpoilerId(0);
 		
 		// Clear all aggro char from list
 		clearAggroList();

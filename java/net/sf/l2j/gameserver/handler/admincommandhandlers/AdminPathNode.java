@@ -16,20 +16,16 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import java.util.List;
 
-import net.sf.l2j.Config;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.pathfinding.AbstractNodeLoc;
-import net.sf.l2j.gameserver.pathfinding.PathFinding;
 
 public class AdminPathNode implements IAdminCommandHandler
 {
 	private static final String[] ADMIN_COMMANDS =
 	{
 		"admin_pn_info",
-		"admin_show_path",
-		"admin_path_debug",
-		"admin_show_pn",
 		"admin_find_path",
 	};
 	
@@ -38,43 +34,25 @@ public class AdminPathNode implements IAdminCommandHandler
 	{
 		if (command.equals("admin_pn_info"))
 		{
-			final String[] info = PathFinding.getInstance().getStat();
+			final List<String> info = PathFinding.getInstance().getStat();
 			if (info == null)
 				activeChar.sendMessage("Not supported");
 			else
 				for (String msg : info)
 					activeChar.sendMessage(msg);
 		}
-		else if (command.equals("admin_show_path"))
-		{
-			
-		}
-		else if (command.equals("admin_path_debug"))
-		{
-			
-		}
-		else if (command.equals("admin_show_pn"))
-		{
-			
-		}
 		else if (command.equals("admin_find_path"))
 		{
-			if (Config.GEODATA < 2)
-			{
-				activeChar.sendMessage("PathFinding has not been enabled.");
-				return true;
-			}
-			
 			if (activeChar.getTarget() != null)
 			{
-				List<AbstractNodeLoc> path = PathFinding.getInstance().findPath(activeChar.getX(), activeChar.getY(), (short) activeChar.getZ(), activeChar.getTarget().getX(), activeChar.getTarget().getY(), (short) activeChar.getTarget().getZ(), true);
+				List<Location> path = PathFinding.getInstance().findPath(activeChar.getX(), activeChar.getY(), (short) activeChar.getZ(), activeChar.getTarget().getX(), activeChar.getTarget().getY(), (short) activeChar.getTarget().getZ(), true);
 				if (path == null)
 				{
 					activeChar.sendMessage("No Route!");
 					return true;
 				}
 				
-				for (AbstractNodeLoc a : path)
+				for (Location a : path)
 					activeChar.sendMessage("x:" + a.getX() + " y:" + a.getY() + " z:" + a.getZ());
 			}
 			else

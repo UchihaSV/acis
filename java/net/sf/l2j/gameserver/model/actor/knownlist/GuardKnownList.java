@@ -14,8 +14,6 @@
  */
 package net.sf.l2j.gameserver.model.actor.knownlist;
 
-import java.util.logging.Logger;
-
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -25,8 +23,6 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
 public class GuardKnownList extends AttackableKnownList
 {
-	private static final Logger _log = Logger.getLogger(GuardKnownList.class.getName());
-	
 	public GuardKnownList(L2GuardInstance activeChar)
 	{
 		super(activeChar);
@@ -38,30 +34,27 @@ public class GuardKnownList extends AttackableKnownList
 		if (!super.addKnownObject(object))
 			return false;
 		
+		// get guard
+		final L2GuardInstance guard = (L2GuardInstance) _activeObject;
+		
 		if (object instanceof L2PcInstance)
 		{
 			// Check if the object added is a L2PcInstance that owns Karma
 			if (((L2PcInstance) object).getKarma() > 0)
 			{
-				if (Config.DEBUG)
-					_log.fine(getActiveChar().getObjectId() + ": PK " + object.getObjectId() + " entered on guard range.");
-				
 				// Set the L2GuardInstance Intention to ACTIVE
-				if (getActiveChar().getAI().getIntention() == CtrlIntention.IDLE)
-					getActiveChar().getAI().setIntention(CtrlIntention.ACTIVE, null);
+				if (guard.getAI().getIntention() == CtrlIntention.IDLE)
+					guard.getAI().setIntention(CtrlIntention.ACTIVE, null);
 			}
 		}
-		else if ((Config.GUARD_ATTACK_AGGRO_MOB && getActiveChar().isInActiveRegion()) && object instanceof L2MonsterInstance)
+		else if ((Config.GUARD_ATTACK_AGGRO_MOB && guard.isInActiveRegion()) && object instanceof L2MonsterInstance)
 		{
 			// Check if the object added is an aggressive L2MonsterInstance
 			if (((L2MonsterInstance) object).isAggressive())
 			{
-				if (Config.DEBUG)
-					_log.fine(getActiveChar().getObjectId() + ": Aggressive mob " + object.getObjectId() + " entered on guard range.");
-				
 				// Set the L2GuardInstance Intention to ACTIVE
-				if (getActiveChar().getAI().getIntention() == CtrlIntention.IDLE)
-					getActiveChar().getAI().setIntention(CtrlIntention.ACTIVE, null);
+				if (guard.getAI().getIntention() == CtrlIntention.IDLE)
+					guard.getAI().setIntention(CtrlIntention.ACTIVE, null);
 			}
 		}
 		return true;
@@ -73,18 +66,15 @@ public class GuardKnownList extends AttackableKnownList
 		if (!super.removeKnownObject(object))
 			return false;
 		
+		// get guard
+		final L2GuardInstance guard = (L2GuardInstance) _activeObject;
+		
 		// If the _aggroList of the L2GuardInstance is empty, set to IDLE
-		if (getActiveChar().gotNoTarget())
+		if (guard.gotNoTarget())
 		{
-			if (getActiveChar().hasAI())
-				getActiveChar().getAI().setIntention(CtrlIntention.IDLE, null);
+			if (guard.hasAI())
+				guard.getAI().setIntention(CtrlIntention.IDLE, null);
 		}
 		return true;
-	}
-	
-	@Override
-	public final L2GuardInstance getActiveChar()
-	{
-		return (L2GuardInstance) super.getActiveChar();
 	}
 }

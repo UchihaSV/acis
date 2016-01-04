@@ -141,7 +141,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		}
 		else if (actualCommand.equalsIgnoreCase("dissolve_clan"))
 		{
-			dissolveClan(player, player.getClanId());
+			dissolveClan(player);
 		}
 		else if (actualCommand.equalsIgnoreCase("change_clan_leader"))
 		{
@@ -152,7 +152,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		}
 		else if (actualCommand.equalsIgnoreCase("recover_clan"))
 		{
-			recoverClan(player, player.getClanId());
+			recoverClan(player);
 		}
 		else if (actualCommand.equalsIgnoreCase("increase_clan_level"))
 		{
@@ -635,7 +635,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		return player.getSubClasses().values().iterator();
 	}
 	
-	private static final void dissolveClan(L2PcInstance player, int clanId)
+	private static final void dissolveClan(L2PcInstance player)
 	{
 		if (!player.isClanLeader())
 		{
@@ -699,7 +699,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		player.deathPenalty(false, false, false);
 	}
 	
-	private static final void recoverClan(L2PcInstance player, int clanId)
+	private static final void recoverClan(L2PcInstance player)
 	{
 		if (!player.isClanLeader())
 		{

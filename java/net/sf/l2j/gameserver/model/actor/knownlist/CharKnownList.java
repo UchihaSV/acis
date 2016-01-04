@@ -24,35 +24,38 @@ public class CharKnownList extends ObjectKnownList
 		super(activeChar);
 	}
 	
-	/** Remove all L2Object from _knownObjects and _knownPlayer of the L2Character then cancel Attak or Cast and notify AI. */
-	@Override
-	public final void removeAllKnownObjects()
-	{
-		super.removeAllKnownObjects();
-		
-		// Set _target of the L2Character to null
-		getActiveChar().setTarget(null);
-		
-		// Cancel AI Task
-		if (getActiveChar().hasAI())
-			getActiveChar().setAI(null);
-	}
-	
 	@Override
 	public boolean removeKnownObject(L2Object object)
 	{
 		if (!super.removeKnownObject(object))
 			return false;
 		
+		// get character
+		final L2Character character = (L2Character) _activeObject;
+		
 		// If object is targeted by the L2Character, cancel Attack or Cast
-		if (object == getActiveChar().getTarget())
-			getActiveChar().setTarget(null);
+		if (object == character.getTarget())
+			character.setTarget(null);
 		
 		return true;
 	}
 	
-	public L2Character getActiveChar()
+	/**
+	 * Remove all objects from known list, cancel target and inform AI.
+	 */
+	@Override
+	public final void removeAllKnownObjects()
 	{
-		return (L2Character) super.getActiveObject();
+		super.removeAllKnownObjects();
+		
+		// get character
+		final L2Character character = (L2Character) _activeObject;
+		
+		// set target to null
+		character.setTarget(null);
+		
+		// cancel AI task
+		if (character.hasAI())
+			character.setAI(null);
 	}
 }

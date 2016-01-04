@@ -141,7 +141,9 @@ public class AuctionManager
 			while (rs.next())
 				_auctions.add(new Auction(rs.getInt("id")));
 			
+			rs.close();
 			statement.close();
+			
 			_log.info("AuctionManager: Loaded " + getAuctions().size() + " auction(s)");
 		}
 		catch (Exception e)

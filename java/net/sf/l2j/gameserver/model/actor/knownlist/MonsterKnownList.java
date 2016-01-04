@@ -35,11 +35,16 @@ public class MonsterKnownList extends AttackableKnownList
 		if (!super.addKnownObject(object))
 			return false;
 		
-		final L2CharacterAI ai = getActiveChar().getAI(); // force AI creation
-		
-		// Set the L2MonsterInstance Intention to ACTIVE if the state was IDLE
-		if (object instanceof L2PcInstance && ai != null && ai.getIntention() == CtrlIntention.IDLE)
-			ai.setIntention(CtrlIntention.ACTIVE, null);
+		// object is player
+		if (object instanceof L2PcInstance)
+		{
+			// get monster AI
+			final L2CharacterAI ai = ((L2MonsterInstance) _activeObject).getAI();
+			
+			// AI exists and is idle, set active
+			if (ai != null && ai.getIntention() == CtrlIntention.IDLE)
+				ai.setIntention(CtrlIntention.ACTIVE, null);
+		}
 		
 		return true;
 	}
@@ -53,20 +58,17 @@ public class MonsterKnownList extends AttackableKnownList
 		if (!(object instanceof L2Character))
 			return true;
 		
-		// Notify the L2MonsterInstance AI with EVT_FORGET_OBJECT
-		if (getActiveChar().hasAI())
-			getActiveChar().getAI().notifyEvent(CtrlEvent.EVT_FORGET_OBJECT, object);
+		// get monster
+		final L2MonsterInstance monster = (L2MonsterInstance) _activeObject;
 		
-		// Clear the _aggroList of the L2MonsterInstance
-		if (getActiveChar().isVisible() && getKnownType(L2PcInstance.class).isEmpty())
-			getActiveChar().clearAggroList();
+		// monster has AI, inform about lost object
+		if (monster.hasAI())
+			monster.getAI().notifyEvent(CtrlEvent.EVT_FORGET_OBJECT, object);
+		
+		// clear agro list
+		if (monster.isVisible() && getKnownType(L2PcInstance.class).isEmpty())
+			monster.clearAggroList();
 		
 		return true;
-	}
-	
-	@Override
-	public final L2MonsterInstance getActiveChar()
-	{
-		return (L2MonsterInstance) super.getActiveChar();
 	}
 }

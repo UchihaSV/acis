@@ -54,7 +54,7 @@ public class Spoil implements ISkillHandler
 			if (target.isDead())
 				continue;
 			
-			if (target.getIsSpoiledBy() != 0)
+			if (target.getSpoilerId() != 0)
 			{
 				activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.ALREADY_SPOILED));
 				continue;
@@ -62,7 +62,7 @@ public class Spoil implements ISkillHandler
 			
 			if (Formulas.calcMagicSuccess(activeChar, (L2Character) tgt, skill))
 			{
-				target.setIsSpoiledBy(activeChar.getObjectId());
+				target.setSpoilerId(activeChar.getObjectId());
 				activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.SPOIL_SUCCESS));
 			}
 			else

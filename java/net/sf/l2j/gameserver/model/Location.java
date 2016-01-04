@@ -14,39 +14,68 @@
  */
 package net.sf.l2j.gameserver.model;
 
-import net.sf.l2j.gameserver.model.actor.L2Character;
-import net.sf.l2j.util.Point3D;
-
-public class Location extends Point3D
+/**
+ * Deedlit: we are using volatile variable types here. We dont need to additionally use synchronized, cause volatile vars are synced vars.
+ */
+public class Location
 {
-	public volatile int _heading;
-	private static final long serialVersionUID = -8892572567626311527L;
+	protected volatile int _x, _y, _z;
 	
 	public Location(int x, int y, int z)
 	{
-		super(x, y, z);
-		_heading = 0;
+		_x = x;
+		_y = y;
+		_z = z;
 	}
 	
-	public Location(int x, int y, int z, int heading)
+	@Override
+	public String toString()
 	{
-		super(x, y, z);
-		_heading = heading;
+		return "(" + _x + ", " + _y + ", " + _z + ")";
 	}
 	
-	public Location(L2Object obj)
+	@Override
+	public int hashCode()
 	{
-		this(obj.getX(), obj.getY(), obj.getZ());
+		return _x ^ _y ^ _z;
 	}
 	
-	public Location(L2Character obj)
+	@Override
+	public boolean equals(Object o)
 	{
-		this((L2Object) obj);
-		_heading = obj.getHeading();
+		if (o instanceof Location)
+		{
+			Location point3D = (Location) o;
+			return (point3D._x == _x && point3D._y == _y && point3D._z == _z);
+		}
+		
+		return false;
 	}
 	
-	public int getHeading()
+	public boolean equals(int x, int y, int z)
 	{
-		return _heading;
+		return _x == x && _y == y && _z == z;
+	}
+	
+	public int getX()
+	{
+		return _x;
+	}
+	
+	public int getY()
+	{
+		return _y;
+	}
+	
+	public int getZ()
+	{
+		return _z;
+	}
+	
+	public void setXYZ(int x, int y, int z)
+	{
+		_x = x;
+		_y = y;
+		_z = z;
 	}
 }

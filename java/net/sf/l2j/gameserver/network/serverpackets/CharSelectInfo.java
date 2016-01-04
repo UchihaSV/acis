@@ -97,18 +97,18 @@ public class CharSelectInfo extends L2GameServerPacket
 			
 			writeD(0x01); // active ??
 			
-			writeD(charInfoPackage.getX()); // x
-			writeD(charInfoPackage.getY()); // y
-			writeD(charInfoPackage.getZ()); // z
+			writeD(charInfoPackage.getX());
+			writeD(charInfoPackage.getY());
+			writeD(charInfoPackage.getZ());
 			
-			writeF(charInfoPackage.getCurrentHp()); // hp cur
-			writeF(charInfoPackage.getCurrentMp()); // mp cur
+			writeF(charInfoPackage.getCurrentHp());
+			writeF(charInfoPackage.getCurrentMp());
 			
 			writeD(charInfoPackage.getSp());
 			writeQ(charInfoPackage.getExp());
 			writeD(charInfoPackage.getLevel());
 			
-			writeD(charInfoPackage.getKarma()); // karma
+			writeD(charInfoPackage.getKarma());
 			writeD(charInfoPackage.getPkKills());
 			
 			writeD(charInfoPackage.getPvPKills());
@@ -160,24 +160,13 @@ public class CharSelectInfo extends L2GameServerPacket
 			writeD(charInfoPackage.getHairColor());
 			writeD(charInfoPackage.getFace());
 			
-			writeF(charInfoPackage.getMaxHp()); // hp max
-			writeF(charInfoPackage.getMaxMp()); // mp max
+			writeF(charInfoPackage.getMaxHp());
+			writeF(charInfoPackage.getMaxMp());
 			
-			long deleteTime = charInfoPackage.getDeleteTimer();
-			int deletedays = 0;
-			if (deleteTime > 0)
-				deletedays = (int) ((deleteTime - System.currentTimeMillis()) / 1000);
-			writeD(deletedays); // days left before
-			
-			// delete .. if != 0 then char is inactive
+			writeD((charInfoPackage.getAccessLevel() > -100) ? ((charInfoPackage.getDeleteTimer() > 0) ? (int) ((charInfoPackage.getDeleteTimer() - System.currentTimeMillis()) / 1000) : 0) : -1);
 			writeD(charInfoPackage.getClassId());
-			if (i == _activeId)
-				writeD(0x01);
-			else
-				writeD(0x00); // c3 auto-select char
-				
-			writeC(charInfoPackage.getEnchantEffect() > 127 ? 127 : charInfoPackage.getEnchantEffect());
-			
+			writeD((i == _activeId) ? 0x01 : 0x00);
+			writeC((charInfoPackage.getEnchantEffect() > 127) ? 127 : charInfoPackage.getEnchantEffect());
 			writeD(charInfoPackage.getAugmentationId());
 		}
 	}

@@ -33,9 +33,6 @@ public class PartyInfo implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (id != COMMAND_IDS[0])
-			return false;
-		
 		if (!activeChar.isInParty())
 			return false;
 		

@@ -14,8 +14,6 @@
  */
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
-import java.util.logging.Logger;
-
 import net.sf.l2j.gameserver.ai.CtrlEvent;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.L2AttackableAI;
@@ -60,8 +58,6 @@ public class Disablers implements ISkillHandler
 		L2SkillType.ERASE,
 		L2SkillType.BETRAY
 	};
-	
-	protected static final Logger _log = Logger.getLogger(Disablers.class.getName());
 	
 	@Override
 	public void useSkill(L2Character activeChar, L2Skill skill, L2Object[] targets)

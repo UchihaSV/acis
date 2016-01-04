@@ -17,9 +17,9 @@ package net.sf.l2j.gameserver.model;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.SkillTable;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.skills.effects.EffectFusion;
 import net.sf.l2j.gameserver.util.Util;
@@ -90,7 +90,7 @@ public final class FusionSkill
 				if (!Util.checkIfInRange(_skillCastRange, _caster, _target, true))
 					_caster.abortCast();
 				
-				if (!GeoData.getInstance().canSeeTarget(_caster, _target))
+				if (!PathFinding.getInstance().canSeeTarget(_caster, _target))
 					_caster.abortCast();
 			}
 			catch (Exception e)

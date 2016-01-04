@@ -15,10 +15,9 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.Announcements;
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.communitybbs.Manager.MailBBSManager;
 import net.sf.l2j.gameserver.datatables.AdminCommandAccessRights;
+import net.sf.l2j.gameserver.datatables.AnnouncementTable;
 import net.sf.l2j.gameserver.datatables.GmListTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
@@ -33,6 +32,7 @@ import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2Clan.SubPledge;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.base.Race;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
 import net.sf.l2j.gameserver.model.entity.Couple;
 import net.sf.l2j.gameserver.model.entity.Siege;
@@ -59,6 +59,7 @@ import net.sf.l2j.gameserver.network.serverpackets.ShortCutInit;
 import net.sf.l2j.gameserver.network.serverpackets.SkillCoolTime;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
+import net.sf.l2j.gameserver.taskmanager.GameTimeTaskManager;
 
 public class EnterWorld extends L2GameClientPacket
 {
@@ -96,7 +97,7 @@ public class EnterWorld extends L2GameClientPacket
 			if (Config.GM_STARTUP_SILENCE && AdminCommandAccessRights.getInstance().hasAccess("admin_silence", activeChar.getAccessLevel()))
 				activeChar.setInRefusalMode(true);
 			
-			if (Config.GM_STARTUP_AUTO_LIST && AdminCommandAccessRights.getInstance().hasAccess("admin_gmliston", activeChar.getAccessLevel()))
+			if (Config.GM_STARTUP_AUTO_LIST && AdminCommandAccessRights.getInstance().hasAccess("admin_gmlist", activeChar.getAccessLevel()))
 				GmListTable.getInstance().addGm(activeChar, false);
 			else
 				GmListTable.getInstance().addGm(activeChar, true);
@@ -171,20 +172,11 @@ public class EnterWorld extends L2GameClientPacket
 		// Announcements, welcome & Seven signs period messages
 		activeChar.sendPacket(SystemMessageId.WELCOME_TO_LINEAGE);
 		SevenSigns.getInstance().sendCurrentPeriodMsg(activeChar);
-		Announcements.getInstance().showAnnouncements(activeChar);
+		AnnouncementTable.getInstance().showAnnouncements(activeChar);
 		
 		// if player is DE, check for shadow sense skill at night
-		if (activeChar.getRace().ordinal() == 2)
-		{
-			// If player got the skill (exemple : low level DEs haven't it)
-			if (activeChar.getSkillLevel(294) == 1)
-			{
-				if (GameTimeController.getInstance().isNowNight())
-					activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.NIGHT_S1_EFFECT_APPLIES).addSkillName(294));
-				else
-					activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.DAY_S1_EFFECT_DISAPPEARS).addSkillName(294));
-			}
-		}
+		if (activeChar.getRace() == Race.DarkElf && activeChar.getSkillLevel(294) == 1)
+			activeChar.sendPacket(SystemMessage.getSystemMessage((GameTimeTaskManager.getInstance().isNight()) ? SystemMessageId.NIGHT_S1_EFFECT_APPLIES : SystemMessageId.DAY_S1_EFFECT_DISAPPEARS).addSkillName(294));
 		
 		activeChar.getMacroses().sendUpdate();
 		activeChar.sendPacket(new UserInfo(activeChar));

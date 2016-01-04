@@ -28,35 +28,6 @@ public class PcKnownList extends PlayableKnownList
 		super(activeChar);
 	}
 	
-	public void refreshInfos()
-	{
-		for (L2Object object : _knownObjects.values())
-		{
-			if (object instanceof L2PcInstance && ((L2PcInstance) object).inObserverMode())
-				continue;
-			
-			sendInfoFrom(object);
-		}
-	}
-	
-	private void sendInfoFrom(L2Object object)
-	{
-		if (object.getPoly().isMorphed() && object.getPoly().getPolyType().equals("item"))
-			getActiveChar().sendPacket(new SpawnItemPoly(object));
-		else
-		{
-			object.sendInfo(getActiveChar());
-			
-			if (object instanceof L2Character)
-			{
-				// Update the state of the L2Character object client side by sending Server->Client packet MoveToPawn/MoveToLocation and AutoAttackStart to the L2PcInstance
-				L2Character obj = (L2Character) object;
-				if (obj.hasAI())
-					obj.getAI().describeStateToPlayer(getActiveChar());
-			}
-		}
-	}
-	
 	/**
 	 * Add a visible L2Object to L2PcInstance _knownObjects and _knownPlayer (if necessary) and send Server-Client Packets needed to inform the L2PcInstance of its state and actions in progress.<BR>
 	 * <BR>
@@ -103,21 +74,12 @@ public class PcKnownList extends PlayableKnownList
 		if (!super.removeKnownObject(object))
 			return false;
 		
-		// Send Server-Client Packet DeleteObject to the L2PcInstance
-		getActiveChar().sendPacket(new DeleteObject(object));
+		// get player
+		final L2PcInstance player = (L2PcInstance) _activeObject;
+		
+		// send Server-Client Packet DeleteObject to the L2PcInstance
+		player.sendPacket(new DeleteObject(object));
 		return true;
-	}
-	
-	@Override
-	public final L2PcInstance getActiveChar()
-	{
-		return (L2PcInstance) super.getActiveChar();
-	}
-	
-	@Override
-	public int getDistanceToForgetObject(L2Object object)
-	{
-		return (int) Math.round(1.5 * getDistanceToWatchObject(object));
 	}
 	
 	@Override
@@ -127,5 +89,45 @@ public class PcKnownList extends PlayableKnownList
 			return 8000;
 		
 		return Math.max(1800, 3600 - (_knownObjects.size() * 20));
+	}
+	
+	@Override
+	public int getDistanceToForgetObject(L2Object object)
+	{
+		// distance to watch + 50%
+		return (int) Math.round(1.5 * getDistanceToWatchObject(object));
+	}
+	
+	public final void refreshInfos()
+	{
+		for (L2Object object : _knownObjects.values())
+		{
+			if (object instanceof L2PcInstance && ((L2PcInstance) object).inObserverMode())
+				continue;
+			
+			sendInfoFrom(object);
+		}
+	}
+	
+	private final void sendInfoFrom(L2Object object)
+	{
+		// get player
+		final L2PcInstance player = (L2PcInstance) _activeObject;
+		
+		if (object.getPoly().isMorphed() && object.getPoly().getPolyType().equals("item"))
+			player.sendPacket(new SpawnItemPoly(object));
+		else
+		{
+			// send object info to player
+			object.sendInfo(player);
+			
+			if (object instanceof L2Character)
+			{
+				// Update the state of the L2Character object client side by sending Server->Client packet MoveToPawn/MoveToLocation and AutoAttackStart to the L2PcInstance
+				L2Character obj = (L2Character) object;
+				if (obj.hasAI())
+					obj.getAI().describeStateToPlayer(player);
+			}
+		}
 	}
 }

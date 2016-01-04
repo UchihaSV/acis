@@ -16,7 +16,7 @@ package net.sf.l2j.gameserver.network.serverpackets;
 
 import java.util.List;
 
-import net.sf.l2j.util.Point3D;
+import net.sf.l2j.gameserver.model.Location;
 
 /**
  * Format: (ch) d[ddddd]
@@ -59,11 +59,11 @@ public class ExCursedWeaponLocation extends L2GameServerPacket
 	
 	public static class CursedWeaponInfo
 	{
-		public Point3D pos;
+		public Location pos;
 		public int id;
 		public int activated; // 0 - not activated ? 1 - activated
 		
-		public CursedWeaponInfo(Point3D p, int ID, int status)
+		public CursedWeaponInfo(Location p, int ID, int status)
 		{
 			pos = p;
 			id = ID;

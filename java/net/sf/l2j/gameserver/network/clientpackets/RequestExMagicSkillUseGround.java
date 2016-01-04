@@ -16,11 +16,11 @@ package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ValidateLocation;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Point3D;
 
 /**
  * Fromat:(ch) dddddc
@@ -63,7 +63,7 @@ public final class RequestExMagicSkillUseGround extends L2GameClientPacket
 		final L2Skill skill = SkillTable.getInstance().getInfo(_skillId, level);
 		if (skill != null)
 		{
-			activeChar.setCurrentSkillWorldPosition(new Point3D(_x, _y, _z));
+			activeChar.setCurrentSkillWorldPosition(new Location(_x, _y, _z));
 			
 			// normally magicskilluse packet turns char client side but for these skills, it doesn't (even with correct target)
 			activeChar.setHeading(Util.calculateHeadingFrom(activeChar.getX(), activeChar.getY(), _x, _y));

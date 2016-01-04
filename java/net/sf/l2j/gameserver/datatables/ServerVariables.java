@@ -72,15 +72,14 @@ public class ServerVariables
 			{
 				statement = con.prepareStatement(DELETE);
 				statement.setString(1, name);
-				statement.execute();
 			}
 			else
 			{
 				statement = con.prepareStatement(REPLACE);
 				statement.setString(1, name);
 				statement.setString(2, value);
-				statement.execute();
 			}
+			statement.execute();
 			statement.close();
 		}
 		catch (Exception e)

@@ -41,7 +41,7 @@ public class DrainSoul implements ISkillHandler
 		// Check player.
 		if (activeChar == null || activeChar.isDead() || !(activeChar instanceof L2PcInstance))
 			return;
-				
+		
 		// Check quest condition.
 		final L2PcInstance player = (L2PcInstance) activeChar;
 		QuestState st = player.getQuestState(qn);
@@ -49,7 +49,7 @@ public class DrainSoul implements ISkillHandler
 			return;
 		
 		// Get target.
-		L2Object target = targets[0]; 
+		L2Object target = targets[0];
 		if (target == null || !(target instanceof L2Attackable))
 			return;
 		

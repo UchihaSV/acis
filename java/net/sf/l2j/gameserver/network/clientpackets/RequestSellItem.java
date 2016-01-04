@@ -22,6 +22,7 @@ import net.sf.l2j.gameserver.model.actor.instance.L2FishermanInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2MercManagerInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2MerchantInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.holder.ItemHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
@@ -36,7 +37,7 @@ public final class RequestSellItem extends L2GameClientPacket
 	private static final int BATCH_LENGTH = 12; // length of the one item
 	
 	private int _listId;
-	private Item[] _items = null;
+	private ItemHolder[] _items = null;
 	
 	@Override
 	protected void readImpl()
@@ -46,7 +47,7 @@ public final class RequestSellItem extends L2GameClientPacket
 		if (count <= 0 || count > Config.MAX_ITEM_IN_PACKET || count * BATCH_LENGTH != _buf.remaining())
 			return;
 		
-		_items = new Item[count];
+		_items = new ItemHolder[count];
 		for (int i = 0; i < count; i++)
 		{
 			int objectId = readD();
@@ -57,7 +58,7 @@ public final class RequestSellItem extends L2GameClientPacket
 				_items = null;
 				return;
 			}
-			_items[i] = new Item(objectId, itemId, cnt);
+			_items[i] = new ItemHolder(objectId, cnt);
 		}
 	}
 	
@@ -91,9 +92,9 @@ public final class RequestSellItem extends L2GameClientPacket
 		
 		int totalPrice = 0;
 		// Proceed the sell
-		for (Item i : _items)
+		for (ItemHolder i : _items)
 		{
-			ItemInstance item = player.checkItemManipulation(i.getObjectId(), i.getCount());
+			ItemInstance item = player.checkItemManipulation(i.getId(), i.getCount());
 			if (item == null || (!item.isSellable()))
 				continue;
 			
@@ -104,7 +105,7 @@ public final class RequestSellItem extends L2GameClientPacket
 				Util.handleIllegalPlayerAction(player, player.getName() + " of account " + player.getAccountName() + " tried to purchase over " + Integer.MAX_VALUE + " adena worth of goods.", Config.DEFAULT_PUNISH);
 				return;
 			}
-			item = player.getInventory().destroyItem("Sell", i.getObjectId(), i.getCount(), player, merchant);
+			item = player.getInventory().destroyItem("Sell", i.getId(), i.getCount(), player, merchant);
 		}
 		
 		player.addAdena("Sell", totalPrice, merchant, false);
@@ -133,27 +134,5 @@ public final class RequestSellItem extends L2GameClientPacket
 		su.addAttribute(StatusUpdate.CUR_LOAD, player.getCurrentLoad());
 		player.sendPacket(su);
 		player.sendPacket(new ItemList(player, true));
-	}
-	
-	private static class Item
-	{
-		private final int _objectId;
-		private final int _count;
-		
-		public Item(int objId, int id, int num)
-		{
-			_objectId = objId;
-			_count = num;
-		}
-		
-		public int getObjectId()
-		{
-			return _objectId;
-		}
-		
-		public int getCount()
-		{
-			return _count;
-		}
 	}
 }

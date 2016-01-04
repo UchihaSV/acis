@@ -33,7 +33,6 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.Announcements;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -42,6 +41,7 @@ import net.sf.l2j.gameserver.model.entity.Hero;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.StatsSet;
+import net.sf.l2j.gameserver.util.Broadcast;
 
 public class Olympiad
 {
@@ -315,7 +315,7 @@ public class Olympiad
 		@Override
 		public void run()
 		{
-			Announcements.announceToAll(SystemMessage.getSystemMessage(SystemMessageId.OLYMPIAD_PERIOD_S1_HAS_ENDED).addNumber(_currentCycle));
+			Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.OLYMPIAD_PERIOD_S1_HAS_ENDED).addNumber(_currentCycle));
 			
 			if (_scheduledWeeklyTask != null)
 				_scheduledWeeklyTask.cancel(true);
@@ -389,7 +389,7 @@ public class Olympiad
 				
 				_inCompPeriod = true;
 				
-				Announcements.announceToAll(SystemMessage.getSystemMessage(SystemMessageId.THE_OLYMPIAD_GAME_HAS_STARTED));
+				Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.THE_OLYMPIAD_GAME_HAS_STARTED));
 				_log.info("Olympiad: Olympiad game started.");
 				
 				_gameManager = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(OlympiadGameManager.getInstance(), 30000, 30000);
@@ -404,7 +404,7 @@ public class Olympiad
 						@Override
 						public void run()
 						{
-							Announcements.announceToAll(SystemMessage.getSystemMessage(SystemMessageId.OLYMPIAD_REGISTRATION_PERIOD_ENDED));
+							Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.OLYMPIAD_REGISTRATION_PERIOD_ENDED));
 						}
 					}, regEnd);
 				}
@@ -418,7 +418,7 @@ public class Olympiad
 							return;
 						
 						_inCompPeriod = false;
-						Announcements.announceToAll(SystemMessage.getSystemMessage(SystemMessageId.THE_OLYMPIAD_GAME_HAS_ENDED));
+						Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.THE_OLYMPIAD_GAME_HAS_ENDED));
 						_log.info("Olympiad: Olympiad game ended.");
 						
 						while (OlympiadGameManager.getInstance().isBattleStarted()) // cleared in game manager
@@ -482,7 +482,7 @@ public class Olympiad
 	
 	protected void setNewOlympiadEnd()
 	{
-		Announcements.announceToAll(SystemMessage.getSystemMessage(SystemMessageId.OLYMPIAD_PERIOD_S1_HAS_STARTED).addNumber(_currentCycle));
+		Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.OLYMPIAD_PERIOD_S1_HAS_STARTED).addNumber(_currentCycle));
 		
 		Calendar currentTime = Calendar.getInstance();
 		currentTime.add(Calendar.MONTH, 1);
@@ -591,14 +591,13 @@ public class Olympiad
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
 			PreparedStatement statement;
-			for (int nobleId : _nobles.keySet())
+			for (Map.Entry<Integer, StatsSet> nobleEntry : _nobles.entrySet())
 			{
-				StatsSet nobleInfo = _nobles.get(nobleId);
-				
+				final StatsSet nobleInfo = nobleEntry.getValue();
 				if (nobleInfo == null)
 					continue;
 				
-				int charId = nobleId;
+				int charId = nobleEntry.getKey();
 				int classId = nobleInfo.getInteger(CLASS_ID);
 				int points = nobleInfo.getInteger(POINTS);
 				int compDone = nobleInfo.getInteger(COMP_DONE);
@@ -787,7 +786,7 @@ public class Olympiad
 	
 	public int getNoblePoints(int objId)
 	{
-		if ((_nobles == null) || !_nobles.containsKey(objId))
+		if (_nobles == null || !_nobles.containsKey(objId))
 			return 0;
 		
 		return _nobles.get(objId).getInteger(POINTS);
@@ -815,7 +814,7 @@ public class Olympiad
 	
 	public int getCompetitionDone(int objId)
 	{
-		if ((_nobles == null) || !_nobles.containsKey(objId))
+		if (_nobles == null || !_nobles.containsKey(objId))
 			return 0;
 		
 		return _nobles.get(objId).getInteger(COMP_DONE);
@@ -823,7 +822,7 @@ public class Olympiad
 	
 	public int getCompetitionWon(int objId)
 	{
-		if ((_nobles == null) || !_nobles.containsKey(objId))
+		if (_nobles == null || !_nobles.containsKey(objId))
 			return 0;
 		
 		return _nobles.get(objId).getInteger(COMP_WON);
@@ -831,7 +830,7 @@ public class Olympiad
 	
 	public int getCompetitionLost(int objId)
 	{
-		if ((_nobles == null) || !_nobles.containsKey(objId))
+		if (_nobles == null || !_nobles.containsKey(objId))
 			return 0;
 		
 		return _nobles.get(objId).getInteger(COMP_LOST);
@@ -859,7 +858,7 @@ public class Olympiad
 	 */
 	protected static StatsSet addNobleStats(int charId, StatsSet data)
 	{
-		return _nobles.put(Integer.valueOf(charId), data);
+		return _nobles.put(charId, data);
 	}
 	
 	private static class SingletonHolder

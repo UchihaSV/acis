@@ -14,6 +14,7 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,61 +22,74 @@ import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
 /**
- * @author Tryskell
+ * Updates and clears PvP flag of {@link L2PcInstance} after specified time.
+ * @author Tryskell, Hasha
  */
-public class PvpFlagTaskManager
+public final class PvpFlagTaskManager implements Runnable
 {
-	protected Map<L2PcInstance, Long> _pvpFlagTask = new ConcurrentHashMap<>();
+	private final Map<L2PcInstance, Long> _players = new ConcurrentHashMap<>();
 	
-	public PvpFlagTaskManager()
-	{
-		ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new PvpFlagScheduler(), 0, 1000);
-	}
-	
-	public static PvpFlagTaskManager getInstance()
+	public static final PvpFlagTaskManager getInstance()
 	{
 		return SingletonHolder._instance;
 	}
 	
-	public void add(L2PcInstance actor, long time)
+	protected PvpFlagTaskManager()
 	{
-		_pvpFlagTask.put(actor, time);
+		// Run task each second.
+		ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(this, 1000, 1000);
 	}
 	
-	public void remove(L2PcInstance actor)
+	/**
+	 * Adds {@link L2PcInstance} to the PvpFlagTask.
+	 * @param player : L2PcInstance to be added and checked.
+	 * @param time : Time in ms, after which the PvP flag is removed.
+	 */
+	public final void add(L2PcInstance player, long time)
 	{
-		_pvpFlagTask.remove(actor);
+		_players.put(player, System.currentTimeMillis() + time);
 	}
 	
-	private class PvpFlagScheduler implements Runnable
+	/**
+	 * Removes {@link L2PcInstance} from the PvpFlagTask.
+	 * @param player : {@link L2PcInstance} to be removed.
+	 */
+	public final void remove(L2PcInstance player)
 	{
-		protected PvpFlagScheduler()
-		{
-			// Do nothing
-		}
+		_players.remove(player);
+	}
+	
+	@Override
+	public final void run()
+	{
+		// List is empty, skip.
+		if (_players.isEmpty())
+			return;
 		
-		@Override
-		public void run()
+		// Get current time.
+		final long currentTime = System.currentTimeMillis();
+		
+		// Loop all players.
+		for (Iterator<Map.Entry<L2PcInstance, Long>> iterator = _players.entrySet().iterator(); iterator.hasNext();)
 		{
-			if (!_pvpFlagTask.isEmpty())
+			// Get entry of current iteration.
+			Map.Entry<L2PcInstance, Long> entry = iterator.next();
+			
+			// Get time left and check.
+			final long timeLeft = entry.getValue();
+			
+			// Time is running out, clear PvP flag and remove from list.
+			if (currentTime > timeLeft)
 			{
-				Long current = System.currentTimeMillis();
-				synchronized (this)
-				{
-					for (L2PcInstance actor : _pvpFlagTask.keySet())
-					{
-						if (current > _pvpFlagTask.get(actor))
-						{
-							actor.updatePvPFlag(0);
-							_pvpFlagTask.remove(actor);
-						}
-						else if (current > (_pvpFlagTask.get(actor) - 5000))
-							actor.updatePvPFlag(2);
-						else
-							actor.updatePvPFlag(1);
-					}
-				}
+				entry.getKey().updatePvPFlag(0);
+				iterator.remove();
 			}
+			// Time almost runned out, update to blinking PvP flag.
+			else if (currentTime > (timeLeft - 5000))
+				entry.getKey().updatePvPFlag(2);
+			// Time didn't run out, keep PvP flag.
+			else
+				entry.getKey().updatePvPFlag(1);
 		}
 	}
 	

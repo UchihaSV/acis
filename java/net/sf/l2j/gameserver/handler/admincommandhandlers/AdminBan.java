@@ -29,10 +29,17 @@ import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.util.GMAudit;
 
 /**
- * This class handles following admin commands: - ban_acc <account_name> = changes account access level to -100 and logs him off. If no account is specified target's account is used. - ban_char <char_name> = changes a characters access level to -100 and logs him off. If no character is specified
- * target is used. - ban_chat <char_name> <duration> = chat bans a character for the specified duration. If no name is specified the target is chat banned indefinitely. - unban_acc <account_name> = changes account access level to 0. - unban_char <char_name> = changes specified characters access
- * level to 0. - unban_chat <char_name> = lifts chat ban from specified player. If no player name is specified current target is used. - jail charname [penalty_time] = jails character. Time specified in minutes. For ever if no time is specified. - unjail charname = Unjails player, teleport him to
- * Floran.
+ * This class handles following admin commands:
+ * <ul>
+ * <li>ban_acc [account_name] = changes account access level to -100 and logs him off. If no account is specified target's account is used.</li>
+ * <li>ban_char [char_name] = changes a characters access level to -100 and logs him off. If no character is specified target is used.</li>
+ * <li>ban_chat [char_name] [duration] = chat bans a character for the specified duration. If no name is specified the target is chat banned indefinitely.</li>
+ * <li>unban_acc [account_name] = changes account access level to 0.</li>
+ * <li>unban_char [char_name] = changes specified characters access level to 0.</li>
+ * <li>unban_chat [char_name] = lifts chat ban from specified player. If no player name is specified current target is used.</li>
+ * <li>jail [char_name] [penalty_time] = jails character. Time specified in minutes. For ever if no time is specified.</li>
+ * <li>unjail [char_name] = Unjails player, teleport him to Floran.</li>
+ * </ul>
  */
 public class AdminBan implements IAdminCommandHandler
 {

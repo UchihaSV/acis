@@ -35,7 +35,7 @@ public final class RequestExPledgeCrestLarge extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		byte[] data = CrestCache.getCrest(CrestType.PLEDGE_LARGE, _crestId);
+		byte[] data = CrestCache.getInstance().getCrest(CrestType.PLEDGE_LARGE, _crestId);
 		if (data != null)
 			sendPacket(new ExPledgeCrestLarge(_crestId, data));
 	}

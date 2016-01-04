@@ -37,9 +37,6 @@ public class SiegeStatus implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (COMMAND_IDS[0] != id)
-			return false;
-		
 		if (!activeChar.isClanLeader())
 		{
 			activeChar.sendPacket(SystemMessageId.ONLY_CLAN_LEADER_CAN_ISSUE_COMMANDS);
