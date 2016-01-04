@@ -178,7 +178,7 @@ public class L2NpcInstance extends L2Npc
 		if (empty)
 		{
 			player.sendPacket(SystemMessageId.THERE_IS_NO_SKILL_THAT_ENABLES_ENCHANT);
-
+			
 			if (player.getLevel() < 74)
 				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.DO_NOT_HAVE_FURTHER_SKILLS_TO_LEARN_S1).addNumber(74));
 			else
@@ -203,7 +203,7 @@ public class L2NpcInstance extends L2Npc
 		{
 			NpcHtmlMessage npcReply = new NpcHtmlMessage(getObjectId());
 			npcReply.setHtml("<html><body>Newbie Guide:<br>I'm sorry, but you are not eligible to receive the protection blessing.<br1>It can only be bestowed on <font color=\"LEVEL\">characters below level 39 who have not made a seccond transfer.</font></body></html>");
-			npcReply.replace("%objectId%", String.valueOf(getObjectId()));
+			npcReply.replace("%objectId%", getObjectId());
 			player.sendPacket(npcReply);
 			return;
 		}
@@ -216,10 +216,10 @@ public class L2NpcInstance extends L2Npc
 		if (command.startsWith("SkillList"))
 		{
 			player.setSkillLearningClassId(player.getClassId());
-			showSkillList(player, player.getCurrentFolkNPC(), player.getClassId());
+			showSkillList(player, this, player.getClassId());
 		}
 		else if (command.startsWith("EnchantSkillList"))
-			showEnchantSkillList(player, player.getCurrentFolkNPC(), player.getClassId());
+			showEnchantSkillList(player, this, player.getClassId());
 		else if (command.startsWith("GiveBlessing"))
 			giveBlessingSupport(player);
 		else

@@ -94,26 +94,21 @@ public final class L2MercManagerInstance extends L2NpcInstance
 			
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
-		html.replace("%npcId%", String.valueOf(getNpcId()));
+		html.replace("%objectId%", getObjectId());
+		html.replace("%npcId%", getNpcId());
 		html.replace("%npcname%", getName());
 		player.sendPacket(html);
 	}
 	
 	private int validateCondition(L2PcInstance player)
 	{
-		if (getCastle() != null && getCastle().getCastleId() > 0)
+		if (getCastle() != null && player.getClan() != null)
 		{
-			if (player.getClan() != null)
-			{
-				if (getCastle().getSiege().getIsInProgress())
-					return COND_BUSY_BECAUSE_OF_SIEGE; // Busy because of siege
-				else if (getCastle().getOwnerId() == player.getClanId()) // Clan owns castle
-				{
-					if ((player.getClanPrivileges() & L2Clan.CP_CS_MERCENARIES) == L2Clan.CP_CS_MERCENARIES)
-						return COND_OWNER;
-				}
-			}
+			if (getCastle().getSiege().isInProgress())
+				return COND_BUSY_BECAUSE_OF_SIEGE;
+			
+			if (getCastle().getOwnerId() == player.getClanId() && (player.getClanPrivileges() & L2Clan.CP_CS_MERCENARIES) == L2Clan.CP_CS_MERCENARIES)
+				return COND_OWNER;
 		}
 		return COND_ALL_FALSE;
 	}

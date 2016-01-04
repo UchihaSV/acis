@@ -30,22 +30,19 @@ public class FuncMaxHpAdd extends Func
 	
 	private FuncMaxHpAdd()
 	{
-		super(Stats.MAX_HP, 0x10, null);
+		super(Stats.MAX_HP, 0x10, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2PcTemplate t = (L2PcTemplate) env.player.getTemplate();
-		int lvl = env.player.getLevel() - t.classBaseLevel;
+		final L2PcTemplate t = (L2PcTemplate) env.getCharacter().getTemplate();
+		final int lvl = Math.max(env.getCharacter().getLevel() - t.classBaseLevel, 0);
 		
-		// This is to prevent Players having only 1 HP
-		if (lvl < 0)
-			lvl = 0;
+		final double hpmod = t.lvlHpMod * lvl;
+		final double hpmax = (t.lvlHpAdd + hpmod) * lvl;
+		final double hpmin = (t.lvlHpAdd * lvl) + hpmod;
 		
-		double hpmod = t.lvlHpMod * lvl;
-		double hpmax = (t.lvlHpAdd + hpmod) * lvl;
-		double hpmin = (t.lvlHpAdd * lvl) + hpmod;
-		env.value += (hpmax + hpmin) / 2;
+		env.addValue((hpmax + hpmin) / 2);
 	}
 }

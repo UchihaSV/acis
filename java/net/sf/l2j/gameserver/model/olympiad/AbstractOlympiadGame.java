@@ -366,23 +366,18 @@ public abstract class AbstractOlympiadGame
 		
 		try
 		{
-			SystemMessage sm;
-			L2ItemInstance item;
 			final InventoryUpdate iu = new InventoryUpdate();
 			for (int[] it : reward)
 			{
 				if (it == null || it.length != 2)
 					continue;
 				
-				item = player.getInventory().addItem("Olympiad", it[0], it[1], player, null);
+				final L2ItemInstance item = player.getInventory().addItem("Olympiad", it[0], it[1], player, null);
 				if (item == null)
 					continue;
 				
 				iu.addModifiedItem(item);
-				sm = SystemMessage.getSystemMessage(SystemMessageId.EARNED_S2_S1_S);
-				sm.addItemName(it[0]);
-				sm.addNumber(it[1]);
-				player.sendPacket(sm);
+				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.EARNED_S2_S1_S).addItemName(it[0]).addNumber(it[1]));
 			}
 			player.sendPacket(iu);
 		}

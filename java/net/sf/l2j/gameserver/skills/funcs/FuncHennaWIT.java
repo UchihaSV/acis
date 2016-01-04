@@ -30,14 +30,14 @@ public class FuncHennaWIT extends Func
 	
 	private FuncHennaWIT()
 	{
-		super(Stats.STAT_WIT, 0x10, null);
+		super(Stats.STAT_WIT, 0x10, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2PcInstance pc = (L2PcInstance) env.player;
-		if (pc != null)
-			env.value += pc.getHennaStatWIT();
+		final L2PcInstance player = env.getPlayer();
+		if (player != null)
+			env.addValue(player.getHennaStatWIT());
 	}
 }

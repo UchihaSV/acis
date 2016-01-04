@@ -42,7 +42,7 @@ public class L2SkillChargeDmg extends L2Skill
 		double modifier = 0;
 		
 		if (caster instanceof L2PcInstance)
-			modifier = 0.7 + 0.3 * ((L2PcInstance) caster).getCharges();
+			modifier = 0.7 + 0.3 * (((L2PcInstance) caster).getCharges() + getNumCharges());
 		
 		final boolean ss = caster.isChargedShot(ShotType.SOULSHOT);
 		
@@ -76,7 +76,7 @@ public class L2SkillChargeDmg extends L2Skill
 				crit = Formulas.calcCrit(getBaseCritRate() * 10 * Formulas.getSTRBonus(caster));
 			
 			// damage calculation, crit is static 2x
-			double damage = Formulas.calcChargeSkillsDam(caster, target, this, shld, false, false, ss);
+			double damage = Formulas.calcPhysDam(caster, target, this, shld, false, ss);
 			if (crit)
 				damage *= 2;
 			
@@ -89,29 +89,19 @@ public class L2SkillChargeDmg extends L2Skill
 					{
 						caster.stopSkillEffects(getId());
 						getEffects(target, caster);
-						SystemMessage sm = SystemMessage.getSystemMessage(SystemMessageId.YOU_FEEL_S1_EFFECT);
-						sm.addSkillName(this);
-						caster.sendPacket(sm);
+						caster.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_FEEL_S1_EFFECT).addSkillName(this));
 					}
 					else
 					{
 						// activate attacked effects, if any
 						target.stopSkillEffects(getId());
-						if (Formulas.calcSkillSuccess(caster, target, this, shld, false, false, true))
+						if (Formulas.calcSkillSuccess(caster, target, this, shld, true))
 						{
 							getEffects(caster, target, new Env(shld, false, false, false));
-							
-							SystemMessage sm = SystemMessage.getSystemMessage(SystemMessageId.YOU_FEEL_S1_EFFECT);
-							sm.addSkillName(this);
-							target.sendPacket(sm);
+							target.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_FEEL_S1_EFFECT).addSkillName(this));
 						}
 						else
-						{
-							SystemMessage sm = SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2);
-							sm.addCharName(target);
-							sm.addSkillName(this);
-							caster.sendPacket(sm);
-						}
+							caster.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(this));
 					}
 				}
 				

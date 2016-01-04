@@ -103,7 +103,7 @@ public class Blow implements ISkillHandler
 					{
 						final byte shld = Formulas.calcShldUse(activeChar, target, skill);
 						target.stopSkillEffects(skill.getId());
-						if (Formulas.calcSkillSuccess(activeChar, target, skill, shld, false, false, true))
+						if (Formulas.calcSkillSuccess(activeChar, target, skill, shld, true))
 						{
 							skill.getEffects(activeChar, target, new Env(shld, false, false, false));
 							target.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_FEEL_S1_EFFECT).addSkillName(skill));
@@ -124,19 +124,21 @@ public class Blow implements ISkillHandler
 				if (crit)
 				{
 					damage *= 2;
+					
 					// Vicious Stance is special after C5, and only for BLOW skills
 					L2Effect vicious = activeChar.getFirstEffect(312);
 					if (vicious != null && damage > 1)
 					{
 						for (Func func : vicious.getStatFuncs())
 						{
-							Env env = new Env();
-							env.player = activeChar;
-							env.target = target;
-							env.skill = skill;
-							env.value = damage;
+							final Env env = new Env();
+							env.setCharacter(activeChar);
+							env.setTarget(target);
+							env.setSkill(skill);
+							env.setValue(damage);
+							
 							func.calc(env);
-							damage = (int) env.value;
+							damage = (int) env.getValue();
 						}
 					}
 				}

@@ -50,15 +50,12 @@ public class ConditionPlayerActiveSkillId extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		for (L2Skill sk : env.player.getAllSkills())
+		for (L2Skill sk : env.getCharacter().getAllSkills())
 		{
-			if (sk != null)
+			if (sk != null && sk.getId() == _skillId)
 			{
-				if (sk.getId() == _skillId)
-				{
-					if (_skillLevel == -1 || _skillLevel <= sk.getLevel())
-						return true;
-				}
+				if (_skillLevel == -1 || _skillLevel <= sk.getLevel())
+					return true;
 			}
 		}
 		return false;

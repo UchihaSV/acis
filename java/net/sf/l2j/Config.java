@@ -67,6 +67,7 @@ public final class Config
 	public static int ALT_CREATE_ALLY_DAYS_WHEN_DISSOLVED;
 	public static int ALT_MAX_NUM_OF_CLANS_IN_ALLY;
 	public static int ALT_CLAN_MEMBERS_FOR_WAR;
+	public static int ALT_CLAN_WAR_PENALTY_WHEN_ENDED;
 	public static boolean ALT_MEMBERS_CAN_WITHDRAW_FROM_CLANWH;
 	public static boolean REMOVE_CASTLE_CIRCLETS;
 	
@@ -495,7 +496,6 @@ public final class Config
 	public static String GAME_SERVER_LOGIN_HOST;
 	
 	/** Access to database */
-	public static String DATABASE_DRIVER;
 	public static String DATABASE_URL;
 	public static String DATABASE_LOGIN;
 	public static String DATABASE_PASSWORD;
@@ -718,6 +718,7 @@ public final class Config
 			ALT_CLAN_CREATE_DAYS = clans.getProperty("DaysBeforeCreateAClan", 10);
 			ALT_MAX_NUM_OF_CLANS_IN_ALLY = clans.getProperty("AltMaxNumOfClansInAlly", 3);
 			ALT_CLAN_MEMBERS_FOR_WAR = clans.getProperty("AltClanMembersForWar", 15);
+			ALT_CLAN_WAR_PENALTY_WHEN_ENDED = clans.getProperty("AltClanWarPenaltyWhenEnded", 5);
 			ALT_CLAN_DISSOLVE_DAYS = clans.getProperty("DaysToPassToDissolveAClan", 7);
 			ALT_ALLY_JOIN_DAYS_WHEN_LEAVED = clans.getProperty("DaysBeforeJoinAllyWhenLeaved", 1);
 			ALT_ALLY_JOIN_DAYS_WHEN_DISMISSED = clans.getProperty("DaysBeforeJoinAllyWhenDismissed", 1);
@@ -1104,7 +1105,6 @@ public final class Config
 			REQUEST_ID = server.getProperty("RequestServerID", 0);
 			ACCEPT_ALTERNATE_ID = server.getProperty("AcceptAlternateID", true);
 			
-			DATABASE_DRIVER = server.getProperty("Driver", "com.mysql.jdbc.Driver");
 			DATABASE_URL = server.getProperty("URL", "jdbc:mysql://localhost/acis");
 			DATABASE_LOGIN = server.getProperty("Login", "root");
 			DATABASE_PASSWORD = server.getProperty("Password", "");
@@ -1264,7 +1264,6 @@ public final class Config
 			INTERNAL_HOSTNAME = server.getProperty("InternalHostname", "localhost");
 			EXTERNAL_HOSTNAME = server.getProperty("ExternalHostname", "localhost");
 			
-			DATABASE_DRIVER = server.getProperty("Driver", "com.mysql.jdbc.Driver");
 			DATABASE_URL = server.getProperty("URL", "jdbc:mysql://localhost/acis");
 			DATABASE_LOGIN = server.getProperty("Login", "root");
 			DATABASE_PASSWORD = server.getProperty("Password", "");

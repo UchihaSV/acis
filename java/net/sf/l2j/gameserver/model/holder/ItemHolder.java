@@ -12,50 +12,59 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package net.sf.l2j.gameserver.model;
+package net.sf.l2j.gameserver.model.holder;
 
 /**
- * @author JIV
+ * Holder for item id-count.
+ * @author UnAfraid
  */
-public class L2ExtractableProduct
+public class ItemHolder
 {
 	private final int _id;
-	private final int _min;
-	private final int _max;
-	private final int _chance;
+	private final int _objectId;
+	private final int _count;
 	
-	/**
-	 * Create Extractable product
-	 * @param id crete item id
-	 * @param min item count max
-	 * @param max item count min
-	 * @param chance chance for creating
-	 */
-	public L2ExtractableProduct(int id, int min, int max, double chance)
+	public ItemHolder(int id, int count)
 	{
 		_id = id;
-		_min = min;
-		_max = max;
-		_chance = (int) (chance * 1000);
+		_objectId = -1;
+		_count = count;
 	}
 	
+	public ItemHolder(int id, int objectId, int count)
+	{
+		_id = id;
+		_objectId = objectId;
+		_count = count;
+	}
+	
+	/**
+	 * @return the item/object identifier.
+	 */
 	public int getId()
 	{
 		return _id;
 	}
 	
-	public int getMin()
+	/**
+	 * @return the object Id
+	 */
+	public int getObjectId()
 	{
-		return _min;
+		return _objectId;
 	}
 	
-	public int getMax()
+	/**
+	 * @return the item count.
+	 */
+	public int getCount()
 	{
-		return _max;
+		return _count;
 	}
 	
-	public int getChance()
+	@Override
+	public String toString()
 	{
-		return _chance;
+		return getClass().getSimpleName() + ": Id: " + _id + " Count: " + _count;
 	}
 }

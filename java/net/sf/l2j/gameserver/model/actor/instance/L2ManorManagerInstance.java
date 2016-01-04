@@ -59,7 +59,7 @@ public class L2ManorManagerInstance extends L2MerchantInstance
 					manager.showChatWindow(player, "data/html/chamberlain/noprivs.htm");
 					return;
 				}
-				if (castle.getSiege().getIsInProgress())
+				if (castle.getSiege().isInProgress())
 				{
 					manager.showChatWindow(player, "data/html/chamberlain/busy.htm");
 					return;
@@ -156,7 +156,7 @@ public class L2ManorManagerInstance extends L2MerchantInstance
 			return;
 		}
 		
-		if (!player.isGM() && getCastle() != null && getCastle().getCastleId() > 0 && player.getClan() != null && getCastle().getOwnerId() == player.getClanId() && player.isClanLeader())
+		if (!player.isGM() && getCastle() != null && player.getClan() != null && getCastle().getOwnerId() == player.getClanId() && player.isClanLeader())
 			showChatWindow(player, "data/html/manormanager/manager-lord.htm");
 		else
 			showChatWindow(player, "data/html/manormanager/manager.htm");

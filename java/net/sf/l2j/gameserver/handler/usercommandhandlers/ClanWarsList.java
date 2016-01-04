@@ -24,6 +24,7 @@ import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.util.Util;
 
 /**
  * Support for /clanwarlist command
@@ -41,71 +42,68 @@ public class ClanWarsList implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (id != COMMAND_IDS[0] && id != COMMAND_IDS[1] && id != COMMAND_IDS[2])
+		if (!Util.contains(COMMAND_IDS, id))
 			return false;
 		
 		L2Clan clan = activeChar.getClan();
 		if (clan == null)
 		{
-			activeChar.sendMessage("You are not in a clan.");
+			activeChar.sendPacket(SystemMessageId.YOU_ARE_NOT_AUTHORIZED_TO_DO_THAT);
 			return false;
 		}
 		
-		SystemMessage sm;
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
 			PreparedStatement statement;
 			
 			// Attack List
 			if (id == 88)
-			{
-				activeChar.sendPacket(SystemMessageId.CLANS_YOU_DECLARED_WAR_ON);
-				statement = con.prepareStatement("select clan_name,clan_id,ally_id,ally_name from clan_data,clan_wars where clan1=? and clan_id=clan2 and clan2 not in (select clan1 from clan_wars where clan2=?)");
-				statement.setInt(1, clan.getClanId());
-				statement.setInt(2, clan.getClanId());
-			}
+				statement = con.prepareStatement("SELECT clan_name,clan_id,ally_id,ally_name FROM clan_data,clan_wars WHERE clan1=? AND clan_id=clan2 AND clan2 NOT IN (SELECT clan1 FROM clan_wars WHERE clan2=?)");
 			// Under Attack List
 			else if (id == 89)
-			{
-				activeChar.sendPacket(SystemMessageId.CLANS_THAT_HAVE_DECLARED_WAR_ON_YOU);
-				statement = con.prepareStatement("select clan_name,clan_id,ally_id,ally_name from clan_data,clan_wars where clan2=? and clan_id=clan1 and clan1 not in (select clan2 from clan_wars where clan1=?)");
-				statement.setInt(1, clan.getClanId());
-				statement.setInt(2, clan.getClanId());
-			}
-			// ID = 90, War List
+				statement = con.prepareStatement("SELECT clan_name,clan_id,ally_id,ally_name FROM clan_data,clan_wars WHERE clan2=? AND clan_id=clan1 AND clan1 NOT IN (SELECT clan2 FROM clan_wars WHERE clan1=?)");
+			// War List
 			else
-			{
-				activeChar.sendPacket(SystemMessageId.WAR_LIST);
-				statement = con.prepareStatement("select clan_name,clan_id,ally_id,ally_name from clan_data,clan_wars where clan1=? and clan_id=clan2 and clan2 in (select clan1 from clan_wars where clan2=?)");
-				statement.setInt(1, clan.getClanId());
-				statement.setInt(2, clan.getClanId());
-			}
+				statement = con.prepareStatement("SELECT clan_name,clan_id,ally_id,ally_name FROM clan_data,clan_wars WHERE clan1=? AND clan_id=clan2 AND clan2 IN (SELECT clan1 FROM clan_wars WHERE clan2=?)");
+			
+			statement.setInt(1, clan.getClanId());
+			statement.setInt(2, clan.getClanId());
 			
 			ResultSet rset = statement.executeQuery();
 			
-			while (rset.next())
+			if (rset.first())
 			{
-				String clanName = rset.getString("clan_name");
-				int ally_id = rset.getInt("ally_id");
-				
-				if (ally_id > 0)
-				{
-					// Target With Ally
-					sm = SystemMessage.getSystemMessage(SystemMessageId.S1_S2_ALLIANCE);
-					sm.addString(clanName);
-					sm.addString(rset.getString("ally_name"));
-				}
+				if (id == 88)
+					activeChar.sendPacket(SystemMessageId.CLANS_YOU_DECLARED_WAR_ON);
+				else if (id == 89)
+					activeChar.sendPacket(SystemMessageId.CLANS_THAT_HAVE_DECLARED_WAR_ON_YOU);
 				else
+					activeChar.sendPacket(SystemMessageId.WAR_LIST);
+				
+				SystemMessage sm;
+				while (rset.next())
 				{
-					// Target Without Ally
-					sm = SystemMessage.getSystemMessage(SystemMessageId.S1_NO_ALLI_EXISTS);
-					sm.addString(clanName);
+					String clanName = rset.getString("clan_name");
+					
+					if (rset.getInt("ally_id") > 0)
+						sm = SystemMessage.getSystemMessage(SystemMessageId.S1_S2_ALLIANCE).addString(clanName).addString(rset.getString("ally_name"));
+					else
+						sm = SystemMessage.getSystemMessage(SystemMessageId.S1_NO_ALLI_EXISTS).addString(clanName);
+					
+					activeChar.sendPacket(sm);
 				}
 				
-				activeChar.sendPacket(sm);
+				activeChar.sendPacket(SystemMessageId.FRIEND_LIST_FOOTER);
 			}
-			
-			activeChar.sendPacket(SystemMessageId.FRIEND_LIST_FOOTER);
+			else
+			{
+				if (id == 88)
+					activeChar.sendPacket(SystemMessageId.YOU_ARENT_IN_CLAN_WARS);
+				else if (id == 89)
+					activeChar.sendPacket(SystemMessageId.NO_CLAN_WARS_VS_YOU);
+				else if (id == 90)
+					activeChar.sendPacket(SystemMessageId.NOT_INVOLVED_IN_WAR);
+			}
 			
 			rset.close();
 			statement.close();

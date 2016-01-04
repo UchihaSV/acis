@@ -18,12 +18,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.gameserver.CastleUpdater;
 import net.sf.l2j.gameserver.SevenSigns;
+import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.L2ItemInstance;
@@ -40,7 +44,6 @@ public class CastleManager
 		return SingletonHolder._instance;
 	}
 	
-	private List<Castle> _castles;
 	private static final int _castleCirclets[] =
 	{
 		0,
@@ -55,6 +58,8 @@ public class CastleManager
 		8183
 	};
 	
+	private final List<Castle> _castles = new ArrayList<>();
+	
 	protected CastleManager()
 	{
 	}
@@ -65,14 +70,14 @@ public class CastleManager
 		if (index < 0)
 		{
 			double closestDistance = 99999999;
-			double distance;
-			Castle castle;
+			
 			for (int i = 0; i < _castles.size(); i++)
 			{
-				castle = _castles.get(i);
+				Castle castle = _castles.get(i);
 				if (castle == null)
 					continue;
-				distance = castle.getDistance(obj);
+				
+				double distance = castle.getDistance(obj);
 				if (closestDistance > distance)
 				{
 					closestDistance = distance;
@@ -85,17 +90,61 @@ public class CastleManager
 	
 	public final void load()
 	{
-		_castles = new ArrayList<>();
-		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement = con.prepareStatement("SELECT id FROM castle ORDER BY id");
+			PreparedStatement statement = con.prepareStatement("SELECT * FROM castle ORDER BY id");
 			ResultSet rs = statement.executeQuery();
 			
+			PreparedStatement statement2 = con.prepareStatement("SELECT clan_id FROM clan_data WHERE hasCastle = ?");
 			while (rs.next())
-				_castles.add(new Castle(rs.getInt("id")));
+			{
+				// Create a new Castle object, and populate it with data.
+				final Castle castle = new Castle();
+				final int id = rs.getInt("id");
+				
+				castle.setCastleId(id);
+				castle.setName(rs.getString("name"));
+				
+				castle.setSiegeDate(Calendar.getInstance());
+				castle.getSiegeDate().setTimeInMillis(rs.getLong("siegeDate"));
+				
+				castle.setSiegeRegistrationEndDate(Calendar.getInstance());
+				castle.getSiegeRegistrationEndDate().setTimeInMillis(rs.getLong("regTimeEnd"));
+				
+				castle.setTimeRegistrationOver(rs.getBoolean("regTimeOver"));
+				castle.setTaxPercent(rs.getInt("taxPercent"), false);
+				castle.setTreasury(rs.getLong("treasury"));
+				
+				// Retrieve clan owner, if any.
+				statement2.setInt(1, id);
+				ResultSet rs2 = statement2.executeQuery();
+				statement2.clearParameters();
+				
+				while (rs2.next())
+				{
+					final int ownerId = rs2.getInt("clan_id");
+					if (ownerId > 0)
+					{
+						// Try to find clan instance
+						final L2Clan clan = ClanTable.getInstance().getClan(ownerId);
+						if (clan != null)
+						{
+							castle.setOwnerId(ownerId);
+							
+							// Schedule owner tasks to start running
+							ThreadPoolManager.getInstance().scheduleGeneral(new CastleUpdater(clan, 1), 3600000);
+						}
+					}
+				}
+				rs2.close();
+				
+				// Store the Castle object with filled data in the array.
+				_castles.add(castle);
+			}
 			
+			rs.close();
 			statement.close();
+			statement2.close();
 			
 			_log.info("CastleManager: Loaded " + _castles.size() + " castles.");
 		}
@@ -107,40 +156,40 @@ public class CastleManager
 	
 	public final Castle getCastleById(int castleId)
 	{
-		for (Castle temp : _castles)
+		for (Castle castle : _castles)
 		{
-			if (temp.getCastleId() == castleId)
-				return temp;
+			if (castle.getCastleId() == castleId)
+				return castle;
 		}
 		return null;
 	}
 	
 	public final Castle getCastleByOwner(L2Clan clan)
 	{
-		for (Castle temp : _castles)
+		for (Castle castle : _castles)
 		{
-			if (temp.getOwnerId() == clan.getClanId())
-				return temp;
+			if (castle.getOwnerId() == clan.getClanId())
+				return castle;
 		}
 		return null;
 	}
 	
 	public final Castle getCastle(String name)
 	{
-		for (Castle temp : _castles)
+		for (Castle castle : _castles)
 		{
-			if (temp.getName().equalsIgnoreCase(name.trim()))
-				return temp;
+			if (castle.getName().equalsIgnoreCase(name.trim()))
+				return castle;
 		}
 		return null;
 	}
 	
 	public final Castle getCastle(int x, int y, int z)
 	{
-		for (Castle temp : _castles)
+		for (Castle castle : _castles)
 		{
-			if (temp.checkIfInZone(x, y, z))
-				return temp;
+			if (castle.checkIfInZone(x, y, z))
+				return castle;
 		}
 		return null;
 	}
@@ -201,15 +250,10 @@ public class CastleManager
 		}
 		
 		for (Castle castle : _castles)
+		{
 			if (castle.getTaxPercent() > maxTax)
-				castle.setTaxPercent(maxTax);
-	}
-	
-	int _castleId = 1; // from this castle
-	
-	public int getCirclet()
-	{
-		return getCircletByCastleId(_castleId);
+				castle.setTaxPercent(maxTax, true);
+		}
 	}
 	
 	public int getCircletByCastleId(int castleId)

@@ -113,6 +113,7 @@ import net.sf.l2j.gameserver.skills.funcs.FuncPDefMod;
 import net.sf.l2j.gameserver.taskmanager.AttackStanceTaskManager;
 import net.sf.l2j.gameserver.templates.chars.L2CharTemplate;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.templates.item.L2Armor;
 import net.sf.l2j.gameserver.templates.item.L2Item;
 import net.sf.l2j.gameserver.templates.item.L2Weapon;
 import net.sf.l2j.gameserver.templates.item.L2WeaponType;
@@ -585,7 +586,9 @@ public abstract class L2Character extends L2Object
 			}
 		}
 		
-		if (getActingPlayer() != null && getActingPlayer().inObserverMode())
+		final L2PcInstance player = getActingPlayer();
+		
+		if (player != null && player.inObserverMode())
 		{
 			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.OBSERVERS_CANNOT_PARTICIPATE));
 			sendPacket(ActionFailed.STATIC_PACKET);
@@ -604,7 +607,9 @@ public abstract class L2Character extends L2Object
 		
 		// Get the active weapon item corresponding to the active weapon instance (always equipped in the right hand)
 		final L2Weapon weaponItem = getActiveWeaponItem();
-		if (weaponItem != null && weaponItem.getItemType() == L2WeaponType.FISHINGROD)
+		final L2WeaponType weaponItemType = getAttackType();
+		
+		if (weaponItemType == L2WeaponType.FISHINGROD)
 		{
 			// You can't make an attack with a fishing pole.
 			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANNOT_ATTACK_WITH_FISHING_POLE));
@@ -624,7 +629,7 @@ public abstract class L2Character extends L2Object
 		}
 		
 		// Check for a bow
-		if (weaponItem != null && weaponItem.getItemType() == L2WeaponType.BOW)
+		if (weaponItemType == L2WeaponType.BOW)
 		{
 			// Check for arrows and MP
 			if (this instanceof L2PcInstance)
@@ -709,7 +714,7 @@ public abstract class L2Character extends L2Object
 		boolean hitted;
 		
 		// Select the type of attack to start
-		switch (getAttackType())
+		switch (weaponItemType)
 		{
 			case BOW:
 				hitted = doAttackHitByBow(attack, target, timeAtk, reuse);
@@ -721,8 +726,14 @@ public abstract class L2Character extends L2Object
 			
 			case DUAL:
 			case DUALFIST:
-			case FIST:
 				hitted = doAttackHitByDual(attack, target, timeToHit);
+				break;
+			
+			case FIST:
+				if (getSecondaryWeaponItem() != null && getSecondaryWeaponItem() instanceof L2Armor)
+					hitted = doAttackHitSimple(attack, target, timeToHit);
+				else
+					hitted = doAttackHitByDual(attack, target, timeToHit);
 				break;
 			
 			default:
@@ -731,8 +742,6 @@ public abstract class L2Character extends L2Object
 		}
 		
 		// Flag the attacker if it's a L2PcInstance outside a PvP area
-		L2PcInstance player = getActingPlayer();
-		
 		if (player != null)
 		{
 			AttackStanceTaskManager.getInstance().addAttackStanceTask(player);
@@ -795,7 +804,7 @@ public abstract class L2Character extends L2Object
 			broadcastPacket(attack);
 		
 		// Notify AI with EVT_READY_TO_ACT
-		ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), timeAtk + reuse);
+		ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), (weaponItemType == L2WeaponType.BOW) ? timeAtk : timeAtk + reuse);
 	}
 	
 	/**
@@ -853,8 +862,7 @@ public abstract class L2Character extends L2Object
 			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.GETTING_READY_TO_SHOOT_AN_ARROW));
 			
 			// Send SetupGauge
-			SetupGauge sg = new SetupGauge(SetupGauge.RED, sAtk + reuse);
-			sendPacket(sg);
+			sendPacket(new SetupGauge(SetupGauge.RED, sAtk + reuse));
 		}
 		
 		// Create a new hit task with Medium priority
@@ -1139,6 +1147,7 @@ public abstract class L2Character extends L2Object
 				target = this;
 				break;
 			case TARGET_SELF:
+			case TARGET_CORPSE_ALLY:
 			case TARGET_PET:
 			case TARGET_SUMMON:
 			case TARGET_OWNER_PET:
@@ -2970,7 +2979,7 @@ public abstract class L2Character extends L2Object
 	 * Add a list of Funcs to the Calculator set of the L2Character.
 	 * @param funcs The list of Func objects to add to the Calculator corresponding to the state affected
 	 */
-	public final void addStatFuncs(Func[] funcs)
+	public final void addStatFuncs(List<Func> funcs)
 	{
 		List<Stats> modifiedStats = new ArrayList<>();
 		for (Func f : funcs)
@@ -4101,8 +4110,7 @@ public abstract class L2Character extends L2Object
 		
 		if (!miss && damage > 0)
 		{
-			L2Weapon weapon = getActiveWeaponItem();
-			boolean isBow = (weapon != null && weapon.getItemType() == L2WeaponType.BOW);
+			boolean isBow = (getAttackType() == L2WeaponType.BOW);
 			int reflectedDamage = 0;
 			
 			// Reflect damage system - do not reflect if weapon is a bow or target is invulnerable
@@ -5139,27 +5147,23 @@ public abstract class L2Character extends L2Object
 							((L2Attackable) target).overhitEnabled(true);
 					}
 					
-					// crafting does not trigger any chance skills
 					switch (skill.getSkillType())
 					{
-						case COMMON_CRAFT:
+						case COMMON_CRAFT: // Crafting does not trigger any chance skills.
 						case DWARVEN_CRAFT:
 							break;
-						default:
-							// Launch weapon Special ability skill effect if available
+						
+						default: // Launch weapon Special ability skill effect if available
 							if (activeWeapon != null && !target.isDead())
 							{
-								if (activeWeapon.getSkillEffects(this, target, skill).length > 0 && this instanceof L2PcInstance)
-								{
-									SystemMessage sm = SystemMessage.getSystemMessage(SystemMessageId.S1_HAS_BEEN_ACTIVATED);
-									sm.addSkillName(skill);
-									sendPacket(sm);
-								}
+								if (this instanceof L2PcInstance && !activeWeapon.getSkillEffects(this, target, skill).isEmpty())
+									sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_HAS_BEEN_ACTIVATED).addSkillName(skill));
 							}
 							
 							// Maybe launch chance skills on us
 							if (_chanceSkills != null)
 								_chanceSkills.onSkillHit(target, false, skill.isMagic(), skill.isOffensive(), skill.getElement());
+							
 							// Maybe launch chance skills on target
 							if (target.getChanceSkills() != null)
 								target.getChanceSkills().onSkillHit(this, true, skill.isMagic(), skill.isOffensive(), skill.getElement());

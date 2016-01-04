@@ -255,12 +255,15 @@ public class CharEffectList
 	 */
 	private boolean doesStack(L2Skill checkSkill)
 	{
-		if ((_buffs == null || _buffs.isEmpty()) || checkSkill._effectTemplates == null || checkSkill._effectTemplates.length < 1 || checkSkill._effectTemplates[0].stackType == null || "none".equals(checkSkill._effectTemplates[0].stackType))
-		{
+		if (_buffs == null || _buffs.isEmpty())
 			return false;
-		}
 		
-		String stackType = checkSkill._effectTemplates[0].stackType;
+		if (checkSkill._effectTemplates == null || checkSkill._effectTemplates.isEmpty())
+			return false;
+		
+		final String stackType = checkSkill._effectTemplates.get(0).stackType;
+		if (stackType == null || "none".equals(stackType))
+			return false;
 		
 		for (L2Effect e : _buffs)
 		{

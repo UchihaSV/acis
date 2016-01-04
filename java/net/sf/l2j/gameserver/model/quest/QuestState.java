@@ -27,6 +27,7 @@ import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.model.L2DropData;
 import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.itemcontainer.PcInventory;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExShowQuestMark;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
@@ -191,7 +192,7 @@ public final class QuestState
 		_vars.clear();
 		
 		// Remove registered quest items.
-		int[] itemIdList = _quest.getRegisteredItemIds();
+		int[] itemIdList = _quest.getItemsIds();
 		if (itemIdList != null)
 		{
 			for (int itemId : itemIdList)
@@ -458,12 +459,39 @@ public final class QuestState
 	}
 	
 	/**
-	 * @param itemId : ID of the item you're looking for
-	 * @return true if item exists in player's inventory, false - if not
+	 * Check for an item in player's inventory.
+	 * @param itemId the ID of the item to check for
+	 * @return {@code true} if the item exists in player's inventory, {@code false} otherwise
 	 */
 	public boolean hasQuestItems(int itemId)
 	{
 		return _player.getInventory().getItemByItemId(itemId) != null;
+	}
+	
+	/**
+	 * Check for multiple items in player's inventory.
+	 * @param itemIds a list of item IDs to check for
+	 * @return {@code true} if all items exist in player's inventory, {@code false} otherwise
+	 */
+	public boolean hasQuestItems(int... itemIds)
+	{
+		final PcInventory inv = _player.getInventory();
+		for (int itemId : itemIds)
+		{
+			if (inv.getItemByItemId(itemId) == null)
+				return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Check if player possesses at least one given item.
+	 * @param itemIds a list of item IDs to check for
+	 * @return {@code true} if at least one item exists in player's inventory, {@code false} otherwise
+	 */
+	public boolean hasAtLeastOneQuestItem(int... itemIds)
+	{
+		return _player.getInventory().hasAtLeastOneItem(itemIds);
 	}
 	
 	/**
@@ -688,6 +716,100 @@ public final class QuestState
 		}
 		
 		return neededCount > 0 && reached;
+	}
+	
+	/**
+	 * Drop multiple items to the player's inventory. Rate and amount is affected by DIVMOD of Config.RATE_QUEST_DROP.
+	 * @param rewardsInfos : Infos regarding drops (itemId, count, neededCount, dropChance).
+	 * @return boolean : Indicating whether item quantity has been reached.
+	 */
+	public boolean dropMultipleItems(int[][] rewardsInfos)
+	{
+		return dropMultipleItems(rewardsInfos, DROP_DIVMOD);
+	}
+	
+	/**
+	 * Drop items to the player's inventory.
+	 * @param rewardsInfos : Infos regarding drops (itemId, count, neededCount, dropChance).
+	 * @param type : Item drop behavior: DROP_DIVMOD (rate and), DROP_FIXED_RATE, DROP_FIXED_COUNT or DROP_FIXED_BOTH
+	 * @return boolean : Indicating whether item quantity has been reached.
+	 */
+	public boolean dropMultipleItems(int[][] rewardsInfos, byte type)
+	{
+		// Used for the sound.
+		boolean sendSound = false;
+		
+		// Used for the reached state.
+		boolean reached = true;
+		
+		// For each reward type, calculate the probability of drop.
+		for (int[] info : rewardsInfos)
+		{
+			final int itemId = info[0];
+			final int currentCount = getQuestItemsCount(itemId);
+			final int neededCount = info[2];
+			
+			// Required amount reached already?
+			if (neededCount > 0 && currentCount >= neededCount)
+				continue;
+			
+			final int count = info[1];
+			
+			int dropChance = info[3];
+			int amount = 0;
+			
+			switch (type)
+			{
+				case DROP_DIVMOD:
+					dropChance *= Config.RATE_QUEST_DROP;
+					amount = count * (dropChance / L2DropData.MAX_CHANCE);
+					if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance % L2DropData.MAX_CHANCE)
+						amount += count;
+					break;
+				
+				case DROP_FIXED_RATE:
+					if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance)
+						amount = (int) (count * Config.RATE_QUEST_DROP);
+					break;
+				
+				case DROP_FIXED_COUNT:
+					if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance * Config.RATE_QUEST_DROP)
+						amount = count;
+					break;
+				
+				case DROP_FIXED_BOTH:
+					if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance)
+						amount = count;
+					break;
+			}
+			
+			if (amount > 0)
+			{
+				// Limit count to reach required amount.
+				if (neededCount > 0)
+					amount = ((currentCount + amount) >= neededCount) ? neededCount - currentCount : amount;
+				
+				// Inventory slot check.
+				if (!_player.getInventory().validateCapacityByItemId(itemId))
+					continue;
+				
+				// Give items to the player.
+				giveItems(itemId, amount, 0);
+				
+				// Send sound.
+				sendSound = true;
+				
+				// Illimited needed count or current count being inferior to needed count means the state isn't reached.
+				if (neededCount <= 0 || ((currentCount + amount) < neededCount))
+					reached = false;
+			}
+		}
+		
+		// Play the sound.
+		if (sendSound)
+			playSound((reached) ? SOUND_MIDDLE : SOUND_ITEMGET);
+		
+		return reached;
 	}
 	
 	/**

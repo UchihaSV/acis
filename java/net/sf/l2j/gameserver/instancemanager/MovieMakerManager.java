@@ -126,15 +126,15 @@ public class MovieMakerManager
 			
 			NpcHtmlMessage html = new NpcHtmlMessage(0);
 			html.setFile("data/html/admin/movie/edit_sequence.htm");
-			html.replace("%sId%", String.valueOf(s._sequenceId));
-			html.replace("%sDist%", String.valueOf(s._dist));
-			html.replace("%sYaw%", String.valueOf(s._yaw));
-			html.replace("%sPitch%", String.valueOf(s._pitch));
-			html.replace("%sTime%", String.valueOf(s._time));
-			html.replace("%sDuration%", String.valueOf(s._duration));
-			html.replace("%sTurn%", String.valueOf(s._turn));
-			html.replace("%sRise%", String.valueOf(s._rise));
-			html.replace("%sWidescreen%", String.valueOf(s._widescreen));
+			html.replace("%sId%", s._sequenceId);
+			html.replace("%sDist%", s._dist);
+			html.replace("%sYaw%", s._yaw);
+			html.replace("%sPitch%", s._pitch);
+			html.replace("%sTime%", s._time);
+			html.replace("%sDuration%", s._duration);
+			html.replace("%sTurn%", s._turn);
+			html.replace("%sRise%", s._rise);
+			html.replace("%sWidescreen%", s._widescreen);
 			player.sendPacket(html);
 		}
 		else

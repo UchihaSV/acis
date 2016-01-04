@@ -26,7 +26,7 @@ public class L2CastleBlacksmithInstance extends L2NpcInstance
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/npcdefault.htm");
-			html.replace("%objectId%", String.valueOf(getObjectId()));
+			html.replace("%objectId%", getObjectId());
 			html.replace("%npcname%", getName());
 			player.sendPacket(html);
 			return;
@@ -61,7 +61,7 @@ public class L2CastleBlacksmithInstance extends L2NpcInstance
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/npcdefault.htm");
-			html.replace("%objectId%", String.valueOf(getObjectId()));
+			html.replace("%objectId%", getObjectId());
 			html.replace("%npcname%", getName());
 			player.sendPacket(html);
 			return;
@@ -85,23 +85,21 @@ public class L2CastleBlacksmithInstance extends L2NpcInstance
 		
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		html.replace("%npcname%", getName());
-		html.replace("%castleid%", Integer.toString(getCastle().getCastleId()));
+		html.replace("%castleid%", getCastle().getCastleId());
 		player.sendPacket(html);
 	}
 	
 	protected int validateCondition(L2PcInstance player)
 	{
-		if (getCastle() != null && getCastle().getCastleId() > 0)
+		if (getCastle() != null && player.getClan() != null)
 		{
-			if (player.getClan() != null)
-			{
-				if (getCastle().getSiege().getIsInProgress())
-					return COND_BUSY_BECAUSE_OF_SIEGE;
-				else if (getCastle().getOwnerId() == player.getClanId() && (player.getClanPrivileges() & L2Clan.CP_CS_MANOR_ADMIN) == L2Clan.CP_CS_MANOR_ADMIN)
-					return COND_OWNER;
-			}
+			if (getCastle().getSiege().isInProgress())
+				return COND_BUSY_BECAUSE_OF_SIEGE;
+			
+			if (getCastle().getOwnerId() == player.getClanId() && (player.getClanPrivileges() & L2Clan.CP_CS_MANOR_ADMIN) == L2Clan.CP_CS_MANOR_ADMIN)
+				return COND_OWNER;
 		}
 		return COND_ALL_FALSE;
 	}

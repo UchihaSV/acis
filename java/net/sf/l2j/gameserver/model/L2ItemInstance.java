@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -34,6 +35,7 @@ import net.sf.l2j.gameserver.instancemanager.ItemsOnGroundManager;
 import net.sf.l2j.gameserver.instancemanager.MercTicketManager;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
@@ -626,10 +628,10 @@ public final class L2ItemInstance extends L2Object
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/admin/iteminfo.htm");
-			html.replace("%objid%", String.valueOf(getObjectId()));
-			html.replace("%itemid%", String.valueOf(getItemId()));
-			html.replace("%ownerid%", String.valueOf(getOwnerId()));
-			html.replace("%loc%", String.valueOf(getLocation()));
+			html.replace("%objid%", getObjectId());
+			html.replace("%itemid%", getItemId());
+			html.replace("%ownerid%", getOwnerId());
+			html.replace("%loc%", getLocation().toString());
 			html.replace("%class%", getClass().getSimpleName());
 			player.sendPacket(html);
 		}
@@ -813,7 +815,7 @@ public final class L2ItemInstance extends L2Object
 	 * @param player : L2Character designating the player
 	 * @return Func[]
 	 */
-	public Func[] getStatFuncs(L2Character player)
+	public List<Func> getStatFuncs(L2Character player)
 	{
 		return getItem().getStatFuncs(this, player);
 	}
@@ -1269,6 +1271,11 @@ public final class L2ItemInstance extends L2Object
 			activeChar.sendPacket(new DropItem(this, _dropperObjectId));
 		else
 			activeChar.sendPacket(new SpawnItem(this));
+	}
+	
+	public List<Quest> getQuestEvents()
+	{
+		return _item.getQuestEvents();
 	}
 	
 	@Override

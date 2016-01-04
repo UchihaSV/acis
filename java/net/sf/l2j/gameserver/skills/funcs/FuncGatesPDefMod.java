@@ -33,7 +33,7 @@ public class FuncGatesPDefMod extends Func
 	
 	private FuncGatesPDefMod()
 	{
-		super(Stats.POWER_DEFENCE, 0x20, null);
+		super(Stats.POWER_DEFENCE, 0x20, null, null);
 	}
 	
 	@Override
@@ -41,8 +41,8 @@ public class FuncGatesPDefMod extends Func
 	{
 		final int sealOwner = SevenSigns.getInstance().getSealOwner(SevenSigns.SEAL_STRIFE);
 		if (sealOwner == SevenSigns.CABAL_DAWN)
-			env.value *= 1.2;
+			env.mulValue(1.2);
 		else if (sealOwner == SevenSigns.CABAL_DUSK)
-			env.value *= 0.3;
+			env.mulValue(0.3);
 	}
 }

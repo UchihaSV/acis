@@ -84,7 +84,7 @@ public class AdminCommandAccessRights
 	
 	public boolean hasAccess(String adminCommand, L2AccessLevel accessLevel)
 	{
-		if (accessLevel.getLevel() == AccessLevels._masterAccessLevelNum)
+		if (accessLevel.getLevel() == AccessLevels.MASTER_ACCESS_LEVEL_NUMBER)
 			return true;
 		
 		L2AdminCommandAccessRight acar = _adminCommandAccessRights.get(adminCommand);

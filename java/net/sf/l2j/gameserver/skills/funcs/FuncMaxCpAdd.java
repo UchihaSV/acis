@@ -30,22 +30,19 @@ public class FuncMaxCpAdd extends Func
 	
 	private FuncMaxCpAdd()
 	{
-		super(Stats.MAX_CP, 0x10, null);
+		super(Stats.MAX_CP, 0x10, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2PcTemplate t = (L2PcTemplate) env.player.getTemplate();
-		int lvl = env.player.getLevel() - t.classBaseLevel;
+		final L2PcTemplate t = (L2PcTemplate) env.getCharacter().getTemplate();
+		final int lvl = Math.max(env.getCharacter().getLevel() - t.classBaseLevel, 0);
 		
-		// This is to prevent Players having only 1 CP
-		if (lvl < 0)
-			lvl = 0;
+		final double cpmod = t.lvlCpMod * lvl;
+		final double cpmax = (t.lvlCpAdd + cpmod) * lvl;
+		final double cpmin = (t.lvlCpAdd * lvl) + cpmod;
 		
-		double cpmod = t.lvlCpMod * lvl;
-		double cpmax = (t.lvlCpAdd + cpmod) * lvl;
-		double cpmin = (t.lvlCpAdd * lvl) + cpmod;
-		env.value += (cpmax + cpmin) / 2;
+		env.addValue((cpmax + cpmin) / 2);
 	}
 }

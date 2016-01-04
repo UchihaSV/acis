@@ -31,7 +31,6 @@ import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ConfirmDlg;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
@@ -48,15 +47,9 @@ public class L2WeddingManagerInstance extends L2NpcInstance
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2Npc
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Send MyTargetSelected to the L2PcInstance player
-			player.sendPacket(new MyTargetSelected(getObjectId(), 0));
-		}
 		else
 		{
 			// Calculate the distance between the L2PcInstance and the L2Npc
@@ -149,7 +142,7 @@ public class L2WeddingManagerInstance extends L2NpcInstance
 				return;
 			}
 			
-			if (partner.getClan() != null && CastleManager.getInstance().getCastleByOwner(partner.getClan()) != null && CastleManager.getInstance().getCastleByOwner(partner.getClan()).getSiege().getIsInProgress())
+			if (partner.getClan() != null && CastleManager.getInstance().getCastleByOwner(partner.getClan()) != null && CastleManager.getInstance().getCastleByOwner(partner.getClan()).getSiege().isInProgress())
 			{
 				player.sendMessage("As your partner is in siege, you can't go to him/her.");
 				return;
@@ -264,8 +257,8 @@ public class L2WeddingManagerInstance extends L2NpcInstance
 	{
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(file);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
-		html.replace("%adenasCost%", String.valueOf(Config.WEDDING_PRICE));
+		html.replace("%objectId%", getObjectId());
+		html.replace("%adenasCost%", Config.WEDDING_PRICE);
 		html.replace("%needOrNot%", Config.WEDDING_FORMALWEAR ? "will" : "won't");
 		player.sendPacket(html);
 	}

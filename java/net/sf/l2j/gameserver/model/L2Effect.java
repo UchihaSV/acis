@@ -15,6 +15,8 @@
 package net.sf.l2j.gameserver.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -51,8 +53,6 @@ public abstract class L2Effect
 		FINISHING
 	}
 	
-	private static final Func[] _emptyFunctionSet = new Func[0];
-	
 	private final L2Character _effector;
 	private final L2Character _effected;
 	
@@ -69,7 +69,7 @@ public abstract class L2Effect
 	
 	private final EffectTemplate _template;
 	
-	private final FuncTemplate[] _funcTemplates; // function templates
+	private final List<FuncTemplate> _funcTemplates; // function templates
 	
 	private final int _totalCount; // initial count
 	private int _count; // counter
@@ -120,10 +120,10 @@ public abstract class L2Effect
 	protected L2Effect(Env env, EffectTemplate template)
 	{
 		_state = EffectState.CREATED;
-		_skill = env.skill;
+		_skill = env.getSkill();
 		_template = template;
-		_effected = env.target;
-		_effector = env.player;
+		_effected = env.getTarget();
+		_effector = env.getCharacter();
 		_lambda = template.lambda;
 		_funcTemplates = template.funcTemplates;
 		_count = template.counter;
@@ -138,7 +138,7 @@ public abstract class L2Effect
 				temp /= 2;
 		}
 		
-		if (env.skillMastery)
+		if (env.isSkillMastery())
 			temp *= 2;
 		
 		_period = temp;
@@ -259,10 +259,11 @@ public abstract class L2Effect
 	
 	public final double calc()
 	{
-		Env env = new Env();
-		env.player = _effector;
-		env.target = _effected;
-		env.skill = _skill;
+		final Env env = new Env();
+		env.setCharacter(_effector);
+		env.setTarget(_effected);
+		env.setSkill(_skill);
+		
 		return _lambda.calc(env);
 	}
 	
@@ -436,28 +437,25 @@ public abstract class L2Effect
 		}
 	}
 	
-	public Func[] getStatFuncs()
+	public List<Func> getStatFuncs()
 	{
 		if (_funcTemplates == null)
-			return _emptyFunctionSet;
-		ArrayList<Func> funcs = new ArrayList<>(_funcTemplates.length);
+			return Collections.emptyList();
 		
-		Env env = new Env();
-		env.player = getEffector();
-		env.target = getEffected();
-		env.skill = getSkill();
-		Func f;
+		final List<Func> funcs = new ArrayList<>(_funcTemplates.size());
+		
+		final Env env = new Env();
+		env.setCharacter(getEffector());
+		env.setTarget(getEffected());
+		env.setSkill(getSkill());
 		
 		for (FuncTemplate t : _funcTemplates)
 		{
-			f = t.getFunc(env, this); // effect is owner
+			final Func f = t.getFunc(env, this);
 			if (f != null)
 				funcs.add(f);
 		}
-		if (funcs.isEmpty())
-			return _emptyFunctionSet;
-		
-		return funcs.toArray(new Func[funcs.size()]);
+		return funcs;
 	}
 	
 	public final void addIcon(AbnormalStatusUpdate mi)

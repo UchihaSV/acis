@@ -65,17 +65,18 @@ public class PcStatus extends PlayableStatus
 	
 	public final void reduceHp(double value, L2Character attacker, boolean awake, boolean isDOT, boolean isHPConsumption, boolean ignoreCP)
 	{
-		if (attacker == null || getActiveChar().isDead())
+		if (getActiveChar().isDead())
 			return;
 		
+		// invul handling
 		if (getActiveChar().isInvul())
 		{
-			if (attacker == getActiveChar())
-			{
-				if (!isDOT && !isHPConsumption)
-					return;
-			}
-			else
+			// other chars can't damage
+			if (attacker != getActiveChar())
+				return;
+			
+			// only DOT and HP consumption allowed for damage self
+			if (!isDOT && !isHPConsumption)
 				return;
 		}
 		
@@ -94,7 +95,7 @@ public class PcStatus extends PlayableStatus
 		int fullValue = (int) value;
 		int tDmg = 0;
 		
-		if (attacker != getActiveChar())
+		if (attacker != null && attacker != getActiveChar())
 		{
 			final L2PcInstance attackerPlayer = attacker.getActingPlayer();
 			if (attackerPlayer != null)
@@ -182,8 +183,12 @@ public class PcStatus extends PlayableStatus
 				{
 					getActiveChar().disableAllSkills();
 					stopHpMpRegeneration();
-					attacker.getAI().setIntention(CtrlIntention.ACTIVE);
-					attacker.sendPacket(ActionFailed.STATIC_PACKET);
+					
+					if (attacker != null)
+					{
+						attacker.getAI().setIntention(CtrlIntention.ACTIVE);
+						attacker.sendPacket(ActionFailed.STATIC_PACKET);
+					}
 					
 					// let the DuelManager know of his defeat
 					DuelManager.getInstance().onPlayerDefeat(getActiveChar());

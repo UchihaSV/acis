@@ -123,10 +123,10 @@ public class L2WyvernManagerInstance extends L2CastleChamberlainInstance
 	{
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile("data/html/wyvernmanager/wyvernmanager-" + val + ".htm");
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		html.replace("%npcname%", getName());
-		html.replace("%wyvern_level%", String.valueOf(requiredLevel));
-		html.replace("%needed_crystals%", String.valueOf(neededCrystals));
+		html.replace("%wyvern_level%", requiredLevel);
+		html.replace("%needed_crystals%", neededCrystals);
 		player.sendPacket(html);
 		
 		player.sendPacket(ActionFailed.STATIC_PACKET);

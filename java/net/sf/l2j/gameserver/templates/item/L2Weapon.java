@@ -15,23 +15,21 @@
 package net.sf.l2j.gameserver.templates.item;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.handler.SkillHandler;
 import net.sf.l2j.gameserver.model.L2Effect;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.holder.SkillHolder;
 import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.model.quest.QuestEventType;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.skills.Formulas;
-import net.sf.l2j.gameserver.skills.SkillHolder;
-import net.sf.l2j.gameserver.skills.basefuncs.Func;
-import net.sf.l2j.gameserver.skills.basefuncs.FuncTemplate;
 import net.sf.l2j.gameserver.skills.conditions.Condition;
 import net.sf.l2j.gameserver.skills.conditions.ConditionGameChance;
 import net.sf.l2j.gameserver.templates.StatsSet;
@@ -279,70 +277,40 @@ public final class L2Weapon extends L2Item
 	}
 	
 	/**
-	 * @param instance : L2ItemInstance pointing out the weapon
-	 * @param player : L2Character pointing out the player
-	 * @return An array of Func objects containing the list of functions used by the weapon.
-	 */
-	@Override
-	public Func[] getStatFuncs(L2ItemInstance instance, L2Character player)
-	{
-		if (_funcTemplates == null || _funcTemplates.length == 0)
-			return _emptyFunctionSet;
-		
-		ArrayList<Func> funcs = new ArrayList<>(_funcTemplates.length);
-		
-		Env env = new Env();
-		env.player = player;
-		env.item = instance;
-		Func f;
-		
-		for (FuncTemplate t : _funcTemplates)
-		{
-			f = t.getFunc(env, instance);
-			if (f != null)
-				funcs.add(f);
-		}
-		
-		return funcs.toArray(new Func[funcs.size()]);
-	}
-	
-	/**
 	 * @param caster : L2Character pointing out the caster
 	 * @param target : L2Character pointing out the target
 	 * @param crit : boolean tells whether the hit was critical
 	 * @return An array of L2Effect of skills associated with the item to be triggered onHit.
 	 */
-	public L2Effect[] getSkillEffects(L2Character caster, L2Character target, boolean crit)
+	public List<L2Effect> getSkillEffects(L2Character caster, L2Character target, boolean crit)
 	{
 		if (_skillsOnCrit == null || !crit)
-			return _emptyEffectSet;
+			return Collections.emptyList();
 		
-		List<L2Effect> effects = new ArrayList<>();
+		final List<L2Effect> effects = new ArrayList<>();
 		
 		if (_skillsOnCritCondition != null)
 		{
-			Env env = new Env();
-			env.player = caster;
-			env.target = target;
-			env.skill = _skillsOnCrit.getSkill();
+			final Env env = new Env();
+			env.setCharacter(caster);
+			env.setTarget(target);
+			env.setSkill(_skillsOnCrit.getSkill());
+			
 			if (!_skillsOnCritCondition.test(env))
-				return _emptyEffectSet; // Skill condition not met
+				return Collections.emptyList();
 		}
 		
-		byte shld = Formulas.calcShldUse(caster, target, _skillsOnCrit.getSkill());
-		if (!Formulas.calcSkillSuccess(caster, target, _skillsOnCrit.getSkill(), shld, false, false, false))
-			return _emptyEffectSet; // These skills should not work on RaidBoss
-			
+		final byte shld = Formulas.calcShldUse(caster, target, _skillsOnCrit.getSkill());
+		if (!Formulas.calcSkillSuccess(caster, target, _skillsOnCrit.getSkill(), shld, false))
+			return Collections.emptyList();
+		
 		if (target.getFirstEffect(_skillsOnCrit.getSkill().getId()) != null)
 			target.getFirstEffect(_skillsOnCrit.getSkill().getId()).exit();
 		
 		for (L2Effect e : _skillsOnCrit.getSkill().getEffects(caster, target, new Env(shld, false, false, false)))
 			effects.add(e);
 		
-		if (effects.isEmpty())
-			return _emptyEffectSet;
-		
-		return effects.toArray(new L2Effect[effects.size()]);
+		return effects;
 	}
 	
 	/**
@@ -351,33 +319,33 @@ public final class L2Weapon extends L2Item
 	 * @param trigger : L2Skill pointing out the skill triggering this action
 	 * @return An array of L2Effect associated with the item to be triggered onCast.
 	 */
-	public L2Effect[] getSkillEffects(L2Character caster, L2Character target, L2Skill trigger)
+	public List<L2Effect> getSkillEffects(L2Character caster, L2Character target, L2Skill trigger)
 	{
 		if (_skillsOnCast == null)
-			return _emptyEffectSet;
+			return Collections.emptyList();
 		
+		// Trigger only same type of skill.
 		if (trigger.isOffensive() != _skillsOnCast.getSkill().isOffensive())
-			return _emptyEffectSet; // Trigger only same type of skill
-			
-		if (trigger.isToggle() && _skillsOnCast.getSkill().getSkillType() == L2SkillType.BUFF)
-			return _emptyEffectSet; // No buffing with toggle skills
-			
-		if (!trigger.isMagic() && _skillsOnCast.getSkill().getSkillType() == L2SkillType.BUFF)
-			return _emptyEffectSet; // No buffing with not magic skills
-			
+			return Collections.emptyList();
+		
+		// No buffing with toggle or not magic skills.
+		if ((trigger.isToggle() || !trigger.isMagic()) && _skillsOnCast.getSkill().getSkillType() == L2SkillType.BUFF)
+			return Collections.emptyList();
+		
 		if (_skillsOnCastCondition != null)
 		{
-			Env env = new Env();
-			env.player = caster;
-			env.target = target;
-			env.skill = _skillsOnCast.getSkill();
+			final Env env = new Env();
+			env.setCharacter(caster);
+			env.setTarget(target);
+			env.setSkill(_skillsOnCast.getSkill());
+			
 			if (!_skillsOnCastCondition.test(env))
-				return _emptyEffectSet;
+				return Collections.emptyList();
 		}
 		
-		byte shld = Formulas.calcShldUse(caster, target, _skillsOnCast.getSkill());
-		if (_skillsOnCast.getSkill().isOffensive() && !Formulas.calcSkillSuccess(caster, target, _skillsOnCast.getSkill(), shld, false, false, false))
-			return _emptyEffectSet;
+		final byte shld = Formulas.calcShldUse(caster, target, _skillsOnCast.getSkill());
+		if (_skillsOnCast.getSkill().isOffensive() && !Formulas.calcSkillSuccess(caster, target, _skillsOnCast.getSkill(), shld, false))
+			return Collections.emptyList();
 		
 		// Get the skill handler corresponding to the skill type
 		ISkillHandler handler = SkillHandler.getInstance().getSkillHandler(_skillsOnCast.getSkill().getSkillType());
@@ -397,12 +365,12 @@ public final class L2Weapon extends L2Item
 			// Mobs in range 1000 see spell
 			for (L2Npc npcMob : caster.getKnownList().getKnownTypeInRadius(L2Npc.class, 1000))
 			{
-				List<Quest> quests = npcMob.getTemplate().getEventQuests(QuestEventType.ON_SKILL_SEE); 
+				List<Quest> quests = npcMob.getTemplate().getEventQuests(QuestEventType.ON_SKILL_SEE);
 				if (quests != null)
 					for (Quest quest : quests)
 						quest.notifySkillSee(npcMob, (L2PcInstance) caster, _skillsOnCast.getSkill(), targets, false);
 			}
 		}
-		return _emptyEffectSet;
+		return Collections.emptyList();
 	}
 }

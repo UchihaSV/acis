@@ -83,9 +83,9 @@ public class AdminZone implements IAdminCommandHandler
 		adminReply.setFile("data/html/admin/zone.htm");
 		
 		adminReply.replace("%MAPREGION%", "[x:" + MapRegionTable.getMapRegionX(activeChar.getX()) + " y:" + MapRegionTable.getMapRegionX(activeChar.getY()) + "]");
-		adminReply.replace("%GEOREGION%", "" + geoX + "_" + geoY);
+		adminReply.replace("%GEOREGION%", geoX + "_" + geoY);
 		adminReply.replace("%CLOSESTTOWN%", MapRegionTable.getInstance().getClosestTownName(activeChar.getX(), activeChar.getY()));
-		adminReply.replace("%CURRENTLOC%", "" + activeChar.getX() + ", " + activeChar.getY() + ", " + activeChar.getZ());
+		adminReply.replace("%CURRENTLOC%", activeChar.getX() + ", " + activeChar.getY() + ", " + activeChar.getZ());
 		
 		adminReply.replace("%PVP%", (activeChar.isInsideZone(ZoneId.PVP) ? "<font color=\"LEVEL\">YES</font>" : "NO"));
 		adminReply.replace("%PEACE%", (activeChar.isInsideZone(ZoneId.PEACE) ? "<font color=\"LEVEL\">YES</font>" : "NO"));

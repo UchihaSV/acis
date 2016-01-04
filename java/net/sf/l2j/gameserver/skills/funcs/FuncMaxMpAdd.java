@@ -30,22 +30,19 @@ public class FuncMaxMpAdd extends Func
 	
 	private FuncMaxMpAdd()
 	{
-		super(Stats.MAX_MP, 0x10, null);
+		super(Stats.MAX_MP, 0x10, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2PcTemplate t = (L2PcTemplate) env.player.getTemplate();
-		int lvl = env.player.getLevel() - t.classBaseLevel;
+		final L2PcTemplate t = (L2PcTemplate) env.getCharacter().getTemplate();
+		final int lvl = Math.max(env.getCharacter().getLevel() - t.classBaseLevel, 0);
 		
-		// This is to prevent Players having only 1 MP
-		if (lvl < 0)
-			lvl = 0;
+		final double mpmod = t.lvlMpMod * lvl;
+		final double mpmax = (t.lvlMpAdd + mpmod) * lvl;
+		final double mpmin = (t.lvlMpAdd * lvl) + mpmod;
 		
-		double mpmod = t.lvlMpMod * lvl;
-		double mpmax = (t.lvlMpAdd + mpmod) * lvl;
-		double mpmin = (t.lvlMpAdd * lvl) + mpmod;
-		env.value += (mpmax + mpmin) / 2;
+		env.addValue((mpmax + mpmin) / 2);
 	}
 }

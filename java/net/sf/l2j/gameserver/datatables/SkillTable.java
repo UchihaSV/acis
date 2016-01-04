@@ -17,11 +17,16 @@ package net.sf.l2j.gameserver.datatables;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
+import java.io.File;
+import java.util.logging.Logger;
+
 import net.sf.l2j.gameserver.model.L2Skill;
-import net.sf.l2j.gameserver.skills.SkillsEngine;
+import net.sf.l2j.gameserver.skills.DocumentSkill;
 
 public class SkillTable
 {
+	private static final Logger _log = Logger.getLogger(SkillTable.class.getName());
+	
 	private static final L2Skill[] EMPTY_SKILLS = new L2Skill[0];
 	
 	private final TIntObjectHashMap<L2Skill> _skills;
@@ -65,7 +70,18 @@ public class SkillTable
 	
 	private void load()
 	{
-		SkillsEngine.getInstance().loadAllSkills(_skills);
+		final File dir = new File("./data/xml/skills");
+		
+		for (File file : dir.listFiles())
+		{
+			DocumentSkill doc = new DocumentSkill(file);
+			doc.parse();
+			
+			for (L2Skill skill : doc.getSkills())
+				_skills.put(getSkillHashCode(skill), skill);
+		}
+		
+		_log.info("SkillTable: Loaded " + _skills.size() + " skills.");
 		
 		// Stores max level of skills in a map for future uses.
 		for (final L2Skill skill : _skills.values(EMPTY_SKILLS))
@@ -127,7 +143,7 @@ public class SkillTable
 		return _skills.get(getSkillHashCode(skillId, level));
 	}
 	
-	public final int getMaxLevel(final int skillId)
+	public int getMaxLevel(int skillId)
 	{
 		return _skillMaxLevel.get(skillId);
 	}

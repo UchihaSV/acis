@@ -39,6 +39,7 @@ import net.sf.l2j.gameserver.network.serverpackets.AcquireSkillList;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListAll;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
@@ -463,7 +464,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					break;
 			}
 			
-			html.replace("%objectId%", String.valueOf(getObjectId()));
+			html.replace("%objectId%", getObjectId());
 			player.sendPacket(html);
 		}
 		else
@@ -663,7 +664,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		
 		for (Siege siege : SiegeManager.getSieges())
 		{
-			if (siege.getIsInProgress())
+			if (siege.isInProgress())
 			{
 				if (siege.getAttackerClan(clan) != null || siege.getDefenderClan(clan) != null)
 				{
@@ -686,7 +687,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		
 		if (Config.ALT_CLAN_DISSOLVE_DAYS > 0)
 		{
-			clan.setDissolvingExpiryTime(System.currentTimeMillis() + Config.ALT_CLAN_DISSOLVE_DAYS * 86400000L); // 24*60*60*1000 = 86400000
+			clan.setDissolvingExpiryTime(System.currentTimeMillis() + Config.ALT_CLAN_DISSOLVE_DAYS * 86400000L);
 			clan.updateClanInDB();
 			
 			ClanTable.getInstance().scheduleRemoveClan(clan);
@@ -871,7 +872,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		
 		subPledge.setName(pledgeName);
 		clan.updateSubPledgeInDB(subPledge.getId());
-		clan.broadcastClanStatus();
+		clan.broadcastToOnlineMembers(new PledgeShowMemberListAll(clan, subPledge.getId()));
 		player.sendMessage("Pledge name have been changed to: " + pledgeName);
 	}
 	
@@ -904,7 +905,9 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			return;
 		}
 		
-		if (clan.getClanMember(leaderName) == null || (clan.getClanMember(leaderName).getPledgeType() != 0))
+		final L2ClanMember leaderSubPledge = clan.getClanMember(leaderName);
+		
+		if (leaderSubPledge == null || leaderSubPledge.getPledgeType() != 0)
 		{
 			if (subPledge.getId() >= L2Clan.SUBUNIT_KNIGHT1)
 				player.sendPacket(SystemMessageId.CAPTAIN_OF_ORDER_OF_KNIGHTS_CANNOT_BE_APPOINTED);
@@ -914,10 +917,20 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			return;
 		}
 		
-		subPledge.setLeaderId(clan.getClanMember(leaderName).getObjectId());
+		// Avoid naming sub pledges with the same captain
+		if (clan.isSubPledgeLeader(leaderSubPledge.getObjectId()))
+		{
+			if (subPledge.getId() >= L2Clan.SUBUNIT_KNIGHT1)
+				player.sendPacket(SystemMessageId.CAPTAIN_OF_ORDER_OF_KNIGHTS_CANNOT_BE_APPOINTED);
+			else if (subPledge.getId() >= L2Clan.SUBUNIT_ROYAL1)
+				player.sendPacket(SystemMessageId.CAPTAIN_OF_ROYAL_GUARD_CANNOT_BE_APPOINTED);
+			
+			return;
+		}
+		
+		subPledge.setLeaderId(leaderSubPledge.getObjectId());
 		clan.updateSubPledgeInDB(subPledge.getId());
 		
-		final L2ClanMember leaderSubPledge = clan.getClanMember(leaderName);
 		final L2PcInstance leaderPlayer = leaderSubPledge.getPlayerInstance();
 		if (leaderPlayer != null)
 		{
@@ -925,8 +938,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			leaderPlayer.sendPacket(new UserInfo(leaderPlayer));
 		}
 		
-		clan.broadcastClanStatus();
-		clan.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.S1_HAS_BEEN_SELECTED_AS_CAPTAIN_OF_S2).addString(leaderName).addString(clanName));
+		clan.broadcastToOnlineMembers(new PledgeShowMemberListAll(clan, subPledge.getId()), SystemMessage.getSystemMessage(SystemMessageId.S1_HAS_BEEN_SELECTED_AS_CAPTAIN_OF_S2).addString(leaderName).addString(clanName));
 	}
 	
 	/**

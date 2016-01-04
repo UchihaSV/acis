@@ -104,7 +104,7 @@ public class L2DawnPriestInstance extends L2SignsPriestInstance
 		
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%",getObjectId());
 		player.sendPacket(html);
 	}
 }

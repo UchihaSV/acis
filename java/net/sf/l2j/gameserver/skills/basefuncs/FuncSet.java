@@ -19,18 +19,15 @@ import net.sf.l2j.gameserver.skills.Stats;
 
 public class FuncSet extends Func
 {
-	private final Lambda _lambda;
-	
 	public FuncSet(Stats pStat, int pOrder, Object owner, Lambda lambda)
 	{
-		super(pStat, pOrder, owner);
-		_lambda = lambda;
+		super(pStat, pOrder, owner, lambda);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
 		if (cond == null || cond.test(env))
-			env.value = _lambda.calc(env);
+			env.setValue(_lambda.calc(env));
 	}
 }

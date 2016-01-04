@@ -15,14 +15,17 @@
 package net.sf.l2j.gameserver.network.serverpackets;
 
 import net.sf.l2j.gameserver.model.L2Clan.RankPrivs;
+import net.sf.l2j.gameserver.model.L2ClanMember;
 
 public class PledgePowerGradeList extends L2GameServerPacket
 {
 	private final RankPrivs[] _privs;
+	private final L2ClanMember[] _members;
 	
-	public PledgePowerGradeList(RankPrivs[] privs)
+	public PledgePowerGradeList(RankPrivs[] privs, L2ClanMember[] members)
 	{
 		_privs = privs;
+		_members = members;
 	}
 	
 	@Override
@@ -34,7 +37,14 @@ public class PledgePowerGradeList extends L2GameServerPacket
 		for (RankPrivs _priv : _privs)
 		{
 			writeD(_priv.getRank());
-			writeD(_priv.getParty());
+			
+			int count = 0;
+			for (L2ClanMember member : _members)
+			{
+				if (member.getPowerGrade() == _priv.getRank())
+					count++;
+			}
+			writeD(count);
 		}
 	}
 }

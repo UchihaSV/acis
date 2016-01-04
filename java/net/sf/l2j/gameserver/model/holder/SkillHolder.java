@@ -12,28 +12,43 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package net.sf.l2j.gameserver.skills.conditions;
+package net.sf.l2j.gameserver.model.holder;
 
-import net.sf.l2j.gameserver.skills.Env;
+import net.sf.l2j.gameserver.datatables.SkillTable;
+import net.sf.l2j.gameserver.model.L2Skill;
 
 /**
- * @author mkizub
+ * @author BiggBoss Simple class for storing skill id/level
  */
-public final class ConditionUsingSkill extends Condition
+public final class SkillHolder
 {
 	private final int _skillId;
+	private final int _skillLvl;
 	
-	public ConditionUsingSkill(int skillId)
+	public SkillHolder(int skillId, int skillLvl)
 	{
 		_skillId = skillId;
+		_skillLvl = skillLvl;
 	}
 	
-	@Override
-	public boolean testImpl(Env env)
+	public SkillHolder(L2Skill skill)
 	{
-		if (env.skill == null)
-			return false;
-		
-		return env.skill.getId() == _skillId;
+		_skillId = skill.getId();
+		_skillLvl = skill.getLevel();
+	}
+	
+	public final int getSkillId()
+	{
+		return _skillId;
+	}
+	
+	public final int getSkillLvl()
+	{
+		return _skillLvl;
+	}
+	
+	public final L2Skill getSkill()
+	{
+		return SkillTable.getInstance().getInfo(_skillId, _skillLvl);
 	}
 }

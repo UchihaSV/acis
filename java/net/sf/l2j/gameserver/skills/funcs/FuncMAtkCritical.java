@@ -32,16 +32,19 @@ public class FuncMAtkCritical extends Func
 	
 	private FuncMAtkCritical()
 	{
-		super(Stats.MCRITICAL_RATE, 0x30, null);
+		super(Stats.MCRITICAL_RATE, 0x30, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2Character p = env.player;
-		if (p instanceof L2PcInstance && p.getActiveWeaponInstance() != null)
-			env.value *= Formulas.WITbonus[p.getWIT()];
+		final L2Character player = env.getCharacter();
+		if (player instanceof L2PcInstance)
+		{
+			if (player.getActiveWeaponInstance() != null)
+				env.mulValue(Formulas.WITbonus[player.getWIT()]);
+		}
 		else
-			env.value *= Formulas.WITbonus[p.getWIT()];
+			env.mulValue(Formulas.WITbonus[player.getWIT()]);
 	}
 }

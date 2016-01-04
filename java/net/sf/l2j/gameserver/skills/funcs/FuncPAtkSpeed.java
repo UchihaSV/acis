@@ -30,12 +30,12 @@ public class FuncPAtkSpeed extends Func
 	
 	private FuncPAtkSpeed()
 	{
-		super(Stats.POWER_ATTACK_SPEED, 0x20, null);
+		super(Stats.POWER_ATTACK_SPEED, 0x20, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		env.value *= Formulas.DEXbonus[env.player.getDEX()];
+		env.mulValue(Formulas.DEXbonus[env.getCharacter().getDEX()]);
 	}
 }

@@ -306,7 +306,7 @@ public class MapRegionTable
 					if (castle == null)
 					{
 						castle = CastleManager.getInstance().getCastle(player);
-						if (!(castle != null && castle.getSiege().getIsInProgress() && castle.getSiege().getDefenderClan(player.getClan()) != null))
+						if (!(castle != null && castle.getSiege().isInProgress() && castle.getSiege().getDefenderClan(player.getClan()) != null))
 							castle = null;
 					}
 					
@@ -319,7 +319,7 @@ public class MapRegionTable
 				{
 					castle = CastleManager.getInstance().getCastle(player);
 					
-					if (castle != null && castle.getSiege().getIsInProgress())
+					if (castle != null && castle.getSiege().isInProgress())
 					{
 						// Check if player's clan is attacker
 						List<L2Npc> flags = castle.getSiege().getFlag(player.getClan());
@@ -346,7 +346,7 @@ public class MapRegionTable
 			castle = CastleManager.getInstance().getCastle(player);
 			if (castle != null)
 			{
-				if (castle.getSiege().getIsInProgress())
+				if (castle.getSiege().isInProgress())
 				{
 					// Check if player's clan is participating
 					if ((castle.getSiege().checkIsDefender(player.getClan()) || castle.getSiege().checkIsAttacker(player.getClan())) && SevenSigns.getInstance().getSealOwner(SevenSigns.SEAL_STRIFE) == SevenSigns.CABAL_DAWN)
@@ -543,7 +543,7 @@ public class MapRegionTable
 		{
 			final Castle castle = CastleManager.getInstance().getCastles().get(CastleManager.getInstance().getCastleIndex(castleIndex));
 			if (castle != null)
-				return castle.getSiege().getIsInProgress();
+				return castle.getSiege().isInProgress();
 		}
 		return false;
 	}

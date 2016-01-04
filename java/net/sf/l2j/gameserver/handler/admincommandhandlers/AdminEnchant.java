@@ -14,24 +14,25 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import java.util.logging.Logger;
-
-import net.sf.l2j.Config;
+import net.sf.l2j.gameserver.datatables.ArmorSetsTable;
+import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
+import net.sf.l2j.gameserver.model.L2ArmorSet;
 import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
-import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
+import net.sf.l2j.gameserver.templates.item.L2Armor;
+import net.sf.l2j.gameserver.templates.item.L2Item;
+import net.sf.l2j.gameserver.templates.item.L2Weapon;
 
 /**
  * This class handles following admin commands: - enchant_armor
  */
 public class AdminEnchant implements IAdminCommandHandler
 {
-	private static Logger _log = Logger.getLogger(AdminEnchant.class.getName());
-	
 	private static final String[] ADMIN_COMMANDS =
 	{
 		"admin_seteh",// 6
@@ -101,17 +102,9 @@ public class AdminEnchant implements IAdminCommandHandler
 					else
 						setEnchant(activeChar, ench, armorType);
 				}
-				catch (StringIndexOutOfBoundsException e)
+				catch (Exception e)
 				{
-					if (Config.DEVELOPER)
-						_log.warning("Set enchant error: " + e);
 					activeChar.sendMessage("Please specify a new enchant value.");
-				}
-				catch (NumberFormatException e)
-				{
-					if (Config.DEVELOPER)
-						_log.warning("Set enchant error: " + e);
-					activeChar.sendMessage("Please specify a valid new enchant value.");
 				}
 			}
 			
@@ -124,45 +117,108 @@ public class AdminEnchant implements IAdminCommandHandler
 	
 	private static void setEnchant(L2PcInstance activeChar, int ench, int armorType)
 	{
-		// get the target
 		L2Object target = activeChar.getTarget();
-		if (target == null)
+		if (!(target instanceof L2PcInstance))
 			target = activeChar;
 		
-		L2PcInstance player = null;
-		if (target instanceof L2PcInstance)
-			player = (L2PcInstance) target;
-		else
+		final L2PcInstance player = (L2PcInstance) target;
+		
+		final L2ItemInstance item = player.getInventory().getPaperdollItem(armorType);
+		if (item != null && item.getLocationSlot() == armorType)
 		{
-			activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
-			return;
-		}
-		
-		// now we need to find the equipped weapon of the targeted character...
-		int curEnchant = 0; // display purposes only
-		L2ItemInstance itemInstance = null;
-		
-		// only attempt to enchant if there is a weapon equipped
-		L2ItemInstance parmorInstance = player.getInventory().getPaperdollItem(armorType);
-		if (parmorInstance != null && parmorInstance.getLocationSlot() == armorType)
-			itemInstance = parmorInstance;
-		
-		if (itemInstance != null)
-		{
-			curEnchant = itemInstance.getEnchantLevel();
+			final L2Item it = item.getItem();
+			final int oldEnchant = item.getEnchantLevel();
 			
-			// set enchant value
-			itemInstance.setEnchantLevel(ench);
-			itemInstance.updateDatabase();
+			item.setEnchantLevel(ench);
+			item.updateDatabase();
 			
-			// send packets
+			// If item is equipped, verify the skill obtention/drop (+4 duals, +6 armorset).
+			if (item.isEquipped())
+			{
+				final int currentEnchant = item.getEnchantLevel();
+				
+				// Skill bestowed by +4 duals.
+				if (it instanceof L2Weapon)
+				{
+					// Old enchant was >= 4 and new is lower : we drop the skill.
+					if (oldEnchant >= 4 && currentEnchant < 4)
+					{
+						final L2Skill enchant4Skill = ((L2Weapon) it).getEnchant4Skill();
+						if (enchant4Skill != null)
+						{
+							player.removeSkill(enchant4Skill, false);
+							player.sendSkillList();
+						}
+					}
+					// Old enchant was < 4 and new is 4 or more : we add the skill.
+					else if (oldEnchant < 4 && currentEnchant >= 4)
+					{
+						final L2Skill enchant4Skill = ((L2Weapon) it).getEnchant4Skill();
+						if (enchant4Skill != null)
+						{
+							player.addSkill(enchant4Skill, false);
+							player.sendSkillList();
+						}
+					}
+				}
+				// Add skill bestowed by +6 armorset.
+				else if (it instanceof L2Armor)
+				{
+					// Old enchant was >= 6 and new is lower : we drop the skill.
+					if (oldEnchant >= 6 && currentEnchant < 6)
+					{
+						// Checks if player is wearing a chest item
+						final L2ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
+						if (chestItem != null)
+						{
+							final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
+							if (armorSet != null)
+							{
+								final int skillId = armorSet.getEnchant6skillId();
+								if (skillId > 0)
+								{
+									final L2Skill skill = SkillTable.getInstance().getInfo(skillId, 1);
+									if (skill != null)
+									{
+										player.removeSkill(skill, false);
+										player.sendSkillList();
+									}
+								}
+							}
+						}
+					}
+					// Old enchant was < 6 and new is 6 or more : we add the skill.
+					else if (oldEnchant < 6 && currentEnchant >= 6)
+					{
+						// Checks if player is wearing a chest item
+						final L2ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
+						if (chestItem != null)
+						{
+							final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
+							if (armorSet != null && armorSet.isEnchanted6(player)) // has all parts of set enchanted to 6 or more
+							{
+								final int skillId = armorSet.getEnchant6skillId();
+								if (skillId > 0)
+								{
+									final L2Skill skill = SkillTable.getInstance().getInfo(skillId, 1);
+									if (skill != null)
+									{
+										player.addSkill(skill, false);
+										player.sendSkillList();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			
 			player.sendPacket(new ItemList(player, false));
 			player.broadcastUserInfo();
 			
-			// informations
-			activeChar.sendMessage("Changed enchantment of " + player.getName() + "'s " + itemInstance.getItem().getName() + " from " + curEnchant + " to " + ench + ".");
+			activeChar.sendMessage("Changed enchantment of " + player.getName() + "'s " + it.getName() + " from " + oldEnchant + " to " + ench + ".");
 			if (player != activeChar)
-				player.sendMessage("A GM has changed the enchantment of your " + itemInstance.getItem().getName() + " from " + curEnchant + " to " + ench + ".");
+				player.sendMessage("A GM has changed the enchantment of your " + it.getName() + " from " + oldEnchant + " to " + ench + ".");
 		}
 	}
 	

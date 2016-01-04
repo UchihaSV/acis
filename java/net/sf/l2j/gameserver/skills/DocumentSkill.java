@@ -31,7 +31,7 @@ import org.w3c.dom.Node;
 /**
  * @author mkizub
  */
-final class DocumentSkill extends DocumentBase
+public final class DocumentSkill extends DocumentBase
 {
 	public class Skill
 	{
@@ -48,7 +48,7 @@ final class DocumentSkill extends DocumentBase
 	private Skill _currentSkill;
 	private final List<L2Skill> _skillsInFile = new ArrayList<>();
 	
-	DocumentSkill(File file)
+	public DocumentSkill(File file)
 	{
 		super(file);
 	}
@@ -64,7 +64,7 @@ final class DocumentSkill extends DocumentBase
 		return _currentSkill.sets[_currentSkill.currentLevel];
 	}
 	
-	protected List<L2Skill> getSkills()
+	public List<L2Skill> getSkills()
 	{
 		return _skillsInFile;
 	}

@@ -30,8 +30,6 @@ public final class RequestPrivateStoreQuitSell extends L2GameClientPacket
 		if (player == null)
 			return;
 		
-		player.setPrivateStoreType(L2PcInstance.STORE_PRIVATE_NONE);
-		player.standUp();
-		player.broadcastUserInfo();
+		player.forceStandUp();
 	}
 }

@@ -15,10 +15,7 @@
 package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.gameserver.SevenSignsFestival;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
-import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.actor.L2Character;
-import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
@@ -40,8 +37,7 @@ public class L2FestivalMonsterInstance extends L2MonsterInstance
 	}
 	
 	/**
-	 * Return True if the attacker is not another L2FestivalMonsterInstance.<BR>
-	 * <BR>
+	 * Return True if the attacker is not another L2FestivalMonsterInstance.
 	 */
 	@Override
 	public boolean isAutoAttackable(L2Character attacker)
@@ -62,7 +58,7 @@ public class L2FestivalMonsterInstance extends L2MonsterInstance
 	}
 	
 	/**
-	 * All mobs in the festival really don't need random animation.
+	 * All mobs in the festival don't need random animation.
 	 */
 	@Override
 	public boolean hasRandomAnimation()
@@ -71,34 +67,17 @@ public class L2FestivalMonsterInstance extends L2MonsterInstance
 	}
 	
 	/**
-	 * Actions: <li>Check if the killing object is a player, and then find the party they belong to.</li> <li>Add a blood offering item to the leader of the party.</li> <li>Update the party leader's inventory to show the new item addition.</li>
+	 * Add a blood offering item to the leader of the party.
 	 */
 	@Override
-	public void doItemDrop(L2Character lastAttacker)
+	public void doItemDrop(L2Character attacker)
 	{
-		L2PcInstance killingChar = null;
-		
-		if (!(lastAttacker instanceof L2PcInstance))
+		final L2PcInstance player = attacker.getActingPlayer();
+		if (player == null || !player.isInParty())
 			return;
 		
-		killingChar = (L2PcInstance) lastAttacker;
-		L2Party associatedParty = killingChar.getParty();
+		player.getParty().getLeader().addItem("Sign", SevenSignsFestival.FESTIVAL_OFFERING_ID, _bonusMultiplier, attacker, true);
 		
-		if (associatedParty == null)
-			return;
-		
-		L2PcInstance partyLeader = associatedParty.getLeader();
-		L2ItemInstance addedOfferings = partyLeader.getInventory().addItem("Sign", SevenSignsFestival.FESTIVAL_OFFERING_ID, _bonusMultiplier, partyLeader, this);
-		
-		InventoryUpdate iu = new InventoryUpdate();
-		
-		if (addedOfferings.getCount() != _bonusMultiplier)
-			iu.addModifiedItem(addedOfferings);
-		else
-			iu.addNewItem(addedOfferings);
-		
-		partyLeader.sendPacket(iu);
-		
-		super.doItemDrop(lastAttacker); // Normal drop
+		super.doItemDrop(attacker);
 	}
 }

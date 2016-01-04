@@ -33,30 +33,30 @@ public class FuncMDefMod extends Func
 	
 	private FuncMDefMod()
 	{
-		super(Stats.MAGIC_DEFENCE, 0x20, null);
+		super(Stats.MAGIC_DEFENCE, 0x20, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		if (env.player instanceof L2PetInstance)
+		if (env.getCharacter() instanceof L2PetInstance)
 			return;
 		
-		if (env.player instanceof L2PcInstance)
+		if (env.getCharacter() instanceof L2PcInstance)
 		{
-			L2PcInstance p = (L2PcInstance) env.player;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LFINGER) != null)
-				env.value -= 5;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_RFINGER) != null)
-				env.value -= 5;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LEAR) != null)
-				env.value -= 9;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_REAR) != null)
-				env.value -= 9;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_NECK) != null)
-				env.value -= 13;
+			final L2PcInstance player = env.getPlayer();
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LFINGER) != null)
+				env.subValue(5);
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_RFINGER) != null)
+				env.subValue(5);
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LEAR) != null)
+				env.subValue(9);
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_REAR) != null)
+				env.subValue(9);
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_NECK) != null)
+				env.subValue(13);
 		}
 		
-		env.value *= Formulas.MENbonus[env.player.getMEN()] * env.player.getLevelMod();
+		env.mulValue(Formulas.MENbonus[env.getCharacter().getMEN()] * env.getCharacter().getLevelMod());
 	}
 }

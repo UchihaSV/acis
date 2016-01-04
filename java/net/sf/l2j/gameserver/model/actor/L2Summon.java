@@ -44,7 +44,6 @@ import net.sf.l2j.gameserver.network.serverpackets.AbstractNpcInfo.SummonInfo;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.PetDelete;
 import net.sf.l2j.gameserver.network.serverpackets.PetInfo;
@@ -179,12 +178,10 @@ public abstract class L2Summon extends L2Playable
 	@Override
 	public void onAction(L2PcInstance player)
 	{
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
 			player.setTarget(this);
-			player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel() - getLevel()));
-		}
-		else if (player == _owner && player.getTarget() == this)
+		else if (player == _owner)
 		{
 			// Calculate the distance between the L2PcInstance and the L2Npc
 			if (!canInteract(player))
@@ -236,15 +233,15 @@ public abstract class L2Summon extends L2Playable
 			html.setFile("data/html/admin/petinfo.htm");
 			String name = getName();
 			html.replace("%name%", name == null ? "N/A" : name);
-			html.replace("%level%", Integer.toString(getLevel()));
-			html.replace("%exp%", Long.toString(getStat().getExp()));
+			html.replace("%level%", getLevel());
+			html.replace("%exp%", getStat().getExp());
 			String owner = getActingPlayer().getName();
 			html.replace("%owner%", " <a action=\"bypass -h admin_character_info " + owner + "\">" + owner + "</a>");
 			html.replace("%class%", getClass().getSimpleName());
-			html.replace("%ai%", hasAI() ? String.valueOf(getAI().getIntention().name()) : "NULL");
+			html.replace("%ai%", hasAI() ? getAI().getIntention().name() : "NULL");
 			html.replace("%hp%", (int) getStatus().getCurrentHp() + "/" + getStat().getMaxHp());
 			html.replace("%mp%", (int) getStatus().getCurrentMp() + "/" + getStat().getMaxMp());
-			html.replace("%karma%", Integer.toString(getKarma()));
+			html.replace("%karma%", getKarma());
 			html.replace("%undead%", isUndead() ? "yes" : "no");
 			
 			if (this instanceof L2PetInstance)
@@ -583,6 +580,7 @@ public abstract class L2Summon extends L2Playable
 			case TARGET_BEHIND_AURA:
 			case TARGET_AURA_UNDEAD:
 			case TARGET_SELF:
+			case TARGET_CORPSE_ALLY:
 				target = this;
 				break;
 			default:

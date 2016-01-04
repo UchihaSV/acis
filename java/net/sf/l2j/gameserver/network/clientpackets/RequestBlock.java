@@ -28,7 +28,7 @@ public final class RequestBlock extends L2GameClientPacket
 	private final static int ALLUNBLOCK = 4;
 	
 	private String _name;
-	private Integer _type;
+	private int _type;
 	
 	@Override
 	protected void readImpl()
@@ -43,9 +43,6 @@ public final class RequestBlock extends L2GameClientPacket
 	protected void runImpl()
 	{
 		final L2PcInstance activeChar = getClient().getActiveChar();
-		final int targetId = CharNameTable.getInstance().getIdByName(_name);
-		final int targetAL = CharNameTable.getInstance().getAccessLevelById(targetId);
-		
 		if (activeChar == null)
 			return;
 		
@@ -53,17 +50,19 @@ public final class RequestBlock extends L2GameClientPacket
 		{
 			case BLOCK:
 			case UNBLOCK:
-				// can't use block/unblock for locating invisible characters
+				final int targetId = CharNameTable.getInstance().getIdByName(_name);
+				final int targetAL = CharNameTable.getInstance().getAccessLevelById(targetId);
+				
+				// Can't block/unblock to locate invisible characters.
 				if (targetId <= 0)
 				{
-					// Incorrect player name.
 					activeChar.sendPacket(SystemMessageId.FAILED_TO_REGISTER_TO_IGNORE_LIST);
 					return;
 				}
 				
+				// Can't block a GM character.
 				if (targetAL > 0)
 				{
-					// Cannot block a GM character.
 					activeChar.sendPacket(SystemMessageId.YOU_MAY_NOT_IMPOSE_A_BLOCK_ON_GM);
 					return;
 				}
@@ -76,17 +75,21 @@ public final class RequestBlock extends L2GameClientPacket
 				else
 					BlockList.removeFromBlockList(activeChar, targetId);
 				break;
+			
 			case BLOCKLIST:
 				BlockList.sendListToOwner(activeChar);
 				break;
+			
 			case ALLBLOCK:
 				activeChar.sendPacket(SystemMessageId.MESSAGE_REFUSAL_MODE);// Update by rocknow
 				BlockList.setBlockAll(activeChar, true);
 				break;
+			
 			case ALLUNBLOCK:
 				activeChar.sendPacket(SystemMessageId.MESSAGE_ACCEPTANCE_MODE);// Update by rocknow
 				BlockList.setBlockAll(activeChar, false);
 				break;
+			
 			default:
 				_log.info("Unknown 0x0a block type: " + _type);
 		}

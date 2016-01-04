@@ -148,7 +148,7 @@ public class AdminSiege implements IAdminCommandHandler
 			}
 			else if (command.equalsIgnoreCase("admin_spawn_doors"))
 			{
-				castle.spawnDoors();
+				castle.spawnDoors(false);
 			}
 			else if (command.equalsIgnoreCase("admin_startsiege"))
 			{
@@ -275,7 +275,7 @@ public class AdminSiege implements IAdminCommandHandler
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setFile("data/html/admin/clanhall.htm");
 		adminReply.replace("%clanhallName%", clanhall.getName());
-		adminReply.replace("%clanhallId%", String.valueOf(clanhall.getId()));
+		adminReply.replace("%clanhallId%", clanhall.getId());
 		L2Clan owner = ClanTable.getInstance().getClan(clanhall.getOwnerId());
 		if (owner == null)
 			adminReply.replace("%clanhallOwner%", "None");

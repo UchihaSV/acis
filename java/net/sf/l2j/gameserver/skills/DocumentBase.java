@@ -57,28 +57,19 @@ import net.sf.l2j.gameserver.skills.conditions.ConditionPlayerPledgeClass;
 import net.sf.l2j.gameserver.skills.conditions.ConditionPlayerRace;
 import net.sf.l2j.gameserver.skills.conditions.ConditionPlayerSex;
 import net.sf.l2j.gameserver.skills.conditions.ConditionPlayerState;
-import net.sf.l2j.gameserver.skills.conditions.ConditionPlayerState.CheckPlayerState;
+import net.sf.l2j.gameserver.skills.conditions.ConditionPlayerState.PlayerState;
 import net.sf.l2j.gameserver.skills.conditions.ConditionPlayerWeight;
 import net.sf.l2j.gameserver.skills.conditions.ConditionSkillStats;
-import net.sf.l2j.gameserver.skills.conditions.ConditionSlotItemId;
-import net.sf.l2j.gameserver.skills.conditions.ConditionTargetActiveEffectId;
 import net.sf.l2j.gameserver.skills.conditions.ConditionTargetActiveSkillId;
-import net.sf.l2j.gameserver.skills.conditions.ConditionTargetAggro;
-import net.sf.l2j.gameserver.skills.conditions.ConditionTargetClassIdRestriction;
 import net.sf.l2j.gameserver.skills.conditions.ConditionTargetHpMinMax;
-import net.sf.l2j.gameserver.skills.conditions.ConditionTargetLevel;
 import net.sf.l2j.gameserver.skills.conditions.ConditionTargetNpcId;
 import net.sf.l2j.gameserver.skills.conditions.ConditionTargetRaceId;
-import net.sf.l2j.gameserver.skills.conditions.ConditionTargetUsesWeaponKind;
 import net.sf.l2j.gameserver.skills.conditions.ConditionUsingItemType;
-import net.sf.l2j.gameserver.skills.conditions.ConditionUsingSkill;
 import net.sf.l2j.gameserver.skills.conditions.ConditionWithSkill;
 import net.sf.l2j.gameserver.skills.effects.EffectChanceSkillTrigger;
 import net.sf.l2j.gameserver.skills.effects.EffectTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.item.L2ArmorType;
 import net.sf.l2j.gameserver.templates.item.L2Item;
-import net.sf.l2j.gameserver.templates.item.L2WeaponType;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
@@ -102,7 +93,7 @@ abstract class DocumentBase
 		_tables = new HashMap<>();
 	}
 	
-	Document parse()
+	public Document parse()
 	{
 		Document doc;
 		try
@@ -219,7 +210,7 @@ abstract class DocumentBase
 		sb.setCharAt(0, Character.toUpperCase(name.charAt(0)));
 		name = sb.toString();
 		Lambda lambda = getLambda(n, template);
-		FuncTemplate ft = new FuncTemplate(null, null, name, null, calc.funcs.length, lambda);
+		FuncTemplate ft = new FuncTemplate(null, null, name, null, calc.getFuncs().size(), lambda);
 		calc.addFunc(ft.getFunc(new Env(), calc));
 	}
 	
@@ -427,42 +418,42 @@ abstract class DocumentBase
 			else if ("resting".equalsIgnoreCase(a.getNodeName()))
 			{
 				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionPlayerState(CheckPlayerState.RESTING, val));
+				cond = joinAnd(cond, new ConditionPlayerState(PlayerState.RESTING, val));
 			}
 			else if ("riding".equalsIgnoreCase(a.getNodeName()))
 			{
 				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionPlayerState(CheckPlayerState.RIDING, val));
+				cond = joinAnd(cond, new ConditionPlayerState(PlayerState.RIDING, val));
 			}
 			else if ("flying".equalsIgnoreCase(a.getNodeName()))
 			{
 				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionPlayerState(CheckPlayerState.FLYING, val));
+				cond = joinAnd(cond, new ConditionPlayerState(PlayerState.FLYING, val));
 			}
 			else if ("moving".equalsIgnoreCase(a.getNodeName()))
 			{
 				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionPlayerState(CheckPlayerState.MOVING, val));
+				cond = joinAnd(cond, new ConditionPlayerState(PlayerState.MOVING, val));
 			}
 			else if ("running".equalsIgnoreCase(a.getNodeName()))
 			{
 				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionPlayerState(CheckPlayerState.RUNNING, val));
+				cond = joinAnd(cond, new ConditionPlayerState(PlayerState.RUNNING, val));
 			}
 			else if ("behind".equalsIgnoreCase(a.getNodeName()))
 			{
 				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionPlayerState(CheckPlayerState.BEHIND, val));
+				cond = joinAnd(cond, new ConditionPlayerState(PlayerState.BEHIND, val));
 			}
 			else if ("front".equalsIgnoreCase(a.getNodeName()))
 			{
 				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionPlayerState(CheckPlayerState.FRONT, val));
+				cond = joinAnd(cond, new ConditionPlayerState(PlayerState.FRONT, val));
 			}
 			else if ("olympiad".equalsIgnoreCase(a.getNodeName()))
 			{
 				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionPlayerState(CheckPlayerState.OLYMPIAD, val));
+				cond = joinAnd(cond, new ConditionPlayerState(PlayerState.OLYMPIAD, val));
 			}
 			else if ("ishero".equalsIgnoreCase(a.getNodeName()))
 			{
@@ -610,57 +601,17 @@ abstract class DocumentBase
 		for (int i = 0; i < attrs.getLength(); i++)
 		{
 			Node a = attrs.item(i);
-			if ("aggro".equalsIgnoreCase(a.getNodeName()))
-			{
-				boolean val = Boolean.valueOf(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionTargetAggro(val));
-			}
-			else if ("level".equalsIgnoreCase(a.getNodeName()))
-			{
-				int lvl = Integer.decode(getValue(a.getNodeValue(), template));
-				cond = joinAnd(cond, new ConditionTargetLevel(lvl));
-			}
-			else if ("hp_min_max".equalsIgnoreCase(a.getNodeName()))
+			if ("hp_min_max".equalsIgnoreCase(a.getNodeName()))
 			{
 				String val = getValue(a.getNodeValue(), template);
 				int hpMin = Integer.decode(getValue(val.split(",")[0], template));
 				int hpMax = Integer.decode(getValue(val.split(",")[1], template));
 				cond = joinAnd(cond, new ConditionTargetHpMinMax(hpMin, hpMax));
 			}
-			else if ("class_id_restriction".equalsIgnoreCase(a.getNodeName()))
-			{
-				List<Integer> array = new ArrayList<>();
-				StringTokenizer st = new StringTokenizer(a.getNodeValue(), ",");
-				while (st.hasMoreTokens())
-				{
-					String item = st.nextToken().trim();
-					array.add(Integer.decode(getValue(item, null)));
-				}
-				cond = joinAnd(cond, new ConditionTargetClassIdRestriction(array));
-			}
-			else if ("active_effect_id".equalsIgnoreCase(a.getNodeName()))
-			{
-				int effect_id = Integer.decode(getValue(a.getNodeValue(), template));
-				cond = joinAnd(cond, new ConditionTargetActiveEffectId(effect_id));
-			}
-			else if ("active_effect_id_lvl".equalsIgnoreCase(a.getNodeName()))
-			{
-				String val = getValue(a.getNodeValue(), template);
-				int effect_id = Integer.decode(getValue(val.split(",")[0], template));
-				int effect_lvl = Integer.decode(getValue(val.split(",")[1], template));
-				cond = joinAnd(cond, new ConditionTargetActiveEffectId(effect_id, effect_lvl));
-			}
 			else if ("active_skill_id".equalsIgnoreCase(a.getNodeName()))
 			{
 				int skill_id = Integer.decode(getValue(a.getNodeValue(), template));
 				cond = joinAnd(cond, new ConditionTargetActiveSkillId(skill_id));
-			}
-			else if ("active_skill_id_lvl".equalsIgnoreCase(a.getNodeName()))
-			{
-				String val = getValue(a.getNodeValue(), template);
-				int skill_id = Integer.decode(getValue(val.split(",")[0], template));
-				int skill_lvl = Integer.decode(getValue(val.split(",")[1], template));
-				cond = joinAnd(cond, new ConditionTargetActiveSkillId(skill_id, skill_lvl));
 			}
 			else if ("race_id".equalsIgnoreCase(a.getNodeName()))
 			{
@@ -672,32 +623,6 @@ abstract class DocumentBase
 					array.add(Integer.decode(getValue(item, null)));
 				}
 				cond = joinAnd(cond, new ConditionTargetRaceId(array));
-			}
-			else if ("using".equalsIgnoreCase(a.getNodeName()))
-			{
-				int mask = 0;
-				StringTokenizer st = new StringTokenizer(a.getNodeValue(), ",");
-				while (st.hasMoreTokens())
-				{
-					String item = st.nextToken().trim();
-					for (L2WeaponType wt : L2WeaponType.values())
-					{
-						if (wt.toString().equals(item))
-						{
-							mask |= wt.mask();
-							break;
-						}
-					}
-					for (L2ArmorType at : L2ArmorType.values())
-					{
-						if (at.toString().equals(item))
-						{
-							mask |= at.mask();
-							break;
-						}
-					}
-				}
-				cond = joinAnd(cond, new ConditionTargetUsesWeaponKind(mask));
 			}
 			else if ("npcId".equalsIgnoreCase(a.getNodeName()))
 			{
@@ -750,23 +675,6 @@ abstract class DocumentBase
 						_log.info("[parseUsingCondition=\"kind\"] Unknown item type name: " + item);
 				}
 				cond = joinAnd(cond, new ConditionUsingItemType(mask));
-			}
-			else if ("skill".equalsIgnoreCase(a.getNodeName()))
-			{
-				int id = Integer.parseInt(a.getNodeValue());
-				cond = joinAnd(cond, new ConditionUsingSkill(id));
-			}
-			else if ("slotitem".equalsIgnoreCase(a.getNodeName()))
-			{
-				StringTokenizer st = new StringTokenizer(a.getNodeValue(), ";");
-				int id = Integer.parseInt(st.nextToken().trim());
-				int slot = Integer.parseInt(st.nextToken().trim());
-				int enchant = 0;
-				
-				if (st.hasMoreTokens())
-					enchant = Integer.parseInt(st.nextToken().trim());
-				
-				cond = joinAnd(cond, new ConditionSlotItemId(slot, id, enchant));
 			}
 		}
 		

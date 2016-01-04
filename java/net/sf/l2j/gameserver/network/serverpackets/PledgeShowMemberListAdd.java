@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
 public class PledgeShowMemberListAdd extends L2GameServerPacket
@@ -32,21 +31,10 @@ public class PledgeShowMemberListAdd extends L2GameServerPacket
 		_name = player.getName();
 		_lvl = player.getLevel();
 		_classId = player.getClassId().getId();
-		_isOnline = (player.isOnline() ? player.getObjectId() : 0);
+		_isOnline = (player.isOnline()) ? player.getObjectId() : 0;
 		_pledgeType = player.getPledgeType();
 		_race = player.getRace().ordinal();
-		_sex = player.getAppearance().getSex() ? 1 : 0;
-	}
-	
-	public PledgeShowMemberListAdd(L2ClanMember member)
-	{
-		_name = member.getName();
-		_lvl = member.getLevel();
-		_classId = member.getClassId();
-		_isOnline = (member.isOnline() ? member.getObjectId() : 0);
-		_pledgeType = member.getPledgeType();
-		_race = member.getRaceOrdinal();
-		_sex = member.getSex() ? 1 : 0;
+		_sex = (player.getAppearance().getSex()) ? 1 : 0;
 	}
 	
 	@Override

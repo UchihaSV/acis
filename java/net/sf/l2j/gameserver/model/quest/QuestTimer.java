@@ -90,7 +90,7 @@ public class QuestTimer
 		@Override
 		public void run()
 		{
-			if (this == null || !getIsActive())
+			if (!getIsActive())
 				return;
 			
 			try

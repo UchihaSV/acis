@@ -30,12 +30,12 @@ public class FuncMaxMpMul extends Func
 	
 	private FuncMaxMpMul()
 	{
-		super(Stats.MAX_MP, 0x20, null);
+		super(Stats.MAX_MP, 0x20, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		env.value *= Formulas.MENbonus[env.player.getMEN()];
+		env.mulValue(Formulas.MENbonus[env.getCharacter().getMEN()]);
 	}
 }

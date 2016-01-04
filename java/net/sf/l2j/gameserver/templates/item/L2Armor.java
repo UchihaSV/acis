@@ -14,13 +14,6 @@
  */
 package net.sf.l2j.gameserver.templates.item;
 
-import java.util.ArrayList;
-
-import net.sf.l2j.gameserver.model.L2ItemInstance;
-import net.sf.l2j.gameserver.model.actor.L2Character;
-import net.sf.l2j.gameserver.skills.Env;
-import net.sf.l2j.gameserver.skills.basefuncs.Func;
-import net.sf.l2j.gameserver.skills.basefuncs.FuncTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
 
 /**
@@ -77,36 +70,5 @@ public final class L2Armor extends L2Item
 	public final int getItemMask()
 	{
 		return getItemType().mask();
-	}
-	
-	/**
-	 * Returns array of Func objects containing the list of functions used by the armor
-	 * @param instance : L2ItemInstance pointing out the armor
-	 * @param player : L2Character pointing out the player
-	 * @return Func[] : array of functions
-	 */
-	@Override
-	public Func[] getStatFuncs(L2ItemInstance instance, L2Character player)
-	{
-		if (_funcTemplates == null || _funcTemplates.length == 0)
-			return _emptyFunctionSet;
-		
-		ArrayList<Func> funcs = new ArrayList<>(_funcTemplates.length);
-		
-		Env env = new Env();
-		env.player = player;
-		env.item = instance;
-		
-		Func f;
-		
-		for (FuncTemplate t : _funcTemplates)
-		{
-			
-			f = t.getFunc(env, instance);
-			if (f != null)
-				funcs.add(f);
-		}
-		
-		return funcs.toArray(new Func[funcs.size()]);
 	}
 }

@@ -30,14 +30,14 @@ public class FuncHennaMEN extends Func
 	
 	private FuncHennaMEN()
 	{
-		super(Stats.STAT_MEN, 0x10, null);
+		super(Stats.STAT_MEN, 0x10, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2PcInstance pc = (L2PcInstance) env.player;
-		if (pc != null)
-			env.value += pc.getHennaStatMEN();
+		final L2PcInstance player = env.getPlayer();
+		if (player != null)
+			env.addValue(player.getHennaStatMEN());
 	}
 }

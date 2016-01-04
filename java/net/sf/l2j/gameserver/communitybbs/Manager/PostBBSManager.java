@@ -41,33 +41,6 @@ public class PostBBSManager extends BaseBBSManager
 		_postByTopic = new HashMap<>();
 	}
 	
-	public Post getPostByTopic(Topic t)
-	{
-		Post post = _postByTopic.get(t);
-		if (post == null)
-		{
-			post = load(t);
-			_postByTopic.put(t, post);
-		}
-		return post;
-	}
-	
-	public void delPostByTopic(Topic t)
-	{
-		_postByTopic.remove(t);
-	}
-	
-	public void addPostByTopic(Post p, Topic t)
-	{
-		if (_postByTopic.get(t) == null)
-			_postByTopic.put(t, p);
-	}
-	
-	private static Post load(Topic t)
-	{
-		return new Post(t);
-	}
-	
 	@Override
 	public void parseCmd(String command, L2PcInstance activeChar)
 	{
@@ -105,7 +78,68 @@ public class PostBBSManager extends BaseBBSManager
 			showEditPost((TopicBBSManager.getInstance().getTopicByID(idt)), ForumsBBSManager.getInstance().getForumByID(idf), activeChar, idp);
 		}
 		else
-			separateAndSend("<html><body><br><br><center>The command: " + command + " isn't implemented.</center></body></html>", activeChar);
+			super.parseCmd(command, activeChar);
+	}
+	
+	@Override
+	public void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar)
+	{
+		StringTokenizer st = new StringTokenizer(ar1, ";");
+		int idf = Integer.parseInt(st.nextToken());
+		int idt = Integer.parseInt(st.nextToken());
+		int idp = Integer.parseInt(st.nextToken());
+		
+		final Forum forum = ForumsBBSManager.getInstance().getForumByID(idf);
+		if (forum == null)
+		{
+			separateAndSend("<html><body><br><br><center>The forum named '" + idf + "' doesn't exist.</center></body></html>", activeChar);
+			return;
+		}
+		
+		final Topic topic = forum.getTopic(idt);
+		if (topic == null)
+		{
+			separateAndSend("<html><body><br><br><center>The topic named '" + idt + "' doesn't exist.</center></body></html>", activeChar);
+			return;
+		}
+		
+		final Post post = getPostByTopic(topic);
+		if (post.getCPost(idp) == null)
+		{
+			separateAndSend("<html><body><br><br><center>The post named '" + idp + "' doesn't exist.</center></body></html>", activeChar);
+			return;
+		}
+		
+		post.getCPost(idp).postTxt = ar4;
+		post.updateText(idp);
+		parseCmd("_bbsposts;read;" + forum.getID() + ";" + topic.getID(), activeChar);
+	}
+	
+	public Post getPostByTopic(Topic t)
+	{
+		Post post = _postByTopic.get(t);
+		if (post == null)
+		{
+			post = load(t);
+			_postByTopic.put(t, post);
+		}
+		return post;
+	}
+	
+	public void delPostByTopic(Topic t)
+	{
+		_postByTopic.remove(t);
+	}
+	
+	public void addPostByTopic(Post p, Topic t)
+	{
+		if (_postByTopic.get(t) == null)
+			_postByTopic.put(t, p);
+	}
+	
+	private static Post load(Topic t)
+	{
+		return new Post(t);
 	}
 	
 	private void showEditPost(Topic topic, Forum forum, L2PcInstance activeChar, int idp)
@@ -155,40 +189,6 @@ public class PostBBSManager extends BaseBBSManager
 		
 		final String html = StringUtil.concat("<html><body><br><br>" + "<table border=0 width=610><tr><td width=10></td><td width=600 align=left>" + "<a action=\"bypass _bbshome\">HOME</a>&nbsp;>&nbsp;<a action=\"bypass _bbsmemo\">Memo Form</a>" + "</td></tr>" + "</table>" + "<img src=\"L2UI.squareblank\" width=\"1\" height=\"10\">" + "<center>" + "<table border=0 cellspacing=0 cellpadding=0 bgcolor=333333>" + "<tr><td height=10></td></tr>" + "<tr>" + "<td fixWIDTH=55 align=right valign=top>&$413; : &nbsp;</td>" + "<td fixWIDTH=380 valign=top>", topic.getName(), "</td>" + "<td fixwidth=5></td>" + "<td fixwidth=50></td>" + "<td fixWIDTH=120></td>" + "</tr>" + "<tr><td height=10></td></tr>" + "<tr>" + "<td align=right><font color=\"AAAAAA\" >&$417; : &nbsp;</font></td>" + "<td><font color=\"AAAAAA\">", topic.getOwnerName() + "</font></td>" + "<td></td>" + "<td><font color=\"AAAAAA\">&$418; :</font></td>" + "<td><font color=\"AAAAAA\">", dateFormat.format(p.getCPost(0).postDate), "</font></td>" + "</tr>" + "<tr><td height=10></td></tr>" + "</table>" + "<br>" + "<table border=0 cellspacing=0 cellpadding=0>" + "<tr>" + "<td fixwidth=5></td>" + "<td FIXWIDTH=600 align=left>", mes, "</td>" + "<td fixqqwidth=5></td>" + "</tr>" + "</table>" + "<br>" + "<img src=\"L2UI.squareblank\" width=\"1\" height=\"5\">" + "<img src=\"L2UI.squaregray\" width=\"610\" height=\"1\">" + "<img src=\"L2UI.squareblank\" width=\"1\" height=\"5\">" + "<table border=0 cellspacing=0 cellpadding=0 FIXWIDTH=610>" + "<tr>" + "<td width=50>" + "<button value=\"&$422;\" action=\"bypass _bbsmemo\" back=\"l2ui_ch3.smallbutton2_down\" width=65 height=20 fore=\"l2ui_ch3.smallbutton2\">" + "</td>" + "<td width=560 align=right><table border=0 cellspacing=0><tr>" + "<td FIXWIDTH=300></td><td><button value = \"&$424;\" action=\"bypass _bbsposts;edit;", String.valueOf(forum.getID()), ";", String.valueOf(topic.getID()), ";0\" back=\"l2ui_ch3.smallbutton2_down\" width=65 height=20 fore=\"l2ui_ch3.smallbutton2\" ></td>&nbsp;" + "<td><button value = \"&$425;\" action=\"bypass _bbstopics;del;", String.valueOf(forum.getID()), ";", String.valueOf(topic.getID()), "\" back=\"l2ui_ch3.smallbutton2_down\" width=65 height=20 fore=\"l2ui_ch3.smallbutton2\" ></td>&nbsp;" + "<td><button value = \"&$421;\" action=\"bypass _bbstopics;crea;", String.valueOf(forum.getID()), "\" back=\"l2ui_ch3.smallbutton2_down\" width=65 height=20 fore=\"l2ui_ch3.smallbutton2\" ></td>&nbsp;" + "</tr></table>" + "</td>" + "</tr>" + "</table>" + "<br>" + "<br>" + "<br></center>" + "</body>" + "</html>");
 		separateAndSend(html, activeChar);
-	}
-	
-	@Override
-	public void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar)
-	{
-		StringTokenizer st = new StringTokenizer(ar1, ";");
-		int idf = Integer.parseInt(st.nextToken());
-		int idt = Integer.parseInt(st.nextToken());
-		int idp = Integer.parseInt(st.nextToken());
-		
-		final Forum forum = ForumsBBSManager.getInstance().getForumByID(idf);
-		if (forum == null)
-		{
-			separateAndSend("<html><body><br><br><center>The forum named '" + idf + "' doesn't exist.</center></body></html>", activeChar);
-			return;
-		}
-		
-		final Topic topic = forum.getTopic(idt);
-		if (topic == null)
-		{
-			separateAndSend("<html><body><br><br><center>The topic named '" + idt + "' doesn't exist.</center></body></html>", activeChar);
-			return;
-		}
-		
-		final Post post = getPostByTopic(topic);
-		if (post.getCPost(idp) == null)
-		{
-			separateAndSend("<html><body><br><br><center>The post named '" + idp + "' doesn't exist.</center></body></html>", activeChar);
-			return;
-		}
-		
-		post.getCPost(idp).postTxt = ar4;
-		post.updateText(idp);
-		parseCmd("_bbsposts;read;" + forum.getID() + ";" + topic.getID(), activeChar);
 	}
 	
 	private static class SingletonHolder

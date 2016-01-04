@@ -17,7 +17,9 @@ package net.sf.l2j.gameserver.instancemanager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,6 +38,7 @@ public class ClanHallManager
 {
 	protected static final Logger _log = Logger.getLogger(ClanHallManager.class.getName());
 	
+	private final Map<String, List<ClanHall>> _allClanHalls;
 	private final Map<Integer, ClanHall> _clanHall;
 	private final Map<Integer, ClanHall> _freeClanHall;
 	private boolean _loaded = false;
@@ -52,6 +55,7 @@ public class ClanHallManager
 	
 	protected ClanHallManager()
 	{
+		_allClanHalls = new HashMap<>();
 		_clanHall = new HashMap<>();
 		_freeClanHall = new HashMap<>();
 		load();
@@ -82,6 +86,11 @@ public class ClanHallManager
 				paid = rs.getBoolean("paid");
 				
 				ClanHall ch = new ClanHall(id, Name, ownerId, lease, Desc, Location, paidUntil, grade, paid);
+				
+				if (!_allClanHalls.containsKey(Location))
+					_allClanHalls.put(Location, new ArrayList<ClanHall>());
+				
+				_allClanHalls.get(Location).add(ch);
 				
 				if (ownerId > 0)
 				{
@@ -125,6 +134,18 @@ public class ClanHallManager
 	public final Map<Integer, ClanHall> getClanHalls()
 	{
 		return _clanHall;
+	}
+	
+	/**
+	 * @param location
+	 * @return Map with all ClanHalls which are in location
+	 */
+	public final List<ClanHall> getClanHallsByLocation(String location)
+	{
+		if (!_allClanHalls.containsKey(location))
+			return null;
+		
+		return _allClanHalls.get(location);
 	}
 	
 	/**

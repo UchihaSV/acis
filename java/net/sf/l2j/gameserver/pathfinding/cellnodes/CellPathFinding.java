@@ -168,54 +168,51 @@ public class CellPathFinding extends PathFinding
 		if (playable)
 			_postFilterPlayableUses++;
 		
-		int currentX, currentY, currentZ;
-		ListIterator<AbstractNodeLoc> middlePoint, endPoint;
-		AbstractNodeLoc locMiddle, locEnd;
+		int pass = 0, pX, pY, pZ;
 		boolean remove;
-		int pass = 0;
+		ListIterator<AbstractNodeLoc> point;
+		AbstractNodeLoc loc, next;
 		do
 		{
-			pass++;
 			_postFilterPasses++;
-			
+			pass++;
+			pX = x;
+			pY = y;
+			pZ = z;
 			remove = false;
-			middlePoint = path.listIterator();
-			endPoint = path.listIterator(1);
-			locEnd = null;
-			currentX = x;
-			currentY = y;
-			currentZ = z;
 			
-			while (endPoint.hasNext())
+			point = path.listIterator();
+			while (point.hasNext())
 			{
-				locEnd = endPoint.next();
-				locMiddle = middlePoint.next();
-				if (GeoData.getInstance().canMoveFromToTarget(currentX, currentY, currentZ, locEnd.getX(), locEnd.getY(), locEnd.getZ()))
+				loc = point.next();
+				
+				if (!point.hasNext())
+					continue;
+				
+				next = path.get(point.nextIndex());
+				if (GeoData.getInstance().canMoveFromToTarget(pX, pY, pZ, next.getX(), next.getY(), next.getZ()))
 				{
-					middlePoint.remove();
+					point.remove();
 					remove = true;
 					if (debug)
-						dropDebugItem(735, 1, locMiddle);
+						dropDebugItem(735, 1, loc);
 				}
 				else
 				{
-					currentX = locMiddle.getX();
-					currentY = locMiddle.getY();
-					currentZ = locMiddle.getZ();
+					pX = loc.getX();
+					pY = loc.getY();
+					pZ = loc.getZ();
 				}
 			}
 		}
 		// only one postfilter pass for AI
-		while (playable && remove && path.size() > 2 && pass < Config.MAX_POSTFILTER_PASSES);
+		while (playable && remove && (path.size() > 2) && (pass < Config.MAX_POSTFILTER_PASSES));
 		
+		// show final path
 		if (debug)
 		{
-			middlePoint = path.listIterator();
-			while (middlePoint.hasNext())
-			{
-				locMiddle = middlePoint.next();
-				dropDebugItem(65, 1, locMiddle);
-			}
+			for (AbstractNodeLoc node : path)
+				dropDebugItem(65, 1, node);
 		}
 		
 		_findSuccess++;

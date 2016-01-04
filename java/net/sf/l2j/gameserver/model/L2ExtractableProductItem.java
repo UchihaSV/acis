@@ -14,30 +14,27 @@
  */
 package net.sf.l2j.gameserver.model;
 
+import java.util.List;
+
+import net.sf.l2j.gameserver.model.holder.ItemHolder;
+
 /**
  * @author -Nemesiss-, Zoey76
  */
 public class L2ExtractableProductItem
 {
-	private final int[] _id;
-	private final int[] _amount;
+	private final List<ItemHolder> _items;
 	private final double _chance;
 	
-	public L2ExtractableProductItem(int[] id, int[] amount, double chance)
+	public L2ExtractableProductItem(List<ItemHolder> items, double chance)
 	{
-		_id = id;
-		_amount = amount;
+		_items = items;
 		_chance = chance;
 	}
 	
-	public int[] getId()
+	public List<ItemHolder> getItems()
 	{
-		return _id;
-	}
-	
-	public int[] getAmount()
-	{
-		return _amount;
+		return _items;
 	}
 	
 	public double getChance()

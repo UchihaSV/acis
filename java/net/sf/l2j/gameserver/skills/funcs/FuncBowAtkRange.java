@@ -31,7 +31,7 @@ public class FuncBowAtkRange extends Func
 	
 	private FuncBowAtkRange()
 	{
-		super(Stats.POWER_ATTACK_RANGE, 0x10, null);
+		super(Stats.POWER_ATTACK_RANGE, 0x10, null, null);
 		setCondition(new ConditionUsingItemType(L2WeaponType.BOW.mask()));
 	}
 	
@@ -42,6 +42,6 @@ public class FuncBowAtkRange extends Func
 			return;
 		
 		// default is 40 and with bow should be 500
-		env.value += 460;
+		env.addValue(460);
 	}
 }

@@ -85,7 +85,7 @@ public class L2DoormenInstance extends L2NpcInstance
 		else
 			html.setFile("data/html/doormen/" + getTemplate().getNpcId() + ".htm");
 		
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%",getObjectId());
 		player.sendPacket(html);
 	}
 	

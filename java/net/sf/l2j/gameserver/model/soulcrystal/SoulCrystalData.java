@@ -12,31 +12,40 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package net.sf.l2j.gameserver.skills.conditions;
+package net.sf.l2j.gameserver.model.soulcrystal;
 
-import net.sf.l2j.gameserver.skills.Env;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
-
-/**
- * @author mkizub
- */
-public class ConditionTargetUsesWeaponKind extends Condition
+public final class SoulCrystalData
 {
-	private final int _weaponMask;
+	private final int _level;
+	private final int _crystalItemId;
+	private final int _stagedItemId;
+	private final int _brokenItemId;
 	
-	public ConditionTargetUsesWeaponKind(int weaponMask)
+	public SoulCrystalData(int level, int crystalItemId, int stagedItemId, int brokenItemId)
 	{
-		_weaponMask = weaponMask;
+		_level = level;
+		_crystalItemId = crystalItemId;
+		_stagedItemId = stagedItemId;
+		_brokenItemId = brokenItemId;
 	}
 	
-	@Override
-	public boolean testImpl(Env env)
+	public int getLevel()
 	{
-		if (env.target == null)
-			return false;
-		
-		final L2Weapon item = env.target.getActiveWeaponItem();
-		
-		return item != null && (item.getItemType().mask() & _weaponMask) != 0;
+		return _level;
+	}
+	
+	public int getCrystalItemId()
+	{
+		return _crystalItemId;
+	}
+	
+	public int getStagedItemId()
+	{
+		return _stagedItemId;
+	}
+	
+	public int getBrokenItemId()
+	{
+		return _brokenItemId;
 	}
 }

@@ -18,12 +18,12 @@ import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
+import net.sf.l2j.gameserver.instancemanager.SiegeManager;
 import net.sf.l2j.gameserver.model.L2SiegeClan;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
-import net.sf.l2j.gameserver.model.entity.Siege;
 
 public final class RequestRestartPoint extends L2GameClientPacket
 {
@@ -77,7 +77,7 @@ public final class RequestRestartPoint extends L2GameClientPacket
 				case 2: // to castle
 					castle = CastleManager.getInstance().getCastle(activeChar);
 					
-					if (castle != null && castle.getSiege().getIsInProgress())
+					if (castle != null && castle.getSiege().isInProgress())
 					{
 						// Siege in progress
 						if (castle.getSiege().checkIsDefender(activeChar.getClan()))
@@ -104,7 +104,7 @@ public final class RequestRestartPoint extends L2GameClientPacket
 					L2SiegeClan siegeClan = null;
 					castle = CastleManager.getInstance().getCastle(activeChar);
 					
-					if (castle != null && castle.getSiege().getIsInProgress())
+					if (castle != null && castle.getSiege().isInProgress())
 						siegeClan = castle.getSiege().getAttackerClan(activeChar.getClan());
 					
 					// Not a normal scenario.
@@ -172,15 +172,15 @@ public final class RequestRestartPoint extends L2GameClientPacket
 		}
 		
 		Castle castle = CastleManager.getInstance().getCastle(activeChar.getX(), activeChar.getY(), activeChar.getZ());
-		if (castle != null && castle.getSiege().getIsInProgress())
+		if (castle != null && castle.getSiege().isInProgress())
 		{
 			if (activeChar.getClan() != null && castle.getSiege().checkIsAttacker(activeChar.getClan()))
 			{
 				// Schedule respawn delay for attacker
-				ThreadPoolManager.getInstance().scheduleGeneral(new DeathTask(activeChar), Siege.getAttackerRespawnDelay());
+				ThreadPoolManager.getInstance().scheduleGeneral(new DeathTask(activeChar), SiegeManager.ATTACKERS_RESPAWN_DELAY);
 				
-				if (Siege.getAttackerRespawnDelay() > 0)
-					activeChar.sendMessage("You will be teleported in " + Siege.getAttackerRespawnDelay() / 1000 + " seconds.");
+				if (SiegeManager.ATTACKERS_RESPAWN_DELAY > 0)
+					activeChar.sendMessage("You will be teleported in " + SiegeManager.ATTACKERS_RESPAWN_DELAY / 1000 + " seconds.");
 				
 				return;
 			}

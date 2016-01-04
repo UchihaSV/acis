@@ -24,7 +24,7 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.skills.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.SkillHolder;
 
 public class ScrollOfResurrection implements IItemHandler
 {
@@ -65,7 +65,7 @@ public class ScrollOfResurrection implements IItemHandler
 		
 		// Check if target isn't in a active siege zone.
 		final Castle castle = CastleManager.getInstance().getCastle(targetPlayer.getX(), targetPlayer.getY(), targetPlayer.getZ());
-		if (castle != null && castle.getSiege().getIsInProgress())
+		if (castle != null && castle.getSiege().isInProgress())
 		{
 			activeChar.sendPacket(SystemMessageId.CANNOT_BE_RESURRECTED_DURING_SIEGE);
 			return;

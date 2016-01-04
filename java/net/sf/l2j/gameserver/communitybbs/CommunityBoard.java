@@ -58,7 +58,7 @@ public class CommunityBoard
 			ClanBBSManager.getInstance().parseCmd(command, activeChar);
 		else if (command.startsWith("_bbsmemo"))
 			TopicBBSManager.getInstance().parseCmd(command, activeChar);
-		else if (command.startsWith("_maillist_0_1_0_"))
+		else if (command.startsWith("_bbsmail") || command.equals("_maillist_0_1_0_"))
 			MailBBSManager.getInstance().parseCmd(command, activeChar);
 		else if (command.startsWith("_friend") || command.startsWith("_block"))
 			FriendsBBSManager.getInstance().parseCmd(command, activeChar);
@@ -86,12 +86,14 @@ public class CommunityBoard
 			TopicBBSManager.getInstance().parseWrite(arg1, arg2, arg3, arg4, arg5, activeChar);
 		else if (url.equals("Post"))
 			PostBBSManager.getInstance().parseWrite(arg1, arg2, arg3, arg4, arg5, activeChar);
-		else if (url.equals("Region"))
+		else if (url.equals("_bbsloc"))
 			RegionBBSManager.getInstance().parseWrite(arg1, arg2, arg3, arg4, arg5, activeChar);
-		else if (url.equals("Notice"))
+		else if (url.equals("_bbsclan"))
 			ClanBBSManager.getInstance().parseWrite(arg1, arg2, arg3, arg4, arg5, activeChar);
 		else if (url.equals("Mail"))
 			MailBBSManager.getInstance().parseWrite(arg1, arg2, arg3, arg4, arg5, activeChar);
+		else if (url.equals("_friend"))
+			FriendsBBSManager.getInstance().parseWrite(arg1, arg2, arg3, arg4, arg5, activeChar);
 		else
 			BaseBBSManager.separateAndSend("<html><body><br><br><center>The command: " + url + " isn't implemented.</center></body></html>", activeChar);
 	}

@@ -100,11 +100,11 @@ public class L2SkillSiegeFlag extends L2Skill
 		final Castle castle = CastleManager.getInstance().getCastle(activeChar);
 		
 		SystemMessage sm;
-		if (castle == null || !castle.getSiege().getIsInProgress() || castle.getSiege().getAttackerClan(player.getClan()) == null)
+		if (castle == null || !castle.getSiege().isInProgress() || castle.getSiege().getAttackerClan(player.getClan()) == null)
 			sm = SystemMessage.getSystemMessage(SystemMessageId.S1_CANNOT_BE_USED).addSkillName(247);
 		else if (!player.isClanLeader())
 			sm = SystemMessage.getSystemMessage(SystemMessageId.ONLY_CLAN_LEADER_CAN_ISSUE_COMMANDS);
-		else if (castle.getSiege().getAttackerClan(player.getClan()).getNumFlags() >= SiegeManager.getInstance().getFlagMaxCount())
+		else if (castle.getSiege().getAttackerClan(player.getClan()).getNumFlags() >= SiegeManager.FLAGS_MAX_COUNT)
 			sm = SystemMessage.getSystemMessage(SystemMessageId.NOT_ANOTHER_HEADQUARTERS);
 		else if (!player.isInsideZone(ZoneId.HQ))
 			sm = SystemMessage.getSystemMessage(SystemMessageId.NOT_SET_UP_BASE_HERE);

@@ -43,12 +43,8 @@ public class TopBBSManager extends BaseBBSManager
 			
 			loadStaticHtm(st.nextToken(), activeChar);
 		}
-	}
-	
-	@Override
-	public void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar)
-	{
-		
+		else
+			super.parseCmd(command, activeChar);
 	}
 	
 	@Override

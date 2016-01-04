@@ -31,29 +31,29 @@ public class FuncPDefMod extends Func
 	
 	private FuncPDefMod()
 	{
-		super(Stats.POWER_DEFENCE, 0x20, null);
+		super(Stats.POWER_DEFENCE, 0x20, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		if (env.player instanceof L2PcInstance)
+		if (env.getCharacter() instanceof L2PcInstance)
 		{
-			L2PcInstance p = (L2PcInstance) env.player;
-			boolean hasMagePDef = (p.getClassId().isMage() || p.getClassId().getId() == 0x31); // orc mystics are a special case
+			final L2PcInstance player = env.getPlayer();
+			final boolean hasMagePDef = (player.getClassId().isMage() || player.getClassId().getId() == 0x31); // orc mystics are a special case
 			
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_HEAD) != null)
-				env.value -= 12;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST) != null)
-				env.value -= hasMagePDef ? 15 : 31;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LEGS) != null)
-				env.value -= hasMagePDef ? 8 : 18;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_GLOVES) != null)
-				env.value -= 8;
-			if (p.getInventory().getPaperdollItem(Inventory.PAPERDOLL_FEET) != null)
-				env.value -= 7;
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_HEAD) != null)
+				env.subValue(12);
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST) != null)
+				env.subValue((hasMagePDef) ? 15 : 31);
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LEGS) != null)
+				env.subValue((hasMagePDef) ? 8 : 18);
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_GLOVES) != null)
+				env.subValue(8);
+			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_FEET) != null)
+				env.subValue(7);
 		}
 		
-		env.value *= env.player.getLevelMod();
+		env.mulValue(env.getCharacter().getLevelMod());
 	}
 }

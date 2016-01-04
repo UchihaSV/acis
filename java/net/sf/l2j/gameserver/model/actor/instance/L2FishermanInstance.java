@@ -59,7 +59,7 @@ public class L2FishermanInstance extends L2MerchantInstance
 		else if (command.startsWith("FishingChampionship"))
 		{
 			if (Config.ALT_FISH_CHAMPIONSHIP_ENABLED)
-				FishingChampionshipManager.getInstance().showChampScreen(player, this);
+				FishingChampionshipManager.getInstance().showChampScreen(player, getObjectId());
 			else
 				sendHtml(player, this, "no_fish_event001.htm");
 		}

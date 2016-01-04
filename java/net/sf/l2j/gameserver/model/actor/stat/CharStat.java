@@ -20,7 +20,6 @@ import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.skills.Calculator;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.skills.Stats;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 import net.sf.l2j.gameserver.templates.item.L2WeaponType;
 
 public class CharStat
@@ -58,26 +57,24 @@ public class CharStat
 		if (_activeChar == null || stat == null)
 			return init;
 		
-		int id = stat.ordinal();
+		final int id = stat.ordinal();
 		
-		Calculator c = _activeChar.getCalculators()[id];
-		
-		// If no Func object found, no modifier is applied
+		final Calculator c = _activeChar.getCalculators()[id];
 		if (c == null || c.size() == 0)
 			return init;
 		
 		// Create and init an Env object to pass parameters to the Calculator
-		Env env = new Env();
-		env.player = _activeChar;
-		env.target = target;
-		env.skill = skill;
-		env.value = init;
+		final Env env = new Env();
+		env.setCharacter(_activeChar);
+		env.setTarget(target);
+		env.setSkill(skill);
+		env.setValue(init);
 		
 		// Launch the calculation
 		c.calc(env);
 		
 		// avoid some troubles with negative stats (some stats should never be negative)
-		if (env.value <= 0)
+		if (env.getValue() <= 0)
 		{
 			switch (stat)
 			{
@@ -97,10 +94,10 @@ public class CharStat
 				case STAT_MEN:
 				case STAT_STR:
 				case STAT_WIT:
-					env.value = 1;
+					env.setValue(1);
 			}
 		}
-		return env.value;
+		return env.getValue();
 	}
 	
 	/**
@@ -456,11 +453,7 @@ public class CharStat
 		if (_activeChar == null)
 			return 1;
 		
-		L2Weapon weaponItem = _activeChar.getActiveWeaponItem();
-		if (weaponItem != null && weaponItem.getItemType() == L2WeaponType.POLE)
-			return (int) calcStat(Stats.POWER_ATTACK_RANGE, 66, null, null);
-		
-		return (int) calcStat(Stats.POWER_ATTACK_RANGE, _activeChar.getTemplate().getBaseAtkRange(), null, null);
+		return (int) calcStat(Stats.POWER_ATTACK_RANGE, (_activeChar.getAttackType() == L2WeaponType.POLE) ? 66 : _activeChar.getTemplate().getBaseAtkRange(), null, null);
 	}
 	
 	/**

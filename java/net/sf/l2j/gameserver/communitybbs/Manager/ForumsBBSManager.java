@@ -20,15 +20,12 @@ import java.sql.ResultSet;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.communitybbs.BB.Forum;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
 public class ForumsBBSManager extends BaseBBSManager
 {
-	private static Logger _log = Logger.getLogger(ForumsBBSManager.class.getName());
 	private final List<Forum> _table;
 	private int _lastid = 1;
 	
@@ -77,11 +74,6 @@ public class ForumsBBSManager extends BaseBBSManager
 			_lastid = ff.getID();
 	}
 	
-	@Override
-	public void parseCmd(String command, L2PcInstance activeChar)
-	{
-	}
-	
 	public Forum getForumByName(String Name)
 	{
 		for (Forum f : _table)
@@ -113,11 +105,6 @@ public class ForumsBBSManager extends BaseBBSManager
 				return f;
 		}
 		return null;
-	}
-	
-	@Override
-	public void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar)
-	{
 	}
 	
 	private static class SingletonHolder

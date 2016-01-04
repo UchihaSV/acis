@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.datatables.CharNameTable;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
@@ -232,11 +231,11 @@ public class Hero
 		}
 		catch (SQLException e)
 		{
-			_log.log(Level.WARNING, "Hero System: Couldnt load heroes: " + e.getMessage(), e);
+			_log.log(Level.WARNING, "Hero: Couldnt load heroes: " + e.getMessage(), e);
 		}
 		
-		_log.info("Hero System: Loaded " + _heroes.size() + " Heroes.");
-		_log.info("Hero System: Loaded " + _completeHeroes.size() + " all time Heroes.");
+		_log.info("Hero: Loaded " + _heroes.size() + " heroes.");
+		_log.info("Hero: Loaded " + _completeHeroes.size() + " all time heroes.");
 	}
 	
 	private static String calcFightTime(long FightTime)
@@ -269,7 +268,7 @@ public class Hero
 		}
 		catch (SQLException e)
 		{
-			_log.log(Level.WARNING, "Hero System: Couldnt load Hero message for char_id: " + charId, e);
+			_log.log(Level.WARNING, "Hero: Couldnt load hero message for char_id: " + charId, e);
 		}
 	}
 	
@@ -317,11 +316,11 @@ public class Hero
 			
 			_herodiary.put(charId, _diary);
 			
-			_log.info("Hero System: Loaded " + diaryentries + " diary entries for Hero: " + CharNameTable.getInstance().getNameById(charId));
+			_log.info("Hero: Loaded " + diaryentries + " diary entries for hero: " + CharNameTable.getInstance().getNameById(charId));
 		}
 		catch (SQLException e)
 		{
-			_log.log(Level.WARNING, "Hero System: Couldnt load Hero Diary for char_id: " + charId + ", " + e.getMessage(), e);
+			_log.log(Level.WARNING, "Hero: Couldnt load hero diary for char_id: " + charId + ", " + e.getMessage(), e);
 		}
 	}
 	
@@ -445,11 +444,11 @@ public class Hero
 			_herocounts.put(charId, _herocountdata);
 			_herofights.put(charId, _fights);
 			
-			_log.info("Hero System: Loaded " + numberoffights + " fights for Hero: " + CharNameTable.getInstance().getNameById(charId));
+			_log.info("Hero: Loaded " + numberoffights + " fights for: " + CharNameTable.getInstance().getNameById(charId));
 		}
 		catch (SQLException e)
 		{
-			_log.log(Level.WARNING, "Hero System: Couldnt load Hero fights history for char_id: " + charId + ", " + e.getMessage(), e);
+			_log.log(Level.WARNING, "Hero: Couldnt load hero fights history for char_id: " + charId + ", " + e.getMessage(), e);
 		}
 	}
 	
@@ -614,9 +613,9 @@ public class Hero
 				FightReply.replace("%buttnext%", "");
 			}
 			
-			FightReply.replace("%win%", String.valueOf(_win));
-			FightReply.replace("%draw%", String.valueOf(_draw));
-			FightReply.replace("%loos%", String.valueOf(_loss));
+			FightReply.replace("%win%", _win);
+			FightReply.replace("%draw%", _draw);
+			FightReply.replace("%loos%", _loss);
 			
 			activeChar.sendPacket(FightReply);
 		}
@@ -793,7 +792,7 @@ public class Hero
 		}
 		catch (SQLException e)
 		{
-			_log.log(Level.WARNING, "Hero System: Couldnt update heroes: " + e.getMessage(), e);
+			_log.log(Level.WARNING, "Hero: Couldnt update heroes: " + e.getMessage(), e);
 		}
 	}
 	
@@ -872,8 +871,7 @@ public class Hero
 		}
 		catch (SQLException e)
 		{
-			if (_log.isLoggable(Level.SEVERE))
-				_log.log(Level.SEVERE, "SQL exception while saving DiaryData.", e);
+			_log.log(Level.SEVERE, "Hero: SQL exception while saving DiaryData.", e);
 		}
 	}
 	
@@ -885,8 +883,6 @@ public class Hero
 	public void setHeroMessage(L2PcInstance player, String message)
 	{
 		_heroMessage.put(player.getObjectId(), message);
-		if (Config.DEBUG)
-			_log.info("Hero message for player: " + player.getName() + ":[" + player.getObjectId() + "] set to: [" + message + "]");
 	}
 	
 	/**
@@ -908,7 +904,7 @@ public class Hero
 		}
 		catch (SQLException e)
 		{
-			_log.log(Level.SEVERE, "SQL exception while saving HeroMessage.", e);
+			_log.log(Level.SEVERE, "Hero: SQL exception while saving HeroMessage.", e);
 		}
 	}
 	
@@ -922,7 +918,7 @@ public class Hero
 		}
 		catch (SQLException e)
 		{
-			_log.log(Level.WARNING, "Couldn't delete items on db: " + e.getMessage(), e);
+			_log.log(Level.WARNING, "Hero: Couldn't delete items on db: " + e.getMessage(), e);
 		}
 	}
 	
@@ -975,8 +971,7 @@ public class Hero
 			String name = hero.getString("char_name");
 			
 			clan.addReputationScore(1000);
-			clan.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan));
-			clan.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.CLAN_MEMBER_S1_BECAME_HERO_AND_GAINED_S2_REPUTATION_POINTS).addString(name).addNumber(1000));
+			clan.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan), SystemMessage.getSystemMessage(SystemMessageId.CLAN_MEMBER_S1_BECAME_HERO_AND_GAINED_S2_REPUTATION_POINTS).addString(name).addNumber(1000));
 		}
 		
 		// Set Gained hero and reload data

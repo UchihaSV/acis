@@ -198,35 +198,36 @@ public class L2Attackable extends L2Npc
 	}
 	
 	/**
-	 * This class contains all AbsorberInfo of the L2Attackable against the absorber L2Character. Data: absorber : The attacker L2Character concerned by this AbsorberInfo of this L2Attackable
+	 * This class contains all needed infos of the L2Attackable against the absorber L2Character.<br>
+	 * <br>
+	 * <b>Data:</b><br>
+	 * <ul>
+	 * <li>_playerObjectId : The id of the attacker concerned by this AbsorberInfo.</li>
+	 * <li>_absorbedHP : The amount of HP at the moment attacker used the item.</li>
+	 * <li>_itemObjectId : The item id of the Soul Crystal used.</li>
+	 * </ul>
 	 */
-	public static final class AbsorberInfo
+	public static final class AbsorbInfo
 	{
-		public int _objId;
-		public double _absorbedHP;
+		public boolean _registered;
+		public int _itemObjectId;
+		public int _absorbedHpPercent;
 		
-		AbsorberInfo(int objId, double pAbsorbedHP)
+		AbsorbInfo(int itemObjectId)
 		{
-			_objId = objId;
-			_absorbedHP = pAbsorbedHP;
+			_registered = false;
+			_itemObjectId = itemObjectId;
+			_absorbedHpPercent = 0;
 		}
 		
-		@Override
-		public boolean equals(Object obj)
+		public boolean isRegistered()
 		{
-			if (this == obj)
-				return true;
-			
-			if (obj instanceof AbsorberInfo)
-				return (((AbsorberInfo) obj)._objId == _objId);
-			
-			return false;
+			return _registered;
 		}
 		
-		@Override
-		public int hashCode()
+		public boolean isValid(int itemObjectId)
 		{
-			return _objId;
+			return _itemObjectId == itemObjectId && _absorbedHpPercent < 50;
 		}
 	}
 	
@@ -300,8 +301,7 @@ public class L2Attackable extends L2Npc
 	private CommandChannelTimer _commandChannelTimer = null;
 	private long _commandChannelLastAttack = 0;
 	
-	private boolean _absorbed;
-	private final Map<Integer, AbsorberInfo> _absorbersList = new ConcurrentHashMap<>();
+	private final Map<Integer, AbsorbInfo> _absorbersList = new ConcurrentHashMap<>();
 	
 	/**
 	 * Constructor of L2Attackable (use L2Character and L2Npc constructor).<BR>
@@ -1585,56 +1585,55 @@ public class L2Attackable extends L2Npc
 	}
 	
 	/**
-	 * Activate the absorbed soul condition on the L2Attackable.
-	 */
-	public void absorbSoul()
-	{
-		_absorbed = true;
-	}
-	
-	/**
-	 * @return True if the L2Attackable had his soul absorbed.
-	 */
-	public boolean isAbsorbed()
-	{
-		return _absorbed;
-	}
-	
-	/**
 	 * Adds an attacker that successfully absorbed the soul of this L2Attackable into the _absorbersList. Params: attacker - a valid L2PcInstance condition - an integer indicating the event when mob dies. This should be: = 0 - "the crystal scatters"; = 1 -
 	 * "the crystal failed to absorb. nothing happens"; = 2 - "the crystal resonates because you got more than 1 crystal on you"; = 3 - "the crystal cannot absorb the soul because the mob level is too low"; = 4 - "the crystal successfuly absorbed the soul";
-	 * @param attacker The L2PcInstance who attacked the monster.
+	 * @param user : The L2PcInstance who attacked the monster.
+	 * @param crystal : The L2ItemInstance which was used to register.
 	 */
-	public void addAbsorber(L2PcInstance attacker)
+	public void addAbsorber(L2PcInstance user, L2ItemInstance crystal)
 	{
-		// If we have no _absorbersList initiated, do it
-		AbsorberInfo ai = _absorbersList.get(attacker.getObjectId());
-		
 		// If the L2Character attacker isn't already in the _absorbersList of this L2Attackable, add it
+		AbsorbInfo ai = _absorbersList.get(user.getObjectId());
 		if (ai == null)
 		{
-			ai = new AbsorberInfo(attacker.getObjectId(), getCurrentHp());
-			_absorbersList.put(attacker.getObjectId(), ai);
+			// Create absorb info.
+			_absorbersList.put(user.getObjectId(), new AbsorbInfo(crystal.getObjectId()));
 		}
 		else
 		{
-			ai._objId = attacker.getObjectId();
-			ai._absorbedHP = getCurrentHp();
+			// Add absorb info, unless already registered.
+			if (!ai._registered)
+				ai._itemObjectId = crystal.getObjectId();
 		}
-		
-		// Set this L2Attackable as absorbed
-		absorbSoul();
 	}
 	
-	public void resetAbsorbList()
+	public void registerAbsorber(L2PcInstance user)
 	{
-		_absorbed = false;
+		// Get AbsorbInfo for user.
+		AbsorbInfo ai = _absorbersList.get(user.getObjectId());
+		if (ai == null)
+			return;
+		
+		// Check item being used and register player to mob's absorber list.
+		if (user.getInventory().getItemByObjectId(ai._itemObjectId) == null)
+			return;
+		
+		// Register AbsorbInfo.
+		if (!ai._registered)
+		{
+			ai._absorbedHpPercent = (int) ((100 * getCurrentHp()) / getMaxHp());
+			ai._registered = true;
+		}
+	}
+	
+	public void resetAbsorberList()
+	{
 		_absorbersList.clear();
 	}
 	
-	public Map<Integer, AbsorberInfo> getAbsorbersList()
+	public AbsorbInfo getAbsorbInfo(int npcObjectId)
 	{
-		return _absorbersList;
+		return _absorbersList.get(npcObjectId);
 	}
 	
 	/**
@@ -1723,7 +1722,7 @@ public class L2Attackable extends L2Npc
 		overhitEnabled(false);
 		
 		_sweepItems = null;
-		resetAbsorbList();
+		resetAbsorberList();
 		
 		setWalking();
 		

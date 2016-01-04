@@ -31,9 +31,7 @@ import net.sf.l2j.gameserver.network.clientpackets.Say2;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.util.Rnd;
@@ -100,30 +98,9 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2NpcInstance
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Check if the player is attackable (without a forced attack)
-			if (isAutoAttackable(player))
-			{
-				// Send MyTargetSelected to the L2PcInstance player
-				player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel() - getLevel()));
-				
-				// Send StatusUpdate of the L2NpcInstance to the L2PcInstance to update its HP bar
-				StatusUpdate su = new StatusUpdate(this);
-				su.addAttribute(StatusUpdate.CUR_HP, (int) getStatus().getCurrentHp());
-				su.addAttribute(StatusUpdate.MAX_HP, getMaxHp());
-				player.sendPacket(su);
-			}
-			else
-			{
-				// Send MyTargetSelected to the L2PcInstance player
-				player.sendPacket(new MyTargetSelected(getObjectId(), 0));
-			}
-		}
 		else
 		{
 			// Check if the player is attackable (without a forced attack) and isn't dead
@@ -141,8 +118,7 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 					player.sendPacket(ActionFailed.STATIC_PACKET);
 				}
 			}
-			
-			if (!isAutoAttackable(player))
+			else if (!isAutoAttackable(player))
 			{
 				// Calculate the distance between the L2PcInstance and the L2NpcInstance
 				if (!canInteract(player))
@@ -258,10 +234,9 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 	@Override
 	public void showChatWindow(L2PcInstance player, int val)
 	{
-		String filename = getHtmlPath(getNpcId(), val);
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.setFile(getHtmlPath(getNpcId(), val));
+		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
 		player.sendPacket(ActionFailed.STATIC_PACKET);
 	}

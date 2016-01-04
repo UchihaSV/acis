@@ -30,12 +30,12 @@ public class FuncMAtkSpeed extends Func
 	
 	private FuncMAtkSpeed()
 	{
-		super(Stats.MAGIC_ATTACK_SPEED, 0x20, null);
+		super(Stats.MAGIC_ATTACK_SPEED, 0x20, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		env.value *= Formulas.WITbonus[env.player.getWIT()];
+		env.mulValue(Formulas.WITbonus[env.getCharacter().getWIT()]);
 	}
 }

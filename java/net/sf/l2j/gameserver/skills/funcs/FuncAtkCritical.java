@@ -31,17 +31,17 @@ public class FuncAtkCritical extends Func
 	
 	private FuncAtkCritical()
 	{
-		super(Stats.CRITICAL_RATE, 0x09, null);
+		super(Stats.CRITICAL_RATE, 0x09, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		if (!(env.player instanceof L2Summon))
-			env.value *= Formulas.DEXbonus[env.player.getDEX()];
+		if (!(env.getCharacter() instanceof L2Summon))
+			env.mulValue(Formulas.DEXbonus[env.getCharacter().getDEX()]);
 		
-		env.value *= 10;
+		env.mulValue(10);
 		
-		env.baseValue = env.value;
+		env.setBaseValue(env.getValue());
 	}
 }

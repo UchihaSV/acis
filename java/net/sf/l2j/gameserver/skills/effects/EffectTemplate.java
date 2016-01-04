@@ -16,6 +16,8 @@ package net.sf.l2j.gameserver.skills.effects;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,7 +46,7 @@ public final class EffectTemplate
 	public final int counter;
 	public final int period; // in seconds
 	public final AbnormalEffect abnormalEffect;
-	public FuncTemplate[] funcTemplates;
+	public List<FuncTemplate> funcTemplates;
 	public final String stackType;
 	public final float stackOrder;
 	public final boolean icon;
@@ -121,17 +123,8 @@ public final class EffectTemplate
 	public void attach(FuncTemplate f)
 	{
 		if (funcTemplates == null)
-			funcTemplates = new FuncTemplate[]
-			{
-				f
-			};
-		else
-		{
-			int len = funcTemplates.length;
-			FuncTemplate[] tmp = new FuncTemplate[len + 1];
-			System.arraycopy(funcTemplates, 0, tmp, 0, len);
-			tmp[len] = f;
-			funcTemplates = tmp;
-		}
+			funcTemplates = new ArrayList<>();
+		
+		funcTemplates.add(f);
 	}
 }

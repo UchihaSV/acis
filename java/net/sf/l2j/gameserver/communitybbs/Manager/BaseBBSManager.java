@@ -16,6 +16,7 @@ package net.sf.l2j.gameserver.communitybbs.Manager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -23,11 +24,19 @@ import net.sf.l2j.gameserver.network.serverpackets.ShowBoard;
 
 public abstract class BaseBBSManager
 {
-	protected final static String CB_PATH = "data/html/CommunityBoard/";
+	protected static final Logger _log = Logger.getLogger(BaseBBSManager.class.getName());
 	
-	public abstract void parseCmd(String command, L2PcInstance activeChar);
+	protected static final String CB_PATH = "data/html/CommunityBoard/";
 	
-	public abstract void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar);
+	public void parseCmd(String command, L2PcInstance activeChar)
+	{
+		separateAndSend("<html><body><br><br><center>The command: " + command + " isn't implemented.</center></body></html>", activeChar);
+	}
+	
+	public void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar)
+	{
+		separateAndSend("<html><body><br><br><center>The command: " + ar1 + " isn't implemented.</center></body></html>", activeChar);
+	}
 	
 	public static void separateAndSend(String html, L2PcInstance acha)
 	{

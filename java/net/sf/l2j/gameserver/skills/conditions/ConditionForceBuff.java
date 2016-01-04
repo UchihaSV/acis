@@ -49,14 +49,14 @@ public class ConditionForceBuff extends Condition
 	{
 		if (_forces[0] > 0)
 		{
-			L2Effect force = env.player.getFirstEffect(BATTLE_FORCE);
+			L2Effect force = env.getCharacter().getFirstEffect(BATTLE_FORCE);
 			if (force == null || ((EffectFusion) force)._effect < _forces[0])
 				return false;
 		}
 		
 		if (_forces[1] > 0)
 		{
-			L2Effect force = env.player.getFirstEffect(SPELL_FORCE);
+			L2Effect force = env.getCharacter().getFirstEffect(SPELL_FORCE);
 			if (force == null || ((EffectFusion) force)._effect < _forces[1])
 				return false;
 		}

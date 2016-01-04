@@ -32,12 +32,9 @@ public class ManagePledgePower extends L2GameServerPacket
 	@Override
 	protected final void writeImpl()
 	{
-		if (_action != 1)
-			return;
-		
 		writeC(0x30);
-		writeD(0);
-		writeD(0);
+		writeD(_rank);
+		writeD(_action);
 		writeD(_clan.getRankPrivs(_rank));
 	}
 }

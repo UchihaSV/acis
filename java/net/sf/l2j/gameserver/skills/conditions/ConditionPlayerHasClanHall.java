@@ -14,10 +14,9 @@
  */
 package net.sf.l2j.gameserver.skills.conditions;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.skills.Env;
 
 /**
@@ -26,13 +25,13 @@ import net.sf.l2j.gameserver.skills.Env;
  */
 public final class ConditionPlayerHasClanHall extends Condition
 {
-	private final ArrayList<Integer> _clanHall;
+	private final List<Integer> _clanHall;
 	
 	/**
 	 * Instantiates a new condition player has clan hall.
 	 * @param clanHall the clan hall
 	 */
-	public ConditionPlayerHasClanHall(ArrayList<Integer> clanHall)
+	public ConditionPlayerHasClanHall(List<Integer> clanHall)
 	{
 		_clanHall = clanHall;
 	}
@@ -45,10 +44,10 @@ public final class ConditionPlayerHasClanHall extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		if (!(env.player instanceof L2PcInstance))
+		if (env.getPlayer() == null)
 			return false;
 		
-		L2Clan clan = ((L2PcInstance) env.player).getClan();
+		final L2Clan clan = env.getPlayer().getClan();
 		if (clan == null)
 			return (_clanHall.size() == 1 && _clanHall.get(0) == 0);
 		

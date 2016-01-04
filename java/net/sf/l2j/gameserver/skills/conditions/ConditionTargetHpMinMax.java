@@ -33,10 +33,10 @@ public class ConditionTargetHpMinMax extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		if (env.target == null)
+		if (env.getTarget() == null)
 			return false;
 		
-		int _currentHp = (int) env.player.getCurrentHp() * 100 / env.player.getMaxHp();
+		int _currentHp = (int) env.getTarget().getCurrentHp() * 100 / env.getTarget().getMaxHp();
 		return _currentHp >= _minHp && _currentHp <= _maxHp;
 	}
 }
