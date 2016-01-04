@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.StringTokenizer;
 
@@ -26,6 +25,7 @@ import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.loginserver.network.gameserverpackets.ServerStatus;
 
 public class AdminMaintenance implements IAdminCommandHandler
@@ -114,21 +114,22 @@ public class AdminMaintenance implements IAdminCommandHandler
 	
 	private static void sendHtmlForm(L2PcInstance activeChar)
 	{
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		int t = GameTimeController.getInstance().getGameTime();
 		int h = t / 60;
 		int m = t % 60;
-		SimpleDateFormat format = new SimpleDateFormat("h:mm a");
+		
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.HOUR_OF_DAY, h);
 		cal.set(Calendar.MINUTE, m);
+		
+		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setFile("data/html/admin/maintenance.htm");
-		adminReply.replace("%count%", String.valueOf(L2World.getInstance().getAllPlayersCount()));
-		adminReply.replace("%used%", String.valueOf(Math.round((int) ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576))));
+		adminReply.replace("%count%", L2World.getInstance().getAllPlayersCount());
+		adminReply.replace("%used%", Math.round((int) ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576)));
 		adminReply.replace("%server_name%", LoginServerThread.getInstance().getServerName());
 		adminReply.replace("%status%", LoginServerThread.getInstance().getStatusString());
-		adminReply.replace("%max_players%", String.valueOf(LoginServerThread.getInstance().getMaxPlayer()));
-		adminReply.replace("%time%", String.valueOf(format.format(cal.getTime())));
+		adminReply.replace("%max_players%", LoginServerThread.getInstance().getMaxPlayer());
+		adminReply.replace("%time%", Util.formatDate(cal.getTime(), "h:mm a"));
 		activeChar.sendPacket(adminReply);
 	}
 	

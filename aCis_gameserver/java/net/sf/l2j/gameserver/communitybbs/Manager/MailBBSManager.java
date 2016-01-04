@@ -25,24 +25,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.StringTokenizer;
 
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.datatables.CharNameTable;
 import net.sf.l2j.gameserver.model.BlockList;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExMailArrived;
+import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.util.Util;
 
 /**
  * @author JIV, Johan, Vital
  */
 public class MailBBSManager extends BaseBBSManager
 {
-	private static Logger _log = Logger.getLogger(MailBBSManager.class.getName());
-	
 	private final Map<Integer, List<Mail>> _mails = new HashMap<>();
 	
 	private int _lastid = 0;
@@ -76,6 +77,95 @@ public class MailBBSManager extends BaseBBSManager
 	protected MailBBSManager()
 	{
 		initId();
+	}
+	
+	@Override
+	public void parseCmd(String command, L2PcInstance activeChar)
+	{
+		if (command.equals("_bbsmail") || command.equals("_maillist_0_1_0_"))
+			showMailList(activeChar, 1, "inbox");
+		else if (command.startsWith("_bbsmail"))
+		{
+			StringTokenizer st = new StringTokenizer(command, ";");
+			st.nextToken();
+			String action = st.nextToken();
+			
+			if (action.equals("inbox") || action.equals("sentbox") || action.equals("archive") || action.equals("temparchive"))
+			{
+				final int page = (st.hasMoreTokens()) ? Integer.parseInt(st.nextToken()) : 1;
+				final String sType = (st.hasMoreTokens()) ? st.nextToken() : "";
+				final String search = (st.hasMoreTokens()) ? st.nextToken() : "";
+				
+				showMailList(activeChar, page, action, sType, search);
+			}
+			else if (action.equals("crea"))
+				showWriteView(activeChar);
+			else if (action.equals("view"))
+			{
+				final int letterId = (st.hasMoreTokens()) ? Integer.parseInt(st.nextToken()) : -1;
+				
+				Mail letter = getLetter(activeChar, letterId);
+				if (letter == null)
+					showLastForum(activeChar);
+				else
+				{
+					showLetterView(activeChar, letter);
+					if (letter.unread)
+						setLetterToRead(activeChar, letter.letterId);
+				}
+			}
+			else if (action.equals("reply"))
+			{
+				final int letterId = (st.hasMoreTokens()) ? Integer.parseInt(st.nextToken()) : -1;
+				
+				Mail letter = getLetter(activeChar, letterId);
+				if (letter == null)
+					showLastForum(activeChar);
+				else
+					showWriteView(activeChar, getCharName(letter.senderId), letter);
+			}
+			else if (action.equals("del"))
+			{
+				final int letterId = (st.hasMoreTokens()) ? Integer.parseInt(st.nextToken()) : -1;
+				
+				Mail letter = getLetter(activeChar, letterId);
+				if (letter != null)
+					deleteLetter(activeChar, letter.letterId);
+				
+				showLastForum(activeChar);
+			}
+			else if (action.equals("store"))
+			{
+				final int letterId = (st.hasMoreTokens()) ? Integer.parseInt(st.nextToken()) : -1;
+				
+				Mail letter = getLetter(activeChar, letterId);
+				if (letter != null)
+					setLetterLocation(activeChar, letter.letterId, "archive");
+				
+				showMailList(activeChar, 1, "archive");
+			}
+		}
+		else
+			super.parseCmd(command, activeChar);
+	}
+	
+	@Override
+	public void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar)
+	{
+		if (ar1.equals("Send"))
+		{
+			sendLetter(ar3, ar4, ar5, activeChar);
+			showMailList(activeChar, 1, "sentbox");
+		}
+		else if (ar1.startsWith("Search"))
+		{
+			StringTokenizer st = new StringTokenizer(ar1, ";");
+			st.nextToken();
+			
+			showMailList(activeChar, 1, st.nextToken(), ar4, ar5);
+		}
+		else
+			super.parseWrite(ar1, ar2, ar3, ar4, ar5, activeChar);
 	}
 	
 	private void initId()
@@ -121,12 +211,12 @@ public class MailBBSManager extends BaseBBSManager
 					letter.charId = result.getInt("charId");
 					letter.letterId = result.getInt("letterId");
 					letter.senderId = result.getInt("senderId");
-					letter.location = result.getString("location");
+					letter.location = result.getString("location").toLowerCase();
 					letter.recipientNames = result.getString("recipientNames");
 					letter.subject = result.getString("subject");
 					letter.message = result.getString("message");
 					letter.sentDate = result.getTimestamp("sentDate");
-					letter.sentDateString = result.getString("sentDate");
+					letter.sentDateString = Util.formatDate(letter.sentDate, "yyyy-MM-dd HH:mm");
 					letter.unread = result.getInt("unread") != 0;
 					_letters.add(0, letter);
 				}
@@ -145,63 +235,11 @@ public class MailBBSManager extends BaseBBSManager
 	private Mail getLetter(L2PcInstance activeChar, int letterId)
 	{
 		for (Mail letter : getPlayerMails(activeChar.getObjectId()))
+		{
 			if (letter.letterId == letterId)
 				return letter;
-		
+		}
 		return null;
-	}
-	
-	@Override
-	public void parseCmd(String command, L2PcInstance activeChar)
-	{
-		if (command.equals("_maillist_0_1_0_"))
-			showInbox(activeChar, 1);
-		else if (command.startsWith("_maillist_0_1_0_ "))
-			showInbox(activeChar, Integer.parseInt(command.substring(17)));
-		else if (command.equals("_maillist_0_1_0_sentbox"))
-			showSentbox(activeChar, 1);
-		else if (command.startsWith("_maillist_0_1_0_sentbox "))
-			showSentbox(activeChar, Integer.parseInt(command.substring(24)));
-		else if (command.equals("_maillist_0_1_0_archive"))
-			showMailArchive(activeChar, 1);
-		else if (command.startsWith("_maillist_0_1_0_archive "))
-			showMailArchive(activeChar, Integer.parseInt(command.substring(24)));
-		else if (command.equals("_maillist_0_1_0_temp_archive"))
-			showTempMailArchive(activeChar, 1);
-		else if (command.startsWith("_maillist_0_1_0_temp_archive "))
-			showTempMailArchive(activeChar, Integer.parseInt(command.substring(29)));
-		else if (command.equals("_maillist_0_1_0_write"))
-			showWriteView(activeChar);
-		else if (command.startsWith("_maillist_0_1_0_view "))
-		{
-			Mail letter = getLetter(activeChar, Integer.parseInt(command.substring(21)));
-			showLetterView(activeChar, letter);
-			if (letter.unread)
-				setLetterToRead(activeChar, letter.letterId);
-		}
-		else if (command.startsWith("_maillist_0_1_0_reply "))
-		{
-			Mail letter = getLetter(activeChar, Integer.parseInt(command.substring(22)));
-			showWriteView(activeChar, getCharName(letter.senderId), letter);
-		}
-		else if (command.startsWith("_maillist_0_1_0_delete "))
-		{
-			Mail letter = getLetter(activeChar, Integer.parseInt(command.substring(23)));
-			if (letter != null)
-				deleteLetter(activeChar, letter.letterId);
-			showLastForum(activeChar);
-		}
-		else if (command.startsWith("_maillist_0_1_0_store "))
-		{
-			Mail letter = getLetter(activeChar, Integer.parseInt(command.substring(22)));
-			if (letter != null)
-				setLetterLocation(activeChar, letter.letterId, "archive");
-			showMailArchive(activeChar, Integer.parseInt(command.substring(22)));
-		}
-		else if (command.startsWith("_maillist_0_1_0_viewlist"))
-			showLastForum(activeChar);
-		else
-			activeChar.sendMessage(command + " not implemented yet.");
 	}
 	
 	private static String abbreviate(String s, int maxWidth)
@@ -213,92 +251,110 @@ public class MailBBSManager extends BaseBBSManager
 	{
 		int count = 0;
 		for (Mail letter : getPlayerMails(activeChar.getObjectId()))
+		{
 			if (letter.unread)
 				count++;
+		}
 		return count;
 	}
 	
-	private void showInbox(L2PcInstance activeChar, int page)
+	private void showMailList(L2PcInstance activeChar, int page, String type)
 	{
-		int countMails = getCountLetters(activeChar, "inbox");
-		int maxpage = getMaxPageId(countMails);
+		showMailList(activeChar, page, type, "", "");
+	}
+	
+	private void showMailList(L2PcInstance activeChar, int page, String type, String sType, String search)
+	{
+		List<Mail> letters;
+		if (!sType.equals("") && !search.equals(""))
+		{
+			letters = new ArrayList<>();
+			
+			boolean byTitle = sType.equalsIgnoreCase("title");
+			
+			for (Mail letter : getPlayerMails(activeChar.getObjectId()))
+			{
+				if (byTitle && letter.subject.toLowerCase().contains(search.toLowerCase()))
+					letters.add(letter);
+				else if (!byTitle)
+				{
+					String writer = getCharName(letter.senderId);
+					if (writer.toLowerCase().contains(search.toLowerCase()))
+						letters.add(letter);
+				}
+			}
+		}
+		else
+			letters = getPlayerMails(activeChar.getObjectId());
+		
+		final int countMails = getCountLetters(activeChar.getObjectId(), type, sType, search);
+		final int maxpage = getMaxPageId(countMails);
+		
 		if (page > maxpage)
 			page = maxpage;
 		if (page < 1)
 			page = 1;
+		
 		activeChar.setMailPosition(page);
 		int index = 0, minIndex = 0, maxIndex = 0;
 		maxIndex = (page == 1 ? page * 9 : (page * 10) - 1);
 		minIndex = maxIndex - 9;
 		
-		final StringBuilder html = new StringBuilder();
-		html.append("<html><body><center>");
-		html.append("<br><br><br1><br1><table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");
-		html.append("<td width=755 height=30 align=left>");
-		html.append("<a action=\"bypass _bbshome\">Home</a>");
-		html.append("&nbsp;&nbsp;&gt;&nbsp;<a action=\"bypass _maillist_0_1_0_viewlist\">&$905;</a>&nbsp;&nbsp;&gt;&nbsp;&$917;");
-		html.append("</td></tr></table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td height=5></td></tr>");
-		html.append("</table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0 width=755 height=25 bgcolor=A7A19A>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td fixWIDTH=5></td>");
-		html.append("<td fixwidth=600>");
-		html.append("<a action=\"bypass _maillist_0_1_0_\">[&$917;]</a>&nbsp;(" + getCountLetters(activeChar, "inbox") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_sentbox\">[&$918;]</a>&nbsp;(" + getCountLetters(activeChar, "sentbox") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_archive\">[&$919;]</a>&nbsp;(" + getCountLetters(activeChar, "archive") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_temp_archive\">[&$920;]</a>&nbsp;(" + getCountLetters(activeChar, "temparchive") + ")</td>");
-		html.append("<td fixWIDTH=5></td>");
-		html.append("</tr>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("</table>");
-		html.append("<br>");
-		html.append("<table border=0 cellspacing=0 cellpadding=2 bgcolor=A7A19A width=755><tr>");
-		html.append("<td FIXWIDTH=5 align=center></td>");
-		html.append("<td FIXWIDTH=150 align=center>&$911;</td>");
-		html.append("<td FIXWIDTH=440>&$413;</td>");
-		html.append("<td FIXWIDTH=150 align=center>&$910;</td>");
-		html.append("<td FIXWIDTH=5 align=center></td>");
-		html.append("</tr></table>");
-		for (Mail letter : getPlayerMails(activeChar.getObjectId()))
+		String content = HtmCache.getInstance().getHtm(CB_PATH + "mail/mail.htm");
+		content = content.replace("%inbox%", getCountLetters(activeChar.getObjectId(), "inbox", "", "") + "");
+		content = content.replace("%sentbox%", getCountLetters(activeChar.getObjectId(), "sentbox", "", "") + "");
+		content = content.replace("%archive%", getCountLetters(activeChar.getObjectId(), "archive", "", "") + "");
+		content = content.replace("%temparchive%", getCountLetters(activeChar.getObjectId(), "temparchive", "", "") + "");
+		
+		String htmlType = "";
+		if (type.equalsIgnoreCase("inbox"))
+			htmlType = "Inbox";
+		else if (type.equalsIgnoreCase("sentbox"))
+			htmlType = "Sent Box";
+		else if (type.equalsIgnoreCase("archive"))
+			htmlType = "Mail Archive";
+		else if (type.equalsIgnoreCase("temparchive"))
+			htmlType = "Temporary Mail Archive";
+		content = content.replace("%type%", htmlType);
+		
+		content = content.replace("%htype%", type);
+		String mailList = "";
+		for (Mail letter : letters)
 		{
-			if (letter.location.equals("inbox"))
+			if (letter.location.equals(type))
 			{
 				if (index < minIndex)
 				{
 					index++;
 					continue;
 				}
+				
 				if (index > maxIndex)
 					break;
+				
 				String tempName = getCharName(letter.senderId);
-				html.append("<table border=0 cellspacing=0 cellpadding=5 width=755><tr>");
-				html.append("<td FIXWIDTH=5 align=center></td>");
-				html.append("<td FIXWIDTH=150 align=center>" + abbreviate(tempName, 6) + "</td>");
-				html.append("<td FIXWIDTH=440 ><a action=\"bypass _maillist_0_1_0_view " + letter.letterId + "\">");
+				mailList += "<table width=610><tr>";
+				mailList += "<td width=5></td>";
+				mailList += "<td width=150>" + tempName + "</td>";
+				mailList += "<td width=300><a action=\"bypass _bbsmail;view;" + letter.letterId + "\">";
 				if (letter.unread)
-					html.append("<font color=\"LEVEL\">");
-				html.append(abbreviate(letter.subject, 51));
+					mailList += "<font color=\"LEVEL\">";
+				mailList += abbreviate(letter.subject, 51);
 				if (letter.unread)
-					html.append("</font>");
-				html.append("</a>");
-				html.append("</td><td FIXWIDTH=150 align=center>" + letter.sentDateString.substring(0, letter.sentDateString.length() - 5) + "</td>");
-				html.append("<td FIXWIDTH=5 align=center></td></tr></table>");
-				html.append("<img src=\"L2UI.Squaregray\" width=\"755\" height=\"1\">");
+					mailList += "</font>";
+				mailList += "</a>";
+				mailList += "</td><td width=150>" + letter.sentDateString + "</td>";
+				mailList += "<td width=5></td></tr></table>";
+				mailList += "<img src=\"L2UI.Squaregray\" width=610 height=1>";
 				index++;
 			}
 		}
-		html.append("<br>");
-		html.append("<table width=755 cellspace=0 cellpadding=0><tr><td width=50></td>");
-		html.append("<td width=510 align=center>");
-		html.append("<table cellspacing=2 cellpadding=0 border=0><tr>");
-		html.append("<td><table><tr><td></td></tr><tr><td>");
-		html.append("<button action=\"bypass _maillist_0_1_0_ " + (page == 1 ? page : page - 1) + "\" back=\"L2UI_CT1.Button_DF_Left_Down\" fore=\"L2UI_CT1.Button_DF_Left\" width=15 height=15>");
-		html.append("</td></tr></table></td>");
-		
+		content = content.replace("%maillist%", mailList);
+		String fullSearch = (!sType.equals("") && !search.equals("")) ? ";" + sType + ";" + search : "";
+		String mailListLength = "";
+		mailListLength += "<td><table><tr><td></td></tr><tr><td>";
+		mailListLength += "<button action=\"bypass _bbsmail;" + type + ";" + (page == 1 ? page : page - 1) + fullSearch + "\" back=\"l2ui_ch3.prev1_down\" fore=\"l2ui_ch3.prev1\" width=16 height=16>";
+		mailListLength += "</td></tr></table></td>";
 		int i = 0;
 		if (maxpage > 21)
 		{
@@ -307,9 +363,9 @@ public class MailBBSManager extends BaseBBSManager
 				for (i = 1; i <= (10 + page); i++)
 				{
 					if (i == page)
-						html.append("<td> " + i + " </td>");
+						mailListLength += "<td> " + i + " </td>";
 					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_ " + i + "\"> " + i + " </a></td>");
+						mailListLength += "<td><a action=\"bypass _bbsmail;" + type + ";" + i + fullSearch + "\"> " + i + " </a></td>";
 				}
 			}
 			else if (page > 11 && (maxpage - page) > 10)
@@ -319,14 +375,14 @@ public class MailBBSManager extends BaseBBSManager
 					if (i == page)
 						continue;
 					
-					html.append("<td><a action=\"bypass _maillist_0_1_0_ " + i + "\"> " + i + " </a></td>");
+					mailListLength += "<td><a action=\"bypass _bbsmail;" + type + ";" + i + fullSearch + "\"> " + i + " </a></td>";
 				}
 				for (i = page; i <= (page + 10); i++)
 				{
 					if (i == page)
-						html.append("<td> " + i + " </td>");
+						mailListLength += "<td> " + i + " </td>";
 					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_ " + i + "\"> " + i + " </a></td>");
+						mailListLength += "<td><a action=\"bypass _bbsmail;" + type + ";" + i + fullSearch + "\"> " + i + " </a></td>";
 				}
 			}
 			else if ((maxpage - page) <= 10)
@@ -334,9 +390,9 @@ public class MailBBSManager extends BaseBBSManager
 				for (i = (page - 10); i <= maxpage; i++)
 				{
 					if (i == page)
-						html.append("<td> " + i + " </td>");
+						mailListLength += "<td> " + i + " </td>";
 					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_ " + i + "\"> " + i + " </a></td>");
+						mailListLength += "<td><a action=\"bypass _bbsmail;" + type + ";" + i + fullSearch + "\"> " + i + " </a></td>";
 				}
 			}
 		}
@@ -345,651 +401,76 @@ public class MailBBSManager extends BaseBBSManager
 			for (i = 1; i <= maxpage; i++)
 			{
 				if (i == page)
-					html.append("<td> " + i + " </td>");
+					mailListLength += "<td> " + i + " </td>";
 				else
-					html.append("<td><a action=\"bypass _maillist_0_1_0_ " + i + "\"> " + i + " </a></td>");
+					mailListLength += "<td><a action=\"bypass _bbsmail;" + type + ";" + i + fullSearch + "\"> " + i + " </a></td>";
 			}
 		}
+		mailListLength += "<td><table><tr><td></td></tr><tr><td>";
+		mailListLength += "<button action=\"bypass _bbsmail;" + type + ";" + (page == maxpage ? page : page + 1) + fullSearch + "\" back=\"l2ui_ch3.next1_down\" fore=\"l2ui_ch3.next1\" width=16 height=16 >";
+		mailListLength += "</td></tr></table></td>";
+		content = content.replace("%maillistlength%", mailListLength);
 		
-		html.append("<td><table><tr><td></td></tr><tr><td>");
-		html.append("<button action=\"bypass _maillist_0_1_0_ " + (page == maxpage ? page : page + 1) + "\" back=\"L2UI_CT1.Button_DF_Right_Down\" fore=\"L2UI_CT1.Button_DF_Right\" width=15 height=15 >");
-		html.append("</td></tr></table></td></tr></table></td>");
-		// html.append("<td align=right><button value=\"&$421;\" action=\"bypass _maillist_0_1_0_write\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("</tr><tr><td width=5 height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td></td>");
-		html.append("<td align=center><table border=0><tr><td>");
-		html.append("<combobox width=65 var=SearchTarget list=\"Writer;Title\">");
-		html.append("</td><td><edit var=\"keyword\" width=130 height=15 length=\"16\"></td>");
-		html.append("<td><button value=\"&$420;\" action=\"bypass _maillist_0_1_0_search $combo $keyword\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td></tr></table></td>");
-		html.append("</tr>");
-		html.append("</table>");
-		html.append("</center></body></html>");
-		separateAndSend(html.toString(), activeChar);
+		separateAndSend(content, activeChar);
 	}
 	
-	private static void showLetterView(L2PcInstance activeChar, Mail letter)
+	private void showLetterView(L2PcInstance activeChar, Mail letter)
 	{
-		final StringBuilder html = new StringBuilder();
-		html.append("<html><body><center>");
-		html.append("<br><br><br1><br1><table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");
-		html.append("<td width=755 height=30 align=left>");
-		html.append("<a action=\"bypass _bbshome\">Home</a>");
-		html.append("&nbsp;&nbsp;&gt;&nbsp;<a action=\"bypass _maillist_0_1_0_viewlist\">&$905;</a>&nbsp;&nbsp;&gt;&nbsp;");
-		if (letter.location.equals("inbox"))
-			html.append("<a action=\"bypass _maillist_0_1_0_\">&$917;</a>");
-		else if (letter.location.equals("sentbox"))
-			html.append("<a action=\"bypass _maillist_0_1_0_sentbox\">&$918;</a>");
-		else if (letter.location.equals("archive"))
-			html.append("<a action=\"bypass _maillist_0_1_0_archive\">&$919;</a>");
-		else if (letter.location.equals("temparchive"))
-			html.append("<a action=\"bypass _maillist_0_1_0_temp_archive\">&$920;</a>");
-		html.append("&nbsp;&nbsp;&gt;&nbsp;" + abbreviate(letter.subject.replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;"), 51));
-		html.append("</td></tr></table>");
-		html.append("<br>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0 bgcolor=A7A19A>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td fixWIDTH=5></td><td WIDTH=85 valign=top>Sender:</td>");
-		html.append("<td WIDTH=415 valign=top>" + getCharName(letter.senderId) + "</td>");
-		html.append("<td width=10></td>");
-		html.append("<td width=90 valign=top>Send Time:</td>");
-		html.append("<td WIDTH=150 valign=top>" + letter.sentDateString.substring(0, letter.sentDateString.length() - 5) + "</td>");
-		html.append("</tr>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td fixWIDTH=5></td><td>Recipient:</td>");
-		html.append("<td>" + letter.recipientNames + "</td>");
-		html.append("<td></td>");
-		html.append("<td>Delete date:</td>");
-		html.append("<td>Unknown</td>");
-		html.append("</tr>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td fixWIDTH=5></td><td valign=top>Title:</td>");
-		html.append("<td fixwidth=415 valign=top>" + letter.subject.replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;") + "</td>");
-		html.append("<td></td>");
-		html.append("<td></td>");
-		html.append("<td></td>");
-		html.append("</tr>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("</table><br>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0><tr>");
-		html.append("<td width=5></td>");
-		html.append("<td width=755 align=left>" + letter.message.replaceAll("\r\n", "<br>").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;") + "</td>");
-		html.append("<td width=5></td>");
-		html.append("</tr></table><br>");
-		html.append("<img src=\"L2UI.squareblank\" width=\"1\" height=\"5\">");
-		html.append("<img src=\"L2UI.squaregray\" width=\"755\" height=\"1\">");
-		html.append("<img src=\"L2UI.squareblank\" width=\"1\" height=\"5\">");
-		html.append("<table border=0 cellspacing=0 cellpadding=0 FIXWIDTH=755><tr>");
-		html.append("<td width=70><button value=\"&$422;\" action=\"bypass _maillist_0_1_0_viewlist\"  back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("<td width=340></td>");
-		if (letter.location.equals("archive"))
-			html.append("<td width=70 align=right></td>");
-		html.append("<td width=70 align=right><button value=\"&$912;\" action=\"bypass _maillist_0_1_0_reply " + letter.letterId + "\"  back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\">&nbsp;</td>");
-		html.append("<td width=70 align=right><button value=\"&$913;\" action=\"bypass _maillist_0_1_0_deliver\"  back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\">&nbsp;</td>");
-		html.append("<td width=70 align=right><button value=\"&$425;\" action=\"bypass _maillist_0_1_0_delete " + letter.letterId + "\"  back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\">&nbsp;</td>");
-		if (!letter.location.equals("archive"))
-			html.append("<td width=70 align=right><button value=\"&$914;\" action=\"bypass _maillist_0_1_0_store " + letter.letterId + "\"  back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\">&nbsp;</td>");
-		html.append("<td width=70 align=right><button value=\"&$915;\" action=\"bypass _maillist_0_1_0_write\"  back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\" ></td>");
-		html.append("</tr></table>");
-		html.append("</center></body></html>");
-		separateAndSend(html.toString(), activeChar);
-	}
-	
-	private void showSentbox(L2PcInstance activeChar, int page)
-	{
-		int countMails = getCountLetters(activeChar, "sentbox");
-		int maxpage = getMaxPageId(countMails);
-		if (page > maxpage)
-			page = maxpage;
-		if (page < 1)
-			page = 1;
-		activeChar.setMailPosition(1 * 1000 + page);
-		int index = 0, minIndex = 0, maxIndex = 0;
-		maxIndex = (page == 1 ? page * 9 : (page * 10) - 1);
-		minIndex = maxIndex - 9;
-		
-		final StringBuilder html = new StringBuilder();
-		html.append("<html><body><center>");
-		html.append("<br><br><br1><br1><table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");
-		html.append("<td width=755 height=30 align=left>");
-		html.append("<a action=\"bypass _bbshome\">Home</a>");
-		html.append("&nbsp;&nbsp;&gt;&nbsp;<a action=\"bypass _maillist_0_1_0_viewlist\">&$905;</a>&nbsp;&nbsp;&gt;&nbsp;&$918;");
-		html.append("</td></tr></table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td height=5></td></tr>");
-		html.append("</table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0 width=755 height=25 bgcolor=A7A19A>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td fixWIDTH=5></td>");
-		html.append("<td fixwidth=600>");
-		html.append("<a action=\"bypass _maillist_0_1_0_\">[&$917;]</a>&nbsp;(" + getCountLetters(activeChar, "inbox") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_sentbox\">[&$918;]</a>&nbsp;(" + getCountLetters(activeChar, "sentbox") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_archive\">[&$919;]</a>&nbsp;(" + getCountLetters(activeChar, "archive") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_temp_archive\">[&$920;]</a>&nbsp;(" + getCountLetters(activeChar, "temparchive") + ")</td>");
-		html.append("<td fixWIDTH=5></td>");
-		html.append("</tr>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("</table>");
-		html.append("<br>");
-		html.append("<table border=0 cellspacing=0 cellpadding=2 bgcolor=A7A19A width=755><tr>");
-		html.append("<td FIXWIDTH=5 align=center></td>");
-		html.append("<td FIXWIDTH=150 align=center>&$911;</td>");
-		html.append("<td FIXWIDTH=440>&$413;</td>");
-		html.append("<td FIXWIDTH=150 align=center>&$910;</td>");
-		html.append("<td FIXWIDTH=5 align=center></td>");
-		html.append("</tr></table>");
-		for (Mail letter : getPlayerMails(activeChar.getObjectId()))
+		if (letter == null)
 		{
-			if (letter.location.equals("sentbox"))
-			{
-				if (index < minIndex)
-				{
-					index++;
-					continue;
-				}
-				if (index > maxIndex)
-					break;
-				String tempName = getCharName(letter.senderId);
-				html.append("<table border=0 cellspacing=0 cellpadding=5 width=755><tr>");
-				html.append("<td FIXWIDTH=5 align=center></td>");
-				html.append("<td FIXWIDTH=150 align=center>" + abbreviate(tempName, 6) + "</td>");
-				html.append("<td FIXWIDTH=440 ><a action=\"bypass _maillist_0_1_0_view " + letter.letterId + "\">");
-				if (letter.unread)
-					html.append("<font color=\"LEVEL\">");
-				html.append(abbreviate(letter.subject, 51));
-				if (letter.unread)
-					html.append("</font>");
-				html.append("</a>");
-				html.append("</td><td FIXWIDTH=150 align=center>" + letter.sentDateString.substring(0, letter.sentDateString.length() - 5) + "</td>");
-				html.append("<td FIXWIDTH=5 align=center></td></tr></table>");
-				html.append("<img src=\"L2UI.Squaregray\" width=\"755\" height=\"1\">");
-				index++;
-			}
-		}
-		html.append("<br>");
-		html.append("<table width=755 cellspace=0 cellpadding=0><tr><td width=50></td>");
-		html.append("<td width=510 align=center>");
-		html.append("<table cellspacing=2 cellpadding=0 border=0><tr>");
-		html.append("<td><table><tr><td></td></tr><tr><td>");
-		html.append("<button action=\"bypass _maillist_0_1_0_sentbox " + (page == 1 ? page : page - 1) + "\" back=\"L2UI_CT1.Button_DF_Left_Down\" fore=\"L2UI_CT1.Button_DF_Left\" width=15 height=15>");
-		html.append("</td></tr></table></td>");
-		
-		int i = 0;
-		if (maxpage > 21)
-		{
-			if (page <= 11)
-			{
-				for (i = 1; i <= (10 + page); i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_sentbox " + i + "\"> " + i + " </a></td>");
-				}
-			}
-			else if (page > 11 && (maxpage - page) > 10)
-			{
-				for (i = (page - 10); i <= (page - 1); i++)
-				{
-					if (i == page)
-						continue;
-					
-					html.append("<td><a action=\"bypass _maillist_0_1_0_sentbox " + i + "\"> " + i + " </a></td>");
-				}
-				for (i = page; i <= (page + 10); i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_sentbox " + i + "\"> " + i + " </a></td>");
-				}
-			}
-			else if ((maxpage - page) <= 10)
-			{
-				for (i = (page - 10); i <= maxpage; i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_sentbox " + i + "\"> " + i + " </a></td>");
-				}
-			}
-		}
-		else
-		{
-			for (i = 1; i <= maxpage; i++)
-			{
-				if (i == page)
-					html.append("<td> " + i + " </td>");
-				else
-					html.append("<td><a action=\"bypass _maillist_0_1_0_sentbox " + i + "\"> " + i + " </a></td>");
-			}
+			showMailList(activeChar, 1, "inbox");
+			return;
 		}
 		
-		html.append("<td><table><tr><td></td></tr><tr><td>");
-		html.append("<button action=\"bypass _maillist_0_1_0_sentbox " + (page == maxpage ? page : page + 1) + "\" back=\"L2UI_CT1.Button_DF_Right_Down\" fore=\"L2UI_CT1.Button_DF_Right\" width=15 height=15 >");
-		html.append("</td></tr></table></td></tr></table></td>");
-		// html.append("<td align=right><button value=\"&$421;\" action=\"bypass _maillist_0_1_0_write\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("</tr><tr><td width=5 height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td></td>");
-		html.append("<td align=center><table border=0><tr><td>");
-		html.append("<combobox width=65 var=SearchTarget list=\"Writer;Title\">");
-		html.append("</td><td><edit var=\"keyword\" width=130 height=15 length=\"16\"></td>");
-		html.append("<td><button value=\"&$420;\" action=\"bypass _maillist_0_1_0_search $combo $keyword\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td></tr></table></td>");
-		html.append("</tr>");
-		html.append("</table>");
-		html.append("</center></body></html>");
-		separateAndSend(html.toString(), activeChar);
-	}
-	
-	private void showMailArchive(L2PcInstance activeChar, int page)
-	{
-		int countMails = getCountLetters(activeChar, "archive");
-		int maxpage = getMaxPageId(countMails);
-		if (page > maxpage)
-			page = maxpage;
-		if (page < 1)
-			page = 1;
-		activeChar.setMailPosition(2 * 1000 + page);
-		int index = 0, minIndex = 0, maxIndex = 0;
-		maxIndex = (page == 1 ? page * 14 : (page * 15) - 1);
-		minIndex = maxIndex - 14;
+		String content = HtmCache.getInstance().getHtm(CB_PATH + "mail/mail-show.htm");
 		
-		final StringBuilder html = new StringBuilder();
-		html.append("<html><body><center>");
-		html.append("<br><br><br1><br1><table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");
-		html.append("<td width=755 height=30 align=left>");
-		html.append("<a action=\"bypass _bbshome\">Home</a>");
-		html.append("&nbsp;&nbsp;&gt;&nbsp;<a action=\"bypass _maillist_0_1_0_viewlist\">&$905;</a>&nbsp;&nbsp;&gt;&nbsp;&$919;");
-		html.append("</td></tr></table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td height=5></td></tr>");
-		html.append("</table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0 width=755 height=25 bgcolor=A7A19A>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td fixWIDTH=5></td>");
-		html.append("<td fixwidth=600>");
-		html.append("<a action=\"bypass _maillist_0_1_0_\">[&$917;]</a>&nbsp;(" + getCountLetters(activeChar, "inbox") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_sentbox\">[&$918;]</a>&nbsp;(" + getCountLetters(activeChar, "sentbox") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_archive\">[&$919;]</a>&nbsp;(" + getCountLetters(activeChar, "archive") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_temp_archive\">[&$920;]</a>&nbsp;(" + getCountLetters(activeChar, "temparchive") + ")</td>");
-		html.append("<td fixWIDTH=5></td>");
-		html.append("</tr>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("</table>");
-		html.append("<br>");
-		html.append("<table border=0 cellspacing=0 cellpadding=2 bgcolor=A7A19A width=755><tr>");
-		html.append("<td FIXWIDTH=5 align=center></td>");
-		html.append("<td FIXWIDTH=150 align=center>&$911;</td>");
-		html.append("<td FIXWIDTH=440>&$413;</td>");
-		html.append("<td FIXWIDTH=150 align=center>&$910;</td>");
-		html.append("<td FIXWIDTH=5 align=center></td>");
-		html.append("</tr></table>");
-		for (Mail letter : getPlayerMails(activeChar.getObjectId()))
-		{
-			if (letter.location.equals("archive"))
-			{
-				if (index < minIndex)
-				{
-					index++;
-					continue;
-				}
-				if (index > maxIndex)
-					break;
-				String tempName = getCharName(letter.senderId);
-				html.append("<table border=0 cellspacing=0 cellpadding=5 width=755><tr>");
-				html.append("<td FIXWIDTH=5 align=center></td>");
-				html.append("<td FIXWIDTH=150 align=center>" + abbreviate(tempName, 6) + "</td>");
-				html.append("<td FIXWIDTH=440 ><a action=\"bypass _maillist_0_1_0_view " + letter.letterId + "\">");
-				if (letter.unread)
-					html.append("<font color=\"LEVEL\">");
-				html.append(abbreviate(letter.subject, 51));
-				if (letter.unread)
-					html.append("</font>");
-				html.append("</a>");
-				html.append("</td><td FIXWIDTH=150 align=center>" + letter.sentDateString.substring(0, letter.sentDateString.length() - 5) + "</td>");
-				html.append("<td FIXWIDTH=5 align=center></td></tr></table>");
-				html.append("<img src=\"L2UI.Squaregray\" width=\"755\" height=\"1\">");
-				index++;
-			}
-		}
-		html.append("<br>");
-		html.append("<table width=755 cellspace=0 cellpadding=0><tr><td width=50></td>");
-		html.append("<td width=510 align=center>");
-		html.append("<table cellspacing=2 cellpadding=0 border=0><tr>");
-		html.append("<td><table><tr><td></td></tr><tr><td>");
-		html.append("<button action=\"bypass _maillist_0_1_0_archive " + (page == 1 ? page : page - 1) + "\" back=\"L2UI_CT1.Button_DF_Left_Down\" fore=\"L2UI_CT1.Button_DF_Left\" width=15 height=15>");
-		html.append("</td></tr></table></td>");
+		String link = "<a action=\"bypass _bbsmail\">Inbox</a>";
+		if (letter.location.equalsIgnoreCase("sentbox"))
+			link = "<a action=\"bypass _bbsmail;sentbox\">Sent Box</a>";
+		else if (letter.location.equalsIgnoreCase("archive"))
+			link = "<a action=\"bypass _bbsmail;archive\">Mail Archive</a>";
+		else if (letter.location.equalsIgnoreCase("temparchive"))
+			link = "<a action=\"bypass _bbsmail;temp_archive\">Temporary Mail Archive</a>";
+		link += "&nbsp;&gt;&nbsp;" + letter.subject;
+		content = content.replace("%maillink%", link);
 		
-		int i = 0;
-		if (maxpage > 21)
-		{
-			if (page <= 11)
-			{
-				for (i = 1; i <= (10 + page); i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_archive " + i + "\"> " + i + " </a></td>");
-				}
-			}
-			else if (page > 11 && (maxpage - page) > 10)
-			{
-				for (i = (page - 10); i <= (page - 1); i++)
-				{
-					if (i == page)
-						continue;
-					
-					html.append("<td><a action=\"bypass _maillist_0_1_0_archive " + i + "\"> " + i + " </a></td>");
-				}
-				for (i = page; i <= (page + 10); i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_archive " + i + "\"> " + i + " </a></td>");
-				}
-			}
-			else if ((maxpage - page) <= 10)
-			{
-				for (i = (page - 10); i <= maxpage; i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_archive " + i + "\"> " + i + " </a></td>");
-				}
-			}
-		}
-		else
-		{
-			for (i = 1; i <= maxpage; i++)
-			{
-				if (i == page)
-					html.append("<td> " + i + " </td>");
-				else
-					html.append("<td><a action=\"bypass _maillist_0_1_0_archive " + i + "\"> " + i + " </a></td>");
-			}
-		}
-		
-		html.append("<td><table><tr><td></td></tr><tr><td>");
-		html.append("<button action=\"bypass _maillist_0_1_0_archive " + (page == maxpage ? page : page + 1) + "\" back=\"L2UI_CT1.Button_DF_Right_Down\" fore=\"L2UI_CT1.Button_DF_Right\" width=15 height=15 >");
-		html.append("</td></tr></table></td></tr></table></td>");
-		// html.append("<td align=right><button value=\"&$421;\" action=\"bypass _maillist_0_1_0_write\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("</tr><tr><td width=5 height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td></td>");
-		html.append("<td align=center><table border=0><tr><td>");
-		html.append("<combobox width=65 var=SearchTarget list=\"Writer;Title\">");
-		html.append("</td><td><edit var=\"keyword\" width=130 height=15 length=\"16\"></td>");
-		html.append("<td><button value=\"&$420;\" action=\"bypass _maillist_0_1_0_search $combo $keyword\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td></tr></table></td>");
-		html.append("</tr>");
-		html.append("</table>");
-		html.append("</center></body></html>");
-		separateAndSend(html.toString(), activeChar);
-	}
-	
-	private void showTempMailArchive(L2PcInstance activeChar, int page)
-	{
-		int countMails = getCountLetters(activeChar, "temparchive");
-		int maxpage = getMaxPageId(countMails);
-		if (page > maxpage)
-			page = maxpage;
-		if (page < 1)
-			page = 1;
-		activeChar.setMailPosition(3 * 1000 + page);
-		int index = 0, minIndex = 0, maxIndex = 0;
-		maxIndex = (page == 1 ? page * 14 : (page * 15) - 1);
-		minIndex = maxIndex - 14;
-		
-		final StringBuilder html = new StringBuilder();
-		html.append("<html><body><center>");
-		html.append("<br><br><br1><br1><table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");
-		html.append("<td width=755 height=30 align=left>");
-		html.append("<a action=\"bypass _bbshome\">Home</a>");
-		html.append("&nbsp;&nbsp;&gt;&nbsp;<a action=\"bypass _maillist_0_1_0_viewlist\">&$905;</a>&nbsp;&nbsp;&gt;&nbsp;&$920;");
-		html.append("</td></tr></table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td height=5></td></tr>");
-		html.append("</table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0 width=755 height=25 bgcolor=A7A19A>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td fixWIDTH=5></td>");
-		html.append("<td fixwidth=600>");
-		html.append("<a action=\"bypass _maillist_0_1_0_\">[&$917;]</a>&nbsp;(" + getCountLetters(activeChar, "inbox") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_sentbox\">[&$918;]</a>&nbsp;(" + getCountLetters(activeChar, "sentbox") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_archive\">[&$919;]</a>&nbsp;(" + getCountLetters(activeChar, "archive") + ")&nbsp;");
-		html.append("<a action=\"bypass _maillist_0_1_0_temp_archive\">[&$920;]</a>&nbsp;(" + getCountLetters(activeChar, "temparchive") + ")</td>");
-		html.append("<td fixWIDTH=5></td>");
-		html.append("</tr>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("</table>");
-		html.append("<br>");
-		html.append("<table border=0 cellspacing=0 cellpadding=2 bgcolor=A7A19A width=755><tr>");
-		html.append("<td FIXWIDTH=5 align=center></td>");
-		html.append("<td FIXWIDTH=150 align=center>&$911;</td>");
-		html.append("<td FIXWIDTH=440>&$413;</td>");
-		html.append("<td FIXWIDTH=150 align=center>&$910;</td>");
-		html.append("<td FIXWIDTH=5 align=center></td>");
-		html.append("</tr></table>");
-		for (Mail letter : getPlayerMails(activeChar.getObjectId()))
-		{
-			if (letter.location.equals("temparchive"))
-			{
-				if (index < minIndex)
-				{
-					index++;
-					continue;
-				}
-				if (index > maxIndex)
-					break;
-				String tempName = getCharName(letter.senderId);
-				html.append("<table border=0 cellspacing=0 cellpadding=5 width=755><tr>");
-				html.append("<td FIXWIDTH=5 align=center></td>");
-				html.append("<td FIXWIDTH=150 align=center>" + abbreviate(tempName, 6) + "</td>");
-				html.append("<td FIXWIDTH=440 ><a action=\"bypass _maillist_0_1_0_view " + letter.letterId + "\">");
-				if (letter.unread)
-					html.append("<font color=\"LEVEL\">");
-				html.append(abbreviate(letter.subject, 51));
-				if (letter.unread)
-					html.append("</font>");
-				html.append("</a>");
-				html.append("</td><td FIXWIDTH=150 align=center>" + letter.sentDateString.substring(0, letter.sentDateString.length() - 5) + "</td>");
-				html.append("<td FIXWIDTH=5 align=center></td></tr></table>");
-				html.append("<img src=\"L2UI.Squaregray\" width=\"755\" height=\"1\">");
-				index++;
-			}
-		}
-		html.append("<br>");
-		html.append("<table width=755 cellspace=0 cellpadding=0><tr><td width=50></td>");
-		html.append("<td width=510 align=center>");
-		html.append("<table cellspacing=2 cellpadding=0 border=0><tr>");
-		html.append("<td><table><tr><td></td></tr><tr><td>");
-		html.append("<button action=\"bypass _maillist_0_1_0_temp_archive " + (page == 1 ? page : page - 1) + "\" back=\"L2UI_CT1.Button_DF_Left_Down\" fore=\"L2UI_CT1.Button_DF_Left\" width=15 height=15>");
-		html.append("</td></tr></table></td>");
-		
-		int i = 0;
-		if (maxpage > 21)
-		{
-			if (page <= 11)
-			{
-				for (i = 1; i <= (10 + page); i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_temp_archive " + i + "\"> " + i + " </a></td>");
-				}
-			}
-			else if (page > 11 && (maxpage - page) > 10)
-			{
-				for (i = (page - 10); i <= (page - 1); i++)
-				{
-					if (i == page)
-						continue;
-					
-					html.append("<td><a action=\"bypass _maillist_0_1_0_temp_archive " + i + "\"> " + i + " </a></td>");
-				}
-				for (i = page; i <= (page + 10); i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_temp_archive " + i + "\"> " + i + " </a></td>");
-				}
-			}
-			else if ((maxpage - page) <= 10)
-			{
-				for (i = (page - 10); i <= maxpage; i++)
-				{
-					if (i == page)
-						html.append("<td> " + i + " </td>");
-					else
-						html.append("<td><a action=\"bypass _maillist_0_1_0_temp_archive " + i + "\"> " + i + " </a></td>");
-				}
-			}
-		}
-		else
-		{
-			for (i = 1; i <= maxpage; i++)
-			{
-				if (i == page)
-					html.append("<td> " + i + " </td>");
-				else
-					html.append("<td><a action=\"bypass _maillist_0_1_0_temp_archive " + i + "\"> " + i + " </a></td>");
-			}
-		}
-		
-		html.append("<td><table><tr><td></td></tr><tr><td>");
-		html.append("<button action=\"bypass _maillist_0_1_0_temp_archive " + (page == maxpage ? page : page + 1) + "\" back=\"L2UI_CT1.Button_DF_Right_Down\" fore=\"L2UI_CT1.Button_DF_Right\" width=15 height=15 >");
-		html.append("</td></tr></table></td></tr></table></td>");
-		// html.append("<td align=right><button value=\"&$421;\" action=\"bypass _maillist_0_1_0_write\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("</tr><tr><td width=5 height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td></td>");
-		html.append("<td align=center><table border=0><tr><td>");
-		html.append("<combobox width=65 var=SearchTarget list=\"Writer;Title\">");
-		html.append("</td><td><edit var=\"keyword\" width=130 height=15 length=\"16\"></td>");
-		html.append("<td><button value=\"&$420;\" action=\"bypass _maillist_0_1_0_search $combo $keyword\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td></tr></table></td>");
-		html.append("</tr>");
-		html.append("</table>");
-		html.append("</center></body></html>");
-		separateAndSend(html.toString(), activeChar);
+		content = content.replace("%writer%", getCharName(letter.senderId));
+		content = content.replace("%sentDate%", letter.sentDateString);
+		content = content.replace("%receiver%", letter.recipientNames);
+		content = content.replace("%delDate%", "Unknown");
+		content = content.replace("%title%", letter.subject.replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;"));
+		content = content.replace("%mes%", letter.message.replaceAll("\r\n", "<br>").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;"));
+		content = content.replace("%letterId%", letter.letterId + "");
+		separateAndSend(content, activeChar);
 	}
 	
 	private static void showWriteView(L2PcInstance activeChar)
 	{
-		final StringBuilder html = new StringBuilder();
-		html.append("<html><body>");
-		html.append("<br><br><br1><br1><table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");
-		html.append("<td width=755 height=30 align=left>");
-		html.append("<a action=\"bypass _bbshome\">Home</a>");
-		html.append("&nbsp;&nbsp;&gt;&nbsp;<a action=\"bypass _maillist_0_1_0_viewlist\">&$905;</a>&nbsp;&nbsp;&gt;&nbsp;&$421;");
-		html.append("</td></tr></table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0><tr><td width=755><img src=\"L2UI.SquareGray\" width=\"755\" height=\"1\"></td></tr></table>");
-		html.append("<table fixwidth=755 border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td width=5 height=20></td></tr>");
-		html.append("<tr>");
-		html.append("<td width=5></td>");
-		html.append("<td FIXWIDTH=80 height=29>Recipient:</td>");
-		html.append("<td FIXWIDTH=520><edit var=\"Recipients\" width=670 height=13 length=\"128\"></td>");
-		html.append("<td width=5></td>");
-		html.append("</tr>");
-		html.append("<tr>");
-		html.append("<td ></td>");
-		html.append("<td height=29>&$413;:</td>");
-		html.append("<td><edit var=\"Title\" width=670 height=13 length=\"128\"></td>");
-		html.append("<td></td>");
-		html.append("</tr>");
-		html.append("</table>");
-		html.append("<table fixwidth=755 border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr>");
-		html.append("<td width=5></td>");
-		html.append("<td FIXWIDTH=80 height=29 valign=top>&$427;:</td>");
-		html.append("<td FIXWIDTH=510><MultiEdit var=\"Message\" width=670 height=313></td>");
-		html.append("<td width=5></td>");
-		html.append("</tr>");
-		html.append("<tr><td width=5 height=10></td></tr>");
-		html.append("</table>");
-		html.append("<table fixwidth=755 border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td width=5></td>");
-		html.append("<td align=center FIXWIDTH=80 height=29>&nbsp;</td>");
-		html.append("<td align=center FIXwidth=70><button value=\"&$1078;\" action=\"Write Mail Send _ Recipients Title Message\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("<td align=center FIXwidth=70><button value=\"&$141;\" action=\"bypass _maillist_0_1_0_viewlist\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("<td align=center FIXwidth=70><button value=\"&$658;\" action=\"\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("<td align=center FIXWIDTH=340>&nbsp;</td><td width=5></td>");
-		html.append("</tr></table>");
-		html.append("</body></html>");
-		separateAndSend(html.toString(), activeChar);
+		String content = HtmCache.getInstance().getHtm(CB_PATH + "mail/mail-write.htm");
+		separateAndSend(content, activeChar);
 	}
 	
 	private static void showWriteView(L2PcInstance activeChar, String parcipientName, Mail letter)
 	{
-		final StringBuilder html = new StringBuilder();
-		html.append("<html><body>");
-		html.append("<br><br><br1><br1><table border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td FIXWIDTH=15>&nbsp;</td>");
-		html.append("<td width=755 height=30 align=left>");
-		html.append("<a action=\"bypass _bbshome\">Home</a>");
-		html.append("&nbsp;&nbsp;&gt;&nbsp;<a action=\"bypass _maillist_0_1_0_viewlist\">&$905;</a>&nbsp;&nbsp;&gt;&nbsp;&$421;");
-		html.append("</td></tr></table>");
-		html.append("<table border=0 cellspacing=0 cellpadding=0><tr><td width=755><img src=\"L2UI.SquareGray\" width=\"755\" height=\"1\"></td></tr></table>");
-		html.append("<table fixwidth=755 border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td width=5 height=20></td></tr>");
-		html.append("<tr>");
-		html.append("<td width=5></td>");
-		html.append("<td FIXWIDTH=80 height=29>Recipient:</td>");
-		html.append("<td FIXWIDTH=520><combobox var=\"Recipients\" width=670 height=13 list=\"" + parcipientName + "\"></td>");
-		html.append("<td width=5></td>");
-		html.append("</tr>");
-		html.append("<tr>");
-		html.append("<td ></td>");
-		html.append("<td height=29>&$413;:</td>");
-		html.append("<td><edit var=\"Title\" width=670 height=13 length=\"128\"></td>");
-		html.append("<td></td>");
-		html.append("</tr>");
-		html.append("</table>");
-		html.append("<table fixwidth=755 border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr>");
-		html.append("<td width=5></td>");
-		html.append("<td FIXWIDTH=80 height=29 valign=top>&$427;:</td>");
-		html.append("<td FIXWIDTH=520><MultiEdit var=\"Message\" width=670 height=313></td>");
-		html.append("<td width=5></td>");
-		html.append("</tr>");
-		html.append("<tr><td width=5 height=10></td></tr>");
-		html.append("</table>");
-		html.append("<table fixwidth=755 border=0 cellspacing=0 cellpadding=0>");
-		html.append("<tr><td height=10></td></tr>");
-		html.append("<tr>");
-		html.append("<td width=5></td>");
-		html.append("<td align=center FIXWIDTH=80 height=29>&nbsp;</td>");
-		html.append("<td align=center FIXwidth=70><button value=\"&$1078;\" action=\"Write Mail Send _ Recipients Title Message\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("<td align=center FIXwidth=70><button value=\"&$141;\" action=\"bypass _maillist_0_1_0_viewlist\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("<td align=center FIXwidth=70><button value=\"&$658;\" action=\"\" back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("<td align=center FIXwidth=70><button value=\"&$425;\" action=\"bypass _maillist_0_1_0_delete " + letter.letterId + "\"  back=\"l2ui_ct1.button.button_df_small_down\" width=70 height=25 fore=\"l2ui_ct1.button.button_df_small\"></td>");
-		html.append("<td align=center FIXWIDTH=340>&nbsp;</td><td width=5></td>");
-		html.append("</tr></table>");
-		html.append("</body></html>");
-		send1001(html.toString(), activeChar);
+		String content = HtmCache.getInstance().getHtm(CB_PATH + "mail/mail-reply.htm");
+		
+		String link = "<a action=\"bypass _bbsmail\">Inbox</a>";
+		if (letter.location.equalsIgnoreCase("sentbox"))
+			link = "<a action=\"bypass _bbsmail;sentbox\">Sent Box</a>";
+		else if (letter.location.equalsIgnoreCase("archive"))
+			link = "<a action=\"bypass _bbsmail;archive\">Mail Archive</a>";
+		else if (letter.location.equalsIgnoreCase("temparchive"))
+			link = "<a action=\"bypass _bbsmail;temp_archive\">Temporary Mail Archive</a>";
+		link += "&nbsp;&gt;&nbsp;<a action=\"bypass _bbsmail;view;" + letter.letterId + "\">" + letter.subject + "</a>&nbsp;&gt;&nbsp;";
+		content = content.replace("%maillink%", link);
+		
+		content = content.replace("%recipients%", letter.senderId == activeChar.getObjectId() ? letter.recipientNames : getCharName(letter.senderId));
+		content = content.replace("%letterId%", letter.letterId + "");
+		send1001(content, activeChar);
 		send1002(activeChar, " ", "Re: " + letter.subject, "0");
 	}
 	
-	private void sendLetter(String recipients, String subject, String message, L2PcInstance activeChar)
+	public void sendLetter(String recipients, String subject, String message, L2PcInstance activeChar)
 	{
 		int countTodaysLetters = 0;
 		Timestamp ts = new Timestamp(Calendar.getInstance().getTimeInMillis() - 86400000L);
@@ -1026,18 +507,22 @@ public class MailBBSManager extends BaseBBSManager
 			for (String recipient : recipts)
 			{
 				int recipId = CharNameTable.getInstance().getIdByName(recipient);
-				if (recipId <= 0)
-					activeChar.sendMessage("Could not find " + recipient + ", Therefore will not get mail.");
-				else if (isGM(recipId) && !activeChar.isGM())
-					activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANNOT_MAIL_GM_S1).addString(recipient));
-				else if (isBlocked(activeChar, recipId) && !activeChar.isGM())
-					activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_BLOCKED_YOU_CANNOT_MAIL).addString(recipient));
-				else if (isRecipInboxFull(recipId) && !activeChar.isGM())
+				if (recipId <= 0 || recipId == activeChar.getObjectId())
+					activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
+				else if (!activeChar.isGM())
 				{
-					activeChar.sendPacket(SystemMessageId.MESSAGE_NOT_SENT);
-					L2PcInstance PCrecipient = L2World.getInstance().getPlayer(recipient);
-					if (PCrecipient != null)
-						PCrecipient.sendPacket(SystemMessageId.MAILBOX_FULL);
+					if (isGM(recipId))
+						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANNOT_MAIL_GM_S1).addString(recipient));
+					else if (isBlocked(activeChar, recipId))
+						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_BLOCKED_YOU_CANNOT_MAIL).addString(recipient));
+					else if (isRecipInboxFull(recipId))
+					{
+						activeChar.sendPacket(SystemMessageId.MESSAGE_NOT_SENT);
+						
+						L2PcInstance PCrecipient = L2World.getInstance().getPlayer(recipient);
+						if (PCrecipient != null)
+							PCrecipient.sendPacket(SystemMessageId.MAILBOX_FULL);
+					}
 				}
 				else if (countRecips < 5 && !activeChar.isGM() || activeChar.isGM())
 				{
@@ -1067,7 +552,7 @@ public class MailBBSManager extends BaseBBSManager
 					letter.subject = abbreviate(subject, 128);
 					letter.message = message;
 					letter.sentDate = time;
-					letter.sentDateString = String.valueOf(time);
+					letter.sentDateString = Util.formatDate(letter.sentDate, "yyyy-MM-dd HH:mm");
 					letter.unread = true;
 					getPlayerMails(recipId).add(0, letter);
 					
@@ -1077,6 +562,7 @@ public class MailBBSManager extends BaseBBSManager
 					if (PCrecipient != null)
 					{
 						PCrecipient.sendPacket(SystemMessageId.NEW_MAIL);
+						PCrecipient.sendPacket(new PlaySound("systemmsg_e.1233"));
 						PCrecipient.sendPacket(ExMailArrived.STATIC_PACKET);
 					}
 				}
@@ -1103,7 +589,7 @@ public class MailBBSManager extends BaseBBSManager
 				letter.subject = abbreviate(subject, 128);
 				letter.message = message;
 				letter.sentDate = time;
-				letter.sentDateString = String.valueOf(time);
+				letter.sentDateString = Util.formatDate(letter.sentDate, "yyyy-MM-dd HH:mm");
 				letter.unread = false;
 				getPlayerMails(activeChar.getObjectId()).add(0, letter);
 			}
@@ -1120,18 +606,34 @@ public class MailBBSManager extends BaseBBSManager
 		}
 	}
 	
-	private int getCountLetters(L2PcInstance activeChar, String location)
-	{
-		return getCountLetters(activeChar.getObjectId(), location);
-	}
-	
-	private int getCountLetters(int objId, String location)
+	private int getCountLetters(int objId, String location, String sType, String search)
 	{
 		int count = 0;
-		for (Mail letter : getPlayerMails(objId))
+		if (!sType.equals("") && !search.equals(""))
 		{
-			if (letter.location.equals(location))
-				count++;
+			boolean byTitle = sType.equalsIgnoreCase("title");
+			for (Mail letter : getPlayerMails(objId))
+			{
+				if (!letter.location.equals(location))
+					continue;
+				
+				if (byTitle && letter.subject.toLowerCase().contains(search.toLowerCase()))
+					count++;
+				else if (!byTitle)
+				{
+					String writer = getCharName(letter.senderId);
+					if (writer.toLowerCase().contains(search.toLowerCase()))
+						count++;
+				}
+			}
+		}
+		else
+		{
+			for (Mail letter : getPlayerMails(objId))
+			{
+				if (letter.location.equals(location))
+					count++;
+			}
 		}
 		return count;
 	}
@@ -1239,17 +741,7 @@ public class MailBBSManager extends BaseBBSManager
 	
 	private boolean isRecipInboxFull(int charId)
 	{
-		return getCountLetters(charId, "inbox") >= 100;
-	}
-	
-	@Override
-	public void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar)
-	{
-		if (ar1.equals("Send"))
-		{
-			sendLetter(ar3, ar4, ar5, activeChar);
-			showSentbox(activeChar, 1);
-		}
+		return getCountLetters(charId, "inbox", "", "") >= 100;
 	}
 	
 	private void showLastForum(L2PcInstance activeChar)
@@ -1260,19 +752,19 @@ public class MailBBSManager extends BaseBBSManager
 		switch (type)
 		{
 			case 0:
-				showInbox(activeChar, page);
+				showMailList(activeChar, page, "inbox");
 				break;
 			
 			case 1:
-				showSentbox(activeChar, page);
+				showMailList(activeChar, page, "sentbox");
 				break;
 			
 			case 2:
-				showMailArchive(activeChar, page);
+				showMailList(activeChar, page, "archive");
 				break;
 			
 			case 3:
-				showTempMailArchive(activeChar, page);
+				showMailList(activeChar, page, "temparchive");
 				break;
 		}
 	}

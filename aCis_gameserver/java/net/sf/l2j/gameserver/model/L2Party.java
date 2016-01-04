@@ -545,35 +545,28 @@ public class L2Party
 	}
 	
 	/**
-	 * distribute adena to party members
-	 * @param player
-	 * @param adena
-	 * @param target
+	 * Distribute adena to party members, according distance.
+	 * @param player The player who picked.
+	 * @param adena Amount of adenas.
+	 * @param target Target used for distance checks.
 	 */
 	public void distributeAdena(L2PcInstance player, int adena, L2Character target)
 	{
-		// Get all the party members
-		List<L2PcInstance> membersList = _members;
-		
-		// Check the number of party members that must be rewarded
-		// (The party member must be in range to receive its reward)
-		List<L2PcInstance> ToReward = new ArrayList<>();
-		for (L2PcInstance member : membersList)
+		List<L2PcInstance> toReward = new ArrayList<>(_members.size());
+		for (L2PcInstance member : _members)
 		{
-			if (!Util.checkIfInRange(Config.ALT_PARTY_RANGE2, target, member, true))
+			if (!Util.checkIfInRange(Config.ALT_PARTY_RANGE2, target, member, true) || member.getAdena() == Integer.MAX_VALUE)
 				continue;
 			
-			ToReward.add(member);
+			toReward.add(member);
 		}
 		
-		// Avoid null exceptions, if any
-		if (ToReward.isEmpty())
+		// Avoid divisions by 0.
+		if (toReward.isEmpty())
 			return;
 		
-		// Now we can actually distribute the adena reward
-		// (Total adena splitted by the number of party members that are in range and must be rewarded)
-		int count = adena / ToReward.size();
-		for (L2PcInstance member : ToReward)
+		final int count = adena / toReward.size();
+		for (L2PcInstance member : toReward)
 			member.addAdena("Party", count, player, true);
 	}
 	

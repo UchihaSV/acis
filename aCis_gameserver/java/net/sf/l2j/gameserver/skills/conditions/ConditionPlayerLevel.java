@@ -31,6 +31,6 @@ public class ConditionPlayerLevel extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		return env.player.getLevel() >= _level;
+		return env.getCharacter().getLevel() >= _level;
 	}
 }

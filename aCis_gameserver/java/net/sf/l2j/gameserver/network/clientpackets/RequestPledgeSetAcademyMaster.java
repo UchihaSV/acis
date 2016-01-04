@@ -18,6 +18,7 @@ import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
+import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
 /**
@@ -133,5 +134,7 @@ public final class RequestPledgeSetAcademyMaster extends L2GameClientPacket
 		
 		if (apprentice != null)
 			apprentice.sendPacket(sm);
+		
+		clan.broadcastToOnlineMembers(new PledgeShowMemberListUpdate(sponsorMember), new PledgeShowMemberListUpdate(apprenticeMember));
 	}
 }

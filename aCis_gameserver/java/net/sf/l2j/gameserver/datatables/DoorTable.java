@@ -274,21 +274,6 @@ public class DoorTable
 		return _staticItems.values(new L2DoorInstance[0]);
 	}
 	
-	/**
-	 * Performs a check and sets up a scheduled task for those doors that require auto opening/closing.
-	 */
-	public void checkAutoOpen()
-	{
-		for (L2DoorInstance doorInst : getDoors())
-			// Garden of Eva (every 7 minutes)
-			if (doorInst.getDoorName().startsWith("Eva"))
-				doorInst.setAutoActionDelay(420000);
-			
-			// Tower of Insolence (every 5 minutes)
-			else if (doorInst.getDoorName().startsWith("hubris"))
-				doorInst.setAutoActionDelay(300000);
-	}
-	
 	public boolean checkIfDoorsBetween(AbstractNodeLoc start, AbstractNodeLoc end)
 	{
 		return checkIfDoorsBetween(start.getX(), start.getY(), start.getZ(), end.getX(), end.getY(), end.getZ());
@@ -352,7 +337,15 @@ public class DoorTable
 		return false;
 	}
 	
-	public void onStart()
+	/**
+	 * Simple operations to handle at server startup :
+	 * <ul>
+	 * <li>Open some doors types.</li>
+	 * <li>Schedule open/close tasks.</li>
+	 * <li>Load castle doors upgrades.</li>
+	 * </ul>
+	 */
+	private void onStart()
 	{
 		try
 		{
@@ -369,7 +362,19 @@ public class DoorTable
 			getDoor(23180006).openMe();
 			
 			// Schedules a task to automatically open/close doors
-			checkAutoOpen();
+			for (L2DoorInstance doorInst : getDoors())
+			{
+				// Garden of Eva (every 7 minutes)
+				if (doorInst.getName().startsWith("Eva"))
+					doorInst.setAutoActionDelay(420000);
+				// Tower of Insolence (every 5 minutes)
+				else if (doorInst.getName().startsWith("hubris"))
+					doorInst.setAutoActionDelay(300000);
+			}
+			
+			// Load doors upgrades.
+			for (Castle castle : CastleManager.getInstance().getCastles())
+				castle.loadDoorUpgrade();
 		}
 		catch (NullPointerException e)
 		{

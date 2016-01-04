@@ -25,8 +25,6 @@ import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.knownlist.SiegeGuardKnownList;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
-import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
@@ -76,7 +74,7 @@ public final class L2SiegeGuardInstance extends L2Attackable
 	public boolean isAutoAttackable(L2Character attacker)
 	{
 		// Attackable during siege by all except defenders
-		return (attacker != null && attacker.getActingPlayer() != null && getCastle() != null && getCastle().getCastleId() > 0 && getCastle().getSiege().getIsInProgress() && !getCastle().getSiege().checkIsDefender(attacker.getActingPlayer().getClan()));
+		return (attacker != null && attacker.getActingPlayer() != null && getCastle() != null && getCastle().getSiege().isInProgress() && !getCastle().getSiege().checkIsDefender(attacker.getActingPlayer().getClan()));
 	}
 	
 	@Override
@@ -113,21 +111,9 @@ public final class L2SiegeGuardInstance extends L2Attackable
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2Npc
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Send MyTargetSelected to the L2PcInstance player
-			player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel() - getLevel()));
-			
-			// Send StatusUpdate of the L2Npc to the L2PcInstance to update its HP bar
-			StatusUpdate su = new StatusUpdate(this);
-			su.addAttribute(StatusUpdate.CUR_HP, (int) getStatus().getCurrentHp());
-			su.addAttribute(StatusUpdate.MAX_HP, getMaxHp());
-			player.sendPacket(su);
-		}
 		else
 		{
 			if (isAutoAttackable(player))

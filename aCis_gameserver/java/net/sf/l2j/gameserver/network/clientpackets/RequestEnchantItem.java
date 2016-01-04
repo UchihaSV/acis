@@ -168,7 +168,7 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 						if (chestItem != null)
 						{
 							final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
-							if (armorSet != null && armorSet.containAll(activeChar) && armorSet.isEnchanted6(activeChar)) // has all parts of set enchanted to 6 or more
+							if (armorSet != null && armorSet.isEnchanted6(activeChar)) // has all parts of set enchanted to 6 or more
 							{
 								final int skillId = armorSet.getEnchant6skillId();
 								if (skillId > 0)
@@ -179,8 +179,6 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 										activeChar.addSkill(skill, false);
 										activeChar.sendSkillList();
 									}
-									else
-										_log.warning("Inventory.ArmorSetListener: Incorrect skill: " + armorSet.getEnchant6skillId() + ".");
 								}
 							}
 						}
@@ -213,7 +211,7 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 						if (chestItem != null)
 						{
 							final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
-							if (armorSet != null && armorSet.containAll(activeChar) && armorSet.isEnchanted6(activeChar)) // has all parts of set enchanted to 6 or more
+							if (armorSet != null && armorSet.isEnchanted6(activeChar)) // has all parts of set enchanted to 6 or more
 							{
 								final int skillId = armorSet.getEnchant6skillId();
 								if (skillId > 0)
@@ -224,8 +222,6 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 										activeChar.removeSkill(skill, false);
 										activeChar.sendSkillList();
 									}
-									else
-										_log.warning("Inventory.ArmorSetListener: Incorrect skill: " + armorSet.getEnchant6skillId() + ".");
 								}
 							}
 						}

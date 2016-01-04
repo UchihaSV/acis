@@ -299,10 +299,12 @@ public class MultiSellChoose extends L2GameClientPacket
 				inv.addItem("Multisell", e.getItemId(), (e.getItemCount() * _amount), player, player.getTarget());
 			else
 			{
-				L2ItemInstance product = null;
 				for (int i = 0; i < (e.getItemCount() * _amount); i++)
 				{
-					product = inv.addItem("Multisell", e.getItemId(), 1, player, player.getTarget());
+					L2ItemInstance product = inv.addItem("Multisell", e.getItemId(), 1, player, player.getTarget());
+					if (product == null)
+						continue;
+					
 					if (maintainEnchantment)
 					{
 						if (i < augmentation.size())

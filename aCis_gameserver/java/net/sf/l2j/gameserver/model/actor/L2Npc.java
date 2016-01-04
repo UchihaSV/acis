@@ -65,7 +65,6 @@ import net.sf.l2j.gameserver.network.serverpackets.AbstractNpcInfo.NpcInfo;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ExShowVariationCancelWindow;
 import net.sf.l2j.gameserver.network.serverpackets.ExShowVariationMakeWindow;
-import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
 import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
@@ -460,28 +459,9 @@ public class L2Npc extends L2Character
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2Npc
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Check if the player is attackable (without a forced attack)
-			if (isAutoAttackable(player))
-			{
-				// Send MyTargetSelected to the L2PcInstance player
-				player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel() - getLevel()));
-				
-				// Send StatusUpdate of the L2Npc to the L2PcInstance to update its HP bar
-				StatusUpdate su = new StatusUpdate(this);
-				su.addAttribute(StatusUpdate.CUR_HP, (int) getCurrentHp());
-				su.addAttribute(StatusUpdate.MAX_HP, getMaxHp());
-				player.sendPacket(su);
-			}
-			// Send MyTargetSelected to the L2PcInstance player
-			else
-				player.sendPacket(new MyTargetSelected(getObjectId(), 0));
-		}
 		else
 		{
 			// Check if the player is attackable (without a forced attack) and isn't dead
@@ -561,52 +541,52 @@ public class L2Npc extends L2Character
 			html.setFile("data/html/admin/npcinfo.htm");
 			
 			html.replace("%class%", getClass().getSimpleName());
-			html.replace("%id%", String.valueOf(getTemplate().getNpcId()));
-			html.replace("%lvl%", String.valueOf(getTemplate().getLevel()));
+			html.replace("%id%", getTemplate().getNpcId());
+			html.replace("%lvl%", getTemplate().getLevel());
 			html.replace("%name%", getTemplate().getName());
-			html.replace("%race%", String.valueOf(getTemplate().getRace()));
-			html.replace("%tmplid%", String.valueOf(getTemplate().getIdTemplate()));
-			html.replace("%aggro%", String.valueOf((this instanceof L2Attackable) ? ((L2Attackable) this).getAggroRange() : 0));
-			html.replace("%corpse%", String.valueOf(getTemplate().getCorpseTime()));
-			html.replace("%enchant%", String.valueOf(getTemplate().getEnchantEffect()));
-			html.replace("%hp%", String.valueOf((int) getCurrentHp()));
-			html.replace("%hpmax%", String.valueOf(getMaxHp()));
-			html.replace("%mp%", String.valueOf((int) getCurrentMp()));
-			html.replace("%mpmax%", String.valueOf(getMaxMp()));
+			html.replace("%race%", getTemplate().getRace().toString());
+			html.replace("%tmplid%", getTemplate().getIdTemplate());
+			html.replace("%aggro%", (this instanceof L2Attackable) ? ((L2Attackable) this).getAggroRange() : 0);
+			html.replace("%corpse%", getTemplate().getCorpseTime());
+			html.replace("%enchant%", getTemplate().getEnchantEffect());
+			html.replace("%hp%", (int) getCurrentHp());
+			html.replace("%hpmax%", getMaxHp());
+			html.replace("%mp%", (int) getCurrentMp());
+			html.replace("%mpmax%", getMaxMp());
 			
-			html.replace("%patk%", String.valueOf(getPAtk(null)));
-			html.replace("%matk%", String.valueOf(getMAtk(null, null)));
-			html.replace("%pdef%", String.valueOf(getPDef(null)));
-			html.replace("%mdef%", String.valueOf(getMDef(null, null)));
-			html.replace("%accu%", String.valueOf(getAccuracy()));
-			html.replace("%evas%", String.valueOf(getEvasionRate(null)));
-			html.replace("%crit%", String.valueOf(getCriticalHit(null, null)));
-			html.replace("%rspd%", String.valueOf(getRunSpeed()));
-			html.replace("%aspd%", String.valueOf(getPAtkSpd()));
-			html.replace("%cspd%", String.valueOf(getMAtkSpd()));
-			html.replace("%str%", String.valueOf(getSTR()));
-			html.replace("%dex%", String.valueOf(getDEX()));
-			html.replace("%con%", String.valueOf(getCON()));
-			html.replace("%int%", String.valueOf(getINT()));
-			html.replace("%wit%", String.valueOf(getWIT()));
-			html.replace("%men%", String.valueOf(getMEN()));
-			html.replace("%loc%", String.valueOf(getX() + " " + getY() + " " + getZ()));
-			html.replace("%dist%", String.valueOf((int) Math.sqrt(player.getDistanceSq(this))));
+			html.replace("%patk%", getPAtk(null));
+			html.replace("%matk%", getMAtk(null, null));
+			html.replace("%pdef%", getPDef(null));
+			html.replace("%mdef%", getMDef(null, null));
+			html.replace("%accu%", getAccuracy());
+			html.replace("%evas%", getEvasionRate(null));
+			html.replace("%crit%", getCriticalHit(null, null));
+			html.replace("%rspd%", getRunSpeed());
+			html.replace("%aspd%", getPAtkSpd());
+			html.replace("%cspd%", getMAtkSpd());
+			html.replace("%str%", getSTR());
+			html.replace("%dex%", getDEX());
+			html.replace("%con%", getCON());
+			html.replace("%int%", getINT());
+			html.replace("%wit%", getWIT());
+			html.replace("%men%", getMEN());
+			html.replace("%loc%", getX() + " " + getY() + " " + getZ());
+			html.replace("%dist%", (int) Math.sqrt(player.getDistanceSq(this)));
 			
-			html.replace("%ele_fire%", String.valueOf(getDefenseElementValue((byte) 2)));
-			html.replace("%ele_water%", String.valueOf(getDefenseElementValue((byte) 3)));
-			html.replace("%ele_wind%", String.valueOf(getDefenseElementValue((byte) 1)));
-			html.replace("%ele_earth%", String.valueOf(getDefenseElementValue((byte) 4)));
-			html.replace("%ele_holy%", String.valueOf(getDefenseElementValue((byte) 5)));
-			html.replace("%ele_dark%", String.valueOf(getDefenseElementValue((byte) 6)));
+			html.replace("%ele_fire%", getDefenseElementValue((byte) 2));
+			html.replace("%ele_water%", getDefenseElementValue((byte) 3));
+			html.replace("%ele_wind%", getDefenseElementValue((byte) 1));
+			html.replace("%ele_earth%", getDefenseElementValue((byte) 4));
+			html.replace("%ele_holy%", getDefenseElementValue((byte) 5));
+			html.replace("%ele_dark%", getDefenseElementValue((byte) 6));
 			
 			if (getSpawn() != null)
 			{
 				html.replace("%spawn%", getSpawn().getLocx() + " " + getSpawn().getLocy() + " " + getSpawn().getLocz());
-				html.replace("%loc2d%", String.valueOf((int) Math.sqrt(getPlanDistanceSq(getSpawn().getLocx(), getSpawn().getLocy()))));
-				html.replace("%loc3d%", String.valueOf((int) Math.sqrt(getDistanceSq(getSpawn().getLocx(), getSpawn().getLocy(), getSpawn().getLocz()))));
-				html.replace("%resp%", String.valueOf(getSpawn().getRespawnDelay() / 1000));
-				html.replace("%rand_resp%", String.valueOf(getSpawn().getRandomRespawnDelay()));
+				html.replace("%loc2d%", (int) Math.sqrt(getPlanDistanceSq(getSpawn().getLocx(), getSpawn().getLocy())));
+				html.replace("%loc3d%", (int) Math.sqrt(getDistanceSq(getSpawn().getLocx(), getSpawn().getLocy(), getSpawn().getLocz())));
+				html.replace("%resp%", getSpawn().getRespawnDelay() / 1000);
+				html.replace("%rand_resp%", getSpawn().getRandomRespawnDelay());
 			}
 			else
 			{
@@ -633,12 +613,7 @@ public class L2Npc extends L2Character
 			html.replace("%ai_seed%", String.valueOf(isSeedable()));
 			html.replace("%ai_ssinfo%", _currentSsCount + "[" + getSsCount() + "] - " + getSsRate() + "%");
 			html.replace("%ai_spsinfo%", _currentSpsCount + "[" + getSpsCount() + "] - " + getSpsRate() + "%");
-			
-			if (this instanceof L2MerchantInstance)
-				html.replace("%butt%", "<button value=\"Shop\" action=\"bypass -h admin_show_shop " + String.valueOf(getTemplate().getNpcId()) + "\" width=65 height=19 back=\"L2UI_ch3.smallbutton2_over\" fore=\"L2UI_ch3.smallbutton2\">");
-			else
-				html.replace("%butt%", "");
-			
+			html.replace("%butt%", ((this instanceof L2MerchantInstance) ? "<button value=\"Shop\" action=\"bypass -h admin_show_shop " + getNpcId() + "\" width=65 height=19 back=\"L2UI_ch3.smallbutton2_over\" fore=\"L2UI_ch3.smallbutton2\">" : ""));
 			player.sendPacket(html);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 		}
@@ -722,8 +697,8 @@ public class L2Npc extends L2Character
 					html.setFile("data/html/territorynoclan.htm");
 				
 				html.replace("%castlename%", getCastle().getName());
-				html.replace("%taxpercent%", "" + getCastle().getTaxPercent());
-				html.replace("%objectId%", String.valueOf(getObjectId()));
+				html.replace("%taxpercent%", getCastle().getTaxPercent());
+				html.replace("%objectId%", getObjectId());
 				
 				if (getCastle().getCastleId() > 6)
 					html.replace("%territory%", "The Kingdom of Elmore");
@@ -769,10 +744,10 @@ public class L2Npc extends L2Character
 				String path = command.substring(5).trim();
 				if (path.indexOf("..") != -1)
 					return;
-				String filename = "data/html/" + path;
+				
 				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-				html.setFile(filename);
-				html.replace("%objectId%", String.valueOf(getObjectId()));
+				html.setFile("data/html/" + path);
+				html.replace("%objectId%", getObjectId());
 				player.sendPacket(html);
 			}
 			else if (command.startsWith("Loto"))
@@ -915,7 +890,7 @@ public class L2Npc extends L2Character
 		{
 			NpcHtmlMessage npcReply = new NpcHtmlMessage(npc.getObjectId());
 			npcReply.setHtml(Quest.getNoQuestMsg());
-			npcReply.replace("%objectId%", String.valueOf(npc.getObjectId()));
+			npcReply.replace("%objectId%", npc.getObjectId());
 			player.sendPacket(npcReply);
 			
 			player.sendPacket(ActionFailed.STATIC_PACKET);
@@ -961,7 +936,7 @@ public class L2Npc extends L2Character
 			if (q == null)
 				continue;
 			
-			StringUtil.append(sb, "<a action=\"bypass -h npc_", String.valueOf(npc.getObjectId()), "_Quest ", q.getName(), "\">[", q.getDescr());
+			StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Quest ", q.getName(), "\">[", q.getDescr());
 			
 			final QuestState qs = player.getQuestState(q.getName());
 			if (qs != null && qs.isStarted())
@@ -976,7 +951,7 @@ public class L2Npc extends L2Character
 		
 		NpcHtmlMessage npcReply = new NpcHtmlMessage(npc.getObjectId());
 		npcReply.setHtml(sb.toString());
-		npcReply.replace("%objectId%", String.valueOf(npc.getObjectId()));
+		npcReply.replace("%objectId%", npc.getObjectId());
 		player.sendPacket(npcReply);
 		
 		player.sendPacket(ActionFailed.STATIC_PACKET);
@@ -1097,7 +1072,6 @@ public class L2Npc extends L2Character
 	{
 		int npcId = getTemplate().getNpcId();
 		String filename;
-		SystemMessage sm;
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		
 		if (val == 0) // 0 - first buy lottery ticket window
@@ -1200,33 +1174,18 @@ public class L2Npc extends L2Character
 				else
 					type2 += Math.pow(2, player.getLoto(i) - 17);
 			}
-			if (player.getAdena() < price)
-			{
-				sm = SystemMessage.getSystemMessage(SystemMessageId.YOU_NOT_ENOUGH_ADENA);
-				player.sendPacket(sm);
-				return;
-			}
+			
 			if (!player.reduceAdena("Loto", price, this, true))
 				return;
-			Lottery.getInstance().increasePrize(price);
 			
-			sm = SystemMessage.getSystemMessage(SystemMessageId.ACQUIRED_S1_S2);
-			sm.addNumber(lotonumber);
-			sm.addItemName(4442);
-			player.sendPacket(sm);
+			Lottery.getInstance().increasePrize(price);
 			
 			L2ItemInstance item = new L2ItemInstance(IdFactory.getInstance().getNextId(), 4442);
 			item.setCount(1);
 			item.setCustomType1(lotonumber);
 			item.setEnchantLevel(enchant);
 			item.setCustomType2(type2);
-			player.getInventory().addItem("Loto", item, player, this);
-			
-			InventoryUpdate iu = new InventoryUpdate();
-			iu.addItem(item);
-			L2ItemInstance adenaupdate = player.getInventory().getItemByItemId(57);
-			iu.addModifiedItem(adenaupdate);
-			player.sendPacket(iu);
+			player.addItem("Loto", item, player, true);
 			
 			filename = (getHtmlPath(npcId, 3));
 			html.setFile(filename);
@@ -1300,15 +1259,15 @@ public class L2Npc extends L2Character
 			player.destroyItem("Loto", item, this, false);
 			return;
 		}
-		html.replace("%objectId%", String.valueOf(getObjectId()));
-		html.replace("%race%", "" + Lottery.getInstance().getId());
-		html.replace("%adena%", "" + Lottery.getInstance().getPrize());
-		html.replace("%ticket_price%", "" + Config.ALT_LOTTERY_TICKET_PRICE);
-		html.replace("%prize5%", "" + (Config.ALT_LOTTERY_5_NUMBER_RATE * 100));
-		html.replace("%prize4%", "" + (Config.ALT_LOTTERY_4_NUMBER_RATE * 100));
-		html.replace("%prize3%", "" + (Config.ALT_LOTTERY_3_NUMBER_RATE * 100));
-		html.replace("%prize2%", "" + Config.ALT_LOTTERY_2_AND_1_NUMBER_PRIZE);
-		html.replace("%enddate%", "" + DateFormat.getDateInstance().format(Lottery.getInstance().getEndDate()));
+		html.replace("%objectId%", getObjectId());
+		html.replace("%race%", Lottery.getInstance().getId());
+		html.replace("%adena%", Lottery.getInstance().getPrize());
+		html.replace("%ticket_price%", Config.ALT_LOTTERY_TICKET_PRICE);
+		html.replace("%prize5%", Config.ALT_LOTTERY_5_NUMBER_RATE * 100);
+		html.replace("%prize4%", Config.ALT_LOTTERY_4_NUMBER_RATE * 100);
+		html.replace("%prize3%", Config.ALT_LOTTERY_3_NUMBER_RATE * 100);
+		html.replace("%prize2%", Config.ALT_LOTTERY_2_AND_1_NUMBER_PRIZE);
+		html.replace("%enddate%", DateFormat.getDateInstance().format(Lottery.getInstance().getEndDate()));
 		player.sendPacket(html);
 		
 		// Send a Server->Client ActionFailed to the L2PcInstance in order to avoid that the client wait another packet
@@ -1379,7 +1338,7 @@ public class L2Npc extends L2Character
 		{
 			NpcHtmlMessage npcReply = new NpcHtmlMessage(getObjectId());
 			npcReply.setHtml("<html><body>Newbie Guide:<br>Only a <font color=\"LEVEL\">novice character of level " + higestLevel + " or less</font> can receive my support magic.<br>Your novice character is the first one that you created and raised in this world.</body></html>");
-			npcReply.replace("%objectId%", String.valueOf(getObjectId()));
+			npcReply.replace("%objectId%", getObjectId());
 			player.sendPacket(npcReply);
 			return;
 		}
@@ -1389,7 +1348,7 @@ public class L2Npc extends L2Character
 		{
 			NpcHtmlMessage npcReply = new NpcHtmlMessage(getObjectId());
 			npcReply.setHtml("<html><body>Come back here when you have reached level " + lowestLevel + ". I will give you support magic then.</body></html>");
-			npcReply.replace("%objectId%", String.valueOf(getObjectId()));
+			npcReply.replace("%objectId%", getObjectId());
 			player.sendPacket(npcReply);
 			return;
 		}
@@ -1484,7 +1443,7 @@ public class L2Npc extends L2Character
 		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
 		
 		// Send a Server->Client ActionFailed to the L2PcInstance in order to avoid that the client wait another packet
@@ -1504,7 +1463,7 @@ public class L2Npc extends L2Character
 		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
 		
 		// Send a Server->Client ActionFailed to the L2PcInstance in order to avoid that the client wait another packet

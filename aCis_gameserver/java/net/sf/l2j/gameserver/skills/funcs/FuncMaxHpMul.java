@@ -30,12 +30,12 @@ public class FuncMaxHpMul extends Func
 	
 	private FuncMaxHpMul()
 	{
-		super(Stats.MAX_HP, 0x20, null);
+		super(Stats.MAX_HP, 0x20, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		env.value *= Formulas.CONbonus[env.player.getCON()];
+		env.mulValue(Formulas.CONbonus[env.getCharacter().getCON()]);
 	}
 }

@@ -44,7 +44,7 @@ public class OlympiadGameManager implements Runnable
 		for (L2OlympiadStadiumZone zone : zones)
 			_tasks[i++] = new OlympiadGameTask(zone);
 		
-		_log.log(Level.INFO, "Olympiad System: Loaded " + _tasks.length + " stadiums.");
+		_log.log(Level.INFO, "Olympiad: Loaded " + _tasks.length + " stadiums.");
 	}
 	
 	public static final OlympiadGameManager getInstance()
@@ -127,7 +127,7 @@ public class OlympiadGameManager implements Runnable
 			{
 				OlympiadManager.getInstance().clearRegistered();
 				_battleStarted = false;
-				_log.log(Level.INFO, "Olympiad System: All current games finished.");
+				_log.log(Level.INFO, "Olympiad: All current games finished.");
 			}
 		}
 	}

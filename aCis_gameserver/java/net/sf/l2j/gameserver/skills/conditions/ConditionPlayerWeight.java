@@ -34,20 +34,14 @@ public class ConditionPlayerWeight extends Condition
 		_weight = weight;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see net.sf.l2j.gameserver.skills.conditions.Condition#testImpl(net.sf.l2j.gameserver.skills.Env)
-	 */
 	@Override
 	public boolean testImpl(Env env)
 	{
-		if (env.player instanceof L2PcInstance)
+		final L2PcInstance player = env.getPlayer();
+		if (player != null && player.getMaxLoad() > 0)
 		{
-			if (((L2PcInstance) env.player).getMaxLoad() > 0)
-			{
-				int weightproc = ((L2PcInstance) env.player).getCurrentLoad() * 100 / ((L2PcInstance) env.player).getMaxLoad();
-				return weightproc < _weight;
-			}
+			int weightproc = player.getCurrentLoad() * 100 / player.getMaxLoad();
+			return weightproc < _weight;
 		}
 		return true;
 	}

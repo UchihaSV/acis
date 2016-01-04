@@ -69,11 +69,7 @@ public final class RequestRecipeShopListSet extends L2GameClientPacket
 		}
 		
 		if (_count == 0)
-		{
-			player.setPrivateStoreType(L2PcInstance.STORE_PRIVATE_NONE);
-			player.broadcastUserInfo();
-			player.standUp();
-		}
+			player.forceStandUp();
 		else
 		{
 			L2ManufactureList createList = new L2ManufactureList();
@@ -90,7 +86,6 @@ public final class RequestRecipeShopListSet extends L2GameClientPacket
 			player.setPrivateStoreType(L2PcInstance.STORE_PRIVATE_MANUFACTURE);
 			player.sitDown();
 			player.broadcastUserInfo();
-			player.sendPacket(new RecipeShopMsg(player));
 			player.broadcastPacket(new RecipeShopMsg(player));
 		}
 	}

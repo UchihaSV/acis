@@ -24,13 +24,11 @@ import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
-import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2ControlTowerInstance extends L2Npc
 {
-	private List<L2Spawn> _guards;
+	private final List<L2Spawn> _guards = new ArrayList<>();
 	
 	public L2ControlTowerInstance(int objectId, L2NpcTemplate template)
 	{
@@ -41,14 +39,14 @@ public class L2ControlTowerInstance extends L2Npc
 	public boolean isAttackable()
 	{
 		// Attackable during siege by attacker only
-		return (getCastle() != null && getCastle().getCastleId() > 0 && getCastle().getSiege().getIsInProgress());
+		return (getCastle() != null && getCastle().getSiege().isInProgress());
 	}
 	
 	@Override
 	public boolean isAutoAttackable(L2Character attacker)
 	{
 		// Attackable during siege by attacker only
-		return (attacker != null && attacker instanceof L2PcInstance && getCastle() != null && getCastle().getCastleId() > 0 && getCastle().getSiege().getIsInProgress() && getCastle().getSiege().checkIsAttacker(((L2PcInstance) attacker).getClan()));
+		return (attacker != null && attacker instanceof L2PcInstance && getCastle() != null && getCastle().getSiege().isInProgress() && getCastle().getSiege().checkIsAttacker(((L2PcInstance) attacker).getClan()));
 	}
 	
 	@Override
@@ -60,21 +58,9 @@ public class L2ControlTowerInstance extends L2Npc
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2Npc
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Send MyTargetSelected to the L2PcInstance player
-			player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel() - getLevel()));
-			
-			// Send StatusUpdate of the L2Npc to the L2PcInstance to update its HP bar
-			StatusUpdate su = new StatusUpdate(this);
-			su.addAttribute(StatusUpdate.CUR_HP, (int) getStatus().getCurrentHp());
-			su.addAttribute(StatusUpdate.MAX_HP, getMaxHp());
-			player.sendPacket(su);
-		}
 		else
 		{
 			if (isAutoAttackable(player) && Math.abs(player.getZ() - getZ()) < 100 && GeoData.getInstance().canSeeTarget(player, this))
@@ -96,41 +82,25 @@ public class L2ControlTowerInstance extends L2Npc
 	@Override
 	public boolean doDie(L2Character killer)
 	{
-		if (getCastle().getSiege().getIsInProgress())
+		if (getCastle().getSiege().isInProgress())
 		{
 			getCastle().getSiege().killedCT();
 			
-			if (_guards != null && !_guards.isEmpty())
-			{
-				for (L2Spawn spawn : _guards)
-				{
-					if (spawn == null)
-						continue;
-					
-					spawn.stopRespawn();
-				}
-				_guards.clear();
-			}
+			for (L2Spawn spawn : _guards)
+				spawn.stopRespawn();
+			
+			_guards.clear();
 		}
 		return super.doDie(killer);
 	}
 	
 	public void registerGuard(L2Spawn guard)
 	{
-		getGuards().add(guard);
+		_guards.add(guard);
 	}
 	
 	public final List<L2Spawn> getGuards()
 	{
-		if (_guards == null)
-		{
-			synchronized (this)
-			{
-				if (_guards == null)
-					_guards = new ArrayList<>();
-			}
-		}
-		
 		return _guards;
 	}
 }

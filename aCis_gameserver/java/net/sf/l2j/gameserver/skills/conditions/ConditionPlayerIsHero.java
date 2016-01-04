@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.skills.conditions;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.skills.Env;
 
 /**
@@ -33,16 +32,12 @@ public class ConditionPlayerIsHero extends Condition
 		_val = val;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see net.sf.l2j.gameserver.skills.conditions.Condition#testImpl(net.sf.l2j.gameserver.skills.Env)
-	 */
 	@Override
 	public boolean testImpl(Env env)
 	{
-		if (!(env.player instanceof L2PcInstance))
+		if (env.getPlayer() == null)
 			return false;
 		
-		return (((L2PcInstance) env.player).isHero() == _val);
+		return (env.getPlayer().isHero() == _val);
 	}
 }

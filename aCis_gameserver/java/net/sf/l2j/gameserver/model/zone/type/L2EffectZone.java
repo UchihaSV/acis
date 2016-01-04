@@ -191,7 +191,7 @@ public class L2EffectZone extends L2ZoneType
 		return _skills.get(skillId);
 	}
 	
-	public void setZoneEnabled(boolean val)
+	public void setEnabled(boolean val)
 	{
 		_enabled = val;
 	}

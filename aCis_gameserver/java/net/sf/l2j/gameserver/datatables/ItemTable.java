@@ -14,6 +14,7 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
@@ -34,7 +35,7 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.skills.SkillsEngine;
+import net.sf.l2j.gameserver.skills.DocumentItem;
 import net.sf.l2j.gameserver.templates.item.L2Armor;
 import net.sf.l2j.gameserver.templates.item.L2ArmorType;
 import net.sf.l2j.gameserver.templates.item.L2EtcItem;
@@ -157,43 +158,39 @@ public class ItemTable
 	
 	private void load()
 	{
+		final File dir = new File("./data/xml/items");
+		
 		int highest = 0;
-		
-		for (L2Item item : SkillsEngine.getInstance().loadItems())
+		for (File file : dir.listFiles())
 		{
-			if (highest < item.getItemId())
-				highest = item.getItemId();
+			DocumentItem document = new DocumentItem(file);
+			document.parse();
 			
-			if (item instanceof L2EtcItem)
-				_etcItems.put(item.getItemId(), (L2EtcItem) item);
-			else if (item instanceof L2Armor)
-				_armors.put(item.getItemId(), (L2Armor) item);
-			else
-				_weapons.put(item.getItemId(), (L2Weapon) item);
+			for (L2Item item : document.getItemList())
+			{
+				if (highest < item.getItemId())
+					highest = item.getItemId();
+				
+				if (item instanceof L2EtcItem)
+					_etcItems.put(item.getItemId(), (L2EtcItem) item);
+				else if (item instanceof L2Armor)
+					_armors.put(item.getItemId(), (L2Armor) item);
+				else
+					_weapons.put(item.getItemId(), (L2Weapon) item);
+			}
 		}
-		buildFastLookupTable(highest);
-	}
-	
-	/**
-	 * Builds a variable in which all items are putting in in function of their ID.
-	 * @param size
-	 */
-	private void buildFastLookupTable(int size)
-	{
-		// Create a FastLookUp Table called _allTemplates of size : value of the highest item ID
-		_log.info("ItemTable: Highest used itemID : " + size);
 		
-		_allTemplates = new L2Item[size + 1];
+		_log.info("ItemTable: Highest used itemID : " + highest);
 		
-		// Insert armor item in Fast Look Up Table
+		// Feed an array with all items templates.
+		_allTemplates = new L2Item[highest + 1];
+		
 		for (L2Armor item : _armors.values())
 			_allTemplates[item.getItemId()] = item;
 		
-		// Insert weapon item in Fast Look Up Table
 		for (L2Weapon item : _weapons.values())
 			_allTemplates[item.getItemId()] = item;
 		
-		// Insert etcItem item in Fast Look Up Table
 		for (L2EtcItem item : _etcItems.values())
 			_allTemplates[item.getItemId()] = item;
 	}
@@ -284,21 +281,17 @@ public class ItemTable
 	}
 	
 	/**
-	 * Returns a dummy (fr = factice) item.<BR>
-	 * <BR>
-	 * <U><I>Concept :</I></U><BR>
 	 * Dummy item is created by setting the ID of the object in the world at null value
 	 * @param itemId : int designating the item
 	 * @return L2ItemInstance designating the dummy item created
 	 */
 	public L2ItemInstance createDummyItem(int itemId)
 	{
-		L2Item item = getTemplate(itemId);
+		final L2Item item = getTemplate(itemId);
 		if (item == null)
 			return null;
 		
-		L2ItemInstance temp = new L2ItemInstance(0, item);
-		return temp;
+		return new L2ItemInstance(0, item);
 	}
 	
 	/**

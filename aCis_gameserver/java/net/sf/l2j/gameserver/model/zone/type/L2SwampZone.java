@@ -14,69 +14,42 @@
  */
 package net.sf.l2j.gameserver.model.zone.type;
 
-import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.entity.Castle;
-import net.sf.l2j.gameserver.model.zone.L2ZoneType;
+import net.sf.l2j.gameserver.model.zone.L2CastleZoneType;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 
 /**
- * another type of zone where your speed is changed
+ * A zone where your speed is affected.
  * @author kerberos
  */
-public class L2SwampZone extends L2ZoneType
+public class L2SwampZone extends L2CastleZoneType
 {
-	private int _move_bonus;
-	
-	private int _castleId;
-	private Castle _castle;
+	private int _moveBonus;
 	
 	public L2SwampZone(int id)
 	{
 		super(id);
 		
 		// Setup default speed reduce (in %)
-		_move_bonus = -50;
-		
-		// no castle by default
-		_castleId = 0;
-		_castle = null;
+		_moveBonus = -50;
 	}
 	
 	@Override
 	public void setParameter(String name, String value)
 	{
 		if (name.equals("move_bonus"))
-			_move_bonus = Integer.parseInt(value);
-		else if (name.equals("castleId"))
-			_castleId = Integer.parseInt(value);
+			_moveBonus = Integer.parseInt(value);
 		else
 			super.setParameter(name, value);
-	}
-	
-	private Castle getCastle()
-	{
-		if (_castleId > 0 && _castle == null)
-			_castle = CastleManager.getInstance().getCastleById(_castleId);
-		
-		return _castle;
 	}
 	
 	@Override
 	protected void onEnter(L2Character character)
 	{
-		if (getCastle() != null)
-		{
-			// castle zones active only during siege
-			if (!getCastle().getSiege().getIsInProgress() || !getCastle().getSiege().isTrapsActive())
-				return;
-			
-			// defenders not affected
-			final L2PcInstance player = character.getActingPlayer();
-			if (player != null && player.isInSiege() && player.getSiegeState() == 2)
-				return;
-		}
+		// Castle traps are active only during siege, or if they're activated.
+		if (getCastle() != null && (!isEnabled() || !getCastle().getSiege().isInProgress()))
+			return;
 		
 		character.setInsideZone(ZoneId.SWAMP, true);
 		if (character instanceof L2PcInstance)
@@ -97,16 +70,6 @@ public class L2SwampZone extends L2ZoneType
 	
 	public int getMoveBonus()
 	{
-		return _move_bonus;
-	}
-	
-	@Override
-	public void onDieInside(L2Character character)
-	{
-	}
-	
-	@Override
-	public void onReviveInside(L2Character character)
-	{
+		return _moveBonus;
 	}
 }

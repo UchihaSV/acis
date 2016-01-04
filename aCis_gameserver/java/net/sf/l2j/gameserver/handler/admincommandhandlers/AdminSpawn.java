@@ -135,7 +135,7 @@ public class AdminSpawn implements IAdminCommandHandler
 			}
 			else
 			{
-				adminReply.replace("%npcid%", name + " (" + String.valueOf(npcId) + ")");
+				adminReply.replace("%npcid%", name + " (" + npcId + ")");
 				adminReply.replace("%list%", replyMSG.toString());
 			}
 			

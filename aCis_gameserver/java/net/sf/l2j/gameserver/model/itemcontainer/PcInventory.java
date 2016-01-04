@@ -412,11 +412,12 @@ public class PcInventory extends Inventory
 	public L2ItemInstance addItem(String process, L2ItemInstance item, L2PcInstance actor, L2Object reference)
 	{
 		item = super.addItem(process, item, actor, reference);
+		if (item == null)
+			return null;
 		
-		if (item != null && item.getItemId() == ADENA_ID && !item.equals(_adena))
+		if (item.getItemId() == ADENA_ID && !item.equals(_adena))
 			_adena = item;
-		
-		if (item != null && item.getItemId() == ANCIENT_ADENA_ID && !item.equals(_ancientAdena))
+		else if (item.getItemId() == ANCIENT_ADENA_ID && !item.equals(_ancientAdena))
 			_ancientAdena = item;
 		
 		return item;
@@ -435,14 +436,15 @@ public class PcInventory extends Inventory
 	public L2ItemInstance addItem(String process, int itemId, int count, L2PcInstance actor, L2Object reference)
 	{
 		L2ItemInstance item = super.addItem(process, itemId, count, actor, reference);
+		if (item == null)
+			return null;
 		
-		if (item != null && item.getItemId() == ADENA_ID && !item.equals(_adena))
+		if (item.getItemId() == ADENA_ID && !item.equals(_adena))
 			_adena = item;
-		
-		if (item != null && item.getItemId() == ANCIENT_ADENA_ID && !item.equals(_ancientAdena))
+		else if (item.getItemId() == ANCIENT_ADENA_ID && !item.equals(_ancientAdena))
 			_ancientAdena = item;
 		
-		if (item != null && actor != null)
+		if (actor != null)
 		{
 			// Send inventory update packet
 			InventoryUpdate playerIU = new InventoryUpdate();

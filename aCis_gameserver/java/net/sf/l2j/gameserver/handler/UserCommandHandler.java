@@ -30,6 +30,7 @@ import net.sf.l2j.gameserver.handler.usercommandhandlers.Loc;
 import net.sf.l2j.gameserver.handler.usercommandhandlers.Mount;
 import net.sf.l2j.gameserver.handler.usercommandhandlers.OlympiadStat;
 import net.sf.l2j.gameserver.handler.usercommandhandlers.PartyInfo;
+import net.sf.l2j.gameserver.handler.usercommandhandlers.SiegeStatus;
 import net.sf.l2j.gameserver.handler.usercommandhandlers.Time;
 
 public class UserCommandHandler
@@ -46,18 +47,19 @@ public class UserCommandHandler
 	protected UserCommandHandler()
 	{
 		_datatable = new TIntObjectHashMap<>();
+		registerUserCommandHandler(new ChannelDelete());
+		registerUserCommandHandler(new ChannelLeave());
+		registerUserCommandHandler(new ChannelListUpdate());
 		registerUserCommandHandler(new ClanPenalty());
 		registerUserCommandHandler(new ClanWarsList());
 		registerUserCommandHandler(new DisMount());
 		registerUserCommandHandler(new Escape());
 		registerUserCommandHandler(new Loc());
 		registerUserCommandHandler(new Mount());
-		registerUserCommandHandler(new PartyInfo());
-		registerUserCommandHandler(new Time());
 		registerUserCommandHandler(new OlympiadStat());
-		registerUserCommandHandler(new ChannelLeave());
-		registerUserCommandHandler(new ChannelDelete());
-		registerUserCommandHandler(new ChannelListUpdate());
+		registerUserCommandHandler(new PartyInfo());
+		registerUserCommandHandler(new SiegeStatus());
+		registerUserCommandHandler(new Time());
 	}
 	
 	public void registerUserCommandHandler(IUserCommandHandler handler)

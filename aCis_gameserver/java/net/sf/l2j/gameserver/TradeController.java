@@ -50,7 +50,7 @@ public class TradeController
 			PreparedStatement statement1 = con.prepareStatement("SELECT shop_id, npc_id FROM merchant_shopids");
 			ResultSet rset1 = statement1.executeQuery();
 			
-			PreparedStatement statement = con.prepareStatement("SELECT item_id, price, shop_id, " + L2DatabaseFactory.getInstance().safetyString("order") + ", count, currentCount, time, savetimer FROM merchant_buylists WHERE shop_id=? ORDER BY " + L2DatabaseFactory.getInstance().safetyString("order") + " ASC");
+			PreparedStatement statement = con.prepareStatement("SELECT item_id, price, shop_id, " + L2DatabaseFactory.safetyString("order") + ", count, currentCount, time, savetimer FROM merchant_buylists WHERE shop_id=? ORDER BY " + L2DatabaseFactory.safetyString("order") + " ASC");
 			while (rset1.next())
 			{
 				statement.setString(1, String.valueOf(rset1.getInt("shop_id")));

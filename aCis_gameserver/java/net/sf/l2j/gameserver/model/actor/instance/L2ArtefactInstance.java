@@ -20,7 +20,6 @@ import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
@@ -43,14 +42,9 @@ public final class L2ArtefactInstance extends L2NpcInstance
 	@Override
 	public void onAction(L2PcInstance player)
 	{
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Send MyTargetSelected to the L2PcInstance player
-			player.sendPacket(new MyTargetSelected(getObjectId(), 0));
-		}
 		else
 		{
 			// Calculate the distance between the L2PcInstance and the L2Npc

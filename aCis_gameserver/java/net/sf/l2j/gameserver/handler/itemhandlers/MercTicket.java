@@ -69,7 +69,7 @@ public class MercTicket implements IItemHandler
 			return;
 		}
 		
-		if (castle.getSiege().getIsInProgress())
+		if (castle.getSiege().isInProgress())
 		{
 			activeChar.sendPacket(SystemMessageId.THIS_MERCENARY_CANNOT_BE_POSITIONED_ANYMORE);
 			return;

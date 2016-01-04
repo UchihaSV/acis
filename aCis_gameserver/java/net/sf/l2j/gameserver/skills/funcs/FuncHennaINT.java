@@ -30,14 +30,14 @@ public class FuncHennaINT extends Func
 	
 	private FuncHennaINT()
 	{
-		super(Stats.STAT_INT, 0x10, null);
+		super(Stats.STAT_INT, 0x10, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2PcInstance pc = (L2PcInstance) env.player;
-		if (pc != null)
-			env.value += pc.getHennaStatINT();
+		final L2PcInstance player = env.getPlayer();
+		if (player != null)
+			env.addValue(player.getHennaStatINT());
 	}
 }

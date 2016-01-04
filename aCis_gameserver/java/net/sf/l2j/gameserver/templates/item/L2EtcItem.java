@@ -14,24 +14,17 @@
  */
 package net.sf.l2j.gameserver.templates.item;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import net.sf.l2j.gameserver.model.L2ExtractableProduct;
 import net.sf.l2j.gameserver.model.itemcontainer.PcInventory;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * This class is dedicated to the management of EtcItem.
  */
 public final class L2EtcItem extends L2Item
 {
-	private String _handler;
+	private final String _handler;
 	private final int _sharedReuseGroup;
 	private L2EtcItemType _type;
-	private final boolean _isBlessed;
-	private final List<L2ExtractableProduct> _extractableItems;
 	private final int _reuseDelay;
 	
 	/**
@@ -67,46 +60,7 @@ public final class L2EtcItem extends L2Item
 		
 		_handler = set.getString("handler", null); // ! null !
 		_sharedReuseGroup = set.getInteger("shared_reuse_group", -1);
-		_isBlessed = set.getBool("blessed", false);
 		_reuseDelay = set.getInteger("reuse_delay", 0);
-		
-		// extractable
-		String capsuled_items = set.getString("capsuled_items", null);
-		if (capsuled_items != null)
-		{
-			String[] split = capsuled_items.split(";");
-			_extractableItems = new ArrayList<>(split.length);
-			for (String part : split)
-			{
-				if (part.trim().isEmpty())
-					continue;
-				String[] data = part.split(",");
-				if (data.length != 4)
-				{
-					_log.info(StringUtil.concat("> Couldnt parse ", part, " in capsuled_items! item ", toString()));
-					continue;
-				}
-				int itemId = Integer.parseInt(data[0]);
-				int min = Integer.parseInt(data[1]);
-				int max = Integer.parseInt(data[2]);
-				double chance = Double.parseDouble(data[3]);
-				if (max < min)
-				{
-					_log.info(StringUtil.concat("> Max amount < Min amount in ", part, ", item ", toString()));
-					continue;
-				}
-				L2ExtractableProduct product = new L2ExtractableProduct(itemId, min, max, chance);
-				_extractableItems.add(product);
-			}
-			((ArrayList<?>) _extractableItems).trimToSize();
-			
-			// check for handler
-			if (_handler == null)
-				// _log.warning("Item "+this+ " define capsuled_items but missing handler.");
-				_handler = "ExtractableItems";
-		}
-		else
-			_extractableItems = null;
 	}
 	
 	/**
@@ -153,21 +107,8 @@ public final class L2EtcItem extends L2Item
 		return _sharedReuseGroup;
 	}
 	
-	public final boolean isBlessed()
-	{
-		return _isBlessed;
-	}
-	
 	public int getReuseDelay()
 	{
 		return _reuseDelay;
-	}
-	
-	/**
-	 * @return the _extractable_items
-	 */
-	public List<L2ExtractableProduct> getExtractableItems()
-	{
-		return _extractableItems;
 	}
 }

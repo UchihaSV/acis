@@ -33,9 +33,9 @@ public class L2SiegeNpcInstance extends L2NpcInstance
 		else
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-			html.setFile("data/html/siege/" + getTemplate().getNpcId() + "-busy.htm");
+			html.setFile("data/html/siege/" + getNpcId() + "-busy.htm");
 			html.replace("%castlename%", getCastle().getName());
-			html.replace("%objectId%", String.valueOf(getObjectId()));
+			html.replace("%objectId%", getObjectId());
 			player.sendPacket(html);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 		}
@@ -43,7 +43,7 @@ public class L2SiegeNpcInstance extends L2NpcInstance
 	
 	private boolean validateCondition(L2PcInstance player)
 	{
-		if (getCastle().getSiege().getIsInProgress())
+		if (getCastle().getSiege().isInProgress())
 			return false; // Busy because of siege
 			
 		return true;

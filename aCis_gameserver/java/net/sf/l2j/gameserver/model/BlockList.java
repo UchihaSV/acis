@@ -154,7 +154,7 @@ public class BlockList
 		_owner.setInRefusalMode(state);
 	}
 	
-	private List<Integer> getBlockList()
+	public List<Integer> getBlockList()
 	{
 		return _blockList;
 	}

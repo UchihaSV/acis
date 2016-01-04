@@ -14,11 +14,13 @@
  */
 package net.sf.l2j.gameserver.util;
 
-import java.util.Collection;
-
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2World;
+import net.sf.l2j.gameserver.model.L2WorldRegion;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.zone.L2ZoneType;
 import net.sf.l2j.gameserver.network.clientpackets.Say2;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
@@ -151,11 +153,45 @@ public final class Broadcast
 	 */
 	public static void toAllOnlinePlayers(L2GameServerPacket mov)
 	{
-		final Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-		for (L2PcInstance onlinePlayer : pls)
+		for (L2PcInstance player : L2World.getInstance().getAllPlayers().values())
 		{
-			if (onlinePlayer.isOnline())
-				onlinePlayer.sendPacket(mov);
+			if (player.isOnline())
+				player.sendPacket(mov);
+		}
+	}
+	
+	/**
+	 * Send a packet to all players in a specific region.
+	 * @param region : The region to send packets.
+	 * @param packets : The packets to send.
+	 */
+	public static void toAllPlayersInRegion(L2WorldRegion region, L2GameServerPacket... packets)
+	{
+		for (L2Playable playable : region.getVisiblePlayable().values())
+		{
+			if (playable instanceof L2PcInstance)
+			{
+				for (L2GameServerPacket packet : packets)
+					playable.sendPacket(packet);
+			}
+		}
+	}
+	
+	/**
+	 * Send a packet to all players in a specific zone type.
+	 * @param <T> L2ZoneType.
+	 * @param zoneType : The zone type to send packets.
+	 * @param packets : The packets to send.
+	 */
+	public static <T extends L2ZoneType> void toAllPlayersInZoneType(Class<T> zoneType, L2GameServerPacket... packets)
+	{
+		for (L2ZoneType temp : ZoneManager.getInstance().getAllZones(zoneType))
+		{
+			for (L2PcInstance player : temp.getKnownTypeInside(L2PcInstance.class))
+			{
+				for (L2GameServerPacket packet : packets)
+					player.sendPacket(packet);
+			}
 		}
 	}
 	

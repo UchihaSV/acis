@@ -14,9 +14,9 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,13 +35,13 @@ public class AccessLevels
 {
 	private static Logger _log = Logger.getLogger(AccessLevels.class.getName());
 	
-	public static final int _masterAccessLevelNum = Config.MASTERACCESS_LEVEL;
-	public static L2AccessLevel _masterAccessLevel = new L2AccessLevel(_masterAccessLevelNum, "Master Access", Config.MASTERACCESS_NAME_COLOR, Config.MASTERACCESS_TITLE_COLOR, null, true, true, true, true, true, true, true, true);
+	public static final int MASTER_ACCESS_LEVEL_NUMBER = Config.MASTERACCESS_LEVEL;
+	public static final int USER_ACCESS_LEVEL_NUMBER = 0;
 	
-	public static final int _userAccessLevelNum = 0;
-	public static L2AccessLevel _userAccessLevel = new L2AccessLevel(_userAccessLevelNum, "User", 0xFFFFFF, 0xFFFF77, null, false, false, false, true, false, true, true, true);
+	public static L2AccessLevel MASTER_ACCESS_LEVEL = new L2AccessLevel(MASTER_ACCESS_LEVEL_NUMBER, "Master Access", Config.MASTERACCESS_NAME_COLOR, Config.MASTERACCESS_TITLE_COLOR, null, true, true, true, true, true, true, true, true);
+	public static L2AccessLevel USER_ACCESS_LEVEL = new L2AccessLevel(USER_ACCESS_LEVEL_NUMBER, "User", 0xFFFFFF, 0xFFFF77, null, false, false, false, true, false, true, true, true);
 	
-	private final TIntObjectHashMap<L2AccessLevel> _accessLevels;
+	private final Map<Integer, L2AccessLevel> _accessLevels = new HashMap<>();
 	
 	public static AccessLevels getInstance()
 	{
@@ -50,8 +50,6 @@ public class AccessLevels
 	
 	protected AccessLevels()
 	{
-		_accessLevels = new TIntObjectHashMap<>();
-		
 		try
 		{
 			File f = new File("./data/xml/access_levels.xml");
@@ -67,14 +65,14 @@ public class AccessLevels
 					int accessLevel = Integer.valueOf(attrs.getNamedItem("level").getNodeValue());
 					String name = attrs.getNamedItem("name").getNodeValue();
 					
-					if (accessLevel == _userAccessLevelNum)
+					if (accessLevel == USER_ACCESS_LEVEL_NUMBER)
 					{
-						_log.log(Level.WARNING, "AccessLevels: Access level " + name + " is using reserved user access level " + _userAccessLevelNum + ". Ignoring it!");
+						_log.log(Level.WARNING, "AccessLevels: Access level " + name + " is using reserved user access level " + USER_ACCESS_LEVEL_NUMBER + ". Ignoring it!");
 						continue;
 					}
-					else if (accessLevel == _masterAccessLevelNum)
+					else if (accessLevel == MASTER_ACCESS_LEVEL_NUMBER)
 					{
-						_log.log(Level.WARNING, "AccessLevels: Access level " + name + " is using reserved master access level " + _masterAccessLevelNum + ". Ignoring it!");
+						_log.log(Level.WARNING, "AccessLevels: Access level " + name + " is using reserved master access level " + MASTER_ACCESS_LEVEL_NUMBER + ". Ignoring it!");
 						continue;
 					}
 					else if (accessLevel < 0)
@@ -125,7 +123,7 @@ public class AccessLevels
 		_log.info("AccessLevels: Loaded " + _accessLevels.size() + " accesses.");
 		
 		// Add finally the normal user access level.
-		_accessLevels.put(_userAccessLevelNum, _userAccessLevel);
+		_accessLevels.put(USER_ACCESS_LEVEL_NUMBER, USER_ACCESS_LEVEL);
 	}
 	
 	/**

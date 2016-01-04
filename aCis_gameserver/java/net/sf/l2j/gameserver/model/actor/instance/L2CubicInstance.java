@@ -20,7 +20,6 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlEvent;
 import net.sf.l2j.gameserver.datatables.SkillTable;
@@ -31,6 +30,7 @@ import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
@@ -413,12 +413,6 @@ public class L2CubicInstance
 						L2Character target = _target; // copy to avoid npe
 						if ((target != null) && (!target.isDead()))
 						{
-							if (Config.DEBUG)
-							{
-								_log.info("L2CubicInstance: Action.run();");
-								_log.info("Cubic Id: " + _id + " Target: " + target.getName() + " distance: " + Math.sqrt(target.getDistanceSq(_owner.getX(), _owner.getY(), _owner.getZ())));
-							}
-							
 							_owner.broadcastPacket(new MagicSkillUse(_owner, target, skill.getId(), skill.getLevel(), 0, 0));
 							
 							L2SkillType type = skill.getSkillType();
@@ -429,35 +423,15 @@ public class L2CubicInstance
 							};
 							
 							if ((type == L2SkillType.PARALYZE) || (type == L2SkillType.STUN) || (type == L2SkillType.ROOT) || (type == L2SkillType.AGGDAMAGE))
-							{
-								if (Config.DEBUG)
-									_log.info("L2CubicInstance: Action.run() handler " + type);
 								useCubicDisabler(type, L2CubicInstance.this, skill, targets);
-							}
 							else if (type == L2SkillType.MDAM)
-							{
-								if (Config.DEBUG)
-									_log.info("L2CubicInstance: Action.run() handler " + type);
 								useCubicMdam(L2CubicInstance.this, skill, targets);
-							}
 							else if ((type == L2SkillType.POISON) || (type == L2SkillType.DEBUFF) || (type == L2SkillType.DOT))
-							{
-								if (Config.DEBUG)
-									_log.info("L2CubicInstance: Action.run() handler " + type);
 								useCubicContinuous(L2CubicInstance.this, skill, targets);
-							}
 							else if (type == L2SkillType.DRAIN)
-							{
-								if (Config.DEBUG)
-									_log.info("L2CubicInstance: Action.run() skill " + type);
 								((L2SkillDrain) skill).useCubicSkill(L2CubicInstance.this, targets);
-							}
 							else
-							{
 								handler.useSkill(_owner, skill, targets);
-								if (Config.DEBUG)
-									_log.info("L2CubicInstance: Action.run(); other handler");
-							}
 						}
 					}
 				}
@@ -482,8 +456,10 @@ public class L2CubicInstance
 			
 			if (skill.isOffensive())
 			{
-				byte shld = Formulas.calcShldUse(activeCubic.getOwner(), target, skill);
-				boolean acted = Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld);
+				final byte shld = Formulas.calcShldUse(activeCubic.getOwner(), target, skill);
+				final boolean bss = activeCubic.getOwner().isChargedShot(ShotType.BLESSED_SPIRITSHOT);
+				final boolean acted = Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld, bss);
+				
 				if (!acted)
 				{
 					activeCubic.getOwner().sendPacket(SystemMessageId.ATTACK_FAILED);
@@ -491,15 +467,14 @@ public class L2CubicInstance
 				}
 			}
 			
-			// if this is a debuff let the duel manager know about it
-			// so the debuff can be removed after the duel
-			// (player & target must be in the same duel)
+			// If this is a debuff, let the duel manager know about it so the debuff can be removed after the duel (player & target must be in the same duel)
 			if (target instanceof L2PcInstance && ((L2PcInstance) target).isInDuel() && skill.getSkillType() == L2SkillType.DEBUFF && activeCubic.getOwner().getDuelId() == ((L2PcInstance) target).getDuelId())
 			{
-				DuelManager dm = DuelManager.getInstance();
 				for (L2Effect debuff : skill.getEffects(activeCubic.getOwner(), target))
+				{
 					if (debuff != null)
-						dm.onBuff(((L2PcInstance) target), debuff);
+						DuelManager.getInstance().onBuff(((L2PcInstance) target), debuff);
+				}
 			}
 			else
 				skill.getEffects(activeCubic, target, null);
@@ -522,18 +497,15 @@ public class L2CubicInstance
 					continue;
 			}
 			
-			boolean mcrit = Formulas.calcMCrit(activeCubic.getMCriticalHit(target, skill));
-			byte shld = Formulas.calcShldUse(activeCubic.getOwner(), target, skill);
+			final boolean mcrit = Formulas.calcMCrit(activeCubic.getMCriticalHit(target, skill));
+			final byte shld = Formulas.calcShldUse(activeCubic.getOwner(), target, skill);
+			final boolean bss = activeCubic.getOwner().isChargedShot(ShotType.BLESSED_SPIRITSHOT);
+			
 			int damage = (int) Formulas.calcMagicDam(activeCubic, target, skill, mcrit, shld);
 			
-			/*
-			 * If target is reflecting the skill then no damage is done Ignoring vengance-like reflections
-			 */
+			// If target is reflecting the skill then no damage is done Ignoring vengance-like reflections
 			if ((Formulas.calcSkillReflect(target, skill) & Formulas.SKILL_REFLECT_SUCCEED) > 0)
 				damage = 0;
-			
-			if (Config.DEBUG)
-				_log.info("L2SkillMdam: useCubicSkill() -> damage = " + damage);
 			
 			if (damage > 0)
 			{
@@ -546,9 +518,11 @@ public class L2CubicInstance
 				{
 					// activate attacked effects, if any
 					target.stopSkillEffects(skill.getId());
+					
 					if (target.getFirstEffect(skill) != null)
 						target.removeEffect(target.getFirstEffect(skill));
-					if (Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld))
+					
+					if (Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld, bss))
 						skill.getEffects(activeCubic, target, null);
 				}
 				
@@ -559,9 +533,6 @@ public class L2CubicInstance
 	
 	public void useCubicDisabler(L2SkillType type, L2CubicInstance activeCubic, L2Skill skill, L2Object[] targets)
 	{
-		if (Config.DEBUG)
-			_log.info("Disablers: useCubicSkill()");
-		
 		for (L2Object obj : targets)
 		{
 			if (!(obj instanceof L2Character))
@@ -571,42 +542,32 @@ public class L2CubicInstance
 			if (target.isDead())
 				continue;
 			
-			byte shld = Formulas.calcShldUse(activeCubic.getOwner(), target, skill);
+			final byte shld = Formulas.calcShldUse(activeCubic.getOwner(), target, skill);
+			final boolean bss = activeCubic.getOwner().isChargedShot(ShotType.BLESSED_SPIRITSHOT);
 			
 			switch (type)
 			{
 				case STUN:
-				case PARALYZE: // use same as root for now
-				{
-					if (Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld))
+				case PARALYZE:
+				case ROOT:
+					if (Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld, bss))
 					{
-						// if this is a debuff let the duel manager know about it
-						// so the debuff can be removed after the duel
-						// (player & target must be in the same duel)
+						// If this is a debuff, let the duel manager know about it so the debuff can be removed after the duel (player & target must be in the same duel)
 						if (target instanceof L2PcInstance && ((L2PcInstance) target).isInDuel() && skill.getSkillType() == L2SkillType.DEBUFF && activeCubic.getOwner().getDuelId() == ((L2PcInstance) target).getDuelId())
 						{
-							DuelManager dm = DuelManager.getInstance();
 							for (L2Effect debuff : skill.getEffects(activeCubic.getOwner(), target))
+							{
 								if (debuff != null)
-									dm.onBuff(((L2PcInstance) target), debuff);
+									DuelManager.getInstance().onBuff(((L2PcInstance) target), debuff);
+							}
 						}
 						else
 							skill.getEffects(activeCubic, target, null);
-						
-						if (Config.DEBUG)
-							_log.info("Disablers: useCubicSkill() -> success");
-					}
-					else
-					{
-						if (Config.DEBUG)
-							_log.info("Disablers: useCubicSkill() -> failed");
 					}
 					break;
-				}
+				
 				case CANCEL_DEBUFF:
-				{
-					L2Effect[] effects = target.getAllEffects();
-					
+					final L2Effect[] effects = target.getAllEffects();
 					if (effects == null || effects.length == 0)
 						break;
 					
@@ -624,54 +585,17 @@ public class L2CubicInstance
 							}
 						}
 					}
-					
 					break;
-				}
-				case ROOT:
-				{
-					if (Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld))
-					{
-						// if this is a debuff let the duel manager know about it
-						// so the debuff can be removed after the duel
-						// (player & target must be in the same duel)
-						if (target instanceof L2PcInstance && ((L2PcInstance) target).isInDuel() && skill.getSkillType() == L2SkillType.DEBUFF && activeCubic.getOwner().getDuelId() == ((L2PcInstance) target).getDuelId())
-						{
-							DuelManager dm = DuelManager.getInstance();
-							for (L2Effect debuff : skill.getEffects(activeCubic.getOwner(), target))
-								if (debuff != null)
-									dm.onBuff(((L2PcInstance) target), debuff);
-						}
-						else
-							skill.getEffects(activeCubic, target, null);
-						
-						if (Config.DEBUG)
-							_log.info("Disablers: useCubicSkill() -> success");
-					}
-					else
-					{
-						if (Config.DEBUG)
-							_log.info("Disablers: useCubicSkill() -> failed");
-					}
-					break;
-				}
+				
 				case AGGDAMAGE:
-				{
-					if (Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld))
+					if (Formulas.calcCubicSkillSuccess(activeCubic, target, skill, shld, bss))
 					{
 						if (target instanceof L2Attackable)
 							target.getAI().notifyEvent(CtrlEvent.EVT_AGGRESSION, activeCubic.getOwner(), (int) ((150 * skill.getPower()) / (target.getLevel() + 7)));
-						skill.getEffects(activeCubic, target, null);
 						
-						if (Config.DEBUG)
-							_log.info("Disablers: useCubicSkill() -> success");
-					}
-					else
-					{
-						if (Config.DEBUG)
-							_log.info("Disablers: useCubicSkill() -> failed");
+						skill.getEffects(activeCubic, target, null);
 					}
 					break;
-				}
 			}
 		}
 	}

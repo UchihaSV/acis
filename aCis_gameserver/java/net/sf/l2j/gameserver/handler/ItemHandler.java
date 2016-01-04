@@ -37,6 +37,7 @@ import net.sf.l2j.gameserver.handler.itemhandlers.RollingDice;
 import net.sf.l2j.gameserver.handler.itemhandlers.ScrollOfResurrection;
 import net.sf.l2j.gameserver.handler.itemhandlers.Seed;
 import net.sf.l2j.gameserver.handler.itemhandlers.SevenSignsRecord;
+import net.sf.l2j.gameserver.handler.itemhandlers.SoulCrystals;
 import net.sf.l2j.gameserver.handler.itemhandlers.SoulShots;
 import net.sf.l2j.gameserver.handler.itemhandlers.SpecialXMas;
 import net.sf.l2j.gameserver.handler.itemhandlers.SpiritShot;
@@ -90,6 +91,7 @@ public class ItemHandler
 		registerItemHandler(new SevenSignsRecord());
 		registerItemHandler(new SoulShots());
 		registerItemHandler(new SpecialXMas());
+		registerItemHandler(new SoulCrystals());
 		registerItemHandler(new SpiritShot());
 		registerItemHandler(new SummonItems());
 	}

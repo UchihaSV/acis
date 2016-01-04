@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,7 +38,7 @@ public class RaidBossPointsManager
 {
 	private final static Logger _log = Logger.getLogger(RaidBossPointsManager.class.getName());
 	
-	private Map<Integer, Map<Integer, Integer>> _list;
+	private final Map<Integer, Map<Integer, Integer>> _list = new ConcurrentHashMap<>();
 	
 	private final Comparator<Map.Entry<Integer, Integer>> _comparator = new Comparator<Map.Entry<Integer, Integer>>()
 	{
@@ -55,12 +56,6 @@ public class RaidBossPointsManager
 	
 	public RaidBossPointsManager()
 	{
-		init();
-	}
-	
-	private final void init()
-	{
-		_list = new HashMap<>();
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
 			PreparedStatement statement = con.prepareStatement("SELECT `char_id`,`boss_id`,`points` FROM `character_raid_points`");

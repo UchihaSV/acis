@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.model.L2Clan;
+import net.sf.l2j.gameserver.model.L2Clan.SubPledge;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.JoinPledge;
@@ -60,18 +61,33 @@ public final class RequestAnswerJoinPledge extends L2GameClientPacket
 			// we must double check this cause during response time conditions can be changed, i.e. another player could join clan
 			if (clan.checkClanJoinCondition(requestor, activeChar, requestPacket.getPledgeType()))
 			{
-				JoinPledge jp = new JoinPledge(requestor.getClanId());
-				activeChar.sendPacket(jp);
+				activeChar.sendPacket(new JoinPledge(requestor.getClanId()));
 				
 				activeChar.setPledgeType(requestPacket.getPledgeType());
-				if (requestPacket.getPledgeType() == L2Clan.SUBUNIT_ACADEMY)
+				
+				switch (requestPacket.getPledgeType())
 				{
-					activeChar.setPowerGrade(9); // academy
-					activeChar.setLvlJoinedAcademy(activeChar.getLevel());
-				}
-				else
-					activeChar.setPowerGrade(6); // new member starts with main clan rank
+					case L2Clan.SUBUNIT_ACADEMY:
+						activeChar.setPowerGrade(9);
+						activeChar.setLvlJoinedAcademy(activeChar.getLevel());
+						break;
 					
+					case L2Clan.SUBUNIT_ROYAL1:
+					case L2Clan.SUBUNIT_ROYAL2:
+						activeChar.setPowerGrade(7);
+						break;
+					
+					case L2Clan.SUBUNIT_KNIGHT1:
+					case L2Clan.SUBUNIT_KNIGHT2:
+					case L2Clan.SUBUNIT_KNIGHT3:
+					case L2Clan.SUBUNIT_KNIGHT4:
+						activeChar.setPowerGrade(8);
+						break;
+					
+					default:
+						activeChar.setPowerGrade(6);
+				}
+				
 				clan.addClanMember(activeChar);
 				activeChar.setClanPrivileges(activeChar.getClan().getRankPrivs(activeChar.getPowerGrade()));
 				
@@ -82,7 +98,10 @@ public final class RequestAnswerJoinPledge extends L2GameClientPacket
 				clan.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan));
 				
 				// this activates the clan tab on the new member
-				activeChar.sendPacket(new PledgeShowMemberListAll(clan, activeChar));
+				activeChar.sendPacket(new PledgeShowMemberListAll(activeChar.getClan(), 0));
+				for (SubPledge sp : activeChar.getClan().getAllSubPledges())
+					activeChar.sendPacket(new PledgeShowMemberListAll(activeChar.getClan(), sp.getId()));
+				
 				activeChar.setClanJoinExpiryTime(0);
 				activeChar.broadcastUserInfo();
 			}

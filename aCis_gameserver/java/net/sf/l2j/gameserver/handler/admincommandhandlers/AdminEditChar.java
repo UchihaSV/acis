@@ -506,11 +506,11 @@ public class AdminEditChar implements IAdminCommandHandler
 							msg.setFile("data/html/admin/claninfo.htm");
 							msg.replace("%clan_name%", clan.getName());
 							msg.replace("%clan_leader%", clan.getLeaderName());
-							msg.replace("%clan_level%", String.valueOf(clan.getLevel()));
+							msg.replace("%clan_level%", clan.getLevel());
 							msg.replace("%clan_has_castle%", clan.hasCastle() ? CastleManager.getInstance().getCastleById(clan.getCastleId()).getName() : "No");
 							msg.replace("%clan_has_clanhall%", clan.hasHideout() ? ClanHallManager.getInstance().getClanHallById(clan.getHideoutId()).getName() : "No");
-							msg.replace("%clan_points%", String.valueOf(clan.getReputationScore()));
-							msg.replace("%clan_players_count%", String.valueOf(clan.getMembersCount()));
+							msg.replace("%clan_points%", clan.getReputationScore());
+							msg.replace("%clan_players_count%", clan.getMembersCount());
 							msg.replace("%clan_ally%", clan.getAllyId() > 0 ? clan.getAllyName() : "Not in ally");
 							activeChar.sendPacket(msg);
 						}
@@ -667,43 +667,43 @@ public class AdminEditChar implements IAdminCommandHandler
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setFile("data/html/admin/" + filename);
 		adminReply.replace("%name%", player.getName());
-		adminReply.replace("%level%", String.valueOf(player.getLevel()));
-		adminReply.replace("%clan%", String.valueOf(player.getClan() != null ? "<a action=\"bypass -h admin_clan_info " + player.getName() + "\">" + player.getClan().getName() + "</a>" : "none"));
-		adminReply.replace("%xp%", String.valueOf(player.getExp()));
-		adminReply.replace("%sp%", String.valueOf(player.getSp()));
+		adminReply.replace("%level%", player.getLevel());
+		adminReply.replace("%clan%", player.getClan() != null ? "<a action=\"bypass -h admin_clan_info " + player.getName() + "\">" + player.getClan().getName() + "</a>" : "none");
+		adminReply.replace("%xp%", player.getExp());
+		adminReply.replace("%sp%", player.getSp());
 		adminReply.replace("%class%", player.getTemplate().className);
-		adminReply.replace("%ordinal%", String.valueOf(player.getClassId().ordinal()));
-		adminReply.replace("%classid%", String.valueOf(player.getClassId()));
+		adminReply.replace("%ordinal%", player.getClassId().ordinal());
+		adminReply.replace("%classid%", player.getClassId().toString());
 		adminReply.replace("%baseclass%", CharTemplateTable.getInstance().getClassNameById(player.getBaseClass()));
-		adminReply.replace("%x%", String.valueOf(player.getX()));
-		adminReply.replace("%y%", String.valueOf(player.getY()));
-		adminReply.replace("%z%", String.valueOf(player.getZ()));
-		adminReply.replace("%currenthp%", String.valueOf((int) player.getCurrentHp()));
-		adminReply.replace("%maxhp%", String.valueOf(player.getMaxHp()));
-		adminReply.replace("%karma%", String.valueOf(player.getKarma()));
-		adminReply.replace("%currentmp%", String.valueOf((int) player.getCurrentMp()));
-		adminReply.replace("%maxmp%", String.valueOf(player.getMaxMp()));
-		adminReply.replace("%pvpflag%", String.valueOf(player.getPvpFlag()));
-		adminReply.replace("%currentcp%", String.valueOf((int) player.getCurrentCp()));
-		adminReply.replace("%maxcp%", String.valueOf(player.getMaxCp()));
-		adminReply.replace("%pvpkills%", String.valueOf(player.getPvpKills()));
-		adminReply.replace("%pkkills%", String.valueOf(player.getPkKills()));
-		adminReply.replace("%currentload%", String.valueOf(player.getCurrentLoad()));
-		adminReply.replace("%maxload%", String.valueOf(player.getMaxLoad()));
-		adminReply.replace("%percent%", String.valueOf(Util.roundTo(((float) player.getCurrentLoad() / (float) player.getMaxLoad()) * 100, 2)));
-		adminReply.replace("%patk%", String.valueOf(player.getPAtk(null)));
-		adminReply.replace("%matk%", String.valueOf(player.getMAtk(null, null)));
-		adminReply.replace("%pdef%", String.valueOf(player.getPDef(null)));
-		adminReply.replace("%mdef%", String.valueOf(player.getMDef(null, null)));
-		adminReply.replace("%accuracy%", String.valueOf(player.getAccuracy()));
-		adminReply.replace("%evasion%", String.valueOf(player.getEvasionRate(null)));
-		adminReply.replace("%critical%", String.valueOf(player.getCriticalHit(null, null)));
-		adminReply.replace("%runspeed%", String.valueOf(player.getRunSpeed()));
-		adminReply.replace("%patkspd%", String.valueOf(player.getPAtkSpd()));
-		adminReply.replace("%matkspd%", String.valueOf(player.getMAtkSpd()));
+		adminReply.replace("%x%", player.getX());
+		adminReply.replace("%y%", player.getY());
+		adminReply.replace("%z%", player.getZ());
+		adminReply.replace("%currenthp%", (int) player.getCurrentHp());
+		adminReply.replace("%maxhp%", player.getMaxHp());
+		adminReply.replace("%karma%", player.getKarma());
+		adminReply.replace("%currentmp%", (int) player.getCurrentMp());
+		adminReply.replace("%maxmp%", player.getMaxMp());
+		adminReply.replace("%pvpflag%", player.getPvpFlag());
+		adminReply.replace("%currentcp%", (int) player.getCurrentCp());
+		adminReply.replace("%maxcp%", player.getMaxCp());
+		adminReply.replace("%pvpkills%", player.getPvpKills());
+		adminReply.replace("%pkkills%", player.getPkKills());
+		adminReply.replace("%currentload%", player.getCurrentLoad());
+		adminReply.replace("%maxload%", player.getMaxLoad());
+		adminReply.replace("%percent%", Util.roundTo(((float) player.getCurrentLoad() / (float) player.getMaxLoad()) * 100, 2));
+		adminReply.replace("%patk%", player.getPAtk(null));
+		adminReply.replace("%matk%", player.getMAtk(null, null));
+		adminReply.replace("%pdef%", player.getPDef(null));
+		adminReply.replace("%mdef%", player.getMDef(null, null));
+		adminReply.replace("%accuracy%", player.getAccuracy());
+		adminReply.replace("%evasion%", player.getEvasionRate(null));
+		adminReply.replace("%critical%", player.getCriticalHit(null, null));
+		adminReply.replace("%runspeed%", player.getRunSpeed());
+		adminReply.replace("%patkspd%", player.getPAtkSpd());
+		adminReply.replace("%matkspd%", player.getMAtkSpd());
 		adminReply.replace("%account%", account);
 		adminReply.replace("%ip%", ip);
-		adminReply.replace("%ai%", String.valueOf(player.getAI().getIntention().name()));
+		adminReply.replace("%ai%", player.getAI().getIntention().name());
 		activeChar.sendPacket(adminReply);
 	}
 	
@@ -784,7 +784,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		else
 			replyMSG.append("s.");
 		
-		adminReply.replace("%number%", String.valueOf(charactersFound));
+		adminReply.replace("%number%", charactersFound);
 		adminReply.replace("%end%", replyMSG.toString());
 		activeChar.sendPacket(adminReply);
 	}
@@ -855,7 +855,7 @@ public class AdminEditChar implements IAdminCommandHandler
 			replyMSG2 = "s.";
 		
 		adminReply.replace("%ip%", IpAdress);
-		adminReply.replace("%number%", String.valueOf(charactersFound));
+		adminReply.replace("%number%", charactersFound);
 		adminReply.replace("%end%", replyMSG2);
 		activeChar.sendPacket(adminReply);
 	}
@@ -947,7 +947,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setFile("data/html/admin/dualbox.htm");
-		adminReply.replace("%multibox%", String.valueOf(multibox));
+		adminReply.replace("%multibox%", multibox);
 		adminReply.replace("%results%", results.toString());
 		adminReply.replace("%strict%", "");
 		activeChar.sendPacket(adminReply);
@@ -964,7 +964,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		String owner = target.getActingPlayer().getName();
 		html.replace("%owner%", " <a action=\"bypass -h admin_character_info " + owner + "\">" + owner + "</a>");
 		html.replace("%class%", target.getClass().getSimpleName());
-		html.replace("%ai%", target.hasAI() ? String.valueOf(target.getAI().getIntention().name()) : "NULL");
+		html.replace("%ai%", target.hasAI() ? target.getAI().getIntention().name() : "NULL");
 		html.replace("%hp%", (int) target.getStatus().getCurrentHp() + "/" + target.getStat().getMaxHp());
 		html.replace("%mp%", (int) target.getStatus().getCurrentMp() + "/" + target.getStat().getMaxMp());
 		html.replace("%karma%", Integer.toString(target.getKarma()));

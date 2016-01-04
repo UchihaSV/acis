@@ -26,13 +26,13 @@ import net.sf.l2j.gameserver.network.serverpackets.PledgeReceiveMemberInfo;
 public final class RequestPledgeMemberInfo extends L2GameClientPacket
 {
 	@SuppressWarnings("unused")
-	private int _unk1;
+	private int _pledgeType;
 	private String _player;
 	
 	@Override
 	protected void readImpl()
 	{
-		_unk1 = readD();
+		_pledgeType = readD();
 		_player = readS();
 	}
 	

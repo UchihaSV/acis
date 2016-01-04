@@ -15,7 +15,6 @@
 package net.sf.l2j.gameserver.skills.conditions;
 
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.skills.Env;
 
 /**
@@ -43,10 +42,10 @@ public final class ConditionPlayerHasCastle extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		if (!(env.player instanceof L2PcInstance))
+		if (env.getPlayer() == null)
 			return false;
 		
-		L2Clan clan = ((L2PcInstance) env.player).getClan();
+		L2Clan clan = env.getPlayer().getClan();
 		if (clan == null)
 			return _castle == 0;
 		

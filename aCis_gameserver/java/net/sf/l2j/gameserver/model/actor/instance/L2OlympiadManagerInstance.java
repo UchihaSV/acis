@@ -16,7 +16,6 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.List;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Multisell;
 import net.sf.l2j.gameserver.model.entity.Hero;
 import net.sf.l2j.gameserver.model.olympiad.CompetitionType;
@@ -24,12 +23,9 @@ import net.sf.l2j.gameserver.model.olympiad.Olympiad;
 import net.sf.l2j.gameserver.model.olympiad.OlympiadGameManager;
 import net.sf.l2j.gameserver.model.olympiad.OlympiadGameTask;
 import net.sf.l2j.gameserver.model.olympiad.OlympiadManager;
-import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ExHeroList;
-import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.StringUtil;
 
@@ -96,8 +92,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 			
 			html.replace("%hero%", hiddenText);
 		}
-		
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
 		
 		// Send a Server->Client ActionFailed to the L2PcInstance in order to avoid that the client wait another packet
@@ -120,7 +115,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 			if (player.getClassIndex() != 0)
 			{
 				html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "noble_cant_sub.htm");
-				html.replace("%objectId%", String.valueOf(getObjectId()));
+				html.replace("%objectId%", getObjectId());
 				player.sendPacket(html);
 				return;
 			}
@@ -128,12 +123,11 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 			if (!player.isNoble() || (player.getClassId().level() < 3))
 			{
 				html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "noble_cant_thirdclass.htm");
-				html.replace("%objectId%", String.valueOf(getObjectId()));
+				html.replace("%objectId%", getObjectId());
 				player.sendPacket(html);
 				return;
 			}
 			
-			int passes;
 			int val = Integer.parseInt(command.substring(14));
 			switch (val)
 			{
@@ -146,17 +140,17 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 					final int classed = OlympiadManager.getInstance().getRegisteredClassBased().size();
 					
 					html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "noble_registered.htm");
-					html.replace("%listClassed%", String.valueOf(classed));
-					html.replace("%listNonClassed%", String.valueOf(nonClassed));
-					html.replace("%objectId%", String.valueOf(getObjectId()));
+					html.replace("%listClassed%", classed);
+					html.replace("%listNonClassed%", nonClassed);
+					html.replace("%objectId%", getObjectId());
 					player.sendPacket(html);
 					break;
 				
 				case 3: // There are %points% Grand Olympiad points granted for this event.
 					int points = Olympiad.getInstance().getNoblePoints(player.getObjectId());
 					html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "noble_points1.htm");
-					html.replace("%points%", String.valueOf(points));
-					html.replace("%objectId%", String.valueOf(getObjectId()));
+					html.replace("%points%", points);
+					html.replace("%objectId%", getObjectId());
 					player.sendPacket(html);
 					break;
 				
@@ -169,19 +163,9 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 					break;
 				
 				case 6: // request tokens reward
-					passes = Olympiad.getInstance().getNoblessePasses(player, false);
-					if (passes > 0)
-					{
-						html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "noble_settle.htm");
-						html.replace("%objectId%", String.valueOf(getObjectId()));
-						player.sendPacket(html);
-					}
-					else
-					{
-						html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "noble_nopoints2.htm");
-						html.replace("%objectId%", String.valueOf(getObjectId()));
-						player.sendPacket(html);
-					}
+					html.setFile(Olympiad.OLYMPIAD_HTML_PATH + ((Olympiad.getInstance().getNoblessePasses(player, false) > 0) ? "noble_settle.htm" : "noble_nopoints2.htm"));
+					html.replace("%objectId%", getObjectId());
+					player.sendPacket(html);
 					break;
 				
 				case 7: // Rewards
@@ -189,20 +173,11 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 					break;
 				
 				case 10: // Give tokens to player
-					passes = Olympiad.getInstance().getNoblessePasses(player, true);
-					if (passes > 0)
-					{
-						L2ItemInstance item = player.getInventory().addItem("Olympiad", GATE_PASS, passes, player, this);
-						InventoryUpdate iu = new InventoryUpdate();
-						iu.addModifiedItem(item);
-						player.sendPacket(iu);
-						
-						player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.EARNED_S2_S1_S).addItemName(item).addItemNumber(passes));
-					}
+					player.addItem("Olympiad", GATE_PASS, Olympiad.getInstance().getNoblessePasses(player, true), player, true);
 					break;
 				
 				default:
-					_log.warning("Olympiad System: Couldnt send packet for request: " + val);
+					_log.warning("Olympiad: Couldnt send packet for request: " + val);
 					break;
 			}
 		}
@@ -223,7 +198,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 						int index = 1;
 						for (String name : names)
 						{
-							reply.replace("%place" + index + "%", String.valueOf(index));
+							reply.replace("%place" + index + "%", index);
 							reply.replace("%rank" + index + "%", name);
 							
 							index++;
@@ -237,7 +212,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 							reply.replace("%rank" + index + "%", "");
 						}
 						
-						reply.replace("%objectId%", String.valueOf(getObjectId()));
+						reply.replace("%objectId%", getObjectId());
 						player.sendPacket(reply);
 					}
 					break;
@@ -272,7 +247,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 						}
 					}
 					reply.replace("%list%", list.toString());
-					reply.replace("%objectId%", String.valueOf(getObjectId()));
+					reply.replace("%objectId%", getObjectId());
 					player.sendPacket(reply);
 					break;
 				
@@ -284,7 +259,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 					if (Hero.getInstance().isInactiveHero(player.getObjectId()))
 					{
 						reply.setFile(Olympiad.OLYMPIAD_HTML_PATH + "hero_confirm.htm");
-						reply.replace("%objectId%", String.valueOf(getObjectId()));
+						reply.replace("%objectId%", getObjectId());
 						player.sendPacket(reply);
 					}
 					break;
@@ -310,12 +285,12 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 						hiddenText = "<a action=\"bypass -h npc_%objectId%_Olympiad 5\">\"I want to be a Hero.\"</a><br>";
 					
 					reply.replace("%hero%", hiddenText);
-					reply.replace("%objectId%", String.valueOf(getObjectId()));
+					reply.replace("%objectId%", getObjectId());
 					player.sendPacket(reply);
 					break;
 				
 				default:
-					_log.warning("Olympiad System: Couldnt send packet for request: " + val);
+					_log.warning("Olympiad: Couldnt send packet for request: " + val);
 					break;
 			}
 		}

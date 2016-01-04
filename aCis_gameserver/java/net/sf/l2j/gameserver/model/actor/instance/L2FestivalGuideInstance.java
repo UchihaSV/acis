@@ -428,7 +428,7 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		html.replace("%festivalMins%", SevenSignsFestival.getInstance().getTimeToNextFestivalStr());
 		player.sendPacket(html);
 		
@@ -445,18 +445,18 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		html.replace("%festivalType%", SevenSignsFestival.getFestivalName(_festivalType));
-		html.replace("%cycleMins%", String.valueOf(SevenSignsFestival.getInstance().getMinsToNextCycle()));
+		html.replace("%cycleMins%", SevenSignsFestival.getInstance().getMinsToNextCycle());
 		if (!isDescription && "2b".equals(val + suffix))
-			html.replace("%minFestivalPartyMembers%", String.valueOf(Config.ALT_FESTIVAL_MIN_PLAYER));
+			html.replace("%minFestivalPartyMembers%", Config.ALT_FESTIVAL_MIN_PLAYER);
 		
 		// Festival's fee
 		if (val == 1)
 		{
-			html.replace("%blueStoneNeeded%", String.valueOf(_blueStonesNeeded));
-			html.replace("%greenStoneNeeded%", String.valueOf(_greenStonesNeeded));
-			html.replace("%redStoneNeeded%", String.valueOf(_redStonesNeeded));
+			html.replace("%blueStoneNeeded%", _blueStonesNeeded);
+			html.replace("%greenStoneNeeded%", _greenStonesNeeded);
+			html.replace("%redStoneNeeded%", _redStonesNeeded);
 		}
 		// If the stats or bonus table is required, construct them.
 		else if (val == 5)

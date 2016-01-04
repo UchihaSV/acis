@@ -30,12 +30,12 @@ public class FuncMoveSpeed extends Func
 	
 	private FuncMoveSpeed()
 	{
-		super(Stats.RUN_SPEED, 0x30, null);
+		super(Stats.RUN_SPEED, 0x30, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		env.value *= Formulas.DEXbonus[env.player.getDEX()];
+		env.mulValue(Formulas.DEXbonus[env.getCharacter().getDEX()]);
 	}
 }

@@ -19,9 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +33,6 @@ import net.sf.l2j.gameserver.model.AutoSpawnHandler;
 import net.sf.l2j.gameserver.model.AutoSpawnHandler.AutoSpawnInstance;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SignsSky;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -158,7 +155,7 @@ public class SevenSigns
 			_log.severe("SevenSigns: Failed to load configuration: " + e);
 		}
 		
-		_log.info("SevenSigns: Currently in the " + getCurrentPeriodName() + " period!");
+		_log.info("SevenSigns: Currently on " + getCurrentPeriodName() + " period.");
 		initializeSeals();
 		
 		if (isSealValidationPeriod())
@@ -166,16 +163,16 @@ public class SevenSigns
 			if (getCabalHighestScore() == CABAL_NULL)
 				_log.info("SevenSigns: The competition ended with a tie last week.");
 			else
-				_log.info("SevenSigns: The " + getCabalName(getCabalHighestScore()) + " were victorious last week.");
+				_log.info("SevenSigns: " + getCabalName(getCabalHighestScore()) + " were victorious last week.");
 		}
 		else if (getCabalHighestScore() == CABAL_NULL)
-			_log.info("SevenSigns: The competition, if the current trend continues, will end in a tie this week.");
+			_log.info("SevenSigns: The competition will end in a tie this week.");
 		else
-			_log.info("SevenSigns: The " + getCabalName(getCabalHighestScore()) + " are in the lead this week.");
+			_log.info("SevenSigns: " + getCabalName(getCabalHighestScore()) + " are leading this week.");
 		
 		long milliToChange = 0;
 		if (isNextPeriodChangeInPast())
-			_log.info("SevenSigns: Next period change was in the past (server was offline), changing periods now!");
+			_log.info("SevenSigns: Next period change was in the past, changing periods now.");
 		else
 		{
 			setCalendarForNextPeriodChange();
@@ -526,53 +523,6 @@ public class SevenSigns
 		return (_activePeriod == PERIOD_COMP_RESULTS);
 	}
 	
-	/**
-	 * A method used for sieges verification.
-	 * @param date The date to test.
-	 * @return true if the given date is in Seal Validation or in Quest Event Results period.
-	 */
-	public boolean isDateInSealValidPeriod(Calendar date)
-	{
-		long nextPeriodChange = getMilliToPeriodChange();
-		long nextQuestStart = 0;
-		long nextValidStart = 0;
-		long tillDate = date.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
-		
-		while ((2 * PERIOD_MAJOR_LENGTH + 2 * PERIOD_MINOR_LENGTH) < tillDate)
-			tillDate -= (2 * PERIOD_MAJOR_LENGTH + 2 * PERIOD_MINOR_LENGTH);
-		
-		while (tillDate < 0)
-			tillDate += (2 * PERIOD_MAJOR_LENGTH + 2 * PERIOD_MINOR_LENGTH);
-		
-		switch (getCurrentPeriod())
-		{
-			case PERIOD_COMP_RECRUITING:
-				nextValidStart = nextPeriodChange + PERIOD_MAJOR_LENGTH;
-				nextQuestStart = nextValidStart + PERIOD_MAJOR_LENGTH + PERIOD_MINOR_LENGTH;
-				break;
-			
-			case PERIOD_COMPETITION:
-				nextValidStart = nextPeriodChange;
-				nextQuestStart = nextPeriodChange + PERIOD_MAJOR_LENGTH + PERIOD_MINOR_LENGTH;
-				break;
-			
-			case PERIOD_COMP_RESULTS:
-				nextQuestStart = nextPeriodChange + PERIOD_MAJOR_LENGTH;
-				nextValidStart = nextQuestStart + PERIOD_MAJOR_LENGTH + PERIOD_MINOR_LENGTH;
-				break;
-			
-			case PERIOD_SEAL_VALIDATION:
-				nextQuestStart = nextPeriodChange;
-				nextValidStart = nextPeriodChange + PERIOD_MAJOR_LENGTH + PERIOD_MINOR_LENGTH;
-				break;
-		}
-		
-		if ((nextQuestStart < tillDate && tillDate < nextValidStart) || (nextValidStart < nextQuestStart && (tillDate < nextValidStart || nextQuestStart < tillDate)))
-			return false;
-		
-		return true;
-	}
-	
 	public final int getCurrentScore(int cabal)
 	{
 		double totalStoneScore = _dawnStoneScore + _duskStoneScore;
@@ -739,9 +689,6 @@ public class SevenSigns
 				sevenDat.set("ancient_adena_amount", rset.getDouble("ancient_adena_amount"));
 				sevenDat.set("contribution_score", rset.getDouble("contribution_score"));
 				
-				if (Config.DEBUG)
-					_log.info("SevenSigns: Loaded data from DB for char ID " + charObjId + " (" + sevenDat.getString("cabal") + ")");
-				
 				_signsPlayerData.put(charObjId, sevenDat);
 			}
 			
@@ -791,9 +738,6 @@ public class SevenSigns
 	 */
 	public void saveSevenSignsData()
 	{
-		if (Config.DEBUG)
-			_log.info("SevenSigns: Saving data to disk.");
-		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
 			PreparedStatement statement = con.prepareStatement(UPDATE_PLAYER);
@@ -810,8 +754,6 @@ public class SevenSigns
 				statement.setInt(8, sevenDat.getInteger("char_obj_id"));
 				statement.execute();
 				statement.clearParameters();
-				if (Config.DEBUG)
-					_log.info("SevenSigns: Updated data in database for char ID " + sevenDat.getInteger("char_obj_id") + " (" + sevenDat.getString("cabal") + ")");
 			}
 			statement.close();
 		}
@@ -881,9 +823,6 @@ public class SevenSigns
 			statement.setLong(18 + SevenSignsFestival.FESTIVAL_COUNT, _lastSave.getTimeInMillis());
 			statement.execute();
 			statement.close();
-			
-			if (Config.DEBUG)
-				_log.info("SevenSigns: Updated data in database.");
 		}
 		catch (SQLException e)
 		{
@@ -897,17 +836,10 @@ public class SevenSigns
 	 */
 	protected void resetPlayerData()
 	{
-		if (Config.DEBUG)
-			_log.info("SevenSigns: Resetting player data for new event period.");
-		
-		int charObjId;
-		
-		// Reset each player's contribution data as well as seal and cabal.
 		for (StatsSet sevenDat : _signsPlayerData.values())
 		{
-			charObjId = sevenDat.getInteger("char_obj_id");
+			int charObjId = sevenDat.getInteger("char_obj_id");
 			
-			// Reset the player's cabal and seal information
 			sevenDat.set("cabal", "");
 			sevenDat.set("seal", SEAL_NULL);
 			sevenDat.set("contribution_score", 0);
@@ -930,8 +862,7 @@ public class SevenSigns
 		
 		if (currPlayerData != null)
 		{
-			// If the seal validation period has passed,
-			// cabal information was removed and so "re-register" player
+			// If the seal validation period has passed, cabal information was removed and so "re-register" player
 			currPlayerData.set("cabal", getCabalShortName(chosenCabal));
 			currPlayerData.set("seal", chosenSeal);
 			
@@ -960,9 +891,6 @@ public class SevenSigns
 				statement.setInt(3, chosenSeal);
 				statement.execute();
 				statement.close();
-				
-				if (Config.DEBUG)
-					_log.info("SevenSigns: Inserted data in DB for char ID " + currPlayerData.getInteger("char_obj_id") + " (" + currPlayerData.getString("cabal") + ")");
 			}
 			catch (SQLException e)
 			{
@@ -1095,12 +1023,15 @@ public class SevenSigns
 			case PERIOD_COMP_RECRUITING:
 				sm = SystemMessage.getSystemMessage(SystemMessageId.PREPARATIONS_PERIOD_BEGUN);
 				break;
+			
 			case PERIOD_COMPETITION:
 				sm = SystemMessage.getSystemMessage(SystemMessageId.COMPETITION_PERIOD_BEGUN);
 				break;
+			
 			case PERIOD_COMP_RESULTS:
 				sm = SystemMessage.getSystemMessage(SystemMessageId.RESULTS_PERIOD_BEGUN);
 				break;
+			
 			case PERIOD_SEAL_VALIDATION:
 				sm = SystemMessage.getSystemMessage(SystemMessageId.VALIDATION_PERIOD_BEGUN);
 				break;
@@ -1157,13 +1088,6 @@ public class SevenSigns
 	 */
 	protected void calcNewSealOwners()
 	{
-		if (Config.DEBUG)
-		{
-			_log.info("SevenSigns: (Avarice) Dawn = " + _signsDawnSealTotals.get(SEAL_AVARICE) + ", Dusk = " + _signsDuskSealTotals.get(SEAL_AVARICE));
-			_log.info("SevenSigns: (Gnosis) Dawn = " + _signsDawnSealTotals.get(SEAL_GNOSIS) + ", Dusk = " + _signsDuskSealTotals.get(SEAL_GNOSIS));
-			_log.info("SevenSigns: (Strife) Dawn = " + _signsDawnSealTotals.get(SEAL_STRIFE) + ", Dusk = " + _signsDuskSealTotals.get(SEAL_STRIFE));
-		}
-		
 		for (Integer currSeal : _signsDawnSealTotals.keySet())
 		{
 			int prevSealOwner = _signsSealOwners.get(currSeal);
@@ -1291,37 +1215,35 @@ public class SevenSigns
 	}
 	
 	/**
-	 * This method is called to remove all players from catacombs and necropolises, who belong to the losing cabal. <BR>
-	 * <BR>
-	 * Should only ever called at the beginning of Seal Validation.
+	 * This method is called to remove all players from catacombs and necropolises, who belong to the losing cabal.<BR>
+	 * <b>Should only ever called at the beginning of Seal Validation.</b>
 	 * @param compWinner
 	 */
 	protected void teleLosingCabalFromDungeons(String compWinner)
 	{
-		final Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-		for (L2PcInstance onlinePlayer : pls)
+		for (L2PcInstance player : L2World.getInstance().getAllPlayers().values())
 		{
-			if (onlinePlayer == null)
+			if (player == null)
 				continue;
 			
-			StatsSet currPlayer = _signsPlayerData.get(onlinePlayer.getObjectId());
+			StatsSet currPlayer = _signsPlayerData.get(player.getObjectId());
 			
 			if (isSealValidationPeriod() || isCompResultsPeriod())
 			{
-				if (!onlinePlayer.isGM() && onlinePlayer.isIn7sDungeon() && (currPlayer == null || !currPlayer.getString("cabal").equals(compWinner)))
+				if (!player.isGM() && player.isIn7sDungeon() && (currPlayer == null || !currPlayer.getString("cabal").equals(compWinner)))
 				{
-					onlinePlayer.teleToLocation(MapRegionTable.TeleportWhereType.Town);
-					onlinePlayer.setIsIn7sDungeon(false);
-					onlinePlayer.sendMessage("You have been teleported to the nearest town due to the beginning of the Seal Validation period.");
+					player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+					player.setIsIn7sDungeon(false);
+					player.sendMessage("You have been teleported to the nearest town due to the beginning of the Seal Validation period.");
 				}
 			}
 			else
 			{
-				if (!onlinePlayer.isGM() && onlinePlayer.isIn7sDungeon() && (currPlayer == null || !currPlayer.getString("cabal").isEmpty()))
+				if (!player.isGM() && player.isIn7sDungeon() && (currPlayer == null || !currPlayer.getString("cabal").isEmpty()))
 				{
-					onlinePlayer.teleToLocation(MapRegionTable.TeleportWhereType.Town);
-					onlinePlayer.setIsIn7sDungeon(false);
-					onlinePlayer.sendMessage("You have been teleported to the nearest town because you have not signed for any cabal.");
+					player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+					player.setIsIn7sDungeon(false);
+					player.sendMessage("You have been teleported to the nearest town because you have not signed for any cabal.");
 				}
 			}
 		}
@@ -1432,11 +1354,6 @@ public class SevenSigns
 			
 			setCalendarForNextPeriodChange();
 			
-			// Make sure that all the scheduled siege dates are in the Seal Validation period
-			List<Castle> castles = CastleManager.getInstance().getCastles();
-			for (Castle castle : castles)
-				castle.getSiege().correctSiegeDateTime();
-			
 			ThreadPoolManager.getInstance().scheduleGeneral(new SevenSignsPeriodChange(), getMilliToPeriodChange());
 		}
 	}
@@ -1447,8 +1364,7 @@ public class SevenSigns
 	 */
 	public void giveSosEffect(int strifeOwner)
 	{
-		final Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-		for (L2PcInstance character : pls)
+		for (L2PcInstance character : L2World.getInstance().getAllPlayers().values())
 		{
 			if (character == null)
 				continue;
@@ -1471,8 +1387,7 @@ public class SevenSigns
 	 */
 	public void removeSosEffect()
 	{
-		final Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-		for (L2PcInstance character : pls)
+		for (L2PcInstance character : L2World.getInstance().getAllPlayers().values())
 		{
 			if (character == null)
 				continue;

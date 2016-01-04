@@ -17,6 +17,9 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.network.SystemMessageId;
+import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListUpdate;
+import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
 /**
  * Format: (ch) Sd
@@ -53,6 +56,6 @@ public final class RequestPledgeSetMemberPowerGrade extends L2GameClientPacket
 			return;
 		
 		member.setPowerGrade(_powerGrade);
-		clan.broadcastClanStatus();
+		clan.broadcastToOnlineMembers(new PledgeShowMemberListUpdate(member), SystemMessage.getSystemMessage(SystemMessageId.CLAN_MEMBER_S1_PRIVILEGE_CHANGED_TO_S2).addString(member.getName()).addNumber(_powerGrade));
 	}
 }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -69,8 +70,8 @@ public class AutoSpawnHandler
 	
 	protected AutoSpawnHandler()
 	{
-		_registeredSpawns = new HashMap<>();
-		_runningSpawns = new HashMap<>();
+		_registeredSpawns = new ConcurrentHashMap<>();
+		_runningSpawns = new ConcurrentHashMap<>();
 		
 		restoreSpawnData();
 	}

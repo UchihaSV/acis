@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
@@ -24,46 +23,45 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 public final class PledgeShowMemberListUpdate extends L2GameServerPacket
 {
 	private final int _pledgeType;
-	private int _hasSponsor;
+	private final int _hasSponsor;
 	private final String _name;
 	private final int _level;
 	private final int _classId;
-	private final int _objectId;
-	private final boolean _isOnline;
+	private final int _isOnline;
 	private final int _race;
 	private final int _sex;
 	
 	public PledgeShowMemberListUpdate(L2PcInstance player)
 	{
 		_pledgeType = player.getPledgeType();
-		if (_pledgeType == L2Clan.SUBUNIT_ACADEMY)
-			_hasSponsor = player.getSponsor() != 0 ? 1 : 0;
-		else
-			_hasSponsor = 0;
-		
+		_hasSponsor = (player.getSponsor() != 0 || player.getApprentice() != 0) ? 1 : 0;
 		_name = player.getName();
 		_level = player.getLevel();
 		_classId = player.getClassId().getId();
 		_race = player.getRace().ordinal();
 		_sex = player.getAppearance().getSex() ? 1 : 0;
-		_objectId = player.getObjectId();
-		_isOnline = player.isOnline();
+		_isOnline = (player.isOnline()) ? player.getObjectId() : 0;
 	}
 	
-	public PledgeShowMemberListUpdate(L2ClanMember member)
+	public PledgeShowMemberListUpdate(L2ClanMember player)
 	{
-		_name = member.getName();
-		_level = member.getLevel();
-		_classId = member.getClassId();
-		_objectId = member.getObjectId();
-		_isOnline = member.isOnline();
-		_pledgeType = member.getPledgeType();
-		_race = member.getRaceOrdinal();
-		_sex = member.getSex() ? 1 : 0;
-		if (_pledgeType == L2Clan.SUBUNIT_ACADEMY)
-			_hasSponsor = member.getSponsor() != 0 ? 1 : 0;
+		_name = player.getName();
+		_level = player.getLevel();
+		_classId = player.getClassId();
+		_isOnline = (player.isOnline()) ? player.getObjectId() : 0;
+		_pledgeType = player.getPledgeType();
+		_hasSponsor = (player.getSponsor() != 0 || player.getApprentice() != 0) ? 1 : 0;
+		
+		if (_isOnline != 0)
+		{
+			_race = player.getPlayerInstance().getRace().ordinal();
+			_sex = (player.getPlayerInstance().getAppearance().getSex()) ? 1 : 0;
+		}
 		else
-			_hasSponsor = 0;
+		{
+			_sex = 0;
+			_race = 0;
+		}
 	}
 	
 	@Override
@@ -75,17 +73,8 @@ public final class PledgeShowMemberListUpdate extends L2GameServerPacket
 		writeD(_classId);
 		writeD(_sex);
 		writeD(_race);
-		if (_isOnline)
-		{
-			writeD(_objectId);
-			writeD(_pledgeType);
-		}
-		else
-		{
-			// when going offline send as 0
-			writeD(0);
-			writeD(0);
-		}
+		writeD(_isOnline);
+		writeD(_pledgeType);
 		writeD(_hasSponsor);
 	}
 }

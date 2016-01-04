@@ -214,6 +214,8 @@ public final class L2NpcTemplate extends L2CharTemplate
 				switch (skill.getSkillType())
 				{
 					case BUFF:
+					case CONT:
+					case REFLECT:
 						_buffSkills.add(skill);
 						break;
 					
@@ -222,6 +224,8 @@ public final class L2NpcTemplate extends L2CharTemplate
 					case HEAL_PERCENT:
 					case HEAL_STATIC:
 					case BALANCE_LIFE:
+					case MANARECHARGE:
+					case MANAHEAL_PERCENT:
 						_healSkills.add(skill);
 						break;
 					
@@ -238,6 +242,8 @@ public final class L2NpcTemplate extends L2CharTemplate
 					case FEAR:
 					case CANCEL:
 					case NEGATE:
+					case WEAKNESS:
+					case AGGDEBUFF:
 						_debuffSkills.add(skill);
 						break;
 					
@@ -250,6 +256,9 @@ public final class L2NpcTemplate extends L2CharTemplate
 					case DEATHLINK:
 					case MANADAM:
 					case CPDAMPERCENT:
+					case GET_PLAYER:
+					case INSTANT_JUMP:
+					case AGGDAMAGE:
 						addShortOrLongRangeSkill(skill);
 						break;
 				}

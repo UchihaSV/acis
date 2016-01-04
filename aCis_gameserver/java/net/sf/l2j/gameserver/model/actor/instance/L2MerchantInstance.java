@@ -151,7 +151,7 @@ public class L2MerchantInstance extends L2NpcInstance
 			else if (player.getLevel() >= 52)
 				html.setFile("data/html/common/shadow_item_b.htm");
 			
-			html.replace("%objectId%", String.valueOf(getObjectId()));
+			html.replace("%objectId%", getObjectId());
 			player.sendPacket(html);
 		}
 		else if (actualCommand.equalsIgnoreCase("Exc_Multisell"))

@@ -44,7 +44,6 @@ public final class RequestStopPledgeWar extends L2GameClientPacket
 		if (clan == null)
 			return;
 		
-		// Check if player who does the request has the correct rights to do it
 		if ((player.getClanPrivileges() & L2Clan.CP_CL_PLEDGE_WAR) != L2Clan.CP_CL_PLEDGE_WAR)
 		{
 			player.sendPacket(SystemMessageId.YOU_ARE_NOT_AUTHORIZED_TO_DO_THAT);
@@ -55,6 +54,15 @@ public final class RequestStopPledgeWar extends L2GameClientPacket
 		{
 			player.sendPacket(SystemMessageId.NOT_INVOLVED_IN_WAR);
 			return;
+		}
+		
+		for (L2PcInstance member : playerClan.getOnlineMembers())
+		{
+			if (member.isInCombat())
+			{
+				player.sendPacket(SystemMessageId.CANT_STOP_CLAN_WAR_WHILE_IN_COMBAT);
+				return;
+			}
 		}
 		
 		ClanTable.getInstance().deleteClansWars(playerClan.getClanId(), clan.getClanId());

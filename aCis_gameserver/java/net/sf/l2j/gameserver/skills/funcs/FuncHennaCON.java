@@ -30,14 +30,14 @@ public class FuncHennaCON extends Func
 	
 	private FuncHennaCON()
 	{
-		super(Stats.STAT_CON, 0x10, null);
+		super(Stats.STAT_CON, 0x10, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2PcInstance pc = (L2PcInstance) env.player;
-		if (pc != null)
-			env.value += pc.getHennaStatCON();
+		final L2PcInstance player = env.getPlayer();
+		if (player != null)
+			env.addValue(player.getHennaStatCON());
 	}
 }

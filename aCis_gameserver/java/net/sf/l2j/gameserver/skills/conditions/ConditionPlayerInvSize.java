@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.skills.conditions;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.skills.Env;
 
 /**
@@ -34,15 +33,12 @@ public class ConditionPlayerInvSize extends Condition
 		_size = size;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see net.sf.l2j.gameserver.skills.conditions.Condition#testImpl(net.sf.l2j.gameserver.skills.Env)
-	 */
 	@Override
 	public boolean testImpl(Env env)
 	{
-		if (env.player instanceof L2PcInstance)
-			return ((L2PcInstance) env.player).getInventory().getSize() <= (((L2PcInstance) env.player).getInventoryLimit() - _size);
+		if (env.getPlayer() != null)
+			return env.getPlayer().getInventory().getSize() <= (env.getPlayer().getInventoryLimit() - _size);
+		
 		return true;
 	}
 }

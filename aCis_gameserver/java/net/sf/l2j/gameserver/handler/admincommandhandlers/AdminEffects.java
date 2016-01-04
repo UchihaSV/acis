@@ -41,9 +41,21 @@ import net.sf.l2j.gameserver.network.serverpackets.SunSet;
 import net.sf.l2j.gameserver.util.Broadcast;
 
 /**
- * This class handles following admin commands: <li>hide = makes yourself invisible or visible <li>earthquake = causes an earthquake of a given intensity and duration around you <li>gmspeed = temporary Super Haste effect. <li>para/unpara = paralyze/remove paralysis from target <li>
- * para_all/unpara_all = same as para/unpara, affects the whole world. <li>polyself/unpolyself = makes you look as a specified mob. <li>changename = temporary change name <li>social = forces an L2Character instance to broadcast social action packets. <li>effect = forces an L2Character instance to
- * broadcast MSU packets. <li>abnormal = force changes over an L2Character instance's abnormal state. <li>play_sound/play_sounds = Music broadcasting related commands <li>atmosphere = sky change related commands.
+ * This class handles following admin commands:
+ * <ul>
+ * <li>hide = makes yourself invisible or visible.</li>
+ * <li>earthquake = causes an earthquake of a given intensity and duration around you.</li>
+ * <li>gmspeed = temporary Super Haste effect.</li>
+ * <li>para/unpara = paralyze/remove paralysis from target.</li>
+ * <li>para_all/unpara_all = same as para/unpara, affects the whole world.</li>
+ * <li>polyself/unpolyself = makes you look as a specified mob.</li>
+ * <li>changename = temporary change name.</li>
+ * <li>social = forces an L2Character instance to broadcast social action packets.</li>
+ * <li>effect = forces an L2Character instance to broadcast MSU packets.</li>
+ * <li>abnormal = force changes over an L2Character instance's abnormal state.</li>
+ * <li>play_sound/play_sounds = Music broadcasting related commands.</li>
+ * <li>atmosphere = sky change related commands.</li>
+ * </ul>
  */
 public class AdminEffects implements IAdminCommandHandler
 {

@@ -30,8 +30,6 @@ public final class RequestRecipeShopManageQuit extends L2GameClientPacket
 		if (player == null)
 			return;
 		
-		player.setPrivateStoreType(L2PcInstance.STORE_PRIVATE_NONE);
-		player.broadcastUserInfo();
-		player.standUp();
+		player.forceStandUp();
 	}
 }

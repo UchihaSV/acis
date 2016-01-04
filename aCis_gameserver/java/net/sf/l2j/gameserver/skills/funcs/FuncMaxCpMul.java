@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.skills.funcs;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.skills.Formulas;
 import net.sf.l2j.gameserver.skills.Stats;
@@ -31,13 +30,12 @@ public class FuncMaxCpMul extends Func
 	
 	private FuncMaxCpMul()
 	{
-		super(Stats.MAX_CP, 0x20, null);
+		super(Stats.MAX_CP, 0x20, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		L2PcInstance p = (L2PcInstance) env.player;
-		env.value *= Formulas.CONbonus[p.getCON()];
+		env.mulValue(Formulas.CONbonus[env.getCharacter().getCON()]);
 	}
 }

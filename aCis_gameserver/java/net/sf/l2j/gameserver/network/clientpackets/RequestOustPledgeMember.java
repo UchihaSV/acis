@@ -72,16 +72,19 @@ public final class RequestOustPledgeMember extends L2GameClientPacket
 		}
 		
 		// this also updates the database
-		clan.removeClanMember(member.getObjectId(), System.currentTimeMillis() + Config.ALT_CLAN_JOIN_DAYS * 86400000L); // 24*60*60*1000 = 86400000
-		clan.setCharPenaltyExpiryTime(System.currentTimeMillis() + Config.ALT_CLAN_JOIN_DAYS * 86400000L); // 24*60*60*1000 = 86400000
+		clan.removeClanMember(member.getObjectId(), System.currentTimeMillis() + Config.ALT_CLAN_JOIN_DAYS * 86400000L);
+		clan.setCharPenaltyExpiryTime(System.currentTimeMillis() + Config.ALT_CLAN_JOIN_DAYS * 86400000L);
 		clan.updateClanInDB();
+		
+		// Remove the player from the members list.
+		if (clan.isSubPledgeLeader(member.getObjectId()))
+			clan.broadcastClanStatus(); // refresh clan tab
+		else
+			clan.broadcastToOnlineMembers(new PledgeShowMemberListDelete(_target));
 		
 		clan.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.CLAN_MEMBER_S1_EXPELLED).addString(member.getName()));
 		activeChar.sendPacket(SystemMessageId.YOU_HAVE_SUCCEEDED_IN_EXPELLING_CLAN_MEMBER);
 		activeChar.sendPacket(SystemMessageId.YOU_MUST_WAIT_BEFORE_ACCEPTING_A_NEW_MEMBER);
-		
-		// Remove the Player From the Member list
-		clan.broadcastToOnlineMembers(new PledgeShowMemberListDelete(_target));
 		
 		if (member.isOnline())
 			member.getPlayerInstance().sendPacket(SystemMessageId.CLAN_MEMBERSHIP_TERMINATED);

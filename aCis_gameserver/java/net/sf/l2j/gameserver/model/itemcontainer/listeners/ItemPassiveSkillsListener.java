@@ -19,7 +19,7 @@ import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.SkillCoolTime;
-import net.sf.l2j.gameserver.skills.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.SkillHolder;
 import net.sf.l2j.gameserver.templates.item.L2Item;
 import net.sf.l2j.gameserver.templates.item.L2Weapon;
 

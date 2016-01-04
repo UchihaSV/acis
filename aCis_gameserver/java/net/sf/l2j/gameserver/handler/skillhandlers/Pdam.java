@@ -14,6 +14,8 @@
  */
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
+import java.util.List;
+
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.L2ItemInstance;
@@ -92,12 +94,12 @@ public class Pdam implements ISkillHandler
 			
 			if (skill.hasEffects())
 			{
-				L2Effect[] effects;
+				List<L2Effect> effects;
 				if ((reflect & Formulas.SKILL_REFLECT_SUCCEED) != 0)
 				{
 					activeChar.stopSkillEffects(skill.getId());
 					effects = skill.getEffects(target, activeChar);
-					if (effects != null && effects.length > 0)
+					if (effects != null && !effects.isEmpty())
 						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_FEEL_S1_EFFECT).addSkillName(skill));
 				}
 				else
@@ -105,7 +107,7 @@ public class Pdam implements ISkillHandler
 					// activate attacked effects, if any
 					target.stopSkillEffects(skill.getId());
 					effects = skill.getEffects(activeChar, target, new Env(shld, false, false, false));
-					if (effects != null && effects.length > 0)
+					if (effects != null && !effects.isEmpty())
 						target.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_FEEL_S1_EFFECT).addSkillName(skill));
 				}
 			}

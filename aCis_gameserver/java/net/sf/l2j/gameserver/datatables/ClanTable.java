@@ -36,7 +36,6 @@ import net.sf.l2j.gameserver.model.entity.Siege;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeShowInfoUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListAll;
-import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
 import net.sf.l2j.gameserver.util.Util;
@@ -64,18 +63,48 @@ public class ClanTable
 		// Load all clans.
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement = con.prepareStatement("SELECT clan_id FROM clan_data");
+			PreparedStatement statement = con.prepareStatement("SELECT * FROM clan_data");
 			ResultSet result = statement.executeQuery();
 			
 			while (result.next())
 			{
 				int clanId = result.getInt("clan_id");
 				
-				L2Clan clan = new L2Clan(clanId);
+				L2Clan clan = new L2Clan(clanId, result.getInt("leader_id"));
 				_clans.put(clanId, clan);
+				
+				clan.setName(result.getString("clan_name"));
+				clan.setLevel(result.getInt("clan_level"));
+				clan.setCastle(result.getInt("hasCastle"));
+				clan.setAllyId(result.getInt("ally_id"));
+				clan.setAllyName(result.getString("ally_name"));
+				
+				// If ally expire time has been reached while server was off, keep it to 0.
+				final long allyExpireTime = result.getLong("ally_penalty_expiry_time");
+				if (allyExpireTime > System.currentTimeMillis())
+					clan.setAllyPenaltyExpiryTime(allyExpireTime, result.getInt("ally_penalty_type"));
+				
+				// If character expire time has been reached while server was off, keep it to 0.
+				final long charExpireTime = result.getLong("char_penalty_expiry_time");
+				if (charExpireTime + Config.ALT_CLAN_JOIN_DAYS * 86400000L > System.currentTimeMillis())
+					clan.setCharPenaltyExpiryTime(charExpireTime);
+				
+				clan.setDissolvingExpiryTime(result.getLong("dissolving_expiry_time"));
+				
+				clan.setCrestId(result.getInt("crest_id"));
+				clan.setCrestLargeId(result.getInt("crest_large_id"));
+				clan.setAllyCrestId(result.getInt("ally_crest_id"));
+				
+				clan.addReputationScore(result.getInt("reputation_score"));
+				clan.setAuctionBiddedAt(result.getInt("auction_bid_at"));
 				
 				if (clan.getDissolvingExpiryTime() != 0)
 					scheduleRemoveClan(clan);
+				
+				clan.setNoticeEnabled(result.getBoolean("enabled"));
+				clan.setNotice(result.getString("notice"));
+				
+				clan.setIntroduction(result.getString("introduction"), false);
 			}
 			result.close();
 			statement.close();
@@ -123,11 +152,8 @@ public class ClanTable
 	 */
 	public L2Clan createClan(L2PcInstance player, String clanName)
 	{
-		if (null == player)
+		if (player == null)
 			return null;
-		
-		if (Config.DEBUG)
-			_log.fine(player.getObjectId() + "(" + player.getName() + ") requested a clan creation.");
 		
 		if (player.getLevel() < 10)
 		{
@@ -175,16 +201,10 @@ public class ClanTable
 		player.setPledgeClass(L2ClanMember.calculatePledgeClass(player));
 		player.setClanPrivileges(L2Clan.CP_ALL);
 		
-		if (Config.DEBUG)
-			_log.fine("New clan created: " + clan.getClanId() + " " + clan.getName());
-		
 		_clans.put(clan.getClanId(), clan);
 		
-		// should be update packet only
-		player.sendPacket(new PledgeShowInfoUpdate(clan));
-		player.sendPacket(new PledgeShowMemberListAll(clan, player));
+		player.sendPacket(new PledgeShowMemberListAll(clan, 0));
 		player.sendPacket(new UserInfo(player));
-		player.sendPacket(new PledgeShowMemberListUpdate(player));
 		player.sendPacket(SystemMessageId.CLAN_CREATED);
 		return clan;
 	}
@@ -241,11 +261,6 @@ public class ClanTable
 			statement.execute();
 			statement.close();
 			
-			statement = con.prepareStatement("DELETE FROM clan_notices WHERE clan_id=?");
-			statement.setInt(1, clanId);
-			statement.execute();
-			statement.close();
-			
 			if (castleId != 0)
 			{
 				statement = con.prepareStatement("UPDATE castle SET taxPercent = 0 WHERE id = ?");
@@ -253,9 +268,6 @@ public class ClanTable
 				statement.execute();
 				statement.close();
 			}
-			
-			if (Config.DEBUG)
-				_log.fine("clan removed in db: " + clanId);
 		}
 		catch (Exception e)
 		{
@@ -295,19 +307,17 @@ public class ClanTable
 		final L2Clan clan2 = _clans.get(clanId2);
 		
 		clan1.setEnemyClan(clanId2);
-		clan1.broadcastClanStatus();
+		clan1.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan1), SystemMessage.getSystemMessage(SystemMessageId.CLAN_WAR_DECLARED_AGAINST_S1_IF_KILLED_LOSE_LOW_EXP).addString(clan2.getName()));
 		
 		clan2.setAttackerClan(clanId1);
-		clan2.broadcastClanStatus();
+		clan2.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan2), SystemMessage.getSystemMessage(SystemMessageId.CLAN_S1_DECLARED_WAR).addString(clan1.getName()));
 		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
 			PreparedStatement statement;
-			statement = con.prepareStatement("REPLACE INTO clan_wars (clan1, clan2, wantspeace1, wantspeace2) VALUES(?,?,?,?)");
+			statement = con.prepareStatement("REPLACE INTO clan_wars (clan1, clan2) VALUES(?,?)");
 			statement.setInt(1, clanId1);
 			statement.setInt(2, clanId2);
-			statement.setInt(3, 0);
-			statement.setInt(4, 0);
 			statement.execute();
 			statement.close();
 		}
@@ -315,9 +325,6 @@ public class ClanTable
 		{
 			_log.log(Level.SEVERE, "Error storing clan wars data.", e);
 		}
-		
-		clan1.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.CLAN_WAR_DECLARED_AGAINST_S1_IF_KILLED_LOSE_LOW_EXP).addString(clan2.getName()));
-		clan2.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.CLAN_S1_DECLARED_WAR).addString(clan1.getName()));
 	}
 	
 	public void deleteClansWars(int clanId1, int clanId2)
@@ -326,16 +333,32 @@ public class ClanTable
 		final L2Clan clan2 = _clans.get(clanId2);
 		
 		clan1.deleteEnemyClan(clanId2);
-		clan1.broadcastClanStatus();
+		clan1.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan1), SystemMessage.getSystemMessage(SystemMessageId.WAR_AGAINST_S1_HAS_STOPPED).addString(clan2.getName()));
 		
 		clan2.deleteAttackerClan(clanId1);
-		clan2.broadcastClanStatus();
+		clan2.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan2), SystemMessage.getSystemMessage(SystemMessageId.CLAN_S1_HAS_DECIDED_TO_STOP).addString(clan1.getName()));
 		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement = con.prepareStatement("DELETE FROM clan_wars WHERE clan1=? AND clan2=?");
-			statement.setInt(1, clanId1);
-			statement.setInt(2, clanId2);
+			PreparedStatement statement;
+			
+			if (Config.ALT_CLAN_WAR_PENALTY_WHEN_ENDED > 0)
+			{
+				final long penaltyExpiryTime = System.currentTimeMillis() + Config.ALT_CLAN_WAR_PENALTY_WHEN_ENDED * 86400000L;
+				
+				clan1.addWarPenaltyTime(clanId2, penaltyExpiryTime);
+				
+				statement = con.prepareStatement("UPDATE clan_wars SET expiry_time=? WHERE clan1=? AND clan2=?");
+				statement.setLong(1, penaltyExpiryTime);
+				statement.setInt(2, clanId1);
+				statement.setInt(3, clanId2);
+			}
+			else
+			{
+				statement = con.prepareStatement("DELETE FROM clan_wars WHERE clan1=? AND clan2=?");
+				statement.setInt(1, clanId1);
+				statement.setInt(2, clanId2);
+			}
 			statement.execute();
 			statement.close();
 		}
@@ -343,9 +366,6 @@ public class ClanTable
 		{
 			_log.log(Level.SEVERE, "Error removing clan wars data.", e);
 		}
-		
-		clan1.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.WAR_AGAINST_S1_HAS_STOPPED).addString(clan2.getName()));
-		clan2.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.CLAN_S1_HAS_DECIDED_TO_STOP).addString(clan1.getName()));
 	}
 	
 	public void checkSurrender(L2Clan clan1, L2Clan clan2)
@@ -365,16 +385,36 @@ public class ClanTable
 		}
 	}
 	
+	/**
+	 * Restore wars, checking penalties.
+	 */
 	private void restoreWars()
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement = con.prepareStatement("SELECT clan1, clan2, wantspeace1, wantspeace2 FROM clan_wars");
+			// Delete deprecated wars (server was offline).
+			PreparedStatement statement = con.prepareStatement("DELETE FROM clan_wars WHERE expiry_time > 0 AND expiry_time <= ?");
+			statement.setLong(1, System.currentTimeMillis());
+			statement.execute();
+			statement.close();
+			
+			// Load all wars.
+			statement = con.prepareStatement("SELECT * FROM clan_wars");
 			ResultSet rset = statement.executeQuery();
 			while (rset.next())
 			{
-				_clans.get(rset.getInt("clan1")).setEnemyClan(rset.getInt("clan2"));
-				_clans.get(rset.getInt("clan2")).setAttackerClan(rset.getInt("clan1"));
+				final int clan1 = rset.getInt("clan1");
+				final int clan2 = rset.getInt("clan2");
+				final long expiryTime = rset.getLong("expiry_time");
+				
+				// Expiry timer is found, add a penalty. Otherwise, add the regular war.
+				if (expiryTime > 0)
+					_clans.get(clan1).addWarPenaltyTime(clan2, expiryTime);
+				else
+				{
+					_clans.get(clan1).setEnemyClan(clan2);
+					_clans.get(clan2).setAttackerClan(clan1);
+				}
 			}
 			rset.close();
 			statement.close();

@@ -32,7 +32,7 @@ import org.w3c.dom.Node;
 /**
  * @author mkizub, JIV
  */
-final class DocumentItem extends DocumentBase
+public final class DocumentItem extends DocumentBase
 {
 	private Item _currentItem = null;
 	private final List<L2Item> _itemsInFile = new ArrayList<>();

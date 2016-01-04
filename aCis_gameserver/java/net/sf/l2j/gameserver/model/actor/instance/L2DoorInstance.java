@@ -41,7 +41,6 @@ import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ConfirmDlg;
 import net.sf.l2j.gameserver.network.serverpackets.DoorInfo;
 import net.sf.l2j.gameserver.network.serverpackets.DoorStatusUpdate;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.skills.funcs.FuncGatesMDefMod;
@@ -72,7 +71,6 @@ public class L2DoorInstance extends L2Character
 	private int _D = 0;
 	
 	protected final int _doorId;
-	protected final String _name;
 	private boolean _open;
 	private final boolean _unlockable;
 	private boolean _isWall = false; // False by default
@@ -178,11 +176,11 @@ public class L2DoorInstance extends L2Character
 				}
 				
 				if (Config.DEBUG)
-					log.info("Auto " + doorAction + " door ID " + _doorId + " (" + _name + ") for " + (_autoActionDelay / 60000) + " minute(s).");
+					log.info("Auto " + doorAction + " door ID " + _doorId + " (" + getName() + ") for " + (_autoActionDelay / 60000) + " minute(s).");
 			}
 			catch (Exception e)
 			{
-				log.warning("Could not auto open/close door ID " + _doorId + " (" + _name + ")");
+				log.warning("Could not auto open/close door ID " + _doorId + " (" + getName() + ")");
 			}
 		}
 	}
@@ -190,9 +188,11 @@ public class L2DoorInstance extends L2Character
 	public L2DoorInstance(int objectId, L2CharTemplate template, int doorId, String name, boolean unlockable)
 	{
 		super(objectId, template);
+		
 		_doorId = doorId;
-		_name = name;
 		_unlockable = unlockable;
+		
+		setName(name);
 	}
 	
 	@Override
@@ -327,7 +327,7 @@ public class L2DoorInstance extends L2Character
 			return true;
 		
 		// Attackable during siege by attacker only
-		final boolean isCastle = (getCastle() != null && getCastle().getCastleId() > 0 && getCastle().getSiege().getIsInProgress());
+		final boolean isCastle = (getCastle() != null && getCastle().getSiege().isInProgress());
 		if (isCastle)
 		{
 			final L2Clan clan = attacker.getActingPlayer().getClan();
@@ -374,15 +374,10 @@ public class L2DoorInstance extends L2Character
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2Npc
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
 		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Send MyTargetSelected to the L2PcInstance player
-			player.sendPacket(new MyTargetSelected(getObjectId(), 0));
-			
 			player.sendPacket(new DoorStatusUpdate(this, player));
 		}
 		else
@@ -419,22 +414,22 @@ public class L2DoorInstance extends L2Character
 			html.setFile("data/html/admin/infos/doorinfo.htm");
 			
 			html.replace("%class%", getClass().getSimpleName());
-			html.replace("%objid%", String.valueOf(getObjectId()));
-			html.replace("%doorid%", String.valueOf(getDoorId()));
+			html.replace("%objid%", getObjectId());
+			html.replace("%doorid%", getDoorId());
 			
-			html.replace("%hp%", String.valueOf((int) getCurrentHp()));
-			html.replace("%hpmax%", String.valueOf(getMaxHp()));
+			html.replace("%hp%", (int) getCurrentHp());
+			html.replace("%hpmax%", getMaxHp());
 			
-			html.replace("%pdef%", String.valueOf(getPDef(null)));
-			html.replace("%mdef%", String.valueOf(getMDef(null, null)));
+			html.replace("%pdef%", getPDef(null));
+			html.replace("%mdef%", getMDef(null, null));
 			
-			html.replace("%minx%", String.valueOf(getXMin()));
-			html.replace("%miny%", String.valueOf(getYMin()));
-			html.replace("%minz%", String.valueOf(getZMin()));
+			html.replace("%minx%", getXMin());
+			html.replace("%miny%", getYMin());
+			html.replace("%minz%", getZMin());
 			
-			html.replace("%maxx%", String.valueOf(getXMax()));
-			html.replace("%maxy%", String.valueOf(getYMax()));
-			html.replace("%maxz%", String.valueOf(getZMax()));
+			html.replace("%maxx%", getXMax());
+			html.replace("%maxy%", getYMax());
+			html.replace("%maxz%", getZMax());
 			html.replace("%unlock%", isUnlockable() ? "<font color=00FF00>YES<font>" : "<font color=FF0000>NO</font>");
 			html.replace("%isWall%", isWall() ? "<font color=00FF00>YES<font>" : "<font color=FF0000>NO</font>");
 			
@@ -445,7 +440,6 @@ public class L2DoorInstance extends L2Character
 		if (player.getTarget() != this)
 		{
 			player.setTarget(this);
-			player.sendPacket(new MyTargetSelected(getObjectId(), 0));
 			
 			if (isAutoAttackable(player))
 				player.sendPacket(new DoorStatusUpdate(this, player));
@@ -487,11 +481,6 @@ public class L2DoorInstance extends L2Character
 	public String toString()
 	{
 		return "door " + _doorId;
-	}
-	
-	public String getDoorName()
-	{
-		return _name;
 	}
 	
 	public int getXMin()
@@ -586,7 +575,7 @@ public class L2DoorInstance extends L2Character
 		if (isWall() && !(attacker instanceof L2SiegeSummonInstance))
 			return;
 		
-		if (!(getCastle() != null && getCastle().getCastleId() > 0 && getCastle().getSiege().getIsInProgress()))
+		if (!(getCastle() != null && getCastle().getSiege().isInProgress()))
 			return;
 		
 		super.reduceCurrentHp(damage, attacker, awake, isDOT, skill);
@@ -604,8 +593,8 @@ public class L2DoorInstance extends L2Character
 		if (!super.doDie(killer))
 			return false;
 		
-		if (getCastle() != null && getCastle().getCastleId() > 0 && getCastle().getSiege().getIsInProgress())
-			broadcastPacket(SystemMessage.getSystemMessage((isWall()) ? SystemMessageId.CASTLE_WALL_DAMAGED : SystemMessageId.CASTLE_GATE_BROKEN_DOWN));
+		if (getCastle() != null && getCastle().getSiege().isInProgress())
+			getCastle().getSiege().announceToPlayer(SystemMessage.getSystemMessage((isWall()) ? SystemMessageId.CASTLE_WALL_DAMAGED : SystemMessageId.CASTLE_GATE_BROKEN_DOWN), false);
 		
 		return true;
 	}
@@ -619,6 +608,11 @@ public class L2DoorInstance extends L2Character
 	public void setUpgradeHpRatio(int hpRatio)
 	{
 		_upgradeHpRatio = hpRatio;
+	}
+	
+	public int getUpgradeHpRatio()
+	{
+		return _upgradeHpRatio;
 	}
 	
 	@Override

@@ -57,7 +57,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
 	}
 	
@@ -179,7 +179,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 					else
 					{
 						html.setFile("data/html/classmaster/comebacklater.htm");
-						html.replace("%level%", String.valueOf(getMinLevel(level - 1)));
+						html.replace("%level%", getMinLevel(level - 1));
 					}
 				}
 				else
@@ -187,7 +187,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 					if (minLevel < Integer.MAX_VALUE)
 					{
 						html.setFile("data/html/classmaster/comebacklater.htm");
-						html.replace("%level%", String.valueOf(minLevel));
+						html.replace("%level%", minLevel);
 					}
 					else
 						html.setFile("data/html/classmaster/nomore.htm");
@@ -195,7 +195,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 			}
 		}
 		
-		html.replace("%objectId%", String.valueOf(objectId));
+		html.replace("%objectId%", objectId);
 		html.replace("%req_items%", getRequiredItems(level));
 		player.sendPacket(html);
 	}

@@ -71,15 +71,17 @@ public class ObjectKnownList
 		return _knownObjects.remove(object.getObjectId()) != null;
 	}
 	
-	// Remove invisible and too far L2Object from _knowObject and if necessary from _knownPlayers of the L2Character
+	/**
+	 * Remove invisible and too far L2Object from L2Character knownlist.
+	 * @param fullCheck
+	 */
 	public void forgetObjects(boolean fullCheck)
 	{
+		if (!fullCheck)
+			return;
+		
 		for (L2Object object : _knownObjects.values())
 		{
-			if (!fullCheck)
-				continue;
-			
-			// Remove all objects invisible or too far
 			if (!object.isVisible() || !Util.checkIfInShortRadius(getDistanceToForgetObject(object), _activeObject, object, true))
 				removeKnownObject(object);
 		}

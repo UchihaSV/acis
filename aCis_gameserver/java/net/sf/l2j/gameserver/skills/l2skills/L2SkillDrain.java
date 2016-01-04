@@ -121,7 +121,7 @@ public class L2SkillDrain extends L2Skill
 						{
 							// activate attacked effects, if any
 							target.stopSkillEffects(getId());
-							if (Formulas.calcSkillSuccess(activeChar, target, this, shld, false, sps, bsps))
+							if (Formulas.calcSkillSuccess(activeChar, target, this, shld, bsps))
 								getEffects(activeChar, target);
 							else
 								activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(getDisplayId()));

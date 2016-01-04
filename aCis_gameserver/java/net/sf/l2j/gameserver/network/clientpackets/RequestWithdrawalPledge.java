@@ -54,11 +54,14 @@ public final class RequestWithdrawalPledge extends L2GameClientPacket
 			return;
 		}
 		
-		clan.removeClanMember(activeChar.getObjectId(), System.currentTimeMillis() + Config.ALT_CLAN_JOIN_DAYS * 86400000L); // 24*60*60*1000 = 86400000
+		clan.removeClanMember(activeChar.getObjectId(), System.currentTimeMillis() + Config.ALT_CLAN_JOIN_DAYS * 86400000L);
 		clan.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.S1_HAS_WITHDRAWN_FROM_THE_CLAN).addPcName(activeChar));
 		
-		// Remove the Player From the Member list
-		clan.broadcastToOnlineMembers(new PledgeShowMemberListDelete(activeChar.getName()));
+		// Remove the player from the members list.
+		if (clan.isSubPledgeLeader(activeChar.getObjectId()))
+			clan.broadcastClanStatus(); // refresh list
+		else
+			clan.broadcastToOnlineMembers(new PledgeShowMemberListDelete(activeChar.getName()));
 		
 		activeChar.sendPacket(SystemMessageId.YOU_HAVE_WITHDRAWN_FROM_CLAN);
 		activeChar.sendPacket(SystemMessageId.YOU_MUST_WAIT_BEFORE_JOINING_ANOTHER_CLAN);

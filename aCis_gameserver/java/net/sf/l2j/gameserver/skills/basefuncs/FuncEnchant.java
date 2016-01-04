@@ -24,7 +24,7 @@ public class FuncEnchant extends Func
 {
 	public FuncEnchant(Stats pStat, int pOrder, Object owner, Lambda lambda)
 	{
-		super(pStat, pOrder, owner);
+		super(pStat, pOrder, owner, lambda);
 	}
 	
 	@Override
@@ -33,7 +33,7 @@ public class FuncEnchant extends Func
 		if (cond != null && !cond.test(env))
 			return;
 		
-		L2ItemInstance item = (L2ItemInstance) funcOwner;
+		final L2ItemInstance item = (L2ItemInstance) funcOwner;
 		
 		int enchant = item.getEnchantLevel();
 		if (enchant <= 0)
@@ -49,7 +49,7 @@ public class FuncEnchant extends Func
 		
 		if (stat == Stats.MAGIC_DEFENCE || stat == Stats.POWER_DEFENCE)
 		{
-			env.value += enchant + 3 * overenchant;
+			env.addValue(enchant + 3 * overenchant);
 			return;
 		}
 		
@@ -58,19 +58,17 @@ public class FuncEnchant extends Func
 			switch (item.getItem().getCrystalType())
 			{
 				case L2Item.CRYSTAL_S:
-					env.value += 4 * enchant + 8 * overenchant;
+					env.addValue(4 * enchant + 8 * overenchant);
 					break;
+				
 				case L2Item.CRYSTAL_A:
-					env.value += 3 * enchant + 6 * overenchant;
-					break;
 				case L2Item.CRYSTAL_B:
-					env.value += 3 * enchant + 6 * overenchant;
-					break;
 				case L2Item.CRYSTAL_C:
-					env.value += 3 * enchant + 6 * overenchant;
+					env.addValue(3 * enchant + 6 * overenchant);
 					break;
+				
 				case L2Item.CRYSTAL_D:
-					env.value += 2 * enchant + 4 * overenchant;
+					env.addValue(2 * enchant + 4 * overenchant);
 					break;
 			}
 			return;
@@ -78,7 +76,7 @@ public class FuncEnchant extends Func
 		
 		if (item.isWeapon())
 		{
-			L2WeaponType type = (L2WeaponType) item.getItemType();
+			final L2WeaponType type = (L2WeaponType) item.getItemType();
 			
 			switch (item.getItem().getCrystalType())
 			{
@@ -86,67 +84,84 @@ public class FuncEnchant extends Func
 					switch (type)
 					{
 						case BOW:
-							env.value += 10 * enchant + 20 * overenchant;
+							env.addValue(10 * enchant + 20 * overenchant);
 							break;
+						
 						case DUALFIST:
 						case DUAL:
-							env.value += 4 * enchant + 12 * overenchant;
+							env.addValue(4 * enchant + 12 * overenchant);
+							break;
+						
 						default:
-							env.value += 4 * enchant + 10 * overenchant;
+							env.addValue(4 * enchant + 10 * overenchant);
 							break;
 					}
 					break;
+				
 				case L2Item.CRYSTAL_A:
 					switch (type)
 					{
 						case BOW:
-							env.value += 8 * enchant + 16 * overenchant;
+							env.addValue(8 * enchant + 16 * overenchant);
 							break;
+						
 						case DUALFIST:
 						case DUAL:
-							env.value += 5 * enchant + 10 * overenchant;
+							env.addValue(5 * enchant + 10 * overenchant);
+							break;
+						
 						default:
-							env.value += 4 * enchant + 8 * overenchant;
+							env.addValue(4 * enchant + 8 * overenchant);
 							break;
 					}
 					break;
+				
 				case L2Item.CRYSTAL_B:
 					switch (type)
 					{
 						case BOW:
-							env.value += 6 * enchant + 12 * overenchant;
+							env.addValue(6 * enchant + 12 * overenchant);
 							break;
+						
 						case DUALFIST:
 						case DUAL:
-							env.value += 4 * enchant + 8 * overenchant;
+							env.addValue(4 * enchant + 8 * overenchant);
+							break;
+						
 						default:
-							env.value += 3 * enchant + 6 * overenchant;
+							env.addValue(3 * enchant + 6 * overenchant);
 							break;
 					}
 					break;
+				
 				case L2Item.CRYSTAL_C:
 					switch (type)
 					{
 						case BOW:
-							env.value += 6 * enchant + 12 * overenchant;
+							env.addValue(6 * enchant + 12 * overenchant);
 							break;
+						
 						case DUALFIST:
 						case DUAL:
-							env.value += 4 * enchant + 8 * overenchant;
+							env.addValue(4 * enchant + 8 * overenchant);
+							break;
+						
 						default:
-							env.value += 3 * enchant + 6 * overenchant;
+							env.addValue(3 * enchant + 6 * overenchant);
 							break;
 					}
 					break;
+				
 				case L2Item.CRYSTAL_D:
 				case L2Item.CRYSTAL_NONE:
 					switch (type)
 					{
 						case BOW:
-							env.value += 4 * enchant + 8 * overenchant;
+							env.addValue(4 * enchant + 8 * overenchant);
 							break;
+						
 						default:
-							env.value += 2 * enchant + 4 * overenchant;
+							env.addValue(2 * enchant + 4 * overenchant);
 							break;
 					}
 					break;

@@ -91,9 +91,9 @@ public class AdminExpSp implements IAdminCommandHandler
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setFile("data/html/admin/expsp.htm");
 		adminReply.replace("%name%", player.getName());
-		adminReply.replace("%level%", String.valueOf(player.getLevel()));
-		adminReply.replace("%xp%", String.valueOf(player.getExp()));
-		adminReply.replace("%sp%", String.valueOf(player.getSp()));
+		adminReply.replace("%level%", player.getLevel());
+		adminReply.replace("%xp%", player.getExp());
+		adminReply.replace("%sp%", player.getSp());
 		adminReply.replace("%class%", player.getTemplate().className);
 		activeChar.sendPacket(adminReply);
 	}

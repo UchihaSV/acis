@@ -14,9 +14,7 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.datatables.AccessLevels;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
-import net.sf.l2j.gameserver.model.L2AccessLevel;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2SiegeClan;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
@@ -28,26 +26,27 @@ public class Die extends L2GameServerPacket
 {
 	private final int _charObjId;
 	private final boolean _fake;
+	
 	private boolean _sweepable;
-	private L2AccessLevel _access = AccessLevels._userAccessLevel;
+	private boolean _allowFixedRes;
 	private L2Clan _clan;
 	L2Character _activeChar;
 	
 	public Die(L2Character cha)
 	{
 		_activeChar = cha;
+		_charObjId = cha.getObjectId();
+		_fake = !cha.isDead();
+		
 		if (cha instanceof L2PcInstance)
 		{
 			L2PcInstance player = (L2PcInstance) cha;
-			_access = player.getAccessLevel();
+			_allowFixedRes = player.getAccessLevel().allowFixedRes();
 			_clan = player.getClan();
 			
 		}
-		_charObjId = cha.getObjectId();
-		_fake = !cha.isDead();
-		if (cha instanceof L2Attackable)
+		else if (cha instanceof L2Attackable)
 			_sweepable = ((L2Attackable) cha).isSweepActive();
-		
 	}
 	
 	@Override
@@ -66,7 +65,7 @@ public class Die extends L2GameServerPacket
 			boolean isInDefense = false;
 			
 			Castle castle = CastleManager.getInstance().getCastle(_activeChar);
-			if (castle != null && castle.getSiege().getIsInProgress())
+			if (castle != null && castle.getSiege().isInProgress())
 			{
 				// siege in progress
 				siegeClan = castle.getSiege().getAttackerClan(_clan);
@@ -86,6 +85,6 @@ public class Die extends L2GameServerPacket
 		}
 		
 		writeD(_sweepable ? 0x01 : 0x00); // sweepable (blue glow)
-		writeD(_access.allowFixedRes() ? 0x01 : 0x00); // FIXED
+		writeD(_allowFixedRes ? 0x01 : 0x00); // FIXED
 	}
 }

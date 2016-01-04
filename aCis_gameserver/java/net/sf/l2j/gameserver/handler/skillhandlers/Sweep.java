@@ -15,16 +15,12 @@
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
 import net.sf.l2j.gameserver.handler.ISkillHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Attackable.RewardItem;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
-import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 /**
@@ -44,8 +40,6 @@ public class Sweep implements ISkillHandler
 			return;
 		
 		L2PcInstance player = (L2PcInstance) activeChar;
-		InventoryUpdate iu = new InventoryUpdate();
-		boolean send = false;
 		
 		for (int index = 0; index < targets.length; index++)
 		{
@@ -75,22 +69,9 @@ public class Sweep implements ISkillHandler
 					if (player.isInParty())
 						player.getParty().distributeItem(player, ritem, true, target);
 					else
-					{
-						L2ItemInstance item = player.getInventory().addItem("Sweep", ritem.getItemId(), ritem.getCount(), player, target);
-						iu.addItem(item);
-						
-						send = true;
-						
-						if (ritem.getCount() > 1)
-							player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.EARNED_S2_S1_S).addItemName(ritem.getItemId()).addNumber(ritem.getCount()));
-						else
-							player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.EARNED_ITEM_S1).addItemName(ritem.getItemId()));
-					}
+						player.addItem("Sweep", ritem.getItemId(), ritem.getCount(), player, true);
 				}
 			}
-			
-			if (send)
-				player.sendPacket(iu);
 		}
 	}
 	

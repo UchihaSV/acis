@@ -26,8 +26,6 @@ import net.sf.l2j.gameserver.model.entity.Siegable;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
-import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
@@ -93,21 +91,9 @@ public class L2SiegeFlagInstance extends L2Npc
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2NpcInstance
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Send MyTargetSelected to the L2PcInstance player
-			player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel() - getLevel()));
-			
-			// Send StatusUpdate of the L2NpcInstance to the L2PcInstance to update its HP bar
-			StatusUpdate su = new StatusUpdate(this);
-			su.addAttribute(StatusUpdate.CUR_HP, (int) getStatus().getCurrentHp());
-			su.addAttribute(StatusUpdate.MAX_HP, getMaxHp());
-			player.sendPacket(su);
-		}
 		else
 		{
 			if (isAutoAttackable(player) && Math.abs(player.getZ() - getZ()) < 100)
@@ -127,7 +113,7 @@ public class L2SiegeFlagInstance extends L2Npc
 	public void reduceCurrentHp(double damage, L2Character attacker, L2Skill skill)
 	{
 		// Send warning to owners of headquarters that theirs base is under attack.
-		if (isScriptValue(1) && _clan != null && getCastle() != null && getCastle().getSiege().getIsInProgress())
+		if (isScriptValue(1) && _clan != null && getCastle() != null && getCastle().getSiege().isInProgress())
 		{
 			_clan.broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.BASE_UNDER_ATTACK));
 			setScriptValue(0);

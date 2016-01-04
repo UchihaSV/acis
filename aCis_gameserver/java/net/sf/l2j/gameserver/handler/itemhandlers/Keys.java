@@ -22,7 +22,7 @@ import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2ChestInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.skills.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.SkillHolder;
 
 /**
  * That handler is used for the different types of keys. Such items aren't consumed until the skill is definitively launched.

@@ -521,21 +521,6 @@ public class SkillTreeTable
 		return 0;
 	}
 	
-	public int getExpertiseLevel(int grade)
-	{
-		if (grade <= 0)
-			return 0;
-		
-		Map<Integer, L2SkillLearn> learnMap = _skillTrees.get(ClassId.paladin);
-		
-		int skillHashCode = SkillTable.getSkillHashCode(239, grade);
-		if (learnMap.containsKey(skillHashCode))
-			return learnMap.get(skillHashCode).getMinLevel();
-		
-		_log.severe("Expertise not found for grade " + grade);
-		return 0;
-	}
-	
 	private static class SingletonHolder
 	{
 		protected static final SkillTreeTable _instance = new SkillTreeTable();

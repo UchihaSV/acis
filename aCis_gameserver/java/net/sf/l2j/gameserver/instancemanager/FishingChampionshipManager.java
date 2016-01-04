@@ -29,7 +29,6 @@ import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.ServerVariables;
-import net.sf.l2j.gameserver.model.actor.instance.L2NpcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
@@ -314,17 +313,17 @@ public class FishingChampionshipManager
 		}
 		html.replace("%TABLE%", str);
 		html.replace("%prizeItem%", ItemTable.getInstance().getTemplate(Config.ALT_FISH_CHAMPIONSHIP_REWARD_ITEM).getName());
-		html.replace("%prizeFirst%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_1));
-		html.replace("%prizeTwo%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_2));
-		html.replace("%prizeThree%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_3));
-		html.replace("%prizeFour%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_4));
-		html.replace("%prizeFive%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_5));
+		html.replace("%prizeFirst%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_1);
+		html.replace("%prizeTwo%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_2);
+		html.replace("%prizeThree%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_3);
+		html.replace("%prizeFour%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_4);
+		html.replace("%prizeFive%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_5);
 		pl.sendPacket(html);
 	}
 	
-	public void showChampScreen(L2PcInstance pl, L2NpcInstance npc)
+	public void showChampScreen(L2PcInstance pl, int objectId)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(0);
+		NpcHtmlMessage html = new NpcHtmlMessage(objectId);
 		html.setFile("data/html/fisherman/championship/fish_event001.htm");
 		
 		String str = null;
@@ -336,13 +335,13 @@ public class FishingChampionshipManager
 		}
 		html.replace("%TABLE%", str);
 		html.replace("%prizeItem%", ItemTable.getInstance().getTemplate(Config.ALT_FISH_CHAMPIONSHIP_REWARD_ITEM).getName());
-		html.replace("%prizeFirst%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_1));
-		html.replace("%prizeTwo%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_2));
-		html.replace("%prizeThree%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_3));
-		html.replace("%prizeFour%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_4));
-		html.replace("%prizeFive%", String.valueOf(Config.ALT_FISH_CHAMPIONSHIP_REWARD_5));
-		html.replace("%refresh%", String.valueOf(getTimeRemaining()));
-		html.replace("%objectId%", String.valueOf(npc.getObjectId()));
+		html.replace("%prizeFirst%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_1);
+		html.replace("%prizeTwo%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_2);
+		html.replace("%prizeThree%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_3);
+		html.replace("%prizeFour%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_4);
+		html.replace("%prizeFive%", Config.ALT_FISH_CHAMPIONSHIP_REWARD_5);
+		html.replace("%refresh%", getTimeRemaining());
+		html.replace("%objectId%", objectId);
 		pl.sendPacket(html);
 	}
 	

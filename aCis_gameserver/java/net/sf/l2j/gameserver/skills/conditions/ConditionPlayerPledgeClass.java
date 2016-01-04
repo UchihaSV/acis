@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.skills.conditions;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.skills.Env;
 
 /**
@@ -42,15 +41,15 @@ public final class ConditionPlayerPledgeClass extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		if (!(env.player instanceof L2PcInstance))
+		if (env.getPlayer() == null)
 			return false;
 		
-		if (((L2PcInstance) env.player).getClan() == null)
+		if (env.getPlayer().getClan() == null)
 			return false;
 		
 		if (_pledgeClass == -1)
-			return ((L2PcInstance) env.player).isClanLeader();
+			return env.getPlayer().isClanLeader();
 		
-		return (((L2PcInstance) env.player).getPledgeClass() >= _pledgeClass);
+		return env.getPlayer().getPledgeClass() >= _pledgeClass;
 	}
 }

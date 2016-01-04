@@ -14,13 +14,9 @@
  */
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
-import net.sf.l2j.gameserver.model.L2Skill.SkillTargetType;
 import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -39,37 +35,9 @@ public class Resurrect implements ISkillHandler
 	@Override
 	public void useSkill(L2Character activeChar, L2Skill skill, L2Object[] targets)
 	{
-		final L2PcInstance player = activeChar.getActingPlayer();
-		
-		List<L2Character> targetToRes = new ArrayList<>();
-		
-		for (L2Object target : targets)
+		for (L2Object cha : targets)
 		{
-			if (!(target instanceof L2Character))
-				continue;
-			
-			if (target instanceof L2PcInstance)
-			{
-				// Check for same party or for same clan, if target is for clan.
-				if (skill.getTargetType() == SkillTargetType.TARGET_CORPSE_CLAN)
-				{
-					if (player.getClanId() != ((L2PcInstance) target).getClanId())
-						continue;
-				}
-			}
-			
-			if (target.isVisible())
-				targetToRes.add((L2Character) target);
-		}
-		
-		if (targetToRes.isEmpty())
-		{
-			activeChar.abortCast();
-			return;
-		}
-		
-		for (L2Character cha : targetToRes)
-		{
+			final L2Character target = (L2Character) cha;
 			if (activeChar instanceof L2PcInstance)
 			{
 				if (cha instanceof L2PcInstance)
@@ -77,17 +45,17 @@ public class Resurrect implements ISkillHandler
 				else if (cha instanceof L2PetInstance)
 				{
 					if (((L2PetInstance) cha).getOwner() == activeChar)
-						cha.doRevive(Formulas.calculateSkillResurrectRestorePercent(skill.getPower(), activeChar));
+						target.doRevive(Formulas.calculateSkillResurrectRestorePercent(skill.getPower(), activeChar));
 					else
 						((L2PetInstance) cha).getOwner().reviveRequest((L2PcInstance) activeChar, skill, true);
 				}
 				else
-					cha.doRevive(Formulas.calculateSkillResurrectRestorePercent(skill.getPower(), activeChar));
+					target.doRevive(Formulas.calculateSkillResurrectRestorePercent(skill.getPower(), activeChar));
 			}
 			else
 			{
-				DecayTaskManager.getInstance().cancelDecayTask(cha);
-				cha.doRevive(Formulas.calculateSkillResurrectRestorePercent(skill.getPower(), activeChar));
+				DecayTaskManager.getInstance().cancelDecayTask(target);
+				target.doRevive(Formulas.calculateSkillResurrectRestorePercent(skill.getPower(), activeChar));
 			}
 		}
 		activeChar.setChargedShot(activeChar.isChargedShot(ShotType.BLESSED_SPIRITSHOT) ? ShotType.BLESSED_SPIRITSHOT : ShotType.SPIRITSHOT, skill.isStaticReuse());

@@ -20,7 +20,6 @@ import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.Rnd;
 
@@ -39,11 +38,9 @@ public class L2TownPetInstance extends L2NpcInstance
 	@Override
 	public void onAction(L2PcInstance player)
 	{
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
 			player.setTarget(this);
-			player.sendPacket(new MyTargetSelected(getObjectId(), 0));
-		}
 		else
 		{
 			if (!canInteract(player))

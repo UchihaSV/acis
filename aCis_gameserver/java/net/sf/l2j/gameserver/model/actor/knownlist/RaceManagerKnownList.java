@@ -33,6 +33,9 @@ public class RaceManagerKnownList extends NpcKnownList
 		if (!super.addKnownObject(object))
 			return false;
 		
+		if (object instanceof L2PcInstance)
+			((L2PcInstance) object).sendPacket(MonsterRace.getInstance().getRacePacket());
+		
 		return true;
 	}
 	

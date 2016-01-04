@@ -141,12 +141,12 @@ public class AdminCreateItem implements IAdminCommandHandler
 					}
 					
 					if (set.getShield() > 0)
-						activeChar.getInventory().addItem("Admin", set.getShield(), 1, target, activeChar);
+						target.getInventory().addItem("Admin", set.getShield(), 1, target, activeChar);
 					
-					activeChar.sendMessage("You have spawned " + ItemTable.getInstance().getTemplate(chestId) + " set in " + activeChar.getName() + "'s inventory.");
+					activeChar.sendMessage("You have spawned " + ItemTable.getInstance().getTemplate(chestId) + " set in " + target.getName() + "'s inventory.");
 					
 					// Send the whole item list and open inventory window.
-					activeChar.sendPacket(new ItemList(activeChar, true));
+					target.sendPacket(new ItemList(target, true));
 				}
 				catch (Exception e)
 				{
@@ -185,7 +185,7 @@ public class AdminCreateItem implements IAdminCommandHandler
 					counter++;
 					
 					// Send whole item list and open inventory window
-					obj.sendPacket(new ItemList(activeChar, true));
+					obj.sendPacket(new ItemList(obj, true));
 				}
 			}
 			
@@ -202,7 +202,7 @@ public class AdminCreateItem implements IAdminCommandHandler
 				activeChar.sendMessage("You have spawned " + num + " " + template.getName() + " (" + id + ") in " + target.getName() + "'s inventory.");
 			
 			// Send the whole item list and open inventory window.
-			target.sendPacket(new ItemList(activeChar, true));
+			target.sendPacket(new ItemList(target, true));
 		}
 	}
 	

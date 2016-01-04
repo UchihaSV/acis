@@ -17,8 +17,8 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.ShowTownMap;
 import net.sf.l2j.gameserver.network.serverpackets.StaticObject;
@@ -28,9 +28,6 @@ import net.sf.l2j.gameserver.network.serverpackets.StaticObject;
  */
 public class L2StaticObjectInstance extends L2Object
 {
-	/** The interaction distance of the L2StaticObjectInstance */
-	public static final int INTERACTION_DISTANCE = 150;
-	
 	private int _staticObjectId;
 	private int _type = -1; // 0 - map signs, 1 - throne , 2 - arena signs
 	private ShowTownMap _map;
@@ -76,30 +73,16 @@ public class L2StaticObjectInstance extends L2Object
 		return _map;
 	}
 	
-	/**
-	 * this is called when a player interacts with this NPC
-	 * @param player
-	 */
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		if (getType() < 0)
-		{
-			player.sendPacket(ActionFailed.STATIC_PACKET);
-			return;
-		}
-		
-		// Check if the L2PcInstance already target the L2Npc
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			player.sendPacket(new MyTargetSelected(getObjectId(), 0));
-		}
 		else
 		{
 			// Calculate the distance between the L2PcInstance and the L2Npc
-			if (!player.isInsideRadius(this, INTERACTION_DISTANCE, false, false))
+			if (!player.isInsideRadius(this, L2Npc.INTERACTION_DISTANCE, false, false))
 			{
 				// Notify the L2PcInstance AI with INTERACT
 				player.getAI().setIntention(CtrlIntention.INTERACT, this);
@@ -128,23 +111,18 @@ public class L2StaticObjectInstance extends L2Object
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/admin/staticinfo.htm");
-			html.replace("%x%", String.valueOf(getX()));
-			html.replace("%y%", String.valueOf(getY()));
-			html.replace("%z%", String.valueOf(getZ()));
-			html.replace("%objid%", String.valueOf(getObjectId()));
-			html.replace("%staticid%", String.valueOf(getStaticObjectId()));
+			html.replace("%x%", getX());
+			html.replace("%y%", getY());
+			html.replace("%z%", getZ());
+			html.replace("%objid%", getObjectId());
+			html.replace("%staticid%", getStaticObjectId());
 			html.replace("%class%", getClass().getSimpleName());
 			player.sendPacket(html);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 		}
 		
 		if (player.getTarget() != this)
-		{
 			player.setTarget(this);
-			player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel()));
-			
-			player.sendPacket(new StaticObject(this));
-		}
 		else
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 	}

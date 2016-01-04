@@ -52,6 +52,7 @@ import net.sf.l2j.gameserver.datatables.NpcWalkerRoutesTable;
 import net.sf.l2j.gameserver.datatables.PetDataTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTreeTable;
+import net.sf.l2j.gameserver.datatables.SoulCrystalsTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.datatables.SpellbookTable;
 import net.sf.l2j.gameserver.datatables.StaticObjects;
@@ -90,7 +91,6 @@ import net.sf.l2j.gameserver.model.L2Multisell;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.PartyMatchRoomList;
 import net.sf.l2j.gameserver.model.PartyMatchWaitingList;
-import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.model.entity.Hero;
 import net.sf.l2j.gameserver.model.olympiad.Olympiad;
 import net.sf.l2j.gameserver.model.olympiad.OlympiadGameManager;
@@ -158,6 +158,7 @@ public class GameServer
 		ArmorSetsTable.getInstance();
 		FishTable.getInstance();
 		SpellbookTable.getInstance();
+		SoulCrystalsTable.load();
 		
 		Util.printSection("Augments");
 		AugmentationData.getInstance();
@@ -211,6 +212,7 @@ public class GameServer
 		SevenSignsFestival.getInstance();
 		
 		Util.printSection("Sieges");
+		SiegeManager.getInstance();
 		SiegeManager.getSieges();
 		MercTicketManager.getInstance();
 		
@@ -224,8 +226,6 @@ public class GameServer
 		NpcTable.getInstance();
 		NpcWalkerRoutesTable.getInstance();
 		DoorTable.getInstance();
-		for (Castle castle : CastleManager.getInstance().getCastles())
-			castle.loadDoorUpgrade();
 		StaticObjects.load();
 		SpawnTable.getInstance();
 		RaidBossSpawnManager.getInstance();

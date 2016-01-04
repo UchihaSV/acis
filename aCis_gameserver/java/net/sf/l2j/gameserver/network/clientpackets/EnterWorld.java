@@ -18,6 +18,7 @@ import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.Announcements;
 import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.SevenSigns;
+import net.sf.l2j.gameserver.communitybbs.Manager.MailBBSManager;
 import net.sf.l2j.gameserver.datatables.AdminCommandAccessRights;
 import net.sf.l2j.gameserver.datatables.GmListTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
@@ -29,6 +30,7 @@ import net.sf.l2j.gameserver.instancemanager.PetitionManager;
 import net.sf.l2j.gameserver.instancemanager.QuestManager;
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
 import net.sf.l2j.gameserver.model.L2Clan;
+import net.sf.l2j.gameserver.model.L2Clan.SubPledge;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
@@ -41,11 +43,13 @@ import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.Die;
 import net.sf.l2j.gameserver.network.serverpackets.EtcStatusUpdate;
+import net.sf.l2j.gameserver.network.serverpackets.ExMailArrived;
 import net.sf.l2j.gameserver.network.serverpackets.ExStorageMaxCount;
 import net.sf.l2j.gameserver.network.serverpackets.FriendList;
 import net.sf.l2j.gameserver.network.serverpackets.HennaInfo;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListAll;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeSkillList;
@@ -102,14 +106,15 @@ public class EnterWorld extends L2GameClientPacket
 		if (activeChar.getCurrentHp() < 0.5)
 			activeChar.setIsDead(true);
 		
-		if (activeChar.getClan() != null)
+		final L2Clan clan = activeChar.getClan();
+		if (clan != null)
 		{
-			activeChar.sendPacket(new PledgeSkillList(activeChar.getClan()));
+			activeChar.sendPacket(new PledgeSkillList(clan));
 			notifyClanMembers(activeChar);
 			notifySponsorOrApprentice(activeChar);
 			
 			// Add message at connexion if clanHall not paid.
-			ClanHall clanHall = ClanHallManager.getInstance().getClanHallByOwner(activeChar.getClan());
+			final ClanHall clanHall = ClanHallManager.getInstance().getClanHallByOwner(clan);
 			if (clanHall != null)
 			{
 				if (!clanHall.getPaid())
@@ -118,17 +123,22 @@ public class EnterWorld extends L2GameClientPacket
 			
 			for (Siege siege : SiegeManager.getSieges())
 			{
-				if (!siege.getIsInProgress())
+				if (!siege.isInProgress())
 					continue;
 				
-				if (siege.checkIsAttacker(activeChar.getClan()))
+				if (siege.checkIsAttacker(clan))
 					activeChar.setSiegeState((byte) 1);
-				else if (siege.checkIsDefender(activeChar.getClan()))
+				else if (siege.checkIsDefender(clan))
 					activeChar.setSiegeState((byte) 2);
 			}
 			
-			activeChar.sendPacket(new PledgeShowMemberListAll(activeChar.getClan(), activeChar));
-			activeChar.sendPacket(new PledgeStatusChanged(activeChar.getClan()));
+			activeChar.sendPacket(new PledgeShowMemberListAll(clan, 0));
+			
+			for (SubPledge sp : clan.getAllSubPledges())
+				activeChar.sendPacket(new PledgeShowMemberListAll(clan, sp.getId()));
+			
+			activeChar.sendPacket(new UserInfo(activeChar));
+			activeChar.sendPacket(new PledgeStatusChanged(clan));
 		}
 		
 		// Updating Seal of Strife Buff/Debuff
@@ -199,7 +209,24 @@ public class EnterWorld extends L2GameClientPacket
 		}
 		activeChar.sendPacket(new QuestList());
 		
-		if (Config.SERVER_NEWS)
+		// Unread mails make a popup appears.
+		if (Config.ENABLE_COMMUNITY_BOARD && MailBBSManager.getInstance().checkUnreadMail(activeChar) > 0)
+		{
+			activeChar.sendPacket(SystemMessageId.NEW_MAIL);
+			activeChar.sendPacket(new PlaySound("systemmsg_e.1233"));
+			activeChar.sendPacket(ExMailArrived.STATIC_PACKET);
+		}
+		
+		// Clan notice, if active.
+		if (Config.ENABLE_COMMUNITY_BOARD && clan != null && clan.isNoticeEnabled())
+		{
+			NpcHtmlMessage notice = new NpcHtmlMessage(0);
+			notice.setFile("data/html/clan_notice.htm");
+			notice.replace("%clan_name%", clan.getName());
+			notice.replace("%notice_text%", clan.getNotice().replaceAll("\r\n", "<br>").replaceAll("action", "").replaceAll("bypass", ""));
+			sendPacket(notice);
+		}
+		else if (Config.SERVER_NEWS)
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(0);
 			html.setFile("data/html/servnews.htm");

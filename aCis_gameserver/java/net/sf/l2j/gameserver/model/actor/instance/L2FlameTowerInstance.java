@@ -14,22 +14,26 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
+import java.util.List;
+
 import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.zone.L2CastleZoneType;
+import net.sf.l2j.gameserver.model.zone.L2ZoneType;
+import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
-import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
+import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
-/**
- * class for Flame Control Tower
- * @author JIV
- */
 public class L2FlameTowerInstance extends L2Npc
 {
+	private int _upgradeLevel;
+	private List<Integer> _zoneList;
+	
 	public L2FlameTowerInstance(int objectId, L2NpcTemplate template)
 	{
 		super(objectId, template);
@@ -39,14 +43,14 @@ public class L2FlameTowerInstance extends L2Npc
 	public boolean isAttackable()
 	{
 		// Attackable during siege by attacker only
-		return (getCastle() != null && getCastle().getCastleId() > 0 && getCastle().getSiege().getIsInProgress());
+		return (getCastle() != null && getCastle().getSiege().isInProgress());
 	}
 	
 	@Override
 	public boolean isAutoAttackable(L2Character attacker)
 	{
 		// Attackable during siege by attacker only
-		return (attacker != null && attacker instanceof L2PcInstance && getCastle() != null && getCastle().getCastleId() > 0 && getCastle().getSiege().getIsInProgress() && getCastle().getSiege().checkIsAttacker(((L2PcInstance) attacker).getClan()));
+		return (attacker != null && attacker instanceof L2PcInstance && getCastle() != null && getCastle().getSiege().isInProgress() && getCastle().getSiege().checkIsAttacker(((L2PcInstance) attacker).getClan()));
 	}
 	
 	@Override
@@ -58,21 +62,9 @@ public class L2FlameTowerInstance extends L2Npc
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2Npc
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Send MyTargetSelected to the L2PcInstance player
-			player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel() - getLevel()));
-			
-			// Send StatusUpdate of the L2Npc to the L2PcInstance to update its HP bar
-			StatusUpdate su = new StatusUpdate(this);
-			su.addAttribute(StatusUpdate.CUR_HP, (int) getStatus().getCurrentHp());
-			su.addAttribute(StatusUpdate.MAX_HP, getMaxHp());
-			player.sendPacket(su);
-		}
 		else
 		{
 			if (isAutoAttackable(player) && Math.abs(player.getZ() - getZ()) < 100 && GeoData.getInstance().canSeeTarget(player, this))
@@ -94,9 +86,47 @@ public class L2FlameTowerInstance extends L2Npc
 	@Override
 	public boolean doDie(L2Character killer)
 	{
-		if (getCastle().getSiege().getIsInProgress())
-			getCastle().getSiege().disableTraps();
+		enableZones(false);
+		
+		if (getCastle() != null)
+		{
+			// Message occurs only if the trap was triggered first.
+			if (_zoneList != null && _upgradeLevel != 0)
+				getCastle().getSiege().announceToPlayer(SystemMessage.getSystemMessage(SystemMessageId.A_TRAP_DEVICE_HAS_BEEN_STOPPED), false);
+		}
 		
 		return super.doDie(killer);
+	}
+	
+	@Override
+	public void deleteMe()
+	{
+		enableZones(false);
+		super.deleteMe();
+	}
+	
+	public final void enableZones(boolean state)
+	{
+		if (_zoneList != null && _upgradeLevel != 0)
+		{
+			final int maxIndex = _upgradeLevel * 2;
+			for (int i = 0; i < maxIndex; i++)
+			{
+				final L2ZoneType zone = ZoneManager.getInstance().getZoneById(_zoneList.get(i));
+				if (zone != null && zone instanceof L2CastleZoneType)
+					((L2CastleZoneType) zone).setEnabled(state);
+			}
+		}
+	}
+	
+	public final void setUpgradeLevel(int level)
+	{
+		_upgradeLevel = level;
+	}
+	
+	public final void setZoneList(List<Integer> list)
+	{
+		_zoneList = list;
+		enableZones(true);
 	}
 }

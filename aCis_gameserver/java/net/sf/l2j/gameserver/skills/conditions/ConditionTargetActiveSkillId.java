@@ -49,7 +49,7 @@ public class ConditionTargetActiveSkillId extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		for (L2Skill sk : env.target.getAllSkills())
+		for (L2Skill sk : env.getTarget().getAllSkills())
 		{
 			if (sk != null)
 			{

@@ -18,8 +18,6 @@ import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.network.serverpackets.MyTargetSelected;
-import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
@@ -38,28 +36,9 @@ public final class L2MutedNpcInstance extends L2NpcInstance
 	@Override
 	public void onAction(L2PcInstance player)
 	{
-		// Check if the L2PcInstance already target the L2Npc
+		// Set the target of the L2PcInstance player
 		if (player.getTarget() != this)
-		{
-			// Set the target of the L2PcInstance player
 			player.setTarget(this);
-			
-			// Check if the player is attackable (without a forced attack)
-			if (isAutoAttackable(player))
-			{
-				// Send MyTargetSelected to the L2PcInstance player
-				player.sendPacket(new MyTargetSelected(getObjectId(), player.getLevel() - getLevel()));
-				
-				// Send StatusUpdate of the L2Npc to the L2PcInstance to update its HP bar
-				StatusUpdate su = new StatusUpdate(this);
-				su.addAttribute(StatusUpdate.CUR_HP, (int) getCurrentHp());
-				su.addAttribute(StatusUpdate.MAX_HP, getMaxHp());
-				player.sendPacket(su);
-			}
-			// Send MyTargetSelected to the L2PcInstance player
-			else
-				player.sendPacket(new MyTargetSelected(getObjectId(), 0));
-		}
 		else
 		{
 			// Check if the player is attackable (without a forced attack) and isn't dead

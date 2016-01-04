@@ -50,7 +50,6 @@ public class L2SignsPriestInstance extends L2NpcInstance
 		}
 		else if (command.startsWith("SevenSigns"))
 		{
-			SystemMessage sm;
 			String path;
 			
 			int cabal = SevenSigns.CABAL_NULL;
@@ -101,15 +100,9 @@ public class L2SignsPriestInstance extends L2NpcInstance
 					}
 					
 					if (!player.reduceAdena("SevenSigns", SevenSigns.RECORD_SEVEN_SIGNS_COST, this, true))
-					{
-						player.sendPacket(SystemMessageId.YOU_NOT_ENOUGH_ADENA);
 						break;
-					}
-					player.getInventory().addItem("SevenSigns", SevenSigns.RECORD_SEVEN_SIGNS_ID, 1, player, this);
 					
-					sm = SystemMessage.getSystemMessage(SystemMessageId.EARNED_ITEM_S1);
-					sm.addItemName(SevenSigns.RECORD_SEVEN_SIGNS_ID);
-					player.sendPacket(sm);
+					player.addItem("SevenSigns", SevenSigns.RECORD_SEVEN_SIGNS_ID, 1, player, true);
 					
 					if (this instanceof L2DawnPriestInstance)
 						showChatWindow(player, val, "dawn", false);
@@ -328,9 +321,7 @@ public class L2SignsPriestInstance extends L2NpcInstance
 					else
 					{
 						score = SevenSigns.getInstance().addPlayerStoneContrib(player.getObjectId(), blueContrib, greenContrib, redContrib);
-						sm = SystemMessage.getSystemMessage(SystemMessageId.CONTRIB_SCORE_INCREASED_S1);
-						sm.addItemNumber(score);
-						player.sendPacket(sm);
+						player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CONTRIB_SCORE_INCREASED_S1).addItemNumber(score));
 						
 						if (this instanceof L2DawnPriestInstance)
 							showChatWindow(player, 6, "dawn", false);
@@ -427,9 +418,7 @@ public class L2SignsPriestInstance extends L2NpcInstance
 								else
 								{
 									contribScore = SevenSigns.getInstance().addPlayerStoneContrib(player.getObjectId(), blueContribCount, greenContribCount, redContribCount);
-									sm = SystemMessage.getSystemMessage(SystemMessageId.CONTRIB_SCORE_INCREASED_S1);
-									sm.addItemNumber(contribScore);
-									player.sendPacket(sm);
+									player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CONTRIB_SCORE_INCREASED_S1).addItemNumber(contribScore));
 									
 									if (this instanceof L2DawnPriestInstance)
 										showChatWindow(player, 6, "dawn", false);
@@ -448,9 +437,9 @@ public class L2SignsPriestInstance extends L2NpcInstance
 						html.setFile(path);
 						html.replace("%contribStoneColor%", contribStoneColor);
 						html.replace("%stoneColor%", stoneColorContr);
-						html.replace("%stoneCount%", String.valueOf(stoneCountContr));
-						html.replace("%stoneItemId%", String.valueOf(stoneIdContr));
-						html.replace("%objectId%", String.valueOf(getObjectId()));
+						html.replace("%stoneCount%", stoneCountContr);
+						html.replace("%stoneItemId%", stoneIdContr);
+						html.replace("%objectId%", getObjectId());
 						player.sendPacket(html);
 					}
 					break;
@@ -628,10 +617,10 @@ public class L2SignsPriestInstance extends L2NpcInstance
 					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 					html.setFile(path);
 					html.replace("%stoneColor%", stoneColor);
-					html.replace("%stoneValue%", String.valueOf(stoneValue));
-					html.replace("%stoneCount%", String.valueOf(stoneCount));
-					html.replace("%stoneItemId%", String.valueOf(stoneId));
-					html.replace("%objectId%", String.valueOf(getObjectId()));
+					html.replace("%stoneValue%", stoneValue);
+					html.replace("%stoneCount%", stoneCount);
+					html.replace("%stoneItemId%", stoneId);
+					html.replace("%objectId%", getObjectId());
 					player.sendPacket(html);
 					break;
 				
@@ -823,7 +812,7 @@ public class L2SignsPriestInstance extends L2NpcInstance
 		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
 		
 		// Send a Server->Client ActionFailed to the L2PcInstance in order to avoid that the client wait another packet

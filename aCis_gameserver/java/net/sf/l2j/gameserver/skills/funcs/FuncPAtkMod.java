@@ -31,15 +31,15 @@ public class FuncPAtkMod extends Func
 	
 	private FuncPAtkMod()
 	{
-		super(Stats.POWER_ATTACK, 0x30, null);
+		super(Stats.POWER_ATTACK, 0x30, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		if (env.player instanceof L2PetInstance)
+		if (env.getCharacter() instanceof L2PetInstance)
 			return;
 		
-		env.value *= Formulas.STRbonus[env.player.getSTR()] * env.player.getLevelMod();
+		env.mulValue(Formulas.STRbonus[env.getCharacter().getSTR()] * env.getCharacter().getLevelMod());
 	}
 }

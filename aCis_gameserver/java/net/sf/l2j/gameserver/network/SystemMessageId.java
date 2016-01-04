@@ -1474,7 +1474,7 @@ public final class SystemMessageId
 	 * ID: 247<br>
 	 * Message: You have already been at war with the $s1 clan: 5 days must pass before you can challenge this clan again
 	 */
-	public static final SystemMessageId FIVE_DAYS_MUST_PASS_BEFORE_CHALLENGE_AGAIN;
+	public static final SystemMessageId FIVE_DAYS_MUST_PASS_BEFORE_CHALLENGE_S1_AGAIN;
 	
 	/**
 	 * ID: 248<br>
@@ -12060,7 +12060,7 @@ public final class SystemMessageId
 		NOT_ALLOWED_TO_CHALLENGE = new SystemMessageId(244);
 		FIVE_DAYS_NOT_PASSED_SINCE_REFUSED_WAR = new SystemMessageId(245);
 		CLAN_CURRENTLY_AT_WAR = new SystemMessageId(246);
-		FIVE_DAYS_MUST_PASS_BEFORE_CHALLENGE_AGAIN = new SystemMessageId(247);
+		FIVE_DAYS_MUST_PASS_BEFORE_CHALLENGE_S1_AGAIN = new SystemMessageId(247);
 		S1_CLAN_NOT_ENOUGH_MEMBERS_FOR_WAR = new SystemMessageId(248);
 		WISH_SURRENDER_TO_S1_CLAN = new SystemMessageId(249);
 		YOU_HAVE_PERSONALLY_SURRENDERED_TO_THE_S1_CLAN = new SystemMessageId(250);

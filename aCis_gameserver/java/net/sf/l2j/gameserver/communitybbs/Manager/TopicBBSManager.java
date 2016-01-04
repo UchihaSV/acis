@@ -46,40 +46,6 @@ public class TopicBBSManager extends BaseBBSManager
 		_maxId = new ConcurrentHashMap<>();
 	}
 	
-	public void addTopic(Topic tt)
-	{
-		_table.add(tt);
-	}
-	
-	public void delTopic(Topic topic)
-	{
-		_table.remove(topic);
-	}
-	
-	public void setMaxID(int id, Forum f)
-	{
-		_maxId.put(f, id);
-	}
-	
-	public int getMaxID(Forum f)
-	{
-		Integer i = _maxId.get(f);
-		if (i == null)
-			return 0;
-		
-		return i;
-	}
-	
-	public Topic getTopicByID(int idf)
-	{
-		for (Topic t : _table)
-		{
-			if (t.getID() == idf)
-				return t;
-		}
-		return null;
-	}
-	
 	@Override
 	public void parseWrite(String ar1, String ar2, String ar3, String ar4, String ar5, L2PcInstance activeChar)
 	{
@@ -126,7 +92,7 @@ public class TopicBBSManager extends BaseBBSManager
 			parseCmd("_bbsmemo", activeChar);
 		}
 		else
-			separateAndSend("<html><body><br><br><center>The command: " + ar1 + " isn't implemented.</center></body></html>", activeChar);
+			super.parseWrite(ar1, ar2, ar3, ar4, ar5, activeChar);
 	}
 	
 	@Override
@@ -197,7 +163,41 @@ public class TopicBBSManager extends BaseBBSManager
 			parseCmd("_bbsmemo", activeChar);
 		}
 		else
-			separateAndSend("<html><body><br><br><center>The command: " + command + " isn't implemented.</center></body></html>", activeChar);
+			super.parseCmd(command, activeChar);
+	}
+	
+	public void addTopic(Topic tt)
+	{
+		_table.add(tt);
+	}
+	
+	public void delTopic(Topic topic)
+	{
+		_table.remove(topic);
+	}
+	
+	public void setMaxID(int id, Forum f)
+	{
+		_maxId.put(f, id);
+	}
+	
+	public int getMaxID(Forum f)
+	{
+		Integer i = _maxId.get(f);
+		if (i == null)
+			return 0;
+		
+		return i;
+	}
+	
+	public Topic getTopicByID(int idf)
+	{
+		for (Topic t : _table)
+		{
+			if (t.getID() == idf)
+				return t;
+		}
+		return null;
 	}
 	
 	private static void showNewTopic(Forum forum, L2PcInstance activeChar, int idf)

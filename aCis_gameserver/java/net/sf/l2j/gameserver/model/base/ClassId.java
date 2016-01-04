@@ -15,12 +15,13 @@
 package net.sf.l2j.gameserver.model.base;
 
 /**
- * This class defines all classes (ex : human fighter, darkFighter...) that a player can chose.<BR>
- * <BR>
- * Data :<BR>
- * <BR>
- * <li>id : The Identifier of the class</li> <li>isMage : True if the class is a mage class</li> <li>race : The race of this class</li> <li>parent : The parent ClassId or null if this class is the root</li><BR>
- * <BR>
+ * This class defines all classes (ex : human fighter, darkFighter...) that a player can chose.
+ * <ul>
+ * <li>id : The Identifier of the class</li>
+ * <li>isMage : True if the class is a mage class</li>
+ * <li>race : The race of this class</li>
+ * <li>parent : The parent ClassId or null if this class is the root</li>
+ * </ul>
  */
 public enum ClassId
 {

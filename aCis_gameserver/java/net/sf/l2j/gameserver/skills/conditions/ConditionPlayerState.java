@@ -14,6 +14,7 @@
  */
 package net.sf.l2j.gameserver.skills.conditions;
 
+import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.skills.Env;
 
@@ -22,7 +23,7 @@ import net.sf.l2j.gameserver.skills.Env;
  */
 public class ConditionPlayerState extends Condition
 {
-	public enum CheckPlayerState
+	public enum PlayerState
 	{
 		RESTING,
 		MOVING,
@@ -34,10 +35,10 @@ public class ConditionPlayerState extends Condition
 		OLYMPIAD
 	}
 	
-	private final CheckPlayerState _check;
+	private final PlayerState _check;
 	private final boolean _required;
 	
-	public ConditionPlayerState(CheckPlayerState check, boolean required)
+	public ConditionPlayerState(PlayerState check, boolean required)
 	{
 		_check = check;
 		_required = required;
@@ -46,30 +47,34 @@ public class ConditionPlayerState extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		L2PcInstance player;
+		final L2Character character = env.getCharacter();
+		final L2PcInstance player = env.getPlayer();
+		
 		switch (_check)
 		{
 			case RESTING:
-				if (env.player instanceof L2PcInstance)
-					return ((L2PcInstance) env.player).isSitting() == _required;
-				return !_required;
+				return (player == null) ? !_required : player.isSitting() == _required;
+				
 			case MOVING:
-				return env.player.isMoving() == _required;
+				return character.isMoving() == _required;
+				
 			case RUNNING:
-				return env.player.isMoving() == _required && env.player.isRunning() == _required;
+				return character.isMoving() == _required && character.isRunning() == _required;
+				
 			case RIDING:
-				return env.player.isRiding() == _required;
+				return character.isRiding() == _required;
+				
 			case FLYING:
-				return env.player.isFlying() == _required;
+				return character.isFlying() == _required;
+				
 			case BEHIND:
-				return env.player.isBehindTarget() == _required;
+				return character.isBehindTarget() == _required;
+				
 			case FRONT:
-				return env.player.isInFrontOfTarget() == _required;
+				return character.isInFrontOfTarget() == _required;
+				
 			case OLYMPIAD:
-				player = env.player.getActingPlayer();
-				if (player != null)
-					return player.isInOlympiadMode() == _required;
-				return !_required;
+				return (player == null) ? !_required : player.isInOlympiadMode() == _required;
 		}
 		return !_required;
 	}

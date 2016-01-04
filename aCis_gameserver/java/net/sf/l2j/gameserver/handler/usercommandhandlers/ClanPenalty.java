@@ -15,8 +15,11 @@
 package net.sf.l2j.gameserver.handler.usercommandhandlers;
 
 import java.text.SimpleDateFormat;
+import java.util.Map;
 
+import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.handler.IUserCommandHandler;
+import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.util.StringUtil;
@@ -27,6 +30,8 @@ import net.sf.l2j.util.StringUtil;
  */
 public class ClanPenalty implements IUserCommandHandler
 {
+	private static final String NO_PENALTY = "<tr><td width=170>No penalty is imposed.</td><td width=100 align=center></td></tr>";
+	
 	private static final int[] COMMAND_IDS =
 	{
 		100
@@ -38,36 +43,43 @@ public class ClanPenalty implements IUserCommandHandler
 		if (id != COMMAND_IDS[0])
 			return false;
 		
-		boolean penalty = false;
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-		final StringBuilder htmlContent = StringUtil.startAppend(500, "<html><body>" + "<center><table width=270 border=0 bgcolor=111111>" + "<tr><td width=170>Penalty</td>" + "<td width=100 align=center>Expiration Date</td></tr>" + "</table><table width=270 border=0><tr>");
+		final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		StringBuilder content = new StringBuilder();
 		
+		// Join a clan penalty.
 		if (activeChar.getClanJoinExpiryTime() > System.currentTimeMillis())
-		{
-			StringUtil.append(htmlContent, "<td width=170>Unable to join a clan.</td><td width=100 align=center>", format.format(activeChar.getClanJoinExpiryTime()), "</td>");
-			penalty = true;
-		}
+			StringUtil.append(content, "<tr><td width=170>Unable to join a clan.</td><td width=100 align=center>", format.format(activeChar.getClanJoinExpiryTime()), "</td></tr>");
 		
+		// Create a clan penalty.
 		if (activeChar.getClanCreateExpiryTime() > System.currentTimeMillis())
+			StringUtil.append(content, "<tr><td width=170>Unable to create a clan.</td><td width=100 align=center>", format.format(activeChar.getClanCreateExpiryTime()), "</td></tr>");
+		
+		final L2Clan clan = activeChar.getClan();
+		if (clan != null)
 		{
-			StringUtil.append(htmlContent, "<td width=170>Unable to create a clan.</td><td width=100 align=center>", format.format(activeChar.getClanCreateExpiryTime()), "</td>");
-			penalty = true;
+			// Invitation in a clan penalty.
+			if (clan.getCharPenaltyExpiryTime() > System.currentTimeMillis())
+				StringUtil.append(content, "<tr><td width=170>Unable to invite a clan member.</td><td width=100 align=center>", format.format(clan.getCharPenaltyExpiryTime()), "</td></tr>");
+			
+			// War penalty.
+			if (!clan.getWarPenalty().isEmpty())
+			{
+				for (Map.Entry<Integer, Long> entry : clan.getWarPenalty().entrySet())
+				{
+					if (entry.getValue() > System.currentTimeMillis())
+					{
+						final L2Clan enemyClan = ClanTable.getInstance().getClan(entry.getKey());
+						if (enemyClan != null)
+							StringUtil.append(content, "<tr><td width=170>Unable to attack ", enemyClan.getName(), " clan.</td><td width=100 align=center>", format.format(entry.getValue()), "</td></tr>");
+					}
+				}
+			}
 		}
 		
-		if (activeChar.getClan() != null && activeChar.getClan().getCharPenaltyExpiryTime() > System.currentTimeMillis())
-		{
-			StringUtil.append(htmlContent, "<td width=170>Unable to invite a clan member.</td>" + "<td width=100 align=center>", format.format(activeChar.getClan().getCharPenaltyExpiryTime()), "</td>");
-			penalty = true;
-		}
-		
-		if (!penalty)
-			htmlContent.append("<td width=170>No penalty is imposed.</td><td width=100 align=center> </td>");
-		
-		htmlContent.append("</tr></table><img src=\"L2UI.SquareWhite\" width=270 height=1></center></body></html>");
-		
-		NpcHtmlMessage penaltyHtml = new NpcHtmlMessage(0);
-		penaltyHtml.setHtml(htmlContent.toString());
-		activeChar.sendPacket(penaltyHtml);
+		NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/clan_penalty.htm");
+		html.replace("%content%", (content.length() == 0) ? NO_PENALTY : content.toString());
+		activeChar.sendPacket(html);
 		return true;
 	}
 	

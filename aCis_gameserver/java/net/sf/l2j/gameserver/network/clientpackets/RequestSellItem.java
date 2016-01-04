@@ -122,7 +122,8 @@ public final class RequestSellItem extends L2GameClientPacket
 			if (content != null)
 			{
 				NpcHtmlMessage html = new NpcHtmlMessage(merchant.getObjectId());
-				html.setHtml(content.replaceAll("%objectId%", String.valueOf(merchant.getObjectId())));
+				html.setHtml(content);
+				html.replace("%objectId%", merchant.getObjectId());
 				player.sendPacket(html);
 			}
 		}

@@ -117,7 +117,7 @@ public class L2GoldenRamInstance extends L2NpcInstance
 		
 		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
-		html.replace("%objectId%", String.valueOf(getObjectId()));
+		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
 		player.sendPacket(ActionFailed.STATIC_PACKET);
 	}

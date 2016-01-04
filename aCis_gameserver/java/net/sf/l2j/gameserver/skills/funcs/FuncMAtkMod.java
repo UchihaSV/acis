@@ -31,17 +31,18 @@ public class FuncMAtkMod extends Func
 	
 	private FuncMAtkMod()
 	{
-		super(Stats.MAGIC_ATTACK, 0x20, null);
+		super(Stats.MAGIC_ATTACK, 0x20, null, null);
 	}
 	
 	@Override
 	public void calc(Env env)
 	{
-		if (env.player instanceof L2PetInstance)
+		if (env.getCharacter() instanceof L2PetInstance)
 			return;
 		
-		double intb = Formulas.INTbonus[env.player.getINT()];
-		double lvlb = env.player.getLevelMod();
-		env.value *= (lvlb * lvlb) * (intb * intb);
+		final double intb = Formulas.INTbonus[env.getCharacter().getINT()];
+		final double lvlb = env.getCharacter().getLevelMod();
+		
+		env.mulValue((lvlb * lvlb) * (intb * intb));
 	}
 }

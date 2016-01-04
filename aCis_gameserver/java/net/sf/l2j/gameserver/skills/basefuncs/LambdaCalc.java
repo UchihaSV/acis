@@ -14,6 +14,9 @@
  */
 package net.sf.l2j.gameserver.skills.basefuncs;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.sf.l2j.gameserver.skills.Env;
 
 /**
@@ -21,37 +24,38 @@ import net.sf.l2j.gameserver.skills.Env;
  */
 public final class LambdaCalc extends Lambda
 {
-	public Func[] funcs;
+	private final List<Func> _funcs;
 	
 	public LambdaCalc()
 	{
-		funcs = new Func[0];
+		_funcs = new ArrayList<>();
 	}
 	
 	@Override
 	public double calc(Env env)
 	{
-		double saveValue = env.value;
+		double saveValue = env.getValue();
 		try
 		{
-			env.value = 0;
-			for (Func f : funcs)
+			env.setValue(0);
+			for (Func f : _funcs)
 				f.calc(env);
-			return env.value;
+			
+			return env.getValue();
 		}
 		finally
 		{
-			env.value = saveValue;
+			env.setValue(saveValue);
 		}
 	}
 	
 	public void addFunc(Func f)
 	{
-		int len = funcs.length;
-		Func[] tmp = new Func[len + 1];
-		for (int i = 0; i < len; i++)
-			tmp[i] = funcs[i];
-		tmp[len] = f;
-		funcs = tmp;
+		_funcs.add(f);
+	}
+	
+	public List<Func> getFuncs()
+	{
+		return _funcs;
 	}
 }

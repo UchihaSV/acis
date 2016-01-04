@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.skills.conditions;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.skills.Env;
 
 /**
@@ -36,9 +35,9 @@ public class ConditionPlayerPkCount extends Condition
 	@Override
 	public boolean testImpl(Env env)
 	{
-		if (!(env.player instanceof L2PcInstance))
+		if (env.getPlayer() == null)
 			return false;
 		
-		return ((L2PcInstance) env.player).getPkKills() <= _pk;
+		return env.getPlayer().getPkKills() <= _pk;
 	}
 }

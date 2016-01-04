@@ -18,7 +18,6 @@ import java.util.StringTokenizer;
 
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
@@ -35,19 +34,28 @@ public final class L2ObservationInstance extends L2NpcInstance
 	@Override
 	public void onBypassFeedback(L2PcInstance player, String command)
 	{
-		if (command.startsWith("observeSiege"))
+		if (command.startsWith("observe"))
 		{
-			String val = command.substring(13);
-			StringTokenizer st = new StringTokenizer(val);
-			st.nextToken(); // Bypass cost
+			StringTokenizer st = new StringTokenizer(command);
+			st.nextToken();
 			
-			if (SiegeManager.getSiege(Integer.parseInt(st.nextToken()), Integer.parseInt(st.nextToken()), Integer.parseInt(st.nextToken())) != null)
-				doObserve(player, val);
-			else
+			final int cost = Integer.parseInt(st.nextToken());
+			final int x = Integer.parseInt(st.nextToken());
+			final int y = Integer.parseInt(st.nextToken());
+			final int z = Integer.parseInt(st.nextToken());
+			
+			if (command.startsWith("observeSiege") && SiegeManager.getSiege(x, y, z) == null)
+			{
 				player.sendPacket(SystemMessageId.ONLY_VIEW_SIEGE);
+				return;
+			}
+			
+			if (player.reduceAdena("Broadcast", cost, this, true))
+			{
+				player.enterObserverMode(x, y, z);
+				player.sendPacket(new ItemList(player, false));
+			}
 		}
-		else if (command.startsWith("observe"))
-			doObserve(player, command.substring(8));
 		else
 			super.onBypassFeedback(player, command);
 	}
@@ -62,22 +70,5 @@ public final class L2ObservationInstance extends L2NpcInstance
 			filename = npcId + "-" + val;
 		
 		return "data/html/observation/" + filename + ".htm";
-	}
-	
-	private void doObserve(L2PcInstance player, String val)
-	{
-		StringTokenizer st = new StringTokenizer(val);
-		int cost = Integer.parseInt(st.nextToken());
-		int x = Integer.parseInt(st.nextToken());
-		int y = Integer.parseInt(st.nextToken());
-		int z = Integer.parseInt(st.nextToken());
-		if (player.reduceAdena("Broadcast", cost, this, true))
-		{
-			// enter mode
-			player.enterObserverMode(x, y, z);
-			ItemList il = new ItemList(player, false);
-			player.sendPacket(il);
-		}
-		player.sendPacket(ActionFailed.STATIC_PACKET);
 	}
 }

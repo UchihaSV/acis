@@ -24,7 +24,6 @@ import net.sf.l2j.gameserver.network.serverpackets.AbstractNpcInfo.NpcInfo;
 import net.sf.l2j.gameserver.network.serverpackets.NpcSay;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
-import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -144,20 +143,12 @@ public final class L2TamedBeastInstance extends L2FeedableBeastInstance
 			// always and automatically follow the owner.
 			getAI().startFollow(_owner, 200);
 			
-			// instead of calculating this value each time, let's get this now and pass it on
-			int totalBuffsAvailable = 0;
-			for (L2Skill skill : getTemplate().getSkillsArray())
-			{
-				if (skill.getSkillType() == L2SkillType.BUFF)
-					totalBuffsAvailable++;
-			}
-			
 			// Cancel the buff task, if existing.
 			if (_buffTask != null)
 				_buffTask.cancel(true);
 			
 			// Start the buff task.
-			_buffTask = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new CheckOwnerBuffs(this, totalBuffsAvailable), BUFF_INTERVAL, BUFF_INTERVAL);
+			_buffTask = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new CheckOwnerBuffs(this, getTemplate().getBuffSkills().size()), BUFF_INTERVAL, BUFF_INTERVAL);
 		}
 		// Despawn if no owner
 		else
@@ -232,7 +223,7 @@ public final class L2TamedBeastInstance extends L2FeedableBeastInstance
 			float HPRatio = ((float) _owner.getCurrentHp()) / _owner.getMaxHp();
 			if (HPRatio < 0.5)
 			{
-				for (L2Skill skill : getTemplate().getSkillsArray())
+				for (L2Skill skill : getTemplate().getHealSkills())
 				{
 					switch (skill.getSkillType())
 					{
@@ -250,10 +241,10 @@ public final class L2TamedBeastInstance extends L2FeedableBeastInstance
 		// Debuff, 33% luck.
 		else if (proba == 1)
 		{
-			for (L2Skill skill : getTemplate().getSkillsArray())
+			for (L2Skill skill : getTemplate().getDebuffSkills())
 			{
 				// if the skill is a debuff, check if the attacker has it already
-				if ((skill.getSkillType() == L2SkillType.DEBUFF) && (attacker.getFirstEffect(skill) == null))
+				if (attacker.getFirstEffect(skill) == null)
 					sitCastAndFollow(skill, attacker);
 			}
 		}
@@ -264,14 +255,12 @@ public final class L2TamedBeastInstance extends L2FeedableBeastInstance
 			float MPRatio = ((float) _owner.getCurrentMp()) / _owner.getMaxMp();
 			if (MPRatio < 0.5)
 			{
-				for (L2Skill skill : getTemplate().getSkillsArray())
+				for (L2Skill skill : getTemplate().getHealSkills())
 				{
 					switch (skill.getSkillType())
 					{
-						case MANAHEAL:
-						case MANAHEAL_PERCENT:
 						case MANARECHARGE:
-						case MPHOT:
+						case MANAHEAL_PERCENT:
 							sitCastAndFollow(skill, _owner);
 							return;
 					}
@@ -371,18 +360,15 @@ public final class L2TamedBeastInstance extends L2FeedableBeastInstance
 			L2Skill buffToGive = null;
 			
 			// Get this npc's skills
-			for (L2Skill skill : getTemplate().getSkillsArray())
+			for (L2Skill skill : getTemplate().getBuffSkills())
 			{
-				if (skill.getSkillType() == L2SkillType.BUFF)
-				{
-					if (i == rand)
-						buffToGive = skill;
-					
-					i++;
-					
-					if (owner.getFirstEffect(skill) != null)
-						totalBuffsOnOwner++;
-				}
+				if (i == rand)
+					buffToGive = skill;
+				
+				i++;
+				
+				if (owner.getFirstEffect(skill) != null)
+					totalBuffsOnOwner++;
 			}
 			
 			/*
