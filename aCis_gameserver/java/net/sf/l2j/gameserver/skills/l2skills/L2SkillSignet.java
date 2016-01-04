@@ -22,12 +22,12 @@ import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2EffectPointInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.util.Point3D;
 
 public final class L2SkillSignet extends L2Skill
 {
@@ -58,7 +58,7 @@ public final class L2SkillSignet extends L2Skill
 		
 		if (caster instanceof L2PcInstance && getTargetType() == L2Skill.SkillTargetType.TARGET_GROUND)
 		{
-			Point3D wordPosition = ((L2PcInstance) caster).getCurrentSkillWorldPosition();
+			Location wordPosition = ((L2PcInstance) caster).getCurrentSkillWorldPosition();
 			
 			if (wordPosition != null)
 			{

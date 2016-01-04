@@ -14,174 +14,55 @@
  */
 package net.sf.l2j.gameserver.ai;
 
-import java.util.ArrayList;
-
 /**
- * Class for AI action after some event. Has 2 array list for "work" and "break".
+ * Class for AI action after some event.
  * @author Yaroslav
  */
 public class NextAction
 {
-	public interface NextActionCallback
-	{
-		public void doWork();
-	}
+	/** After which CtrlEvent is this action supposed to run. */
+	private final CtrlEvent _event;
 	
-	private ArrayList<CtrlEvent> _events;
-	private ArrayList<CtrlIntention> _intentions;
-	private NextActionCallback _callback;
+	/** What is the intention of the action, e.g. if AI gets this CtrlIntention set, NextAction is canceled. */
+	private final CtrlIntention _intention;
 	
-	/**
-	 * Empty.
-	 */
-	public NextAction()
-	{
-	}
-	
-	/**
-	 * Main constructor.
-	 * @param events
-	 * @param intentions
-	 * @param callback
-	 */
-	public NextAction(ArrayList<CtrlEvent> events, ArrayList<CtrlIntention> intentions, NextActionCallback callback)
-	{
-		_events = events;
-		_intentions = intentions;
-		setCallback(callback);
-	}
+	/** Wrapper for NextAction content. */
+	private final Runnable _runnable;
 	
 	/**
 	 * Single constructor.
-	 * @param event
-	 * @param intention
-	 * @param callback
+	 * @param event : After which the NextAction is triggered.
+	 * @param intention : CtrlIntention of the action.
+	 * @param runnable :
 	 */
-	public NextAction(CtrlEvent event, CtrlIntention intention, NextActionCallback callback)
+	public NextAction(CtrlEvent event, CtrlIntention intention, Runnable runnable)
 	{
-		if (_events == null)
-			_events = new ArrayList<>();
-		
-		if (_intentions == null)
-			_intentions = new ArrayList<>();
-		
-		if (event != null)
-			_events.add(event);
-		
-		if (intention != null)
-			_intentions.add(intention);
-		
-		setCallback(callback);
-	}
-	
-	/**
-	 * Do action.
-	 */
-	public void doAction()
-	{
-		if (_callback != null)
-			_callback.doWork();
+		_event = event;
+		_intention = intention;
+		_runnable = runnable;
 	}
 	
 	/**
 	 * @return the _event
 	 */
-	public ArrayList<CtrlEvent> getEvents()
+	public CtrlEvent getEvent()
 	{
-		// If null return empty list.
-		if (_events == null)
-			_events = new ArrayList<>();
-		
-		return _events;
-	}
-	
-	/**
-	 * @param event the _event to set
-	 */
-	public void setEvents(ArrayList<CtrlEvent> event)
-	{
-		_events = event;
-	}
-	
-	/**
-	 * @param event
-	 */
-	public void addEvent(CtrlEvent event)
-	{
-		if (_events == null)
-			_events = new ArrayList<>();
-		
-		if (event != null)
-			_events.add(event);
-	}
-	
-	/**
-	 * @param event
-	 */
-	public void removeEvent(CtrlEvent event)
-	{
-		if (_events == null)
-			return;
-		
-		_events.remove(event);
-	}
-	
-	/**
-	 * @return the _callback
-	 */
-	public NextActionCallback getCallback()
-	{
-		return _callback;
-	}
-	
-	/**
-	 * @param callback the _callback to set
-	 */
-	public void setCallback(NextActionCallback callback)
-	{
-		_callback = callback;
+		return _event;
 	}
 	
 	/**
 	 * @return the _intention
 	 */
-	public ArrayList<CtrlIntention> getIntentions()
+	public CtrlIntention getIntention()
 	{
-		// If null return empty list.
-		if (_intentions == null)
-			_intentions = new ArrayList<>();
-		
-		return _intentions;
+		return _intention;
 	}
 	
 	/**
-	 * @param intentions the _intention to set
+	 * Do action.
 	 */
-	public void setIntentions(ArrayList<CtrlIntention> intentions)
+	public void run()
 	{
-		_intentions = intentions;
-	}
-	
-	/**
-	 * @param intention
-	 */
-	public void addIntention(CtrlIntention intention)
-	{
-		if (_intentions == null)
-			_intentions = new ArrayList<>();
-		
-		if (intention != null)
-			_intentions.add(intention);
-	}
-	
-	/**
-	 * @param intention
-	 */
-	public void removeIntention(CtrlIntention intention)
-	{
-		if (_intentions == null)
-			return;
-		
-		_intentions.remove(intention);
+		_runnable.run();
 	}
 }

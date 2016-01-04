@@ -41,7 +41,7 @@ public class PartyMemberPosition extends L2GameServerPacket
 			if (member == null)
 				continue;
 			
-			locations.put(member.getObjectId(), new Location(member));
+			locations.put(member.getObjectId(), new Location(member.getX(), member.getY(), member.getZ()));
 		}
 	}
 	

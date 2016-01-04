@@ -27,11 +27,11 @@ import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
 import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
 import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
-import net.sf.l2j.gameserver.pathfinding.AbstractNodeLoc;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
@@ -269,66 +269,64 @@ public class DoorTable
 		return _staticItems.values();
 	}
 	
-	public boolean checkIfDoorsBetween(AbstractNodeLoc start, AbstractNodeLoc end)
+	public boolean checkIfDoorsBetween(Location start, Location end)
 	{
 		return checkIfDoorsBetween(start.getX(), start.getY(), start.getZ(), end.getX(), end.getY(), end.getZ());
 	}
 	
-	public boolean checkIfDoorsBetween(int x, int y, int z, int tx, int ty, int tz)
+	public boolean checkIfDoorsBetween(int ox, int oy, int oz, int tx, int ty, int tz)
 	{
-		List<L2DoorInstance> allDoors = _regions.get(MapRegionTable.getMapRegion(x, y));
-		if (allDoors == null)
+		List<L2DoorInstance> doors = _regions.get(MapRegionTable.getMapRegion(ox, oy));
+		if (doors == null)
 			return false;
 		
-		for (L2DoorInstance doorInst : allDoors)
+		for (L2DoorInstance door : doors)
 		{
-			if (doorInst.getXMax() == 0)
+			if (door.isOpened() || door.getCurrentHp() <= 0)
 				continue;
+			
+			int maxX = door.getXMax();
+			int maxY = door.getYMax();
+			int maxZ = door.getZMax();
+			int minX = door.getXMin();
+			int minY = door.getYMin();
+			int minZ = door.getZMin();
 			
 			// line segment goes through box
 			// first basic checks to stop most calculations short
 			// phase 1, x
-			if ((x <= doorInst.getXMax() && tx >= doorInst.getXMin()) || (tx <= doorInst.getXMax() && x >= doorInst.getXMin()))
+			if ((ox <= maxX && tx >= minX) || (tx <= maxX && ox >= minX))
 			{
 				// phase 2, y
-				if ((y <= doorInst.getYMax() && ty >= doorInst.getYMin()) || (ty <= doorInst.getYMax() && y >= doorInst.getYMin()))
+				if ((oy <= maxY && ty >= minY) || (ty <= maxY && oy >= minY))
 				{
 					// phase 3, basically only z remains but now we calculate it with another formula (by rage)
 					// in some cases the direct line check (only) in the beginning isn't sufficient,
 					// when char z changes a lot along the path
-					if (doorInst.getCurrentHp() > 0 && !doorInst.isOpened())
+					int l = tx - ox;
+					int m = ty - oy;
+					int n = tz - oz;
+					
+					int dk;
+					
+					if ((dk = (door.getA() * l + door.getB() * m + door.getC() * n)) == 0)
+						continue; // Parallel
+						
+					float p = (float) (door.getA() * ox + door.getB() * oy + door.getC() * oz + door.getD()) / (float) dk;
+					
+					int fx = (int) (ox - l * p);
+					int fy = (int) (oy - m * p);
+					int fz = (int) (oz - n * p);
+					
+					if ((Math.min(ox, tx) <= fx && fx <= Math.max(ox, tx)) && (Math.min(oy, ty) <= fy && fy <= Math.max(oy, ty)) && (Math.min(oz, tz) <= fz && fz <= Math.max(oz, tz)))
 					{
-						int px1 = doorInst.getXMin();
-						int py1 = doorInst.getYMin();
-						int pz1 = doorInst.getZMin();
-						int px2 = doorInst.getXMax();
-						int py2 = doorInst.getYMax();
-						int pz2 = doorInst.getZMax();
-						
-						int l = tx - x;
-						int m = ty - y;
-						int n = tz - z;
-						
-						int dk;
-						
-						if ((dk = (doorInst.getA() * l + doorInst.getB() * m + doorInst.getC() * n)) == 0)
-							continue; // Parallel
-							
-						float p = (float) (doorInst.getA() * x + doorInst.getB() * y + doorInst.getC() * z + doorInst.getD()) / (float) dk;
-						
-						int fx = (int) (x - l * p);
-						int fy = (int) (y - m * p);
-						int fz = (int) (z - n * p);
-						
-						if ((Math.min(x, tx) <= fx && fx <= Math.max(x, tx)) && (Math.min(y, ty) <= fy && fy <= Math.max(y, ty)) && (Math.min(z, tz) <= fz && fz <= Math.max(z, tz)))
-						{
-							if (((fx >= px1 && fx <= px2) || (fx >= px2 && fx <= px1)) && ((fy >= py1 && fy <= py2) || (fy >= py2 && fy <= py1)) && ((fz >= pz1 && fz <= pz2) || (fz >= pz2 && fz <= pz1)))
-								return true; // Door between
-						}
+						if (((fx >= minX && fx <= maxX) || (fx >= maxX && fx <= minX)) && ((fy >= minY && fy <= maxY) || (fy >= maxY && fy <= minY)) && ((fz >= minZ && fz <= maxZ) || (fz >= maxZ && fz <= minZ)))
+							return true; // Door between
 					}
 				}
 			}
 		}
+		
 		return false;
 	}
 	

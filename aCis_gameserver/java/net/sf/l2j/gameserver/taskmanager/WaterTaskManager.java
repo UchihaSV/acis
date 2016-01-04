@@ -18,68 +18,72 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.sf.l2j.gameserver.ThreadPoolManager;
-import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
 /**
- * @author Tryskell
+ * Updates {@link L2PcInstance} drown timer and reduces {@link L2PcInstance} HP, when drowning.
+ * @author Tryskell, Hasha
  */
-public class WaterTaskManager
+public final class WaterTaskManager implements Runnable
 {
-	protected Map<L2PcInstance, Long> _waterTask = new ConcurrentHashMap<>();
+	private final Map<L2PcInstance, Long> _players = new ConcurrentHashMap<>();
 	
-	public WaterTaskManager()
-	{
-		ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(new WaterScheduler(), 0, 1000);
-	}
-	
-	public static WaterTaskManager getInstance()
+	public static final WaterTaskManager getInstance()
 	{
 		return SingletonHolder._instance;
 	}
 	
-	public void add(L2PcInstance actor, long time)
+	protected WaterTaskManager()
 	{
-		_waterTask.put(actor, time);
+		// Run task each second.
+		ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(this, 1000, 1000);
 	}
 	
-	public void remove(L2Character actor)
+	/**
+	 * Adds {@link L2PcInstance} to the WaterTask.
+	 * @param player : {@link L2PcInstance} to be added and checked.
+	 * @param time : Time in ms, after which the drowning effect is applied.
+	 */
+	public final void add(L2PcInstance player, long time)
 	{
-		_waterTask.remove(actor);
+		_players.put(player, System.currentTimeMillis() + time);
 	}
 	
-	private class WaterScheduler implements Runnable
+	/**
+	 * Removes {@link L2PcInstance} from the WaterTask.
+	 * @param player : L2PcInstance to be removed.
+	 */
+	public final void remove(L2PcInstance player)
 	{
-		protected WaterScheduler()
-		{
-			// Do nothing
-		}
+		_players.remove(player);
+	}
+	
+	@Override
+	public final void run()
+	{
+		// List is empty, skip.
+		if (_players.isEmpty())
+			return;
 		
-		@Override
-		public void run()
+		// Get current time.
+		final long time = System.currentTimeMillis();
+		
+		// Loop all players.
+		for (Map.Entry<L2PcInstance, Long> entry : _players.entrySet())
 		{
-			if (!_waterTask.isEmpty())
-			{
-				Long current = System.currentTimeMillis();
-				synchronized (this)
-				{
-					for (L2PcInstance actor : _waterTask.keySet())
-					{
-						if (current > _waterTask.get(actor))
-						{
-							double reduceHp = actor.getMaxHp() / 100.0;
-							
-							if (reduceHp < 1)
-								reduceHp = 1;
-							
-							actor.reduceCurrentHp(reduceHp, actor, false, false, null);
-							actor.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.DROWN_DAMAGE_S1).addNumber((int) reduceHp));
-						}
-					}
-				}
-			}
+			// Time has not passed yet, skip.
+			if (time < entry.getValue())
+				continue;
+			
+			// Get player.
+			final L2PcInstance player = entry.getKey();
+			
+			// Reduce 1% of HP per second.
+			final double hp = player.getMaxHp() / 100.0;
+			player.reduceCurrentHp(hp, player, false, false, null);
+			player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.DROWN_DAMAGE_S1).addNumber((int) hp));
 		}
 	}
 	

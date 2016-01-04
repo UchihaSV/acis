@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.model.L2Party;
+import net.sf.l2j.gameserver.model.L2Party.MessageType;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoom;
 import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoomList;
@@ -44,15 +45,15 @@ public final class RequestWithdrawParty extends L2GameClientPacket
 			player.sendMessage("You can't exit party when you are in Dimensional Rift.");
 		else
 		{
-			party.removePartyMember(player);
+			party.removePartyMember(player, MessageType.Left);
 			
 			if (player.isInPartyMatchRoom())
 			{
 				PartyMatchRoom _room = PartyMatchRoomList.getInstance().getPlayerRoom(player);
 				if (_room != null)
 				{
-					player.sendPacket(new PartyMatchDetail(player, _room));
-					player.sendPacket(new ExPartyRoomMember(player, _room, 0));
+					player.sendPacket(new PartyMatchDetail(_room));
+					player.sendPacket(new ExPartyRoomMember(_room, 0));
 					player.sendPacket(ExClosePartyRoom.STATIC_PACKET);
 					
 					_room.deleteMember(player);

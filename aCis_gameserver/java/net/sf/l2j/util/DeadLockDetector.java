@@ -22,8 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.Announcements;
 import net.sf.l2j.gameserver.Shutdown;
+import net.sf.l2j.gameserver.util.Broadcast;
 
 /**
  * Thread to check for deadlocked threads.
@@ -100,7 +100,7 @@ public class DeadLockDetector extends Thread
 					
 					if (Config.RESTART_ON_DEADLOCK)
 					{
-						Announcements.announceToAll("Server has stability issues - restarting now.");
+						Broadcast.announceToOnlinePlayers("Server has stability issues - restarting now.");
 						Shutdown.getInstance().startShutdown(null, "DeadLockDetector - Auto Restart", 60, true);
 					}
 				}

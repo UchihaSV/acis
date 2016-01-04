@@ -32,13 +32,12 @@ public class ChannelListUpdate implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (id != COMMAND_IDS[0])
+		if (!activeChar.isInParty())
 			return false;
 		
-		if (activeChar.getParty() == null || activeChar.getParty().getCommandChannel() == null)
+		final L2CommandChannel channel = activeChar.getParty().getCommandChannel();
+		if (channel == null)
 			return false;
-		
-		L2CommandChannel channel = activeChar.getParty().getCommandChannel();
 		
 		activeChar.sendPacket(new ExMultiPartyCommandChannelInfo(channel));
 		return true;

@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import net.sf.l2j.commons.io.UnicodeReader;
-import net.sf.l2j.commons.io.filters.HtmFilter;
 
 /**
  * @author Layane, reworked by Java-man and Hasha
@@ -32,8 +31,8 @@ public class HtmCache
 {
 	private static final Logger _log = Logger.getLogger(HtmCache.class.getName());
 	
-	private static final Map<Integer, String> _htmCache = new HashMap<>();
-	private static final FileFilter _htmFilter = new HtmFilter();
+	private final Map<Integer, String> _htmCache;
+	private final FileFilter _htmFilter;
 	
 	public static HtmCache getInstance()
 	{
@@ -42,7 +41,8 @@ public class HtmCache
 	
 	protected HtmCache()
 	{
-		reload();
+		_htmCache = new HashMap<>();
+		_htmFilter = new HtmFilter();
 	}
 	
 	/**
@@ -51,6 +51,7 @@ public class HtmCache
 	public void reload()
 	{
 		_log.info("HtmCache: Cache cleared, had " + _htmCache.size() + " entries.");
+		
 		_htmCache.clear();
 	}
 	
@@ -68,7 +69,7 @@ public class HtmCache
 	 * Parse given directory, all html files are loaded to HtmCache.
 	 * @param dir : Directory to be parsed.
 	 */
-	private static void parseDir(File dir)
+	private void parseDir(File dir)
 	{
 		for (File file : dir.listFiles(_htmFilter))
 		{
@@ -84,31 +85,27 @@ public class HtmCache
 	 * @param file : File to be cached.
 	 * @return String : Content of the file.
 	 */
-	private static String loadFile(File file)
+	private String loadFile(File file)
 	{
-		if (file.exists() && _htmFilter.accept(file) && !file.isDirectory())
+		try (FileInputStream fis = new FileInputStream(file); UnicodeReader ur = new UnicodeReader(fis, "UTF-8"); BufferedReader br = new BufferedReader(ur))
 		{
-			try (FileInputStream fis = new FileInputStream(file); UnicodeReader ur = new UnicodeReader(fis, "UTF-8"); BufferedReader br = new BufferedReader(ur))
-			{
-				StringBuilder sb = new StringBuilder();
-				String line;
-				
-				while ((line = br.readLine()) != null)
-					sb.append(line).append('\n');
-				
-				String content = sb.toString().replaceAll("\r\n", "\n");
-				sb = null;
-				
-				_htmCache.put(file.getPath().replace("\\", "/").hashCode(), content);
-				return content;
-			}
-			catch (Exception e)
-			{
-				_log.warning("HtmCache: problem with loading file " + e);
-			}
+			StringBuilder sb = new StringBuilder();
+			String line;
+			
+			while ((line = br.readLine()) != null)
+				sb.append(line).append('\n');
+			
+			String content = sb.toString().replaceAll("\r\n", "\n");
+			sb = null;
+			
+			_htmCache.put(file.getPath().replace("\\", "/").hashCode(), content);
+			return content;
 		}
-		
-		return null;
+		catch (Exception e)
+		{
+			_log.warning("HtmCache: problem with loading file " + e);
+			return null;
+		}
 	}
 	
 	/**
@@ -118,7 +115,12 @@ public class HtmCache
 	 */
 	public boolean isLoadable(String path)
 	{
-		return loadFile(new File(path)) != null;
+		final File file = new File(path);
+		
+		if (file.exists() && _htmFilter.accept(file) && !file.isDirectory())
+			return loadFile(file) != null;
+		
+		return false;
 	}
 	
 	/**
@@ -133,7 +135,12 @@ public class HtmCache
 		
 		String content = _htmCache.get(filename.hashCode());
 		if (content == null)
-			content = loadFile(new File(filename));
+		{
+			final File file = new File(filename);
+			
+			if (file.exists() && _htmFilter.accept(file) && !file.isDirectory())
+				content = loadFile(file);
+		}
 		
 		return content;
 	}
@@ -158,5 +165,15 @@ public class HtmCache
 	private static class SingletonHolder
 	{
 		protected static final HtmCache _instance = new HtmCache();
+	}
+	
+	protected class HtmFilter implements FileFilter
+	{
+		@Override
+		public boolean accept(File file)
+		{
+			// directories, *.htm and *.html files
+			return file.isDirectory() || file.getName().endsWith(".htm") || file.getName().endsWith(".html");
+		}
 	}
 }

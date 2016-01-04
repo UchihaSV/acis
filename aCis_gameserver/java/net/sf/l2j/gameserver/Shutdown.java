@@ -25,7 +25,6 @@ import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
 import net.sf.l2j.gameserver.instancemanager.FishingChampionshipManager;
 import net.sf.l2j.gameserver.instancemanager.FourSepulchersManager;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
-import net.sf.l2j.gameserver.instancemanager.ItemsOnGroundManager;
 import net.sf.l2j.gameserver.instancemanager.RaidBossSpawnManager;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
@@ -38,6 +37,8 @@ import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.gameserverpackets.ServerStatus;
 import net.sf.l2j.gameserver.network.serverpackets.ServerClose;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.taskmanager.ItemsOnGroundTaskManager;
+import net.sf.l2j.gameserver.taskmanager.MovementTaskManager;
 import net.sf.l2j.gameserver.util.Broadcast;
 import net.sf.l2j.util.Util;
 
@@ -131,7 +132,7 @@ public class Shutdown extends Thread
 			// ensure all services are stopped
 			try
 			{
-				GameTimeController.getInstance().stopTimer();
+				MovementTaskManager.getInstance().interrupt();
 			}
 			catch (Throwable t)
 			{
@@ -195,12 +196,7 @@ public class Shutdown extends Thread
 			_log.info("BufferTable data has been saved.");
 			
 			// Save items on ground before closing
-			if (Config.SAVE_DROPPED_ITEM)
-			{
-				ItemsOnGroundManager.getInstance().saveInDb();
-				ItemsOnGroundManager.getInstance().cleanUp();
-				_log.info("ItemsOnGroundManager: Items on ground have been saved.");
-			}
+			ItemsOnGroundTaskManager.getInstance().save();
 			
 			try
 			{
@@ -318,7 +314,7 @@ public class Shutdown extends Thread
 			_log.warning("GM: " + activeChar.getName() + " (" + activeChar.getObjectId() + ") issued shutdown abort, " + MODE_TEXT[_shutdownMode] + " has been stopped.");
 			_counterInstance._abort();
 			
-			Announcements.announceToAll("Server aborts " + MODE_TEXT[_shutdownMode] + " and continues normal operation.");
+			Broadcast.announceToOnlinePlayers("Server aborts " + MODE_TEXT[_shutdownMode] + " and continues normal operation.");
 		}
 	}
 	

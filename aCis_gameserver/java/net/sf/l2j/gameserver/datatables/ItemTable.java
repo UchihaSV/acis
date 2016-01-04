@@ -200,11 +200,6 @@ public class ItemTable
 		return item;
 	}
 	
-	public ItemInstance createItem(String process, int itemId, int count, L2PcInstance actor)
-	{
-		return createItem(process, itemId, count, actor, null);
-	}
-	
 	/**
 	 * Dummy item is created by setting the ID of the object in the world at null value
 	 * @param itemId : int designating the item

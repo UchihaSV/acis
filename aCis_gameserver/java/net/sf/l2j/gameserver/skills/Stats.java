@@ -41,7 +41,6 @@ public enum Stats
 	POWER_ATTACK_SPEED("pAtkSpd"),
 	MAGIC_ATTACK_SPEED("mAtkSpd"),
 	MAGIC_REUSE_RATE("mReuse"),
-	ATK_REUSE("atkReuse"),
 	P_REUSE("pReuse"),
 	SHIELD_DEFENCE("sDef"),
 	SHIELD_DEFENCE_ANGLE("shieldDefAngle"),
@@ -177,9 +176,6 @@ public enum Stats
 	PHYSICAL_MP_CONSUME_RATE("PhysicalMpConsumeRate"),
 	MAGICAL_MP_CONSUME_RATE("MagicalMpConsumeRate"),
 	DANCE_MP_CONSUME_RATE("DanceMpConsumeRate"),
-	BOW_MP_CONSUME_RATE("BowMpConsumeRate"),
-	HP_CONSUME_RATE("HpConsumeRate"),
-	MP_CONSUME("MpConsume"),
 	
 	// Skill mastery
 	SKILL_MASTERY("skillMastery");

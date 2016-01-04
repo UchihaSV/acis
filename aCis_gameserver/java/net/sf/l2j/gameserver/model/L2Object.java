@@ -171,14 +171,14 @@ public abstract class L2Object
 			// Set the x,y,z position of the L2Object spawn and update its _worldregion
 			_isVisible = true;
 			
-			if (x > L2World.MAP_MAX_X)
-				x = L2World.MAP_MAX_X - 5000;
-			if (x < L2World.MAP_MIN_X)
-				x = L2World.MAP_MIN_X + 5000;
-			if (y > L2World.MAP_MAX_Y)
-				y = L2World.MAP_MAX_Y - 5000;
-			if (y < L2World.MAP_MIN_Y)
-				y = L2World.MAP_MIN_Y + 5000;
+			if (x > L2World.WORLD_X_MAX)
+				x = L2World.WORLD_X_MAX - 5000;
+			if (x < L2World.WORLD_X_MIN)
+				x = L2World.WORLD_X_MIN + 5000;
+			if (y > L2World.WORLD_Y_MAX)
+				y = L2World.WORLD_Y_MAX - 5000;
+			if (y < L2World.WORLD_Y_MIN)
+				y = L2World.WORLD_Y_MIN + 5000;
 			
 			getPosition().setWorldPosition(x, y, z);
 			getPosition().setWorldRegion(L2World.getInstance().getRegion(getPosition().getWorldPosition()));

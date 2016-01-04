@@ -64,7 +64,7 @@ public final class RequestFriendDel extends L2GameClientPacket
 			// Player deleted from your friendlist
 			activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_HAS_BEEN_DELETED_FROM_YOUR_FRIENDS_LIST).addString(_name));
 			
-			activeChar.getFriendList().remove(new Integer(id));
+			activeChar.getFriendList().remove(Integer.valueOf(id));
 			activeChar.sendPacket(new FriendList(activeChar)); // update friendList *heavy method*
 			
 			L2PcInstance player = L2World.getInstance().getPlayer(_name);

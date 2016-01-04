@@ -493,6 +493,7 @@ public class Siege implements Siegable
 				statement = con.prepareStatement("DELETE FROM siege_clans WHERE clan_id=?");
 				statement.setInt(1, getCastle().getOwnerId());
 				statement.execute();
+				statement.close();
 			}
 			
 			getAttackerClans().clear();
@@ -513,6 +514,7 @@ public class Siege implements Siegable
 			PreparedStatement statement = con.prepareStatement("DELETE FROM siege_clans WHERE castle_id=? and type = 2");
 			statement.setInt(1, getCastle().getCastleId());
 			statement.execute();
+			statement.close();
 			
 			getDefenderWaitingClans().clear();
 		}
@@ -745,6 +747,7 @@ public class Siege implements Siegable
 			statement.setInt(1, getCastle().getCastleId());
 			statement.setInt(2, clanId);
 			statement.execute();
+			statement.close();
 			
 			loadSiegeClan();
 		}
@@ -956,6 +959,8 @@ public class Siege implements Siegable
 				else if (typeId == DEFENDER_NOT_APPROVED)
 					addDefenderWaiting(rs.getInt("clan_id"));
 			}
+			rs.close();
+			statement.close();
 		}
 		catch (Exception e)
 		{
@@ -1044,6 +1049,7 @@ public class Siege implements Siegable
 			statement.setString(3, String.valueOf(isTimeRegistrationOver()));
 			statement.setInt(4, getCastle().getCastleId());
 			statement.execute();
+			statement.close();
 		}
 		catch (Exception e)
 		{

@@ -54,12 +54,14 @@ public class SellListProcure extends L2GameServerPacket
 		writeD(0x00); // lease ?
 		writeH(_sellList.size()); // list size
 		
-		for (ItemInstance item : _sellList.keySet())
+		for (Map.Entry<ItemInstance, Integer> itemEntry : _sellList.entrySet())
 		{
+			final ItemInstance item = itemEntry.getKey();
+			
 			writeH(item.getItem().getType1());
 			writeD(item.getObjectId());
 			writeD(item.getItemId());
-			writeD(_sellList.get(item)); // count
+			writeD(itemEntry.getValue()); // count
 			writeH(item.getItem().getType2());
 			writeH(0); // unknown
 			writeD(0); // price, u shouldnt get any adena for crops, only raw materials

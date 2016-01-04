@@ -27,18 +27,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.Announcements;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.L2Spawn;
-import net.sf.l2j.gameserver.model.Location;
+import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.util.Broadcast;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -90,12 +89,8 @@ public class AutoSpawnManager
 	
 	private void restoreSpawnData()
 	{
-		int numLoaded = 0;
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement2 = null;
-			ResultSet rs2 = null;
-			
 			// Restore spawn group data, then the location data.
 			PreparedStatement statement = con.prepareStatement("SELECT * FROM random_spawn ORDER BY groupId ASC");
 			ResultSet rs = statement.executeQuery();
@@ -109,26 +104,21 @@ public class AutoSpawnManager
 				spawnInst.setSpawnCount(rs.getInt("count"));
 				spawnInst.setBroadcast(rs.getBoolean("broadcastSpawn"));
 				spawnInst.setRandomSpawn(rs.getBoolean("randomSpawn"));
-				numLoaded++;
-				
 				// Restore the spawn locations for this spawn group/instance.
-				statement2 = con.prepareStatement("SELECT * FROM random_spawn_loc WHERE groupId=?");
+				PreparedStatement statement2 = con.prepareStatement("SELECT * FROM random_spawn_loc WHERE groupId=?");
 				statement2.setInt(1, rs.getInt("groupId"));
-				rs2 = statement2.executeQuery();
+				ResultSet rs2 = statement2.executeQuery();
 				
 				while (rs2.next())
 				{
 					// Add each location to the spawn group/instance.
 					spawnInst.addSpawnLocation(rs2.getInt("x"), rs2.getInt("y"), rs2.getInt("z"), rs2.getInt("heading"));
 				}
-				
+				rs2.close();
 				statement2.close();
 			}
-			
+			rs.close();
 			statement.close();
-			
-			if (Config.DEBUG)
-				_log.config("AutoSpawnManager: Loaded " + numLoaded + " spawn group(s) from the database.");
 		}
 		catch (Exception e)
 		{
@@ -169,9 +159,6 @@ public class AutoSpawnManager
 		
 		setSpawnActive(newSpawn, true);
 		
-		if (Config.DEBUG)
-			_log.config("AutoSpawnManager: Registered auto spawn for NPC ID " + npcId + " (Object ID = " + newId + ").");
-		
 		return newSpawn;
 	}
 	
@@ -204,14 +191,11 @@ public class AutoSpawnManager
 		try
 		{
 			// Try to remove from the list of registered spawns if it exists.
-			_registeredSpawns.remove(spawnInst);
+			_registeredSpawns.remove(spawnInst.getObjectId());
 			
 			// Cancel the currently associated running scheduled task.
 			ScheduledFuture<?> respawnTask = _runningSpawns.remove(spawnInst._objectId);
 			respawnTask.cancel(false);
-			
-			if (Config.DEBUG)
-				_log.config("AutoSpawnManager: Removed auto spawn for NPC ID " + spawnInst._npcId + " (Object ID = " + spawnInst._objectId + ").");
 		}
 		catch (Exception e)
 		{
@@ -220,15 +204,6 @@ public class AutoSpawnManager
 		}
 		
 		return true;
-	}
-	
-	/**
-	 * Remove a registered spawn from the list, specified by the given spawn object ID.
-	 * @param objectId
-	 */
-	public void removeSpawn(int objectId)
-	{
-		removeSpawn(_registeredSpawns.get(objectId));
 	}
 	
 	/**
@@ -382,7 +357,7 @@ public class AutoSpawnManager
 				if (!spawnInst.isSpawnActive())
 					return;
 				
-				Location[] locationList = spawnInst.getLocationList();
+				SpawnLocation[] locationList = spawnInst.getLocationList();
 				
 				// If there are no set co-ordinates, cancel the spawn task.
 				if (locationList.length == 0)
@@ -458,7 +433,7 @@ public class AutoSpawnManager
 				
 				// Announce to all players that the spawn has taken place, with the nearest town location.
 				if (npcInst != null && spawnInst.isBroadcasting())
-					Announcements.announceToAll("The " + npcInst.getName() + " has spawned near " + MapRegionTable.getInstance().getClosestTownName(npcInst.getX(), npcInst.getY()) + "!");
+					Broadcast.announceToOnlinePlayers("The " + npcInst.getName() + " has spawned near " + MapRegionTable.getInstance().getClosestTownName(npcInst.getX(), npcInst.getY()) + "!");
 				
 				// If there is no despawn time, do not create a despawn task.
 				if (spawnInst.getDespawnDelay() > 0)
@@ -506,9 +481,6 @@ public class AutoSpawnManager
 					
 					npcInst.deleteMe();
 					spawnInst.removeNpcInstance(npcInst);
-					
-					if (Config.DEBUG)
-						_log.info("AutoSpawnManager: Spawns removed for spawn instance (Object ID = " + _objectId + ").");
 				}
 			}
 			catch (Exception e)
@@ -528,8 +500,6 @@ public class AutoSpawnManager
 	{
 		protected int _objectId;
 		
-		protected int _spawnIndex;
-		
 		protected int _npcId;
 		
 		protected int _initDelay;
@@ -544,7 +514,7 @@ public class AutoSpawnManager
 		
 		private final List<L2Npc> _npcList = new ArrayList<>();
 		
-		private final List<Location> _locList = new ArrayList<>();
+		private final List<SpawnLocation> _locList = new ArrayList<>();
 		
 		private boolean _spawnActive;
 		
@@ -605,9 +575,9 @@ public class AutoSpawnManager
 			return _spawnCount;
 		}
 		
-		public Location[] getLocationList()
+		public SpawnLocation[] getLocationList()
 		{
-			return _locList.toArray(new Location[_locList.size()]);
+			return _locList.toArray(new SpawnLocation[_locList.size()]);
 		}
 		
 		public L2Npc[] getNPCInstanceList()
@@ -664,7 +634,7 @@ public class AutoSpawnManager
 		
 		public boolean addSpawnLocation(int x, int y, int z, int heading)
 		{
-			return _locList.add(new Location(x, y, z, heading));
+			return _locList.add(new SpawnLocation(x, y, z, heading));
 		}
 		
 		public boolean addSpawnLocation(int[] spawnLoc)
@@ -673,18 +643,6 @@ public class AutoSpawnManager
 				return false;
 			
 			return addSpawnLocation(spawnLoc[0], spawnLoc[1], spawnLoc[2], -1);
-		}
-		
-		public Location removeSpawnLocation(int locIndex)
-		{
-			try
-			{
-				return _locList.remove(locIndex);
-			}
-			catch (IndexOutOfBoundsException e)
-			{
-				return null;
-			}
 		}
 	}
 	

@@ -33,24 +33,24 @@ public class SiegeGuardKnownList extends AttackableKnownList
 		if (!super.addKnownObject(object))
 			return false;
 		
+		// get siege guard
+		final L2SiegeGuardInstance guard = (L2SiegeGuardInstance) _activeObject;
+		
 		// Check if siege is in progress
-		final Castle castle = getActiveChar().getCastle();
+		final Castle castle = guard.getCastle();
 		if (castle != null && castle.getZone().isActive())
 		{
-			// Check if player is not the defender
+			// get player
 			final L2PcInstance player = object.getActingPlayer();
-			if (player != null && (player.getClan() == null || getActiveChar().getCastle().getSiege().getAttackerClan(player.getClan()) != null))
+			
+			// check player's clan is in siege attacker list
+			if (player != null && (player.getClan() == null || castle.getSiege().getAttackerClan(player.getClan()) != null))
 			{
-				if (getActiveChar().getAI().getIntention() == CtrlIntention.IDLE)
-					getActiveChar().getAI().setIntention(CtrlIntention.ACTIVE, null);
+				// try to set AI to attack
+				if (guard.getAI().getIntention() == CtrlIntention.IDLE)
+					guard.getAI().setIntention(CtrlIntention.ACTIVE, null);
 			}
 		}
 		return true;
-	}
-	
-	@Override
-	public final L2SiegeGuardInstance getActiveChar()
-	{
-		return (L2SiegeGuardInstance) super.getActiveChar();
 	}
 }

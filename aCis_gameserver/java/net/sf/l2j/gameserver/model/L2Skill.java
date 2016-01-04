@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTreeTable;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -111,15 +111,8 @@ public abstract class L2Skill implements IChanceSkillTrigger
 	}
 	
 	// conditional values
-	public final static int COND_RUNNING = 0x0001;
-	public final static int COND_WALKING = 0x0002;
-	public final static int COND_SIT = 0x0004;
 	public final static int COND_BEHIND = 0x0008;
 	public final static int COND_CRIT = 0x0010;
-	public final static int COND_LOWHP = 0x0020;
-	public final static int COND_ROBES = 0x0040;
-	public final static int COND_CHARGES = 0x0080;
-	public final static int COND_SHIELD = 0x0100;
 	
 	private final int _id;
 	private final int _level;
@@ -970,11 +963,6 @@ public abstract class L2Skill implements IChanceSkillTrigger
 	public final boolean useSpiritShot()
 	{
 		return isMagic();
-	}
-	
-	public final boolean useFishShot()
-	{
-		return ((_skillType == L2SkillType.PUMPING) || (_skillType == L2SkillType.REELING));
 	}
 	
 	public final int getWeaponsAllowed()
@@ -1892,7 +1880,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 				}
 				
 				// Corpse mob only available for half time
-				if (_skillType == L2SkillType.DRAIN && DecayTaskManager.getInstance().getTasks().containsKey(target) && (System.currentTimeMillis() - DecayTaskManager.getInstance().getTasks().get(target)) > DecayTaskManager.DEFAULT_DECAY_TIME / 2)
+				if (_skillType == L2SkillType.DRAIN && !DecayTaskManager.getInstance().isCorpseActionAllowed((L2Attackable) target))
 				{
 					activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CORPSE_TOO_OLD_SKILL_NOT_USED));
 					return _emptyTargetList;
@@ -1982,7 +1970,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 					if (target.isAlikeDead() || !target.isUndead())
 						continue;
 					
-					if (!GeoData.getInstance().canSeeTarget(activeChar, target))
+					if (!PathFinding.getInstance().canSeeTarget(activeChar, target))
 						continue;
 					
 					if (onlyFirst)
@@ -2110,7 +2098,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 			if (skill.isOffensive() && !target.isAutoAttackable(caster))
 				return false;
 		}
-		return GeoData.getInstance().canSeeTarget(caster, target);
+		return PathFinding.getInstance().canSeeTarget(caster, target);
 	}
 	
 	public static final boolean addSummon(L2Character caster, L2PcInstance owner, int radius, boolean isDead)
@@ -2134,7 +2122,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 		return true;
 	}
 	
-	public final List<Func> getStatFuncs(L2Effect effect, L2Character player)
+	public final List<Func> getStatFuncs(L2Character player)
 	{
 		if (_funcTemplates == null)
 			return Collections.emptyList();

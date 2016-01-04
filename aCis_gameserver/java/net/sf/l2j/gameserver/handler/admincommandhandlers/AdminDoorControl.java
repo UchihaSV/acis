@@ -16,19 +16,22 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import net.sf.l2j.gameserver.datatables.DoorTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
-import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.entity.Castle;
+import net.sf.l2j.gameserver.network.SystemMessageId;
 
 /**
- * This class handles following admin commands: - open1 = open coloseum door 24190001 - open2 = open coloseum door 24190002 - open3 = open coloseum door 24190003 - open4 = open coloseum door 24190004 - openall = open all coloseum door - close1 = close coloseum door 24190001 - close2 = close coloseum
- * door 24190002 - close3 = close coloseum door 24190003 - close4 = close coloseum door 24190004 - closeall = close all coloseum door - open = open selected door - close = close selected door
+ * This class handles following admin commands
+ * <ul>
+ * <li>open = open a door using a doorId, or a targeted door if not found.</li>
+ * <li>close = close a door using a doorId, or a targeted door if not found.</li>
+ * <li>openall = open all doors registered on doors.xml.</li>
+ * <li>closeall = close all doors registered on doors.xml.</li>
+ * </ul>
  */
 public class AdminDoorControl implements IAdminCommandHandler
 {
-	private static DoorTable _doorTable;
 	private static final String[] ADMIN_COMMANDS =
 	{
 		"admin_open",
@@ -40,79 +43,63 @@ public class AdminDoorControl implements IAdminCommandHandler
 	@Override
 	public boolean useAdminCommand(String command, L2PcInstance activeChar)
 	{
-		_doorTable = DoorTable.getInstance();
-		
-		try
+		if (command.startsWith("admin_open"))
 		{
-			if (command.startsWith("admin_open "))
-			{
-				int doorId = Integer.parseInt(command.substring(11));
-				if (_doorTable.getDoor(doorId) != null)
-					_doorTable.getDoor(doorId).openMe();
-				else
-				{
-					for (Castle castle : CastleManager.getInstance().getCastles())
-						if (castle.getDoor(doorId) != null)
-							castle.getDoor(doorId).openMe();
-				}
-			}
-			else if (command.startsWith("admin_close "))
-			{
-				int doorId = Integer.parseInt(command.substring(12));
-				if (_doorTable.getDoor(doorId) != null)
-					_doorTable.getDoor(doorId).closeMe();
-				else
-				{
-					for (Castle castle : CastleManager.getInstance().getCastles())
-						if (castle.getDoor(doorId) != null)
-							castle.getDoor(doorId).closeMe();
-				}
-			}
-			
-			if (command.equals("admin_closeall"))
-			{
-				for (L2DoorInstance door : _doorTable.getDoors())
-					door.closeMe();
-				
-				for (Castle castle : CastleManager.getInstance().getCastles())
-					for (L2DoorInstance door : castle.getDoors())
-						door.closeMe();
-			}
-			
 			if (command.equals("admin_openall"))
 			{
-				for (L2DoorInstance door : _doorTable.getDoors())
+				for (L2DoorInstance door : DoorTable.getInstance().getDoors())
 					door.openMe();
-				
-				for (Castle castle : CastleManager.getInstance().getCastles())
-					for (L2DoorInstance door : castle.getDoors())
+			}
+			else
+			{
+				try
+				{
+					final L2DoorInstance door = DoorTable.getInstance().getDoor(Integer.parseInt(command.substring(11)));
+					if (door != null)
 						door.openMe();
-			}
-			
-			if (command.equals("admin_open"))
-			{
-				L2Object target = activeChar.getTarget();
-				
-				if (target instanceof L2DoorInstance)
-					((L2DoorInstance) target).openMe();
-				else
-					activeChar.sendMessage("Incorrect target.");
-			}
-			
-			if (command.equals("admin_close"))
-			{
-				L2Object target = activeChar.getTarget();
-				
-				if (target instanceof L2DoorInstance)
-					((L2DoorInstance) target).closeMe();
-				else
-					activeChar.sendMessage("Incorrect target.");
+					else
+						activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
+				}
+				catch (Exception e)
+				{
+					final L2Object target = activeChar.getTarget();
+					
+					if (target instanceof L2DoorInstance)
+						((L2DoorInstance) target).openMe();
+					else
+						activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
+				}
 			}
 		}
-		catch (Exception e)
+		else if (command.startsWith("admin_close"))
 		{
-			e.printStackTrace();
+			if (command.equals("admin_closeall"))
+			{
+				for (L2DoorInstance door : DoorTable.getInstance().getDoors())
+					door.closeMe();
+			}
+			else
+			{
+				try
+				{
+					final L2DoorInstance door = DoorTable.getInstance().getDoor(Integer.parseInt(command.substring(12)));
+					if (door != null)
+						door.closeMe();
+					else
+						activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
+				}
+				catch (Exception e)
+				{
+					final L2Object target = activeChar.getTarget();
+					
+					if (target instanceof L2DoorInstance)
+						((L2DoorInstance) target).closeMe();
+					else
+						activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
+				}
+			}
 		}
+		
 		return true;
 	}
 	

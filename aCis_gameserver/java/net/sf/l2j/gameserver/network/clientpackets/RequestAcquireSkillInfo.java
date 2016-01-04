@@ -62,7 +62,7 @@ public class RequestAcquireSkillInfo extends L2GameClientPacket
 		
 		switch (_skillType)
 		{
-			// General skills
+		// General skills
 			case 0:
 				int skillLvl = activeChar.getSkillLevel(_skillId);
 				if (skillLvl >= _skillLevel)
@@ -73,7 +73,7 @@ public class RequestAcquireSkillInfo extends L2GameClientPacket
 				
 				if (!trainer.getTemplate().canTeach(activeChar.getSkillLearningClassId()))
 					return;
-					
+				
 				for (L2SkillLearn sl : SkillTreeTable.getInstance().getAvailableSkills(activeChar, activeChar.getSkillLearningClassId()))
 				{
 					if (sl.getId() == _skillId && sl.getLevel() == _skillLevel)
@@ -87,7 +87,7 @@ public class RequestAcquireSkillInfo extends L2GameClientPacket
 					}
 				}
 				break;
-			// Common skills 
+			// Common skills
 			case 1:
 				skillLvl = activeChar.getSkillLevel(_skillId);
 				if (skillLvl >= _skillLevel)

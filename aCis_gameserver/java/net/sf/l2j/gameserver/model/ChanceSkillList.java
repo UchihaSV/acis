@@ -50,7 +50,7 @@ public class ChanceSkillList extends ConcurrentHashMap<IChanceSkillTrigger, Chan
 		return _owner;
 	}
 	
-	public void onHit(L2Character target, int damage, boolean ownerWasHit, boolean wasCrit)
+	public void onHit(L2Character target, boolean ownerWasHit, boolean wasCrit)
 	{
 		int event;
 		if (ownerWasHit)
@@ -66,15 +66,15 @@ public class ChanceSkillList extends ConcurrentHashMap<IChanceSkillTrigger, Chan
 				event |= ChanceCondition.EVT_CRIT;
 		}
 		
-		onChanceSkillEvent(event, damage, target);
+		onChanceSkillEvent(event, target);
 	}
 	
 	public void onEvadedHit(L2Character attacker)
 	{
-		onChanceSkillEvent(ChanceCondition.EVT_EVADED_HIT, 0, attacker);
+		onChanceSkillEvent(ChanceCondition.EVT_EVADED_HIT, attacker);
 	}
 	
-	public void onSkillHit(L2Character target, boolean ownerWasHit, boolean wasMagic, boolean wasOffensive, byte element)
+	public void onSkillHit(L2Character target, boolean ownerWasHit, boolean wasMagic, boolean wasOffensive)
 	{
 		int event;
 		if (ownerWasHit)
@@ -97,25 +97,25 @@ public class ChanceSkillList extends ConcurrentHashMap<IChanceSkillTrigger, Chan
 			event |= wasOffensive ? ChanceCondition.EVT_MAGIC_OFFENSIVE : ChanceCondition.EVT_MAGIC_GOOD;
 		}
 		
-		onChanceSkillEvent(event, 0, target);
+		onChanceSkillEvent(event, target);
 	}
 	
 	public void onStart()
 	{
-		onChanceSkillEvent(ChanceCondition.EVT_ON_START, 0, _owner);
+		onChanceSkillEvent(ChanceCondition.EVT_ON_START, _owner);
 	}
 	
 	public void onActionTime()
 	{
-		onChanceSkillEvent(ChanceCondition.EVT_ON_ACTION_TIME, 0, _owner);
+		onChanceSkillEvent(ChanceCondition.EVT_ON_ACTION_TIME, _owner);
 	}
 	
 	public void onExit()
 	{
-		onChanceSkillEvent(ChanceCondition.EVT_ON_EXIT, 0, _owner);
+		onChanceSkillEvent(ChanceCondition.EVT_ON_EXIT, _owner);
 	}
 	
-	public void onChanceSkillEvent(int event, int damage, L2Character target)
+	public void onChanceSkillEvent(int event, L2Character target)
 	{
 		if (_owner.isDead())
 			return;
@@ -125,7 +125,7 @@ public class ChanceSkillList extends ConcurrentHashMap<IChanceSkillTrigger, Chan
 			IChanceSkillTrigger trigger = entry.getKey();
 			ChanceCondition cond = entry.getValue();
 			
-			if (cond != null && cond.trigger(event, damage))
+			if (cond != null && cond.trigger(event))
 			{
 				if (trigger instanceof L2Skill)
 					makeCast((L2Skill) trigger, target);

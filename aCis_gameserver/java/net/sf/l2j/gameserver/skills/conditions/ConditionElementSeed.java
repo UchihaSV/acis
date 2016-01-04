@@ -22,7 +22,7 @@ import net.sf.l2j.gameserver.skills.effects.EffectSeed;
  */
 public class ConditionElementSeed extends Condition
 {
-	private static int[] seedSkills =
+	private static int[] SEED_SKILLS =
 	{
 		1285,
 		1286,
@@ -33,17 +33,6 @@ public class ConditionElementSeed extends Condition
 	public ConditionElementSeed(int[] seeds)
 	{
 		_requiredSeeds = seeds;
-		// if (Config.DEVELOPER) System.out.println("Required seeds: " + _requiredSeeds[0] + ", " + _requiredSeeds[1] + ", " + _requiredSeeds[2]+ ", " + _requiredSeeds[3]+ ", " + _requiredSeeds[4]);
-	}
-	
-	ConditionElementSeed(int fire, int water, int wind, int various, int any)
-	{
-		_requiredSeeds = new int[5];
-		_requiredSeeds[0] = fire;
-		_requiredSeeds[1] = water;
-		_requiredSeeds[2] = wind;
-		_requiredSeeds[3] = various;
-		_requiredSeeds[4] = any;
 	}
 	
 	@Override
@@ -52,14 +41,13 @@ public class ConditionElementSeed extends Condition
 		int[] Seeds = new int[3];
 		for (int i = 0; i < Seeds.length; i++)
 		{
-			Seeds[i] = (env.getCharacter().getFirstEffect(seedSkills[i]) instanceof EffectSeed ? ((EffectSeed) env.getCharacter().getFirstEffect(seedSkills[i])).getPower() : 0);
+			Seeds[i] = (env.getCharacter().getFirstEffect(SEED_SKILLS[i]) instanceof EffectSeed ? ((EffectSeed) env.getCharacter().getFirstEffect(SEED_SKILLS[i])).getPower() : 0);
 			if (Seeds[i] >= _requiredSeeds[i])
 				Seeds[i] -= _requiredSeeds[i];
 			else
 				return false;
 		}
 		
-		// if (Config.DEVELOPER) System.out.println("Seeds: " + Seeds[0] + ", " + Seeds[1] + ", " + Seeds[2]);
 		if (_requiredSeeds[3] > 0)
 		{
 			int count = 0;

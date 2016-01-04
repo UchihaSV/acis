@@ -14,15 +14,15 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.util.Point3D;
 
 public class ValidateLocationInVehicle extends L2GameServerPacket
 {
 	private final int _charObjId;
 	private final int _boatObjId;
 	private final int _heading;
-	private final Point3D _pos;
+	private final Location _pos;
 	
 	public ValidateLocationInVehicle(L2PcInstance player)
 	{

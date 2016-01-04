@@ -24,7 +24,6 @@ import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.util.Util;
 
 /**
  * Support for /clanwarlist command
@@ -42,9 +41,6 @@ public class ClanWarsList implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (!Util.contains(COMMAND_IDS, id))
-			return false;
-		
 		L2Clan clan = activeChar.getClan();
 		if (clan == null)
 		{

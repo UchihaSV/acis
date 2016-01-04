@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.model;
 
-import net.sf.l2j.gameserver.GameTimeController;
+import net.sf.l2j.gameserver.taskmanager.GameTimeTaskManager;
 
 public class FishData
 {
@@ -86,7 +86,7 @@ public class FishData
 	
 	public int getType(boolean isLureNight)
 	{
-		if (!GameTimeController.getInstance().isNowNight() && isLureNight)
+		if (!GameTimeTaskManager.getInstance().isNight() && isLureNight)
 			return -1;
 		
 		return _type;

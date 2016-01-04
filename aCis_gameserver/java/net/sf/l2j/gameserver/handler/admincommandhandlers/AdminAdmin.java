@@ -23,6 +23,7 @@ import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.cache.CrestCache;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.datatables.AdminCommandAccessRights;
+import net.sf.l2j.gameserver.datatables.AnnouncementTable;
 import net.sf.l2j.gameserver.datatables.DoorTable;
 import net.sf.l2j.gameserver.datatables.GmListTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
@@ -44,16 +45,16 @@ import net.sf.l2j.gameserver.scripting.L2ScriptEngineManager;
 import net.sf.l2j.gameserver.util.Util;
 
 /**
- * This class handles following admin commands:<br>
- * <br>
- * - admin|admin1/admin2/admin3/admin4 = slots for the starting admin menus<br>
- * - gmliston/gmlistoff = includes/excludes active character from /gmlist results<br>
- * - silence = toggles private messages acceptance mode<br>
- * - tradeoff = toggles trade acceptance mode<br>
- * - reload = reloads specified component from multisell|skill|npc|htm|item|instancemanager<br>
- * - saveolymp = saves olympiad state manually<br>
- * - script_load = loads following script. MUSTN'T be used instead of //reload quest !<br>
- * - manualhero = cycles olympiad and calculate new heroes.
+ * This class handles following admin commands:
+ * <ul>
+ * <li>admin/admin1/admin2/admin3/admin4 : the different admin menus.</li>
+ * <li>gmlist : includes/excludes active character from /gmlist results.</li>
+ * <li>kill : handles the kill command.</li>
+ * <li>silence : toggles private messages acceptance mode.</li>
+ * <li>tradeoff : toggles trade acceptance mode.</li>
+ * <li>reload : reloads specified component.</li>
+ * <li>script_load : loads following script. MUSTN'T be used instead of //reload quest !</li>
+ * </ul>
  */
 public class AdminAdmin implements IAdminCommandHandler
 {
@@ -64,8 +65,7 @@ public class AdminAdmin implements IAdminCommandHandler
 		"admin_admin2",
 		"admin_admin3",
 		"admin_admin4",
-		"admin_gmliston",
-		"admin_gmlistoff",
+		"admin_gmlist",
 		"admin_kill",
 		"admin_silence",
 		"admin_tradeoff",
@@ -78,15 +78,12 @@ public class AdminAdmin implements IAdminCommandHandler
 	{
 		if (command.startsWith("admin_admin"))
 			showMainPage(activeChar, command);
-		else if (command.startsWith("admin_gmliston"))
+		else if (command.startsWith("admin_gmlist"))
 		{
-			GmListTable.getInstance().showGm(activeChar);
-			activeChar.sendMessage("Registered into GMList.");
-		}
-		else if (command.startsWith("admin_gmlistoff"))
-		{
-			GmListTable.getInstance().hideGm(activeChar);
-			activeChar.sendMessage("Removed from GMList.");
+			final boolean visibleStatus = GmListTable.getInstance().isGmVisible(activeChar);
+			
+			GmListTable.getInstance().showOrHideGm(activeChar, !visibleStatus);
+			activeChar.sendMessage((visibleStatus) ? "Registered into GMList." : "Removed from GMList.");
 		}
 		else if (command.startsWith("admin_kill"))
 		{
@@ -197,6 +194,11 @@ public class AdminAdmin implements IAdminCommandHandler
 					AdminCommandAccessRights.getInstance().reload();
 					activeChar.sendMessage("Admin commands rights have been reloaded.");
 				}
+				else if (type.startsWith("announcement"))
+				{
+					AnnouncementTable.getInstance().reload();
+					activeChar.sendMessage("The content of announcements.xml has been reloaded.");
+				}
 				else if (type.startsWith("config"))
 				{
 					Config.load();
@@ -204,7 +206,7 @@ public class AdminAdmin implements IAdminCommandHandler
 				}
 				else if (type.startsWith("crest"))
 				{
-					CrestCache.load();
+					CrestCache.getInstance().reload();
 					activeChar.sendMessage("Crests have been reloaded.");
 				}
 				else if (type.startsWith("cw"))
@@ -278,8 +280,9 @@ public class AdminAdmin implements IAdminCommandHandler
 			}
 			catch (Exception e)
 			{
-				activeChar.sendMessage("Usage : //reload <acar|config|crest|door|htm|item|multisell>");
-				activeChar.sendMessage("Usage : //reload <npc|npcwalker|quest|scripts|skill|teleport|zone>");
+				activeChar.sendMessage("Usage : //reload <acar|announcement|config|crest|door>");
+				activeChar.sendMessage("Usage : //reload <htm|item|multisell|npc|npcwalker|quest>");
+				activeChar.sendMessage("Usage : //reload <scripts|skill|teleport|zone>");
 			}
 		}
 		// This provides a way to load new scripts without having to reboot the server.

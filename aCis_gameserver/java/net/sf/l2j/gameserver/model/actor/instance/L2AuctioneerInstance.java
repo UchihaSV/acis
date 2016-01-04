@@ -48,10 +48,11 @@ public final class L2AuctioneerInstance extends L2NpcInstance
 	@Override
 	public void onBypassFeedback(L2PcInstance player, String command)
 	{
-		int condition = validateCondition(player);
+		int condition = validateCondition();
 		if (condition <= COND_ALL_FALSE)
 			return;
-		else if (condition == COND_BUSY_BECAUSE_OF_SIEGE)
+		
+		if (condition == COND_BUSY_BECAUSE_OF_SIEGE)
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/auction/auction-busy.htm");
@@ -59,7 +60,8 @@ public final class L2AuctioneerInstance extends L2NpcInstance
 			player.sendPacket(html);
 			return;
 		}
-		else if (condition == COND_REGULAR)
+		
+		if (condition == COND_REGULAR)
 		{
 			StringTokenizer st = new StringTokenizer(command, " ");
 			String actualCommand = st.nextToken();
@@ -415,7 +417,7 @@ public final class L2AuctioneerInstance extends L2NpcInstance
 	{
 		String filename = "data/html/auction/auction-no.htm";
 		
-		int condition = validateCondition(player);
+		int condition = validateCondition();
 		if (condition == COND_BUSY_BECAUSE_OF_SIEGE)
 			filename = "data/html/auction/auction-busy.htm";
 		else
@@ -438,7 +440,7 @@ public final class L2AuctioneerInstance extends L2NpcInstance
 		super.showChatWindow(player, val);
 	}
 	
-	private int validateCondition(L2PcInstance player)
+	private int validateCondition()
 	{
 		if (getCastle() != null)
 		{

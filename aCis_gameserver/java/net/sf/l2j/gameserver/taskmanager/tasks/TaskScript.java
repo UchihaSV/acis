@@ -21,28 +21,22 @@ import javax.script.ScriptException;
 
 import net.sf.l2j.gameserver.scripting.L2ScriptEngineManager;
 import net.sf.l2j.gameserver.taskmanager.TaskManager.ExecutedTask;
-import net.sf.l2j.gameserver.taskmanager.models.Task;
 
 /**
  * @author janiii
  */
-public class TaskScript extends Task
+public final class TaskScript extends ATask
 {
 	private static final Logger _log = Logger.getLogger(TaskScript.class.getName());
-	public static final String NAME = "script";
 	
-	/**
-	 * @see net.sf.l2j.gameserver.taskmanager.models.Task#getName()
-	 */
+	private static final String NAME = "script";
+	
 	@Override
 	public String getName()
 	{
 		return NAME;
 	}
 	
-	/**
-	 * @see net.sf.l2j.gameserver.taskmanager.models.Task#onTimeElapsed(net.sf.l2j.gameserver.taskmanager.TaskManager.ExecutedTask)
-	 */
 	@Override
 	public void onTimeElapsed(ExecutedTask task)
 	{

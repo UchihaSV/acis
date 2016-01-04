@@ -15,7 +15,8 @@
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.GeoData;
+import net.sf.l2j.gameserver.geoengine.GeoData;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -153,7 +154,7 @@ public class Fishing implements ISkillHandler
 			if (Config.GEODATA > 0)
 			{
 				// geodata enabled, checking if we can see end of the pole
-				if (GeoData.getInstance().canSeeTarget(player.getX(), player.getY(), z, x, y, z))
+				if (PathFinding.getInstance().canSeeTarget(player, new Location(x, y, z)))
 				{
 					// finding z level for hook
 					if (water != null)

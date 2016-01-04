@@ -18,29 +18,25 @@ import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.mmocore.IClientFactory;
+import net.sf.l2j.commons.mmocore.IMMOExecutor;
+import net.sf.l2j.commons.mmocore.IPacketHandler;
+import net.sf.l2j.commons.mmocore.MMOConnection;
+import net.sf.l2j.commons.mmocore.ReceivablePacket;
 import net.sf.l2j.gameserver.network.L2GameClient.GameClientState;
 import net.sf.l2j.gameserver.network.clientpackets.*;
 import net.sf.l2j.util.Util;
 
-import org.mmocore.network.IClientFactory;
-import org.mmocore.network.IMMOExecutor;
-import org.mmocore.network.IPacketHandler;
-import org.mmocore.network.MMOConnection;
-import org.mmocore.network.ReceivablePacket;
-
 /**
- * Stateful Packet Handler<BR>
- * The Stateful approach prevents the server from handling inconsistent packets, examples:<BR>
- * <li>Clients sends a MoveToLocation packet without having a character attached. (Potential errors handling the packet).</li> <li>Clients sends a RequestAuthLogin being already authed. (Potential exploit).</li> <BR>
+ * The Stateful approach prevents the server from handling inconsistent packets.<BR>
  * <BR>
- * Note: If for a given exception a packet needs to be handled on more then one state, then it should be added to all these states.
+ * Note : If for a given exception a packet needs to be handled on more then one state, then it should be added to all these states.
  * @author KenM
  */
 public final class L2GamePacketHandler implements IPacketHandler<L2GameClient>, IClientFactory<L2GameClient>, IMMOExecutor<L2GameClient>
 {
 	private static final Logger _log = Logger.getLogger(L2GamePacketHandler.class.getName());
 	
-	// implementation
 	@Override
 	public ReceivablePacket<L2GameClient> handlePacket(ByteBuffer buf, L2GameClient client)
 	{
@@ -272,12 +268,11 @@ public final class L2GamePacketHandler implements IPacketHandler<L2GameClient>, 
 					// case 0x49:
 					// // RequestSEKCustom
 					// break;
-					// THESE ARE NOW TEMPORARY DISABLED
 					case 0x4a:
-						// new StartRotating();
+						msg = new StartRotating();
 						break;
 					case 0x4b:
-						// new FinishRotating();
+						msg = new FinishRotating();
 						break;
 					case 0x4d:
 						msg = new RequestStartPledgeWar();

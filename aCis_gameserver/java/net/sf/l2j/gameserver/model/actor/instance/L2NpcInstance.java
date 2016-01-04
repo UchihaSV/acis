@@ -82,7 +82,7 @@ public class L2NpcInstance extends L2Npc
 		if (((L2NpcInstance) npc).getClassesToTeach() == null)
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
-			final String sb = StringUtil.concat("<html><body>I cannot teach you. My class list is empty.<br>Ask admin to fix it. Need add my npcid and classes to skill_learn.sql.<br>NpcId:", String.valueOf(npc.getTemplate().getNpcId()), ", Your classId:", String.valueOf(player.getClassId().getId()), "<br></body></html>");
+			final String sb = StringUtil.concat("<html><body>I cannot teach you. My class list is empty.<br>Your admin needs to add me teachTo informations.<br>NpcId:", String.valueOf(npc.getTemplate().getNpcId()), ", your classId:", String.valueOf(player.getClassId().getId()), "</body></html>");
 			html.setHtml(sb);
 			player.sendPacket(html);
 			return;
@@ -91,7 +91,7 @@ public class L2NpcInstance extends L2Npc
 		if (!npc.getTemplate().canTeach(classId))
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
-			html.setHtml("<html><body>I cannot teach you any skills.<br>You must find your current class teachers.</body></html>");
+			html.setFile("data/html/trainer/" + npc.getTemplate().getNpcId() + "-noskills.htm");
 			player.sendPacket(html);
 			return;
 		}
@@ -135,7 +135,7 @@ public class L2NpcInstance extends L2Npc
 		if (((L2NpcInstance) npc).getClassesToTeach() == null)
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
-			final String sb = StringUtil.concat("<html><body>I cannot teach you. My class list is empty.<br>Ask admin to fix it. Need add my npcid and classes to skill_learn.sql.<br>NpcId:", String.valueOf(npc.getTemplate().getNpcId()), ", Your classId:", String.valueOf(player.getClassId().getId()), "<br></body></html>");
+			final String sb = StringUtil.concat("<html><body>I cannot teach you. My class list is empty.<br>Your admin needs to add me teachTo informations.<br>NpcId:", String.valueOf(npc.getTemplate().getNpcId()), ", your classId:", String.valueOf(player.getClassId().getId()), "</body></html>");
 			html.setHtml(sb);
 			player.sendPacket(html);
 			return;
@@ -144,7 +144,7 @@ public class L2NpcInstance extends L2Npc
 		if (!npc.getTemplate().canTeach(classId))
 		{
 			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
-			html.setHtml("<html><body>I cannot teach you any skills.<br>You must find your current class teachers. </body></html>");
+			html.setFile("data/html/trainer/" + npc.getTemplate().getNpcId() + "-noskills.htm");
 			player.sendPacket(html);
 			return;
 		}

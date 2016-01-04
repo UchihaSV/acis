@@ -70,22 +70,7 @@ public class ItemSkills implements IItemHandler
 			
 			// No message on retail, the use is just forgotten.
 			if (playable.isSkillDisabled(itemSkill))
-			{
-				// Update icons only for players.
-				if (!isPet && item.isEtcItem())
-				{
-					final int group = item.getEtcItem().getSharedReuseGroup();
-					if (group >= 0)
-					{
-						if (activeChar.getReuseTimeStamp().containsKey(itemSkill.getReuseHashCode()))
-						{
-							final long remainingTime = activeChar.getReuseTimeStamp().get(itemSkill.getReuseHashCode()).getRemaining();
-							activeChar.sendPacket(new ExUseSharedGroupItem(item.getItemId(), group, (int) remainingTime, itemSkill.getReuseDelay()));
-						}
-					}
-				}
 				return;
-			}
 			
 			if (!itemSkill.isPotion() && playable.isCastingNow())
 				return;
@@ -110,16 +95,16 @@ public class ItemSkills implements IItemHandler
 			}
 			else
 			{
-				playable.getAI().setIntention(CtrlIntention.IDLE);
-				if (!playable.useMagic(itemSkill, forceUse, false))
-					return;
-				
 				// Normal item consumption is 1, if more, it must be given in DP with getItemConsume().
 				if (!playable.destroyItem("Consume", item.getObjectId(), (itemSkill.getItemConsumeId() == 0 && itemSkill.getItemConsume() > 0) ? itemSkill.getItemConsume() : 1, null, false))
 				{
 					activeChar.sendPacket(SystemMessageId.NOT_ENOUGH_ITEMS);
 					return;
 				}
+				
+				playable.getAI().setIntention(CtrlIntention.IDLE);
+				if (!playable.useMagic(itemSkill, forceUse, false))
+					return;
 			}
 			
 			// Send message to owner.

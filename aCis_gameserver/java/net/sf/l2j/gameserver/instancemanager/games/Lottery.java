@@ -24,11 +24,11 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.Announcements;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.util.Broadcast;
 import net.sf.l2j.util.Rnd;
 
 public class Lottery
@@ -178,7 +178,7 @@ public class Lottery
 			_isSellingTickets = true;
 			_isStarted = true;
 			
-			Announcements.announceToAll("Lottery tickets are now available for Lucky Lottery #" + getId() + ".");
+			Broadcast.announceToOnlinePlayers("Lottery tickets are now available for Lucky Lottery #" + getId() + ".");
 			Calendar finishtime = Calendar.getInstance();
 			finishtime.setTimeInMillis(_enddate);
 			finishtime.set(Calendar.MINUTE, 0);
@@ -232,7 +232,7 @@ public class Lottery
 				_log.info("Lottery: Stopping ticket sell for lottery #" + getId() + ".");
 			_isSellingTickets = false;
 			
-			Announcements.announceToAll(SystemMessage.getSystemMessage(SystemMessageId.LOTTERY_TICKET_SALES_TEMP_SUSPENDED));
+			Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.LOTTERY_TICKET_SALES_TEMP_SUSPENDED));
 		}
 	}
 	
@@ -367,10 +367,10 @@ public class Lottery
 				_log.info("Lottery: Jackpot for next lottery is " + newprize + ".");
 			
 			if (count1 > 0) // There are winners.
-				Announcements.announceToAll(SystemMessage.getSystemMessage(SystemMessageId.AMOUNT_FOR_WINNER_S1_IS_S2_ADENA_WE_HAVE_S3_PRIZE_WINNER).addNumber(getId()).addNumber(getPrize()).addNumber(count1));
+				Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.AMOUNT_FOR_WINNER_S1_IS_S2_ADENA_WE_HAVE_S3_PRIZE_WINNER).addNumber(getId()).addNumber(getPrize()).addNumber(count1));
 			else
 				// There are no winners.
-				Announcements.announceToAll(SystemMessage.getSystemMessage(SystemMessageId.AMOUNT_FOR_LOTTERY_S1_IS_S2_ADENA_NO_WINNER).addNumber(getId()).addNumber(getPrize()));
+				Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.AMOUNT_FOR_LOTTERY_S1_IS_S2_ADENA_NO_WINNER).addNumber(getId()).addNumber(getPrize()));
 			
 			try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 			{

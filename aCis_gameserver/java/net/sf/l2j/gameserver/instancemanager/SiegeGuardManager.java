@@ -119,8 +119,7 @@ public class SiegeGuardManager
 	}
 	
 	/**
-	 * Remove mercs.<BR>
-	 * <BR>
+	 * Remove mercs.
 	 */
 	public void removeMercs()
 	{
@@ -171,8 +170,7 @@ public class SiegeGuardManager
 	}
 	
 	/**
-	 * Unspawn guards.<BR>
-	 * <BR>
+	 * Unspawn guards.
 	 */
 	public void unspawnSiegeGuard()
 	{
@@ -201,28 +199,24 @@ public class SiegeGuardManager
 			
 			ResultSet rs = statement.executeQuery();
 			
-			L2Spawn spawn1;
-			NpcTemplate template1;
-			
 			while (rs.next())
 			{
-				template1 = NpcTable.getInstance().getTemplate(rs.getInt("npcId"));
-				if (template1 != null)
+				NpcTemplate template = NpcTable.getInstance().getTemplate(rs.getInt("npcId"));
+				if (template != null)
 				{
-					spawn1 = new L2Spawn(template1);
-					spawn1.setLocx(rs.getInt("x"));
-					spawn1.setLocy(rs.getInt("y"));
-					spawn1.setLocz(rs.getInt("z"));
-					spawn1.setHeading(rs.getInt("heading"));
-					spawn1.setRespawnDelay(rs.getInt("respawnDelay"));
+					L2Spawn spawn = new L2Spawn(template);
+					spawn.setLocx(rs.getInt("x"));
+					spawn.setLocy(rs.getInt("y"));
+					spawn.setLocz(rs.getInt("z"));
+					spawn.setHeading(rs.getInt("heading"));
+					spawn.setRespawnDelay(rs.getInt("respawnDelay"));
 					
-					_siegeGuardSpawn.add(spawn1);
+					_siegeGuardSpawn.add(spawn);
 				}
 				else
-				{
 					_log.warning("Missing npc data in npc table for id: " + rs.getInt("npcId"));
-				}
 			}
+			rs.close();
 			statement.close();
 		}
 		catch (Exception e)

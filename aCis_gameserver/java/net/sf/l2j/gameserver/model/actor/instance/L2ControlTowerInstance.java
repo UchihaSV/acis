@@ -17,8 +17,8 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -63,7 +63,7 @@ public class L2ControlTowerInstance extends L2Npc
 			player.setTarget(this);
 		else
 		{
-			if (isAutoAttackable(player) && Math.abs(player.getZ() - getZ()) < 100 && GeoData.getInstance().canSeeTarget(player, this))
+			if (isAutoAttackable(player) && Math.abs(player.getZ() - getZ()) < 100 && PathFinding.getInstance().canSeeTarget(player, this))
 			{
 				// Notify the L2PcInstance AI with INTERACT
 				player.getAI().setIntention(CtrlIntention.ATTACK, this);

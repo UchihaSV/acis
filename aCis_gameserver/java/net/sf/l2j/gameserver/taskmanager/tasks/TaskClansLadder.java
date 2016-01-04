@@ -17,12 +17,10 @@ package net.sf.l2j.gameserver.taskmanager.tasks;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.taskmanager.TaskManager;
 import net.sf.l2j.gameserver.taskmanager.TaskManager.ExecutedTask;
-import net.sf.l2j.gameserver.taskmanager.models.Task;
-import net.sf.l2j.gameserver.taskmanager.models.TaskTypes;
 
-public class TaskClansLadder extends Task
+public final class TaskClansLadder extends ATask
 {
-	public static final String NAME = "clans_ladder";
+	private static final String NAME = "clans_ladder";
 	
 	@Override
 	public String getName()
@@ -31,15 +29,14 @@ public class TaskClansLadder extends Task
 	}
 	
 	@Override
-	public void onTimeElapsed(ExecutedTask task)
+	public void initializate()
 	{
-		ClanTable.getInstance().refreshClansLadder(true);
+		TaskManager.addUniqueTask(NAME, TaskType.TYPE_GLOBAL_TASK, "1", "00:05:00", "", 0);
 	}
 	
 	@Override
-	public void initializate()
+	public void onTimeElapsed(ExecutedTask task)
 	{
-		super.initializate();
-		TaskManager.addUniqueTask(NAME, TaskTypes.TYPE_GLOBAL_TASK, "1", "00:05:00", "");
+		ClanTable.getInstance().refreshClansLadder(true);
 	}
 }

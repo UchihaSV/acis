@@ -34,10 +34,10 @@ public class PackageToList extends L2GameServerPacket
 	{
 		writeC(0xC2);
 		writeD(_players.size());
-		for (int objId : _players.keySet())
+		for (Map.Entry<Integer, String> playerEntry : _players.entrySet())
 		{
-			writeD(objId);
-			writeS(_players.get(objId));
+			writeD(playerEntry.getKey());
+			writeS(playerEntry.getValue());
 		}
 	}
 }

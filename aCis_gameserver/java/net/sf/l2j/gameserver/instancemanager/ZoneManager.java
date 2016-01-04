@@ -294,17 +294,11 @@ public class ZoneManager
 						// Register the zone into any world region it
 						// intersects with...
 						// currently 11136 test for each zone :>
-						int ax, ay, bx, by;
 						for (int x = 0; x < worldRegions.length; x++)
 						{
 							for (int y = 0; y < worldRegions[x].length; y++)
 							{
-								ax = (x - L2World.OFFSET_X) << L2World.SHIFT_BY;
-								bx = ((x + 1) - L2World.OFFSET_X) << L2World.SHIFT_BY;
-								ay = (y - L2World.OFFSET_Y) << L2World.SHIFT_BY;
-								by = ((y + 1) - L2World.OFFSET_Y) << L2World.SHIFT_BY;
-								
-								if (temp.getZone().intersectsRectangle(ax, bx, ay, by))
+								if (temp.getZone().intersectsRectangle(L2World.getRegionX(x), L2World.getRegionX(x + 1), L2World.getRegionY(y), L2World.getRegionY(y + 1)))
 								{
 									if (Config.DEBUG)
 										_log.info("Zone (" + zoneId + ") added to: " + x + " " + y);

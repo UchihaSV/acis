@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoom;
 
 /**
@@ -24,7 +23,7 @@ public class PartyMatchDetail extends L2GameServerPacket
 {
 	private final PartyMatchRoom _room;
 	
-	public PartyMatchDetail(L2PcInstance player, PartyMatchRoom room)
+	public PartyMatchDetail(PartyMatchRoom room)
 	{
 		_room = room;
 	}

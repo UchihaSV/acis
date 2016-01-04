@@ -20,22 +20,27 @@ import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
 import net.sf.l2j.gameserver.taskmanager.TaskManager;
 import net.sf.l2j.gameserver.taskmanager.TaskManager.ExecutedTask;
-import net.sf.l2j.gameserver.taskmanager.models.Task;
-import net.sf.l2j.gameserver.taskmanager.models.TaskTypes;
 
 /**
  * Updates all data for the Seven Signs and Festival of Darkness engines, when time is elapsed.
  * @author Tempy
  */
-public class TaskSevenSignsUpdate extends Task
+public final class TaskSevenSignsUpdate extends ATask
 {
 	private static final Logger _log = Logger.getLogger(TaskSevenSignsUpdate.class.getName());
-	public static final String NAME = "SevenSignsUpdate";
+	
+	private static final String NAME = "SevenSignsUpdate";
 	
 	@Override
 	public String getName()
 	{
 		return NAME;
+	}
+	
+	@Override
+	public void initializate()
+	{
+		TaskManager.addUniqueTask(NAME, TaskType.TYPE_FIXED_SHEDULED, "1800000", "1800000", "", 0);
 	}
 	
 	@Override
@@ -54,12 +59,5 @@ public class TaskSevenSignsUpdate extends Task
 		{
 			_log.warning("SevenSigns: Failed to save Seven Signs configuration: " + e);
 		}
-	}
-	
-	@Override
-	public void initializate()
-	{
-		super.initializate();
-		TaskManager.addUniqueTask(NAME, TaskTypes.TYPE_FIXED_SHEDULED, "1800000", "1800000", "");
 	}
 }

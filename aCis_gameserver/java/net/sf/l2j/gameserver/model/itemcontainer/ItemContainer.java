@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
@@ -34,6 +33,7 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance.ItemLocation;
 import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.util.Rnd;
 
 /**
  * @author Advi
@@ -228,7 +228,7 @@ public abstract class ItemContainer
 			if (item.getItemId() == 57 && count < 10000 * Config.RATE_DROP_ADENA)
 			{
 				// Small adena changes won't be saved to database all the time
-				if (GameTimeController.getGameTicks() % 5 == 0)
+				if (Rnd.get(10) < 2)
 					item.updateDatabase();
 			}
 			else
@@ -274,7 +274,7 @@ public abstract class ItemContainer
 			if (itemId == 57 && count < 10000 * Config.RATE_DROP_ADENA)
 			{
 				// Small adena changes won't be saved to database all the time
-				if (GameTimeController.getGameTicks() % 5 == 0)
+				if (Rnd.get(10) < 2)
 					item.updateDatabase();
 			}
 			else
@@ -416,10 +416,8 @@ public abstract class ItemContainer
 				item.setLastChange(ItemInstance.MODIFIED);
 				
 				// don't update often for untraced items
-				if (process != null || GameTimeController.getGameTicks() % 10 == 0)
-				{
+				if (process != null || Rnd.get(10) == 0)
 					item.updateDatabase();
-				}
 				
 				refreshWeight();
 				

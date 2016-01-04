@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -64,7 +63,7 @@ public abstract class L2Effect
 	private EffectState _state; // the current state
 	
 	private final int _period; // period, seconds
-	protected int _periodStartTicks;
+	protected long _periodStartTime;
 	protected int _periodFirstTime;
 	
 	private final EffectTemplate _template;
@@ -88,7 +87,7 @@ public abstract class L2Effect
 			try
 			{
 				_periodFirstTime = 0;
-				_periodStartTicks = GameTimeController.getGameTicks();
+				_periodStartTime = System.currentTimeMillis();
 				scheduleEffect();
 			}
 			catch (Exception e)
@@ -145,7 +144,7 @@ public abstract class L2Effect
 		_abnormalEffect = template.abnormalEffect;
 		_stackType = template.stackType;
 		_stackOrder = template.stackOrder;
-		_periodStartTicks = GameTimeController.getGameTicks();
+		_periodStartTime = System.currentTimeMillis();
 		_periodFirstTime = 0;
 		_icon = template.icon;
 		_effectPower = template.effectPower;
@@ -172,7 +171,7 @@ public abstract class L2Effect
 	public void setFirstTime(int newFirstTime)
 	{
 		_periodFirstTime = Math.min(newFirstTime, _period);
-		_periodStartTicks -= _periodFirstTime * GameTimeController.TICKS_PER_SECOND;
+		_periodStartTime = System.currentTimeMillis() - _periodFirstTime * 1000;
 	}
 	
 	public boolean getShowIcon()
@@ -187,7 +186,7 @@ public abstract class L2Effect
 	
 	public int getTime()
 	{
-		return (GameTimeController.getGameTicks() - _periodStartTicks) / GameTimeController.TICKS_PER_SECOND;
+		return (int) ((System.currentTimeMillis() - _periodStartTime) / 1000);
 	}
 	
 	/**
@@ -507,11 +506,6 @@ public abstract class L2Effect
 	public int getLevel()
 	{
 		return getSkill().getLevel();
-	}
-	
-	public int getPeriodStartTicks()
-	{
-		return _periodStartTicks;
 	}
 	
 	public EffectTemplate getEffectTemplate()

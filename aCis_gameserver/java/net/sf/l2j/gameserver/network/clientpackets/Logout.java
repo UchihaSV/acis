@@ -60,7 +60,7 @@ public final class Logout extends L2GameClientPacket
 			return;
 		}
 		
-		if (AttackStanceTaskManager.getInstance().get(player) && !player.isGM())
+		if (AttackStanceTaskManager.getInstance().isInAttackStance(player) && !player.isGM())
 		{
 			if (Config.DEBUG)
 				_log.fine(player.getName() + " tried to logout while fighting.");

@@ -1054,17 +1054,18 @@ public class SevenSigns
 	 */
 	protected void initializeSeals()
 	{
-		for (Integer currSeal : _signsSealOwners.keySet())
+		for (Map.Entry<Integer, Integer> sealEntry : _signsSealOwners.entrySet())
 		{
-			int sealOwner = _signsSealOwners.get(currSeal);
+			final int currentSeal = sealEntry.getKey();
+			final int sealOwner = sealEntry.getValue();
 			
 			if (sealOwner != CABAL_NULL)
 				if (isSealValidationPeriod())
-					_log.info("SevenSigns: The " + getCabalName(sealOwner) + " have won the " + getSealName(currSeal, false) + ".");
+					_log.info("SevenSigns: The " + getCabalName(sealOwner) + " have won the " + getSealName(currentSeal, false) + ".");
 				else
-					_log.info("SevenSigns: The " + getSealName(currSeal, false) + " is currently owned by " + getCabalName(sealOwner) + ".");
+					_log.info("SevenSigns: The " + getSealName(currentSeal, false) + " is currently owned by " + getCabalName(sealOwner) + ".");
 			else
-				_log.info("SevenSigns: The " + getSealName(currSeal, false) + " remains unclaimed.");
+				_log.info("SevenSigns: The " + getSealName(currentSeal, false) + " remains unclaimed.");
 		}
 	}
 	

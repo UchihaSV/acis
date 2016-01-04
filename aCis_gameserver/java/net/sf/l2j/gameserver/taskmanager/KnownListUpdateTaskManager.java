@@ -14,8 +14,6 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
-import java.util.logging.Logger;
-
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -24,77 +22,91 @@ import net.sf.l2j.gameserver.model.L2WorldRegion;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
+import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
-public class KnownListUpdateTaskManager
+/**
+ * Periodically updates known list of all existing {@link L2Character}.<br>
+ * Special scope is used for {@link L2WorldRegion} without {@link L2PcInstance} inside.
+ * @author Hasha
+ */
+public final class KnownListUpdateTaskManager implements Runnable
 {
-	protected static final Logger _log = Logger.getLogger(KnownListUpdateTaskManager.class.getName());
+	// Update for NPCs is performed each FULL_UPDATE tick interval.
+	private static final int FULL_UPDATE = 10;
 	
-	private static final int FULL_UPDATE_TIMER = 100;
+	private boolean _flagForgetAdd = true;
+	private int _timer = FULL_UPDATE;
 	
-	protected boolean updatePass = true;
-	protected int _fullUpdateTimer = FULL_UPDATE_TIMER;
-	
-	protected KnownListUpdateTaskManager()
-	{
-		ThreadPoolManager.getInstance().scheduleAiAtFixedRate(new KnownListUpdate(), 1000, Config.KNOWNLIST_UPDATE_INTERVAL);
-	}
-	
-	public static KnownListUpdateTaskManager getInstance()
+	public static final KnownListUpdateTaskManager getInstance()
 	{
 		return SingletonHolder._instance;
 	}
 	
-	private class KnownListUpdate implements Runnable
+	protected KnownListUpdateTaskManager()
 	{
-		public KnownListUpdate()
-		{
-		}
+		ThreadPoolManager.getInstance().scheduleAiAtFixedRate(this, Config.KNOWNLIST_UPDATE_INTERVAL, Config.KNOWNLIST_UPDATE_INTERVAL);
+	}
+	
+	@Override
+	public final void run()
+	{
+		// Decrease and reset full iteration timer.
+		if (--_timer == 0)
+			_timer = FULL_UPDATE;
 		
-		@Override
-		public void run()
+		// When iteration timer is 1, 2, perform forget and add for NPCs.
+		final boolean fullUpdate = _timer < 3;
+		
+		// Swap forget/add flag for this iteration.
+		_flagForgetAdd = !_flagForgetAdd;
+		
+		// Go through all world regions.
+		for (L2WorldRegion regions[] : L2World.getInstance().getAllWorldRegions())
 		{
-			boolean fullUpdate = (_fullUpdateTimer == FULL_UPDATE_TIMER);
-			for (L2WorldRegion regions[] : L2World.getInstance().getAllWorldRegions())
+			for (L2WorldRegion region : regions)
 			{
-				for (L2WorldRegion r : regions) // go through all world regions
+				// Skip inactive regions unless full update (knownlist can be still updated regardless AI active or detached).
+				if (!region.isActive() && !fullUpdate)
+					continue;
+				
+				// Go through all visible objects.
+				for (L2Object object : region.getVisibleObjects().values())
 				{
-					if (!r.isActive()) // and check only if the region is active
+					// don't busy about objects lower than L2Character.
+					if (!(object instanceof L2Character) || !object.isVisible())
 						continue;
 					
-					for (L2Object object : r.getVisibleObjects().values())
+					final boolean isPlayable = object instanceof L2Playable;
+					final boolean isAttackable = object instanceof L2Attackable;
+					
+					// When one of these conditions below is passed performs forget objects (which are beyond forget distance) or add objects from surrounding regions (which are closer than detect distance)
+					// 1) object is non-attackable and non-playable (NPCs) -> each FULL_UPDATE_TIMER iterations
+					// 2) object is playable (players, summons, pets) -> each iteration
+					// 3) object is attackable (monsters, raids, etc) -> each iteration
+					if (fullUpdate || isPlayable || isAttackable)
 					{
-						if (!(object instanceof L2Character) || !object.isVisible())
-							continue; // skip dying objects, don't busy about objects lower than L2Character.
-							
-						// Mobs need faster knownlist update.
-						final boolean needFastUpdate = object instanceof L2Attackable;
-						fullUpdate = fullUpdate || object instanceof L2Playable;
-						
-						if (updatePass)
-							object.getKnownList().forgetObjects(fullUpdate || needFastUpdate);
+						// One iteration performs object forget.
+						if (_flagForgetAdd)
+							object.getKnownList().forgetObjects();
+						// The other iteration performs object add.
 						else
 						{
-							for (L2WorldRegion regi : r.getSurroundingRegions())
+							for (L2WorldRegion surroundingRegion : region.getSurroundingRegions())
 							{
-								if (fullUpdate || (needFastUpdate && regi.isActive()))
+								// Object is a monster and surrounding region does not contain playable, skip.
+								if (isAttackable && !surroundingRegion.isActive())
+									continue;
+								
+								for (L2Object o : surroundingRegion.getVisibleObjects().values())
 								{
-									for (L2Object o : regi.getVisibleObjects().values())
-									{
-										if (o != object)
-											object.getKnownList().addKnownObject(o);
-									}
+									if (o != object)
+										object.getKnownList().addKnownObject(o);
 								}
 							}
 						}
 					}
 				}
 			}
-			updatePass = !updatePass;
-			
-			if (_fullUpdateTimer > 0)
-				_fullUpdateTimer--;
-			else
-				_fullUpdateTimer = FULL_UPDATE_TIMER;
 		}
 	}
 	

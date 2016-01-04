@@ -114,9 +114,7 @@ public class ValidatePosition extends L2GameClientPacket
 				activeChar.setHeading(_heading);
 				return;
 			}
-			// Sync 2 (or other),
-			// intended for geodata. Sends a validation packet to client
-			// when too far from server calculated true coordinate.
+			// Sync 2 (or other), intended for geodata. Sends a validation packet to client when too far from server calculated real coordinate.
 			// Due to geodata/zone errors, some Z axis checks are made. (maybe a temporary solution)
 			// Important: this code part must work together with L2Character.updatePosition
 			if (Config.GEODATA > 0 && (diffSq > 250000 || Math.abs(dz) > 200))
@@ -140,6 +138,5 @@ public class ValidatePosition extends L2GameClientPacket
 		activeChar.setClientY(_y);
 		activeChar.setClientZ(_z);
 		activeChar.setClientHeading(_heading); // No real need to validate heading.
-		activeChar.setLastServerPosition(realX, realY, realZ);
 	}
 }

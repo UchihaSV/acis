@@ -46,7 +46,7 @@ public abstract class IdFactory
 			"clan_id"
 		},
 		{
-			"itemsonground",
+			"items_on_ground",
 			"object_id"
 		}
 	};

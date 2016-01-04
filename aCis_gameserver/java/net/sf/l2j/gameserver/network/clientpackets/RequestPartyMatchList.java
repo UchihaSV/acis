@@ -69,7 +69,7 @@ public class RequestPartyMatchList extends L2GameClientPacket
 					if (_member == null)
 						continue;
 					
-					_member.sendPacket(new PartyMatchDetail(_activeChar, _room));
+					_member.sendPacket(new PartyMatchDetail(_room));
 					_member.sendPacket(SystemMessageId.PARTY_ROOM_REVISED);
 				}
 			}
@@ -101,8 +101,8 @@ public class RequestPartyMatchList extends L2GameClientPacket
 				}
 			}
 			
-			_activeChar.sendPacket(new PartyMatchDetail(_activeChar, _room));
-			_activeChar.sendPacket(new ExPartyRoomMember(_activeChar, _room, 1));
+			_activeChar.sendPacket(new PartyMatchDetail(_room));
+			_activeChar.sendPacket(new ExPartyRoomMember(_room, 1));
 			
 			_activeChar.sendPacket(SystemMessageId.PARTY_ROOM_CREATED);
 			

@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.util.Point3D;
+import net.sf.l2j.gameserver.model.Location;
 
 /**
  * @author Maktakien
@@ -23,9 +23,9 @@ public class GetOnVehicle extends L2GameServerPacket
 {
 	private final int _charObjId;
 	private final int _boatObjId;
-	private final Point3D _pos;
+	private final Location _pos;
 	
-	public GetOnVehicle(int charObjId, int boatObjId, Point3D pos)
+	public GetOnVehicle(int charObjId, int boatObjId, Location pos)
 	{
 		_charObjId = charObjId;
 		_boatObjId = boatObjId;

@@ -14,15 +14,16 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.StopMoveInVehicle;
-import net.sf.l2j.util.Point3D;
 
 /**
  * @author Maktakien
  */
 public final class CannotMoveAnymoreInVehicle extends L2GameClientPacket
 {
+	@SuppressWarnings("unused")
 	private int _x, _y, _z, _heading;
 	private int _boatId;
 	
@@ -47,8 +48,7 @@ public final class CannotMoveAnymoreInVehicle extends L2GameClientPacket
 		{
 			if (player.getBoat().getObjectId() == _boatId)
 			{
-				player.setInVehiclePosition(new Point3D(_x, _y, _z));
-				player.getPosition().setHeading(_heading);
+				player.setInVehiclePosition(new Location(_x, _y, _z));
 				player.broadcastPacket(new StopMoveInVehicle(player, _boatId));
 			}
 		}

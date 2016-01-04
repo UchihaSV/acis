@@ -285,7 +285,8 @@ public class L2Clan
 		}
 		newLeader.broadcastUserInfo();
 		
-		broadcastToOnlineMembers(new PledgeShowMemberListAll(this, 0), SystemMessage.getSystemMessage(SystemMessageId.CLAN_LEADER_PRIVILEGES_HAVE_BEEN_TRANSFERRED_TO_S1).addPcName(newLeader));
+		broadcastClanStatus();
+		broadcastToOnlineMembers(SystemMessage.getSystemMessage(SystemMessageId.CLAN_LEADER_PRIVILEGES_HAVE_BEEN_TRANSFERRED_TO_S1).addPcName(newLeader));
 	}
 	
 	/**
@@ -2085,7 +2086,7 @@ public class L2Clan
 	public void changeClanCrest(int crestId)
 	{
 		if (crestId == 0)
-			CrestCache.removeCrest(CrestType.PLEDGE, _crestId);
+			CrestCache.getInstance().removeCrest(CrestType.PLEDGE, _crestId);
 		
 		_crestId = crestId;
 		
@@ -2118,7 +2119,7 @@ public class L2Clan
 		if (!onlyThisClan)
 		{
 			if (crestId == 0)
-				CrestCache.removeCrest(CrestType.ALLY, _allyCrestId);
+				CrestCache.getInstance().removeCrest(CrestType.ALLY, _allyCrestId);
 			
 			sqlStatement = "UPDATE clan_data SET ally_crest_id = ? WHERE ally_id = ?";
 			allyId = _allyId;
@@ -2164,7 +2165,7 @@ public class L2Clan
 	public void changeLargeCrest(int crestId)
 	{
 		if (crestId == 0)
-			CrestCache.removeCrest(CrestType.PLEDGE_LARGE, _crestLargeId);
+			CrestCache.getInstance().removeCrest(CrestType.PLEDGE_LARGE, _crestLargeId);
 		
 		_crestLargeId = crestId;
 		
@@ -2189,7 +2190,7 @@ public class L2Clan
 	{
 		if (_crestId != 0)
 		{
-			if (CrestCache.getCrest(CrestType.PLEDGE, _crestId) == null)
+			if (CrestCache.getInstance().getCrest(CrestType.PLEDGE, _crestId) == null)
 			{
 				_log.log(Level.INFO, "Removing non-existent crest for clan " + _name + " [" + _clanId + "], crestId:" + _crestId);
 				changeClanCrest(0);
@@ -2198,7 +2199,7 @@ public class L2Clan
 		
 		if (_crestLargeId != 0)
 		{
-			if (CrestCache.getCrest(CrestType.PLEDGE_LARGE, _crestLargeId) == null)
+			if (CrestCache.getInstance().getCrest(CrestType.PLEDGE_LARGE, _crestLargeId) == null)
 			{
 				_log.log(Level.INFO, "Removing non-existent large crest for clan " + _name + " [" + _clanId + "], crestLargeId:" + _crestLargeId);
 				changeLargeCrest(0);
@@ -2207,7 +2208,7 @@ public class L2Clan
 		
 		if (_allyCrestId != 0)
 		{
-			if (CrestCache.getCrest(CrestType.ALLY, _allyCrestId) == null)
+			if (CrestCache.getInstance().getCrest(CrestType.ALLY, _allyCrestId) == null)
 			{
 				_log.log(Level.INFO, "Removing non-existent ally crest for clan " + _name + " [" + _clanId + "], allyCrestId:" + _allyCrestId);
 				changeAllyCrest(0, true);

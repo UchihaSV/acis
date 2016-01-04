@@ -26,20 +26,20 @@ public class VehicleKnownList extends CharKnownList
 	}
 	
 	@Override
-	public int getDistanceToForgetObject(L2Object object)
-	{
-		if (!(object instanceof L2PcInstance))
-			return 0;
-		
-		return object.getKnownList().getDistanceToForgetObject(_activeObject);
-	}
-	
-	@Override
 	public int getDistanceToWatchObject(L2Object object)
 	{
 		if (!(object instanceof L2PcInstance))
 			return 0;
 		
 		return object.getKnownList().getDistanceToWatchObject(_activeObject);
+	}
+	
+	@Override
+	public int getDistanceToForgetObject(L2Object object)
+	{
+		if (!(object instanceof L2PcInstance))
+			return 0;
+		
+		return object.getKnownList().getDistanceToForgetObject(_activeObject);
 	}
 }

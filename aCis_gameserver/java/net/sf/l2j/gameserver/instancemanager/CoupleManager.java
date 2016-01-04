@@ -64,6 +64,7 @@ public class CoupleManager
 			while (rs.next())
 				_couples.add(new Couple(rs.getInt("id")));
 			
+			rs.close();
 			statement.close();
 			
 			_log.info("CoupleManager : Loaded " + getCouples().size() + " couples.");

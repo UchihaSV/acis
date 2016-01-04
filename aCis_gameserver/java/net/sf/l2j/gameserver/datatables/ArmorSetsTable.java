@@ -77,11 +77,6 @@ public class ArmorSetsTable
 		_log.info("ArmorSetsTable: Loaded " + _armorSets.size() + " armor sets.");
 	}
 	
-	public boolean setExists(int chestId)
-	{
-		return _armorSets.containsKey(chestId);
-	}
-	
 	public ArmorSet getSet(int chestId)
 	{
 		return _armorSets.get(chestId);

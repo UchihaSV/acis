@@ -15,9 +15,6 @@
 package net.sf.l2j.gameserver.instancemanager;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +23,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2FeedableBeastInstance;
@@ -58,16 +54,16 @@ public class CursedWeaponsManager
 {
 	private static final Logger _log = Logger.getLogger(CursedWeaponsManager.class.getName());
 	
+	private final Map<Integer, CursedWeapon> _cursedWeapons = new HashMap<>();
+	
 	public static final CursedWeaponsManager getInstance()
 	{
 		return SingletonHolder._instance;
 	}
 	
-	private final Map<Integer, CursedWeapon> _cursedWeapons = new HashMap<>();
-	
 	public CursedWeaponsManager()
 	{
-		init();
+		load();
 	}
 	
 	public void reload()
@@ -77,10 +73,10 @@ public class CursedWeaponsManager
 			cw.endOfLife();
 		
 		_cursedWeapons.clear();
-		init();
+		load();
 	}
 	
-	private void init()
+	private void load()
 	{
 		if (!Config.ALLOW_CURSED_WEAPONS)
 		{
@@ -88,15 +84,6 @@ public class CursedWeaponsManager
 			return;
 		}
 		
-		load();
-		restore();
-	}
-	
-	/**
-	 * Load static data from XML.
-	 */
-	private void load()
-	{
 		try
 		{
 			File file = new File("./data/xml/cursed_weapons.xml");
@@ -149,58 +136,19 @@ public class CursedWeaponsManager
 						}
 					}
 					
+					// load data from SQL
+					cw.loadData();
+					
 					// Store cursed weapon
 					_cursedWeapons.put(id, cw);
 				}
 			}
+			
+			_log.info("CursedWeaponsManager: Loaded " + _cursedWeapons.size() + " cursed weapons.");
 		}
 		catch (Exception e)
 		{
 			_log.log(Level.SEVERE, "Error parsing cursed_weapons.xml: ", e);
-		}
-		_log.info("CursedWeaponsManager: Loaded " + _cursedWeapons.size() + " cursed weapons.");
-	}
-	
-	/**
-	 * Restore dynamic data from SQL.
-	 */
-	private void restore()
-	{
-		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
-		{
-			PreparedStatement statement = con.prepareStatement("SELECT * FROM cursed_weapons");
-			ResultSet rset = statement.executeQuery();
-			
-			while (rset.next())
-			{
-				int itemId = rset.getInt("itemId");
-				int playerId = rset.getInt("playerId");
-				int playerKarma = rset.getInt("playerKarma");
-				int playerPkKills = rset.getInt("playerPkKills");
-				int nbKills = rset.getInt("nbKills");
-				int currentStage = rset.getInt("currentStage");
-				int numberBeforeNextStage = rset.getInt("numberBeforeNextStage");
-				int hungryTime = rset.getInt("hungryTime");
-				long endTime = rset.getLong("endTime");
-				
-				CursedWeapon cw = _cursedWeapons.get(itemId);
-				cw.setPlayerId(playerId);
-				cw.setPlayerKarma(playerKarma);
-				cw.setPlayerPkKills(playerPkKills);
-				cw.setNbKills(nbKills);
-				cw.setCurrentStage(currentStage);
-				cw.setNumberBeforeNextStage(numberBeforeNextStage);
-				cw.setHungryTime(hungryTime);
-				cw.setEndTime(endTime);
-				cw.reActivate(false);
-			}
-			
-			rset.close();
-			statement.close();
-		}
-		catch (Exception e)
-		{
-			_log.log(Level.WARNING, "Could not restore CursedWeapons data: " + e.getMessage(), e);
 		}
 	}
 	

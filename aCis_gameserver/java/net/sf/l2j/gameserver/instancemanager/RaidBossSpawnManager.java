@@ -309,10 +309,9 @@ public class RaidBossSpawnManager
 		{
 			PreparedStatement statement = con.prepareStatement("UPDATE raidboss_spawnlist SET respawn_time = ?, currentHP = ?, currentMP = ? WHERE boss_id = ?");
 			
-			for (Integer bossId : _storedInfo.keySet())
+			for (Map.Entry<Integer, StatsSet> infoEntry : _storedInfo.entrySet())
 			{
-				if (bossId == null)
-					continue;
+				final int bossId = infoEntry.getKey();
 				
 				final L2RaidBossInstance boss = _bosses.get(bossId);
 				if (boss == null)
@@ -321,29 +320,22 @@ public class RaidBossSpawnManager
 				if (boss.getRaidStatus().equals(StatusEnum.ALIVE))
 					updateStatus(boss, false);
 				
-				final StatsSet info = _storedInfo.get(bossId);
+				final StatsSet info = infoEntry.getValue();
 				if (info == null)
 					continue;
 				
-				try
-				{
-					statement.setLong(1, info.getLong("respawnTime"));
-					statement.setDouble(2, info.getDouble("currentHP"));
-					statement.setDouble(3, info.getDouble("currentMP"));
-					statement.setInt(4, bossId);
-					statement.executeUpdate();
-					statement.clearParameters();
-				}
-				catch (SQLException e)
-				{
-					_log.log(Level.WARNING, "RaidBossSpawnManager: Couldnt update raidboss_spawnlist table " + e.getMessage(), e);
-				}
+				statement.setLong(1, info.getLong("respawnTime"));
+				statement.setDouble(2, info.getDouble("currentHP"));
+				statement.setDouble(3, info.getDouble("currentMP"));
+				statement.setInt(4, bossId);
+				statement.executeUpdate();
+				statement.clearParameters();
 			}
 			statement.close();
 		}
 		catch (SQLException e)
 		{
-			_log.log(Level.WARNING, "SQL error while updating RaidBoss spawn to database: " + e.getMessage(), e);
+			_log.log(Level.WARNING, "RaidBossSpawnManager: Couldnt update raidboss_spawnlist table " + e.getMessage(), e);
 		}
 	}
 	
@@ -414,13 +406,11 @@ public class RaidBossSpawnManager
 		
 		_bosses.clear();
 		
-		if (_schedules != null)
+		if (!_schedules.isEmpty())
 		{
-			for (Integer bossId : _schedules.keySet())
-			{
-				final ScheduledFuture<?> f = _schedules.get(bossId);
+			for (ScheduledFuture<?> f : _schedules.values())
 				f.cancel(true);
-			}
+			
 			_schedules.clear();
 		}
 		

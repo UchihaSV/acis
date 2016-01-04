@@ -29,6 +29,9 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.mmocore.MMOClient;
+import net.sf.l2j.commons.mmocore.MMOConnection;
+import net.sf.l2j.commons.mmocore.ReceivablePacket;
 import net.sf.l2j.gameserver.LoginServerThread;
 import net.sf.l2j.gameserver.LoginServerThread.SessionKey;
 import net.sf.l2j.gameserver.ThreadPoolManager;
@@ -43,10 +46,6 @@ import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
 import net.sf.l2j.gameserver.network.serverpackets.ServerClose;
 import net.sf.l2j.gameserver.util.FloodProtectors;
 
-import org.mmocore.network.MMOClient;
-import org.mmocore.network.MMOConnection;
-import org.mmocore.network.ReceivablePacket;
-
 /**
  * Represents a client connected on Game Server
  * @author KenM
@@ -60,7 +59,7 @@ public final class L2GameClient extends MMOClient<MMOConnection<L2GameClient>> i
 		CONNECTED, // client has just connected
 		AUTHED, // client has authed but doesnt has character attached to it yet
 		IN_GAME // client has selected a char and is in game
-	};
+	}
 	
 	public GameClientState _state;
 	

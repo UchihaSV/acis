@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.L2GameClient;
 import net.sf.l2j.util.StringUtil;
@@ -32,7 +31,7 @@ public final class FloodProtectorAction
 	private final L2GameClient _client;
 	private final FloodProtectorConfig _config;
 	
-	private volatile int _nextGameTick = GameTimeController.getGameTicks();
+	private volatile long _lastTime = System.currentTimeMillis();
 	private final AtomicInteger _count = new AtomicInteger(0);
 	
 	private boolean _logged;
@@ -58,13 +57,13 @@ public final class FloodProtectorAction
 	 */
 	public boolean tryPerformAction(final String command)
 	{
-		final int curTick = GameTimeController.getGameTicks();
+		final long time = System.currentTimeMillis();
 		
-		if (curTick < _nextGameTick || _punishmentInProgress)
+		if (time < _lastTime || _punishmentInProgress)
 		{
 			if (_config.LOG_FLOODING && !_logged && _log.isLoggable(Level.WARNING))
 			{
-				log(" called command ", command, " ~", String.valueOf((_config.FLOOD_PROTECTION_INTERVAL - (_nextGameTick - curTick)) * GameTimeController.MILLIS_IN_TICK), " ms after previous command");
+				log(" called command ", command, " ~", String.valueOf((_config.FLOOD_PROTECTION_INTERVAL - (_lastTime - time))), " ms after previous command");
 				_logged = true;
 			}
 			
@@ -90,10 +89,10 @@ public final class FloodProtectorAction
 		if (_count.get() > 0)
 		{
 			if (_config.LOG_FLOODING && _log.isLoggable(Level.WARNING))
-				log(" issued ", String.valueOf(_count), " extra requests within ~", String.valueOf(_config.FLOOD_PROTECTION_INTERVAL * GameTimeController.MILLIS_IN_TICK), " ms");
+				log(" issued ", String.valueOf(_count), " extra requests within ~", String.valueOf(_config.FLOOD_PROTECTION_INTERVAL), " ms");
 		}
 		
-		_nextGameTick = curTick + _config.FLOOD_PROTECTION_INTERVAL;
+		_lastTime = time + _config.FLOOD_PROTECTION_INTERVAL;
 		_logged = false;
 		_count.set(0);
 		

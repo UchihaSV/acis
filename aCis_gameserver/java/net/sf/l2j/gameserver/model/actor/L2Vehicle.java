@@ -19,7 +19,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.L2CharacterAI;
@@ -39,6 +38,7 @@ import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
+import net.sf.l2j.gameserver.taskmanager.MovementTaskManager;
 import net.sf.l2j.gameserver.util.Util;
 
 /**
@@ -144,10 +144,10 @@ public abstract class L2Vehicle extends L2Character
 						if (distance > 1) // vertical movement heading check
 							setHeading(Util.calculateHeadingFrom(getX(), getY(), point.x, point.y));
 						
-						m._moveStartTime = GameTimeController.getGameTicks();
+						m._moveStartTime = System.currentTimeMillis();
 						_move = m;
 						
-						GameTimeController.getInstance().registerMovingObject(this);
+						MovementTaskManager.getInstance().add(this);
 						return true;
 					}
 				}
@@ -312,9 +312,9 @@ public abstract class L2Vehicle extends L2Character
 	}
 	
 	@Override
-	public boolean updatePosition(int gameTicks)
+	public boolean updatePosition()
 	{
-		final boolean result = super.updatePosition(gameTicks);
+		final boolean result = super.updatePosition();
 		
 		for (L2PcInstance player : _passengers)
 		{

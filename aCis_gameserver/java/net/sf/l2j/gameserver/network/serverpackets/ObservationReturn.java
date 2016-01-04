@@ -14,23 +14,23 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.Location;
 
 public class ObservationReturn extends L2GameServerPacket
 {
-	private final L2PcInstance _activeChar;
+	private final Location _location;
 	
-	public ObservationReturn(L2PcInstance observer)
+	public ObservationReturn(Location loc)
 	{
-		_activeChar = observer;
+		_location = loc;
 	}
 	
 	@Override
 	protected final void writeImpl()
 	{
 		writeC(0xe0);
-		writeD(_activeChar.getLastX());
-		writeD(_activeChar.getLastY());
-		writeD(_activeChar.getLastZ());
+		writeD(_location.getX());
+		writeD(_location.getY());
+		writeD(_location.getZ());
 	}
 }

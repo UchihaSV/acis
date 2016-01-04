@@ -710,8 +710,8 @@ public class MercTicketManager
 							// create the ticket in the gameworld
 							ItemInstance dropticket = new ItemInstance(IdFactory.getInstance().getNextId(), itemId);
 							dropticket.setLocation(ItemInstance.ItemLocation.INVENTORY);
+							dropticket.setDestroyProtected(true);
 							dropticket.dropMe(null, x, y, z);
-							dropticket.setDropTime(0); // avoids it from beeing removed by the auto item destroyer
 							L2World.getInstance().storeObject(dropticket);
 							_droppedTickets.add(dropticket);
 						}
@@ -719,6 +719,7 @@ public class MercTicketManager
 					}
 				}
 			}
+			rs.close();
 			statement.close();
 		}
 		catch (Exception e)
@@ -839,8 +840,8 @@ public class MercTicketManager
 				// create the ticket in the gameworld
 				ItemInstance dropticket = new ItemInstance(IdFactory.getInstance().getNextId(), itemId);
 				dropticket.setLocation(ItemInstance.ItemLocation.INVENTORY);
-				dropticket.dropMe(null, x, y, z);
-				dropticket.setDropTime(0); // avoids it from beeing removed by the auto item destroyer
+				dropticket.setDestroyProtected(true);
+				dropticket.dropMe(activeChar, x, y, z);
 				L2World.getInstance().storeObject(dropticket); // add to the world
 				// and keep track of this ticket in the list
 				_droppedTickets.add(dropticket);

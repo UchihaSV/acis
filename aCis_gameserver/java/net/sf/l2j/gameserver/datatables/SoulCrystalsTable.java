@@ -159,7 +159,7 @@ public class SoulCrystalsTable
 			_log.log(Level.WARNING, "SoulCrystalsTable: Could not parse soul_crystals.xml file: " + e.getMessage(), e);
 		}
 		
-		_log.info("SoulCrystalsTable: Loaded " + _soulCrystals.size() + " SC(s) data and " + _npcLevelingInfos.size() + " NPC(s) data.");
+		_log.info("SoulCrystalsTable: Loaded " + _soulCrystals.size() + " SC data and " + _npcLevelingInfos.size() + " NPC data.");
 	}
 	
 	public static final Map<Integer, SoulCrystalData> getSoulCrystalInfos()

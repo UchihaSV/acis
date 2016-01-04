@@ -26,7 +26,7 @@ public class ExPartyRoomMember extends L2GameServerPacket
 	private final PartyMatchRoom _room;
 	private final int _mode;
 	
-	public ExPartyRoomMember(L2PcInstance player, PartyMatchRoom room, int mode)
+	public ExPartyRoomMember(PartyMatchRoom room, int mode)
 	{
 		_room = room;
 		_mode = mode;

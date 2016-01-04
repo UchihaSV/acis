@@ -15,8 +15,8 @@
 package net.sf.l2j.gameserver.skills.effects;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.Location;
@@ -95,7 +95,7 @@ public class EffectFear extends L2Effect
 		
 		if (Config.GEODATA > 0)
 		{
-			Location destiny = GeoData.getInstance().moveCheck(getEffected().getX(), getEffected().getY(), getEffected().getZ(), posX, posY, posZ);
+			Location destiny = PathFinding.getInstance().canMoveToTargetLoc(getEffected().getX(), getEffected().getY(), getEffected().getZ(), posX, posY, posZ);
 			posX = destiny.getX();
 			posY = destiny.getY();
 		}

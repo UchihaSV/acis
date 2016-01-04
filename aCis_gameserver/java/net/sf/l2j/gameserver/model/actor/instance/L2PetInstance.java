@@ -35,7 +35,6 @@ import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.handler.ItemHandler;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.CursedWeaponsManager;
-import net.sf.l2j.gameserver.instancemanager.ItemsOnGroundManager;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2PetData;
@@ -64,6 +63,7 @@ import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.StopMove;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.taskmanager.DecayTaskManager;
+import net.sf.l2j.gameserver.taskmanager.ItemsOnGroundTaskManager;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.util.Rnd;
 
@@ -488,8 +488,8 @@ public class L2PetInstance extends L2Summon
 			else
 				target.pickupMe(this);
 			
-			if (Config.SAVE_DROPPED_ITEM) // item must be removed from ItemsOnGroundManager if is active
-				ItemsOnGroundManager.getInstance().removeObject(target);
+			// Item must be removed from ItemsOnGroundManager if it is active.
+			ItemsOnGroundTaskManager.getInstance().remove(target);
 		}
 		
 		// Auto use herbs - pick up
@@ -574,7 +574,7 @@ public class L2PetInstance extends L2Summon
 		
 		stopFeed();
 		getOwner().sendPacket(SystemMessageId.MAKE_SURE_YOU_RESSURECT_YOUR_PET_WITHIN_20_MINUTES);
-		DecayTaskManager.getInstance().add(this, 1200000);
+		DecayTaskManager.getInstance().add(this, 1200);
 		
 		// Dont decrease exp if killed in duel or arena
 		L2PcInstance owner = getOwner();

@@ -18,9 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
@@ -32,9 +30,12 @@ import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
  */
 public class GmListTable
 {
-	private static Logger _log = Logger.getLogger(GmListTable.class.getName());
+	private final Map<L2PcInstance, Boolean> _gmList = new ConcurrentHashMap<>();
 	
-	private final Map<L2PcInstance, Boolean> _gmList;
+	protected GmListTable()
+	{
+		
+	}
 	
 	public static GmListTable getInstance()
 	{
@@ -70,11 +71,6 @@ public class GmListTable
 		return tmpGmList;
 	}
 	
-	protected GmListTable()
-	{
-		_gmList = new ConcurrentHashMap<>();
-	}
-	
 	/**
 	 * Add a L2PcInstance player to the Set _gmList
 	 * @param player
@@ -82,38 +78,28 @@ public class GmListTable
 	 */
 	public void addGm(L2PcInstance player, boolean hidden)
 	{
-		if (Config.DEBUG)
-			_log.fine("added gm: " + player.getName());
-		
 		_gmList.put(player, hidden);
 	}
 	
 	public void deleteGm(L2PcInstance player)
 	{
-		if (Config.DEBUG)
-			_log.fine("deleted gm: " + player.getName());
-		
 		_gmList.remove(player);
 	}
 	
 	/**
-	 * GM will be displayed on clients gmlist
-	 * @param player
+	 * Refresh GM for GMlist.
+	 * @param player : The GM to affect.
+	 * @param showOrHide : The option to set.
 	 */
-	public void showGm(L2PcInstance player)
+	public void showOrHideGm(L2PcInstance player, boolean showOrHide)
 	{
 		if (_gmList.containsKey(player))
-			_gmList.put(player, false);
+			_gmList.put(player, showOrHide);
 	}
 	
-	/**
-	 * GM will no longer be displayed on clients gmlist
-	 * @param player
-	 */
-	public void hideGm(L2PcInstance player)
+	public boolean isGmVisible(L2PcInstance player)
 	{
-		if (_gmList.containsKey(player))
-			_gmList.put(player, true);
+		return _gmList.get(player);
 	}
 	
 	public boolean isGmOnline(boolean includeHidden)

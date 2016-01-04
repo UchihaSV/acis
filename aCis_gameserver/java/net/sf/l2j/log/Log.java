@@ -37,7 +37,7 @@ public class Log
 		new File("log/game").mkdirs();
 		
 		final File file = new File("log/game/" + (curr != null ? curr : "") + (cat != null ? cat : "unk") + ".txt");
-		try(FileWriter save = new FileWriter(file, true))
+		try (FileWriter save = new FileWriter(file, true))
 		{
 			String out = "[" + date + "] " + text + "\n";
 			save.write(out);

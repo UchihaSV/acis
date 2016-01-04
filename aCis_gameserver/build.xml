@@ -15,7 +15,6 @@
 				<include name="c3p0-0.9.5-pre5.jar" />
 				<include name="mchange-commons-java-0.2.6.2.jar" />
 				<include name="mysql-connector-java-5.1.26.jar" />
-				<include name="mmocore.jar" />
 			</fileset>
 		</copy>
 		<copy todir="${build.dist.game}/libs">
@@ -36,6 +35,7 @@
 			<fileset dir="dist">
 				<include name="GameServer_loop.sh" />
 				<include name="startGameServer.*" />
+				<include name="GeoDataConverter.*" />
 			</fileset>
 		</copy>
 		<fixcrlf srcdir="${build.dist.game}" eol="lf" eof="remove" includes="**/*.sh" />
@@ -92,7 +92,7 @@
 	</target>
 
 	<target name="compile" depends="init" description="Compile the source.">
-		<javac srcdir="${src}" classpathref="classpath" destdir="${build.classes}" compiler="javac1.7" debug="true" debuglevel="lines,vars,source" includeantruntime="false" source="1.7" target="1.7" />
+		<javac srcdir="${src}" classpathref="classpath" destdir="${build.classes}" compiler="javac1.8" debug="true" debuglevel="lines,vars,source" includeantruntime="false" source="1.8" target="1.8" />
 	</target>
 	
 	<target name="init" depends="clean,checkRequirements" description="Create the output directories.">
@@ -109,8 +109,8 @@
 
 	<target name="checkRequirements" description="Check requirements.">
 		<echo message="Verification of your JDK version."/>
-		<available classname="java.lang.AutoCloseable" property="JDK7.present" />
-		<fail unless="JDK7.present" message="Java 1.7 is required, but your version is Java ${ant.java.version}. Install latest JDK." />
+		<available classname="java.util.stream.Stream" property="JDK8.present" />
+		<fail unless="JDK8.present" message="Java 1.8 is required, but your version is Java ${ant.java.version}. Install latest JDK." />
 	</target>
 	
 	<path id="classpath">

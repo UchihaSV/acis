@@ -33,7 +33,7 @@ public class AdminBuffs implements IAdminCommandHandler
 		if (command.startsWith("admin_getbuffs"))
 		{
 			StringTokenizer st = new StringTokenizer(command, " ");
-			command = st.nextToken();
+			st.nextToken();
 			
 			if (st.hasMoreTokens())
 			{
@@ -127,7 +127,7 @@ public class AdminBuffs implements IAdminCommandHandler
 		else if (command.startsWith("admin_removereuse"))
 		{
 			StringTokenizer st = new StringTokenizer(command, " ");
-			command = st.nextToken();
+			st.nextToken();
 			
 			L2PcInstance player = null;
 			if (st.hasMoreTokens())

@@ -16,9 +16,8 @@ package net.sf.l2j.loginserver.network.clientpackets;
 
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.mmocore.ReceivablePacket;
 import net.sf.l2j.loginserver.L2LoginClient;
-
-import org.mmocore.network.ReceivablePacket;
 
 /**
  * @author KenM

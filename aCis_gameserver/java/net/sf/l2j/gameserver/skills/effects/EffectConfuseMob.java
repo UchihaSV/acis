@@ -23,7 +23,6 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2ChestInstance;
-import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.templates.skills.L2EffectFlag;
 import net.sf.l2j.gameserver.templates.skills.L2EffectType;
@@ -73,10 +72,8 @@ public class EffectConfuseMob extends L2Effect
 		for (L2Object obj : getEffected().getKnownList().getKnownObjects())
 		{
 			// Only attackable NPCs are put in the list.
-			if ((obj instanceof L2Attackable) && (obj != getEffected()))
-				// Don't put doors nor chests on it.
-				if (!(obj instanceof L2DoorInstance || obj instanceof L2ChestInstance))
-					targetList.add((L2Character) obj);
+			if (obj instanceof L2Attackable && !(obj instanceof L2ChestInstance) && obj != getEffected())
+				targetList.add((L2Character) obj);
 		}
 		
 		// if there is no target, exit function

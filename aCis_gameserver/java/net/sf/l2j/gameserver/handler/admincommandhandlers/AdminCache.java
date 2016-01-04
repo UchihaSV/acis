@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import net.sf.l2j.gameserver.cache.CrestCache;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -28,7 +27,6 @@ public class AdminCache implements IAdminCommandHandler
 	{
 		"admin_reload_cache_path",
 		"admin_reload_cache_file",
-		"admin_fix_cache_crest"
 	};
 	
 	@Override
@@ -67,11 +65,6 @@ public class AdminCache implements IAdminCommandHandler
 			{
 				activeChar.sendMessage("Usage: //reload_cache_file <relative_path/file>");
 			}
-		}
-		else if (command.startsWith("admin_fix_cache_crest"))
-		{
-			CrestCache.convertOldPledgeFiles();
-			activeChar.sendMessage("Cache[Crest]: crests have been fixed.");
 		}
 		return true;
 	}

@@ -50,11 +50,11 @@ public class ExGetBossRecord extends L2GameServerPacket
 		else
 		{
 			writeD(_bossRecordInfo.size()); // list size
-			for (int bossId : _bossRecordInfo.keySet())
+			for (Map.Entry<Integer, Integer> bossEntry : _bossRecordInfo.entrySet())
 			{
-				writeD(bossId);
-				writeD(_bossRecordInfo.get(bossId));
-				writeD(0x00); // ??
+				writeD(bossEntry.getKey());
+				writeD(bossEntry.getValue());
+				writeD(0x00); // Total points
 			}
 		}
 	}

@@ -31,7 +31,7 @@ public final class RequestAllyCrest extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		byte[] data = CrestCache.getCrest(CrestType.ALLY, _crestId);
+		byte[] data = CrestCache.getInstance().getCrest(CrestType.ALLY, _crestId);
 		if (data != null)
 			sendPacket(new AllyCrest(_crestId, data));
 	}

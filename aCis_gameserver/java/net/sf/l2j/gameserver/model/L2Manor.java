@@ -35,9 +35,9 @@ import org.w3c.dom.Node;
  */
 public class L2Manor
 {
-	private static Logger _log = Logger.getLogger(L2Manor.class.getName());
+	private static final Logger _log = Logger.getLogger(L2Manor.class.getName());
 	
-	private static Map<Integer, SeedData> _seeds;
+	private final Map<Integer, SeedData> _seeds;
 	
 	public L2Manor()
 	{

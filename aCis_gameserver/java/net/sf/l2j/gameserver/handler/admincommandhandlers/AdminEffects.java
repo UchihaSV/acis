@@ -293,7 +293,7 @@ public class AdminEffects implements IAdminCommandHandler
 						L2PcInstance player = L2World.getInstance().getPlayer(targetOrRadius);
 						if (player != null)
 						{
-							if (performSocial(social, player, activeChar))
+							if (performSocial(social, player))
 								activeChar.sendMessage(player.getName() + " was affected by your social request.");
 							else
 								activeChar.sendPacket(SystemMessageId.NOTHING_HAPPENED);
@@ -303,7 +303,7 @@ public class AdminEffects implements IAdminCommandHandler
 							final int radius = Integer.parseInt(targetOrRadius);
 							
 							for (L2Object object : activeChar.getKnownList().getKnownTypeInRadius(L2Character.class, radius))
-								performSocial(social, object, activeChar);
+								performSocial(social, object);
 							
 							activeChar.sendMessage(radius + " units radius was affected by your social request.");
 						}
@@ -315,7 +315,7 @@ public class AdminEffects implements IAdminCommandHandler
 					if (obj == null)
 						obj = activeChar;
 					
-					if (performSocial(social, obj, activeChar))
+					if (performSocial(social, obj))
 						activeChar.sendMessage(obj.getName() + " was affected by your social request.");
 					else
 						activeChar.sendPacket(SystemMessageId.NOTHING_HAPPENED);
@@ -437,7 +437,7 @@ public class AdminEffects implements IAdminCommandHandler
 		return false;
 	}
 	
-	private static boolean performSocial(int action, L2Object target, L2PcInstance activeChar)
+	private static boolean performSocial(int action, L2Object target)
 	{
 		if (target instanceof L2Character)
 		{

@@ -189,7 +189,7 @@ public class RecipeTable
 	
 	public void requestMakeItem(L2PcInstance player, int recipeListId)
 	{
-		if (AttackStanceTaskManager.getInstance().get(player) || player.isInDuel())
+		if (AttackStanceTaskManager.getInstance().isInAttackStance(player) || player.isInDuel())
 		{
 			player.sendPacket(SystemMessageId.CANT_OPERATE_PRIVATE_STORE_DURING_COMBAT);
 			return;

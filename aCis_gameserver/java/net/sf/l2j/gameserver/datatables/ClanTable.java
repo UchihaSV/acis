@@ -489,6 +489,8 @@ public class ClanTable
 				if (clan != null && clan.getReputationScore() > 0)
 					clan.setRank(rank++);
 			}
+			result.close();
+			statement.close();
 		}
 		catch (Exception e)
 		{

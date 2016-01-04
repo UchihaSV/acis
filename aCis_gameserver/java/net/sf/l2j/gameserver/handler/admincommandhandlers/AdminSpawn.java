@@ -17,7 +17,6 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,7 +47,6 @@ import net.sf.l2j.util.StringUtil;
  */
 public class AdminSpawn implements IAdminCommandHandler
 {
-	public static Logger _log = Logger.getLogger(AdminSpawn.class.getName());
 	private static final String[] ADMIN_COMMANDS =
 	{
 		"admin_list_spawns",

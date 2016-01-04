@@ -14,18 +14,14 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import java.util.Calendar;
-import java.util.StringTokenizer;
-
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.LoginServerThread;
 import net.sf.l2j.gameserver.Shutdown;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.util.Util;
+import net.sf.l2j.gameserver.taskmanager.GameTimeTaskManager;
 import net.sf.l2j.loginserver.network.gameserverpackets.ServerStatus;
 
 public class AdminMaintenance implements IAdminCommandHandler
@@ -52,8 +48,7 @@ public class AdminMaintenance implements IAdminCommandHandler
 		{
 			try
 			{
-				int val = Integer.parseInt(command.substring(22));
-				serverShutdown(activeChar, val, false);
+				Shutdown.getInstance().startShutdown(activeChar, null, Integer.parseInt(command.substring(22)), false);
 			}
 			catch (StringIndexOutOfBoundsException e)
 			{
@@ -64,8 +59,7 @@ public class AdminMaintenance implements IAdminCommandHandler
 		{
 			try
 			{
-				int val = Integer.parseInt(command.substring(21));
-				serverShutdown(activeChar, val, true);
+				Shutdown.getInstance().startShutdown(activeChar, null, Integer.parseInt(command.substring(21)), true);
 			}
 			catch (StringIndexOutOfBoundsException e)
 			{
@@ -74,54 +68,44 @@ public class AdminMaintenance implements IAdminCommandHandler
 		}
 		else if (command.startsWith("admin_server_abort"))
 		{
-			serverAbort(activeChar);
+			Shutdown.getInstance().abort(activeChar);
 		}
 		else if (command.equals("admin_server_gm_only"))
 		{
-			gmOnly();
-			activeChar.sendMessage("Server is now GMonly");
+			LoginServerThread.getInstance().setServerStatus(ServerStatus.STATUS_GM_ONLY);
+			Config.SERVER_GMONLY = true;
+			
+			activeChar.sendMessage("Server is now setted as GMonly.");
 			sendHtmlForm(activeChar);
 		}
 		else if (command.equals("admin_server_all"))
 		{
-			allowToAll();
-			activeChar.sendMessage("Server isn't GMonly anymore");
+			LoginServerThread.getInstance().setServerStatus(ServerStatus.STATUS_AUTO);
+			Config.SERVER_GMONLY = false;
+			
+			activeChar.sendMessage("Server isn't setted as GMonly anymore.");
 			sendHtmlForm(activeChar);
 		}
 		else if (command.startsWith("admin_server_max_player"))
 		{
-			StringTokenizer st = new StringTokenizer(command);
-			if (st.countTokens() > 1)
+			try
 			{
-				st.nextToken();
-				String number = st.nextToken();
-				try
-				{
-					LoginServerThread.getInstance().setMaxPlayer(new Integer(number).intValue());
-					activeChar.sendMessage("maxPlayer set to " + new Integer(number).intValue());
-					sendHtmlForm(activeChar);
-				}
-				catch (NumberFormatException e)
-				{
-					activeChar.sendMessage("Max players must be a number.");
-				}
+				final int number = Integer.parseInt(command.substring(24));
+				
+				LoginServerThread.getInstance().setMaxPlayer(number);
+				activeChar.sendMessage("Server maximum player amount is setted to " + number + ".");
+				sendHtmlForm(activeChar);
 			}
-			else
-				activeChar.sendMessage("Format is server_max_player <max>");
+			catch (Exception e)
+			{
+				activeChar.sendMessage("The parameter must be a valid number.");
+			}
 		}
 		return true;
 	}
 	
 	private static void sendHtmlForm(L2PcInstance activeChar)
 	{
-		int t = GameTimeController.getInstance().getGameTime();
-		int h = t / 60;
-		int m = t % 60;
-		
-		Calendar cal = Calendar.getInstance();
-		cal.set(Calendar.HOUR_OF_DAY, h);
-		cal.set(Calendar.MINUTE, m);
-		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setFile("data/html/admin/maintenance.htm");
 		adminReply.replace("%count%", L2World.getInstance().getAllPlayersCount());
@@ -129,30 +113,8 @@ public class AdminMaintenance implements IAdminCommandHandler
 		adminReply.replace("%server_name%", LoginServerThread.getInstance().getServerName());
 		adminReply.replace("%status%", LoginServerThread.getInstance().getStatusString());
 		adminReply.replace("%max_players%", LoginServerThread.getInstance().getMaxPlayer());
-		adminReply.replace("%time%", Util.formatDate(cal.getTime(), "h:mm a"));
+		adminReply.replace("%time%", GameTimeTaskManager.getInstance().getGameTimeFormated());
 		activeChar.sendPacket(adminReply);
-	}
-	
-	private static void allowToAll()
-	{
-		LoginServerThread.getInstance().setServerStatus(ServerStatus.STATUS_AUTO);
-		Config.SERVER_GMONLY = false;
-	}
-	
-	private static void gmOnly()
-	{
-		LoginServerThread.getInstance().setServerStatus(ServerStatus.STATUS_GM_ONLY);
-		Config.SERVER_GMONLY = true;
-	}
-	
-	private static void serverShutdown(L2PcInstance activeChar, int seconds, boolean restart)
-	{
-		Shutdown.getInstance().startShutdown(activeChar, null, seconds, restart);
-	}
-	
-	private static void serverAbort(L2PcInstance activeChar)
-	{
-		Shutdown.getInstance().abort(activeChar);
 	}
 	
 	@Override

@@ -22,8 +22,8 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Base64;
 
-import net.sf.l2j.Base64;
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.Server;
@@ -144,7 +144,7 @@ public class SQLAccountManager
 		con = L2DatabaseFactory.getInstance().getConnection();
 		PreparedStatement statement = con.prepareStatement("REPLACE	accounts (login, password, access_level) VALUES (?,?,?)");
 		statement.setString(1, account);
-		statement.setString(2, Base64.encodeBytes(newpass));
+		statement.setString(2, Base64.getEncoder().encodeToString(newpass));
 		statement.setString(3, level);
 		statement.executeUpdate();
 		statement.close();

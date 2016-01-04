@@ -21,8 +21,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.gameserver.geoengine.GeoData;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -354,9 +354,7 @@ public class L2Spawn
 				_template
 			};
 			
-			// Call the constructor of the L2Npc
-			// (can be a L2ArtefactInstance, L2FriendlyMobInstance, L2GuardInstance, L2MonsterInstance, L2SiegeGuardInstance, L2BoxInstance,
-			// L2FeedableBeastInstance, L2TamedBeastInstance, L2NpcInstance)
+			// Call the constructor of the L2Npc (can be a L2ArtefactInstance, L2FriendlyMobInstance, L2GuardInstance, L2MonsterInstance, L2SiegeGuardInstance, L2BoxInstance, L2FeedableBeastInstance, L2TamedBeastInstance, L2NpcInstance)
 			Object tmp = _constructor.newInstance(parameters);
 			
 			if (isSummonSpawn && tmp instanceof L2Character)
@@ -394,7 +392,11 @@ public class L2Spawn
 		// The L2Npc is spawned at the exact position (Lox, Locy, Locz)
 		newlocx = getLocx();
 		newlocy = getLocy();
-		newlocz = (Config.GEODATA > 0) ? GeoData.getInstance().getSpawnHeight(newlocx, newlocy, getLocz(), getLocz(), this) : getLocz();
+		newlocz = GeoData.getInstance().getHeight(newlocx, newlocy, getLocz());
+		
+		// temporarily fix: when the spawn Z and geo Z differs more than 200, use spawn Z coord
+		if (Math.abs(newlocz - getLocz()) > 200)
+			newlocz = getLocz();
 		
 		mob.stopAllEffects();
 		mob.setIsDead(false);
@@ -431,9 +433,6 @@ public class L2Spawn
 		L2Spawn.notifyNpcSpawned(mob);
 		
 		_lastSpawn = mob;
-		
-		if (Config.DEBUG)
-			_log.finest("Spawned Mob ID: " + _template.getNpcId() + " at X: " + mob.getX() + ", Y: " + mob.getY() + ", 2: " + mob.getZ());
 		
 		return mob;
 	}

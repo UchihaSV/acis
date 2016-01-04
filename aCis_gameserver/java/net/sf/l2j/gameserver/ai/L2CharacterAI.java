@@ -14,11 +14,12 @@
  */
 package net.sf.l2j.gameserver.ai;
 
-import net.sf.l2j.gameserver.GeoData;
+import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -32,7 +33,6 @@ import net.sf.l2j.gameserver.network.serverpackets.AutoAttackStop;
 import net.sf.l2j.gameserver.taskmanager.AttackStanceTaskManager;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Point3D;
 
 /**
  * This class manages AI of L2Character. It is mother class of following :
@@ -476,8 +476,7 @@ public class L2CharacterAI extends AbstractAI
 	{
 		// Stop the actor auto-attack client side by sending Server->Client packet AutoAttackStop (broadcast)
 		_actor.broadcastPacket(new AutoAttackStop(_actor.getObjectId()));
-		if (AttackStanceTaskManager.getInstance().get(_actor))
-			AttackStanceTaskManager.getInstance().remove(_actor);
+		AttackStanceTaskManager.getInstance().remove(_actor);
 		
 		// Stop Server AutoAttack also
 		setAutoAttacking(false);
@@ -504,8 +503,7 @@ public class L2CharacterAI extends AbstractAI
 	{
 		// Stop the actor auto-attack client side by sending Server->Client packet AutoAttackStop (broadcast)
 		_actor.broadcastPacket(new AutoAttackStop(_actor.getObjectId()));
-		if (AttackStanceTaskManager.getInstance().get(_actor))
-			AttackStanceTaskManager.getInstance().remove(_actor);
+		AttackStanceTaskManager.getInstance().remove(_actor);
 		
 		// Stop Server AutoAttack also
 		setAutoAttacking(false);
@@ -531,8 +529,7 @@ public class L2CharacterAI extends AbstractAI
 	{
 		// Stop the actor auto-attack client side by sending Server->Client packet AutoAttackStop (broadcast)
 		_actor.broadcastPacket(new AutoAttackStop(_actor.getObjectId()));
-		if (AttackStanceTaskManager.getInstance().get(_actor))
-			AttackStanceTaskManager.getInstance().remove(_actor);
+		AttackStanceTaskManager.getInstance().remove(_actor);
 		
 		// stop Server AutoAttack also
 		setAutoAttacking(false);
@@ -731,7 +728,7 @@ public class L2CharacterAI extends AbstractAI
 		// Stop an AI Follow Task
 		stopFollow();
 		
-		if (!AttackStanceTaskManager.getInstance().get(_actor))
+		if (!AttackStanceTaskManager.getInstance().isInAttackStance(_actor))
 			_actor.broadcastPacket(new AutoAttackStop(_actor.getObjectId()));
 		
 		// Launch actions corresponding to the Event Think
@@ -784,7 +781,7 @@ public class L2CharacterAI extends AbstractAI
 		// do nothing
 	}
 	
-	protected boolean maybeMoveToPosition(Point3D worldPosition, int offset)
+	protected boolean maybeMoveToPosition(Location worldPosition, int offset)
 	{
 		if (worldPosition == null)
 		{
@@ -855,8 +852,10 @@ public class L2CharacterAI extends AbstractAI
 		{
 			if (getFollowTarget() != null)
 			{
+				int foffset = offset + (((L2Character) target).isMoving() ? 100 : 0);
+				
 				// allow larger hit range when the target is moving (check is run only once per second)
-				if (!_actor.isInsideRadius(target, offset + 100, false, false))
+				if (!_actor.isInsideRadius(target, foffset, false, false))
 				{
 					if (!_actor.isAttackingNow() || _actor instanceof L2Summon)
 						moveToPawn(target, offset);
@@ -974,7 +973,7 @@ public class L2CharacterAI extends AbstractAI
 				boolean cancast = true;
 				for (L2Character target : _actor.getKnownList().getKnownTypeInRadius(L2Character.class, sk.getSkillRadius()))
 				{
-					if (!GeoData.getInstance().canSeeTarget(_actor, target))
+					if (!PathFinding.getInstance().canSeeTarget(_actor, target))
 						continue;
 					
 					if (target instanceof L2Attackable && !_actor.isConfused())
@@ -992,7 +991,7 @@ public class L2CharacterAI extends AbstractAI
 				boolean cancast = true;
 				for (L2Character target : ((L2Character) getTarget()).getKnownList().getKnownTypeInRadius(L2Character.class, sk.getSkillRadius()))
 				{
-					if (!GeoData.getInstance().canSeeTarget(_actor, target) || target == null)
+					if (!PathFinding.getInstance().canSeeTarget(_actor, target))
 						continue;
 					
 					if (target instanceof L2Attackable && !_actor.isConfused())
@@ -1013,7 +1012,7 @@ public class L2CharacterAI extends AbstractAI
 				boolean cancast = false;
 				for (L2Character target : _actor.getKnownList().getKnownTypeInRadius(L2Character.class, sk.getSkillRadius()))
 				{
-					if (!GeoData.getInstance().canSeeTarget(_actor, target))
+					if (!PathFinding.getInstance().canSeeTarget(_actor, target))
 						continue;
 					
 					if (target instanceof L2Attackable && !_actor.isConfused())
@@ -1031,7 +1030,7 @@ public class L2CharacterAI extends AbstractAI
 				boolean cancast = true;
 				for (L2Character target : ((L2Character) getTarget()).getKnownList().getKnownTypeInRadius(L2Character.class, sk.getSkillRadius()))
 				{
-					if (!GeoData.getInstance().canSeeTarget(_actor, target))
+					if (!PathFinding.getInstance().canSeeTarget(_actor, target))
 						continue;
 					
 					if (target instanceof L2Attackable && !_actor.isConfused())
@@ -1059,7 +1058,7 @@ public class L2CharacterAI extends AbstractAI
 		final String[] actorClans = ((L2Npc) _actor).getClans();
 		for (L2Attackable target : _actor.getKnownList().getKnownTypeInRadius(L2Attackable.class, sk.getSkillRadius()))
 		{
-			if (!GeoData.getInstance().canSeeTarget(_actor, target))
+			if (!PathFinding.getInstance().canSeeTarget(_actor, target))
 				continue;
 			
 			if (!Util.contains(actorClans, target.getClans()))
