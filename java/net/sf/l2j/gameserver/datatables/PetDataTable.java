@@ -14,21 +14,21 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.model.L2PetData;
 import net.sf.l2j.gameserver.model.L2PetData.L2PetLevelData;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
-import net.sf.l2j.gameserver.templates.item.L2EtcItemType;
-import net.sf.l2j.gameserver.templates.item.L2Item;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
 import org.w3c.dom.Document;
@@ -36,9 +36,9 @@ import org.w3c.dom.Node;
 
 public class PetDataTable
 {
-	private static Logger _log = Logger.getLogger(L2PetInstance.class.getName());
+	private static final Logger _log = Logger.getLogger(L2PetInstance.class.getName());
 	
-	private static TIntObjectHashMap<L2PetData> _petTable;
+	private static final Map<Integer, L2PetData> _petTable = new HashMap<>();
 	
 	public static PetDataTable getInstance()
 	{
@@ -47,7 +47,6 @@ public class PetDataTable
 	
 	protected PetDataTable()
 	{
-		_petTable = new TIntObjectHashMap<>();
 		load();
 	}
 	
@@ -124,9 +123,6 @@ public class PetDataTable
 	
 	public L2PetData getPetData(int petID)
 	{
-		if (!_petTable.contains(petID))
-			_log.info("Missing pet data for npcid: " + petID);
-		
 		return _petTable.get(petID);
 	}
 	
@@ -181,8 +177,8 @@ public class PetDataTable
 	
 	public static boolean isPetCollar(int itemId)
 	{
-		L2Item item = ItemTable.getInstance().getTemplate(itemId);
-		if (item != null && item.getItemType() == L2EtcItemType.PET_COLLAR)
+		Item item = ItemTable.getInstance().getTemplate(itemId);
+		if (item != null && item.getItemType() == EtcItemType.PET_COLLAR)
 			return true;
 		
 		return false;

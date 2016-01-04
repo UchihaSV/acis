@@ -18,22 +18,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import net.sf.l2j.gameserver.TradeController;
+import net.sf.l2j.gameserver.datatables.BuyListTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
-import net.sf.l2j.gameserver.model.L2DropCategory;
-import net.sf.l2j.gameserver.model.L2DropData;
 import net.sf.l2j.gameserver.model.L2Skill;
-import net.sf.l2j.gameserver.model.L2TradeList;
-import net.sf.l2j.gameserver.model.L2TradeList.L2TradeItem;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2MerchantInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
+import net.sf.l2j.gameserver.model.buylist.Product;
+import net.sf.l2j.gameserver.model.item.DropCategory;
+import net.sf.l2j.gameserver.model.item.DropData;
 import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.model.quest.QuestEventType;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.util.StringUtil;
 
@@ -56,22 +56,33 @@ public class AdminEditNpc implements IAdminCommandHandler
 	@Override
 	public boolean useAdminCommand(String command, L2PcInstance activeChar)
 	{
+		final StringTokenizer st = new StringTokenizer(command, " ");
+		st.nextToken();
+		
 		if (command.startsWith("admin_show_shoplist"))
 		{
-			String[] args = command.split(" ");
-			if (args.length > 2)
-				showShopList(activeChar, Integer.parseInt(command.split(" ")[1]), Integer.parseInt(command.split(" ")[2]));
+			try
+			{
+				showShopList(activeChar, Integer.parseInt(st.nextToken()));
+			}
+			catch (Exception e)
+			{
+				activeChar.sendMessage("Usage: //show_shoplist <list_id>");
+			}
 		}
 		else if (command.startsWith("admin_show_shop"))
 		{
-			String[] args = command.split(" ");
-			if (args.length > 1)
-				showShop(activeChar, Integer.parseInt(command.split(" ")[1]));
+			try
+			{
+				showShop(activeChar, Integer.parseInt(st.nextToken()));
+			}
+			catch (Exception e)
+			{
+				activeChar.sendMessage("Usage: //show_shop <npc_id>");
+			}
 		}
 		else if (command.startsWith("admin_show_droplist"))
 		{
-			StringTokenizer st = new StringTokenizer(command, " ");
-			st.nextToken();
 			try
 			{
 				int npcId = Integer.parseInt(st.nextToken());
@@ -86,24 +97,17 @@ public class AdminEditNpc implements IAdminCommandHandler
 		}
 		else if (command.startsWith("admin_show_skilllist"))
 		{
-			StringTokenizer st = new StringTokenizer(command, " ");
-			st.nextToken();
 			try
 			{
-				int npcId = Integer.parseInt(st.nextToken());
-				int page = (st.hasMoreTokens()) ? Integer.parseInt(st.nextToken()) : 0;
-				
-				showNpcSkillList(activeChar, npcId, page);
+				showNpcSkillList(activeChar, Integer.parseInt(st.nextToken()));
 			}
 			catch (Exception e)
 			{
-				activeChar.sendMessage("Usage: //show_skilllist <npc_id> <page>");
+				activeChar.sendMessage("Usage: //show_skilllist <npc_id>");
 			}
 		}
 		else if (command.startsWith("admin_show_scripts"))
 		{
-			StringTokenizer st = new StringTokenizer(command, " ");
-			st.nextToken();
 			try
 			{
 				showScriptsList(activeChar, Integer.parseInt(st.nextToken()));
@@ -117,67 +121,45 @@ public class AdminEditNpc implements IAdminCommandHandler
 		return true;
 	}
 	
-	private static void showShopList(L2PcInstance activeChar, int tradeListID, int page)
+	private static void showShopList(L2PcInstance activeChar, int listId)
 	{
-		L2TradeList tradeList = TradeController.getInstance().getBuyList(tradeListID);
-		if (page > tradeList.getItems().size() / PAGE_LIMIT + 1 || page < 1)
+		final NpcBuyList buyList = BuyListTable.getInstance().getBuyList(listId);
+		if (buyList == null)
+		{
+			activeChar.sendMessage("BuyList template is unknown for id: " + listId + ".");
 			return;
+		}
 		
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setHtml(itemListHtml(tradeList, page));
+		final StringBuilder replyMSG = new StringBuilder();
+		replyMSG.append("<html><body><center><font color=\"LEVEL\">");
+		replyMSG.append(NpcTable.getInstance().getTemplate(buyList.getNpcId()).getName());
+		replyMSG.append(" (");
+		replyMSG.append(buyList.getNpcId());
+		replyMSG.append(") buylist id: ");
+		replyMSG.append(buyList.getListId());
+		replyMSG.append("</font></center><br><table width=\"100%\"><tr><td width=200>Item</td><td width=80>Price</td></tr>");
+		
+		for (Product product : buyList.getProducts())
+		{
+			replyMSG.append("<tr><td>");
+			replyMSG.append(product.getItem().getName());
+			replyMSG.append("</td><td>");
+			replyMSG.append(product.getPrice());
+			replyMSG.append("</td></tr>");
+		}
+		replyMSG.append("</table></body></html>");
+		
+		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
+		adminReply.setHtml(replyMSG.toString());
 		activeChar.sendPacket(adminReply);
 	}
 	
-	private static String itemListHtml(L2TradeList tradeList, int page)
+	private static void showShop(L2PcInstance activeChar, int npcId)
 	{
-		final StringBuilder replyMSG = new StringBuilder();
-		
-		int max = tradeList.getItems().size() / PAGE_LIMIT;
-		if (tradeList.getItems().size() > PAGE_LIMIT * max)
-			max++;
-		
-		StringUtil.append(replyMSG, "<html><body><center><font color=\"LEVEL\">", NpcTable.getInstance().getTemplate(Integer.parseInt(tradeList.getNpcId())).getName(), " (", tradeList.getNpcId(), ") Shop ID: ", Integer.toString(tradeList.getListId()), "</font></center><table width=300 bgcolor=666666><tr>");
-		
-		for (int x = 0; x < max; x++)
+		final List<NpcBuyList> buyLists = BuyListTable.getInstance().getBuyListsByNpcId(npcId);
+		if (buyLists.isEmpty())
 		{
-			int pagenr = x + 1;
-			if (page == pagenr)
-			{
-				replyMSG.append("<td>Page ");
-				replyMSG.append(pagenr);
-				replyMSG.append("</td>");
-			}
-			else
-			{
-				replyMSG.append("<td><a action=\"bypass -h admin_show_shoplist ");
-				replyMSG.append(tradeList.getListId());
-				replyMSG.append(" ");
-				replyMSG.append(x + 1);
-				replyMSG.append("\"> Page ");
-				replyMSG.append(pagenr);
-				replyMSG.append(" </a></td>");
-			}
-		}
-		
-		replyMSG.append("</tr></table><table width=\"100%\"><tr><td width=200>Item</td><td width=80>Price</td></tr>");
-		
-		int start = ((page - 1) * PAGE_LIMIT);
-		int end = Math.min(((page - 1) * PAGE_LIMIT) + PAGE_LIMIT, tradeList.getItems().size());
-		
-		for (L2TradeItem item : tradeList.getItems(start, end))
-			StringUtil.append(replyMSG, "<tr><td>", ItemTable.getInstance().getTemplate(item.getItemId()).getName(), "</td><td>", String.valueOf(item.getPrice()), "</td></tr>");
-		
-		StringUtil.append(replyMSG, "</table></body></html>");
-		
-		return replyMSG.toString();
-	}
-	
-	private static void showShop(L2PcInstance activeChar, int merchantID)
-	{
-		List<L2TradeList> tradeLists = TradeController.getInstance().getBuyListByNpcId(merchantID);
-		if (tradeLists == null)
-		{
-			activeChar.sendMessage("Unknown npc template Id: " + merchantID);
+			activeChar.sendMessage("No buyLists found for id: " + npcId + ".");
 			return;
 		}
 		
@@ -189,30 +171,27 @@ public class AdminEditNpc implements IAdminCommandHandler
 			L2Npc merchant = (L2Npc) activeChar.getTarget();
 			int taxRate = merchant.getCastle().getTaxPercent();
 			
-			StringUtil.append(replyMSG, "<center><font color=\"LEVEL\">", merchant.getName(), " (", Integer.toString(merchantID), ")</font></center><br>Tax rate: ", Integer.toString(taxRate), "%");
+			StringUtil.append(replyMSG, "<center><font color=\"LEVEL\">", merchant.getName(), " (", Integer.toString(npcId), ")</font></center><br>Tax rate: ", Integer.toString(taxRate), "%");
 		}
 		
 		StringUtil.append(replyMSG, "<table width=\"100%\">");
 		
-		for (L2TradeList tradeList : tradeLists)
-		{
-			if (tradeList != null)
-				StringUtil.append(replyMSG, "<tr><td><a action=\"bypass -h admin_show_shoplist ", String.valueOf(tradeList.getListId()), " 1\">Merchant list ID: ", String.valueOf(tradeList.getListId()), "</a></td></tr>");
-		}
+		for (NpcBuyList buyList : buyLists)
+			StringUtil.append(replyMSG, "<tr><td><a action=\"bypass -h admin_show_shoplist ", String.valueOf(buyList.getListId()), " 1\">Buylist id: ", String.valueOf(buyList.getListId()), "</a></td></tr>");
 		
 		StringUtil.append(replyMSG, "</table></body></html>");
 		
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
+		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setHtml(replyMSG.toString());
 		activeChar.sendPacket(adminReply);
 	}
 	
 	private static void showNpcDropList(L2PcInstance activeChar, int npcId, int page)
 	{
-		L2NpcTemplate npcData = NpcTable.getInstance().getTemplate(npcId);
+		final NpcTemplate npcData = NpcTable.getInstance().getTemplate(npcId);
 		if (npcData == null)
 		{
-			activeChar.sendMessage("Unknown npc template id " + npcId);
+			activeChar.sendMessage("Npc template is unknown for id: " + npcId + ".");
 			return;
 		}
 		
@@ -227,14 +206,14 @@ public class AdminEditNpc implements IAdminCommandHandler
 		
 		if (!npcData.getDropData().isEmpty())
 		{
-			replyMSG.append("Drop type legend: <font color=\"3BB9FF\">Drop</font> | <font color=\"00ff00\">Sweep</font> | <font color=\"C12869\">Quest</font><br><table><tr><td width=25>cat.</td><td width=255>item</td></tr>");
+			replyMSG.append("Drop type legend: <font color=\"3BB9FF\">Drop</font> | <font color=\"00ff00\">Sweep</font><br><table><tr><td width=25>cat.</td><td width=255>item</td></tr>");
 			
 			int myPage = 1;
 			int i = 0;
 			int shown = 0;
 			boolean hasMore = false;
 			
-			for (L2DropCategory cat : npcData.getDropData())
+			for (DropCategory cat : npcData.getDropData())
 			{
 				if (shown == PAGE_LIMIT)
 				{
@@ -242,9 +221,9 @@ public class AdminEditNpc implements IAdminCommandHandler
 					break;
 				}
 				
-				for (L2DropData drop : cat.getAllDrops())
+				for (DropData drop : cat.getAllDrops())
 				{
-					final String color = (drop.isQuestDrop() ? "C12869" : (cat.isSweep() ? "00FF00" : "3BB9FF"));
+					final String color = ((cat.isSweep()) ? "00FF00" : "3BB9FF");
 					
 					if (myPage != page)
 					{
@@ -312,68 +291,54 @@ public class AdminEditNpc implements IAdminCommandHandler
 		
 		replyMSG.append("</body></html>");
 		
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
+		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setHtml(replyMSG.toString());
 		activeChar.sendPacket(adminReply);
 	}
 	
-	private static void showNpcSkillList(L2PcInstance activeChar, int npcId, int page)
+	private static void showNpcSkillList(L2PcInstance activeChar, int npcId)
 	{
-		final L2NpcTemplate npcData = NpcTable.getInstance().getTemplate(npcId);
+		final NpcTemplate npcData = NpcTable.getInstance().getTemplate(npcId);
 		if (npcData == null)
 		{
-			activeChar.sendMessage("Template id unknown: " + npcId);
+			activeChar.sendMessage("Npc template is unknown for id: " + npcId + ".");
 			return;
 		}
 		
 		final L2Skill[] skills = npcData.getSkillsArray();
-		final int _skillsize = skills.length;
 		
-		int MaxPages = _skillsize / PAGE_LIMIT;
-		if (_skillsize > PAGE_LIMIT * MaxPages)
-			MaxPages++;
+		final StringBuilder replyMSG = new StringBuilder();
+		replyMSG.append("<html><body><center><font color=\"LEVEL\">");
+		replyMSG.append(npcData.getName());
+		replyMSG.append(" (");
+		replyMSG.append(npcId);
+		replyMSG.append("): ");
+		replyMSG.append(skills.length);
+		replyMSG.append(" skills</font></center><table width=\"100%\">");
 		
-		if (page > MaxPages)
-			page = MaxPages;
-		
-		final int SkillsStart = PAGE_LIMIT * page;
-		int SkillsEnd = _skillsize;
-		if (SkillsEnd - SkillsStart > PAGE_LIMIT)
-			SkillsEnd = SkillsStart + PAGE_LIMIT;
-		
-		final StringBuilder replyMSG = StringUtil.startAppend(200 + _skillsize * 100, "<html><body><center><font color=\"LEVEL\">" + npcData.getName() + " (", Integer.toString(npcId), "): ", Integer.toString(_skillsize), " skills</font></center><table width=\"100%\" bgcolor=666666><tr>");
-		
-		for (int x = 0; x < MaxPages; x++)
+		for (L2Skill skill : skills)
 		{
-			int pagenr = x + 1;
-			if (page == x)
-				StringUtil.append(replyMSG, "<td>Page ", Integer.toString(pagenr), "</td>");
-			else
-				StringUtil.append(replyMSG, "<td><a action=\"bypass -h admin_show_skilllist ", Integer.toString(npcId), " ", Integer.toString(x), "\"> Page ", Integer.toString(pagenr), " </a></td>");
+			replyMSG.append("<tr><td>");
+			replyMSG.append((skill.getSkillType() == L2SkillType.NOTDONE) ? ("<font color=\"777777\">" + skill.getName() + "</font>") : skill.getName());
+			replyMSG.append(" [");
+			replyMSG.append(skill.getId());
+			replyMSG.append("-");
+			replyMSG.append(skill.getLevel());
+			replyMSG.append("]</td></tr>");
 		}
-		replyMSG.append("</tr></table><table width=\"100%\">");
+		replyMSG.append("</table></body></html>");
 		
-		for (int i = SkillsStart; i < SkillsEnd; i++)
-		{
-			final L2Skill skill = skills[i];
-			if (skill == null)
-				continue;
-			
-			StringUtil.append(replyMSG, "<tr><td>" + ((skill.getSkillType() == L2SkillType.NOTDONE) ? ("<font color=\"777777\">" + skill.getName() + "</font>") : skill.getName()) + " [", Integer.toString(skill.getId()), "-", Integer.toString(skill.getLevel()), "]</td></tr>");
-		}
-		StringUtil.append(replyMSG, "</table></body></html>");
-		
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
+		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setHtml(replyMSG.toString());
 		activeChar.sendPacket(adminReply);
 	}
 	
 	private static void showScriptsList(L2PcInstance activeChar, int npcId)
 	{
-		L2NpcTemplate npcData = NpcTable.getInstance().getTemplate(npcId);
+		final NpcTemplate npcData = NpcTable.getInstance().getTemplate(npcId);
 		if (npcData == null)
 		{
-			activeChar.sendMessage("Unknown npc template id " + npcId);
+			activeChar.sendMessage("Npc template is unknown for id: " + npcId + ".");
 			return;
 		}
 		
@@ -405,7 +370,8 @@ public class AdminEditNpc implements IAdminCommandHandler
 			replyMSG.append("This NPC isn't affected by scripts.");
 		
 		replyMSG.append("</body></html>");
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
+		
+		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
 		adminReply.setHtml(replyMSG.toString());
 		activeChar.sendPacket(adminReply);
 	}

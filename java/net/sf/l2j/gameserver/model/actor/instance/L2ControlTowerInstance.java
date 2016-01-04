@@ -22,15 +22,15 @@ import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2ControlTowerInstance extends L2Npc
 {
 	private final List<L2Spawn> _guards = new ArrayList<>();
 	
-	public L2ControlTowerInstance(int objectId, L2NpcTemplate template)
+	public L2ControlTowerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

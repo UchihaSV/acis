@@ -348,7 +348,7 @@ public final class DocumentSkill extends DocumentBase
 			}
 			catch (Exception e)
 			{
-				_log.log(Level.SEVERE, "Skill id=" + _currentSkill.sets[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.sets[i]).getDisplayId() + "level" + _currentSkill.sets[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.sets[i]).getLevel(), e);
+				_log.log(Level.SEVERE, "Skill id=" + _currentSkill.sets[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.sets[i]).getId() + "level" + _currentSkill.sets[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.sets[i]).getLevel(), e);
 			}
 		}
 		int _count = count;
@@ -361,7 +361,7 @@ public final class DocumentSkill extends DocumentBase
 			}
 			catch (Exception e)
 			{
-				_log.log(Level.SEVERE, "Skill id=" + _currentSkill.enchsets1[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.enchsets1[i]).getDisplayId() + " level=" + _currentSkill.enchsets1[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.enchsets1[i]).getLevel(), e);
+				_log.log(Level.SEVERE, "Skill id=" + _currentSkill.enchsets1[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.enchsets1[i]).getId() + " level=" + _currentSkill.enchsets1[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.enchsets1[i]).getLevel(), e);
 			}
 		}
 		_count = count;
@@ -374,7 +374,7 @@ public final class DocumentSkill extends DocumentBase
 			}
 			catch (Exception e)
 			{
-				_log.log(Level.SEVERE, "Skill id=" + _currentSkill.enchsets2[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.enchsets2[i]).getDisplayId() + " level=" + _currentSkill.enchsets2[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.enchsets2[i]).getLevel(), e);
+				_log.log(Level.SEVERE, "Skill id=" + _currentSkill.enchsets2[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.enchsets2[i]).getId() + " level=" + _currentSkill.enchsets2[i].getEnum("skillType", L2SkillType.class).makeSkill(_currentSkill.enchsets2[i]).getLevel(), e);
 			}
 		}
 	}

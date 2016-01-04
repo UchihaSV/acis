@@ -14,8 +14,6 @@
  */
 package net.sf.l2j.gameserver;
 
-import gnu.trove.map.hash.TShortObjectHashMap;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,6 +26,8 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,13 +49,16 @@ import net.sf.l2j.util.Point3D;
 public class GeoEngine extends GeoData
 {
 	private static Logger _log = Logger.getLogger(GeoData.class.getName());
+	
 	private static final byte EAST = 1;
 	private static final byte WEST = 2;
 	private static final byte SOUTH = 4;
 	private static final byte NORTH = 8;
 	private static final byte NSWE_ALL = 15;
-	private static TShortObjectHashMap<MappedByteBuffer> _geodata = new TShortObjectHashMap<>();
-	private static TShortObjectHashMap<IntBuffer> _geodataIndex = new TShortObjectHashMap<>();
+	
+	private static Map<Short, MappedByteBuffer> _geodata = new HashMap<>();
+	private static Map<Short, IntBuffer> _geodataIndex = new HashMap<>();
+	
 	private static BufferedOutputStream _geoBugsOut;
 	private static short count;
 	
@@ -242,14 +245,10 @@ public class GeoEngine extends GeoData
 	@Override
 	public boolean hasGeo(int x, int y)
 	{
-		int gx = (x - L2World.MAP_MIN_X) >> 4;
-		int gy = (y - L2World.MAP_MIN_Y) >> 4;
-		short region = getRegionOffset(gx, gy);
+		final int gx = (x - L2World.MAP_MIN_X) >> 4;
+		final int gy = (y - L2World.MAP_MIN_Y) >> 4;
 		
-		if (_geodata.contains(region))
-			return true;
-		
-		return false;
+		return _geodata.containsKey(getRegionOffset(gx, gy));
 	}
 	
 	@Override
@@ -281,7 +280,7 @@ public class GeoEngine extends GeoData
 				short region = getRegionOffset(x, y);
 				// geodata is loaded for region and mobs should have correct Z coordinate...
 				// so there would likely be a floor in between the two
-				if (_geodata.contains(region))
+				if (_geodata.containsKey(region))
 					return false;
 			}
 			return true;

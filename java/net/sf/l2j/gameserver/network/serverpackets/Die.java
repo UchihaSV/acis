@@ -46,7 +46,7 @@ public class Die extends L2GameServerPacket
 			
 		}
 		else if (cha instanceof L2Attackable)
-			_sweepable = ((L2Attackable) cha).isSweepActive();
+			_sweepable = ((L2Attackable) cha).isSpoiled();
 	}
 	
 	@Override
@@ -75,7 +75,7 @@ public class Die extends L2GameServerPacket
 			
 			writeD(_clan.hasHideout() ? 0x01 : 0x00); // to hide away
 			writeD(_clan.hasCastle() || isInDefense ? 0x01 : 0x00); // to castle
-			writeD(siegeClan != null && !isInDefense && !siegeClan.getFlag().isEmpty() ? 0x01 : 0x00); // to siege HQ
+			writeD(siegeClan != null && !isInDefense && !siegeClan.getFlags().isEmpty() ? 0x01 : 0x00); // to siege HQ
 		}
 		else
 		{

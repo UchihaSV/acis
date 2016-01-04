@@ -17,16 +17,16 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 import net.sf.l2j.gameserver.datatables.ArmorSetsTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
-import net.sf.l2j.gameserver.model.L2ArmorSet;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.ArmorSet;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Armor;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
-import net.sf.l2j.gameserver.templates.item.L2Armor;
-import net.sf.l2j.gameserver.templates.item.L2Item;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 
 /**
  * This class handles following admin commands: - enchant_armor
@@ -123,10 +123,10 @@ public class AdminEnchant implements IAdminCommandHandler
 		
 		final L2PcInstance player = (L2PcInstance) target;
 		
-		final L2ItemInstance item = player.getInventory().getPaperdollItem(armorType);
+		final ItemInstance item = player.getInventory().getPaperdollItem(armorType);
 		if (item != null && item.getLocationSlot() == armorType)
 		{
-			final L2Item it = item.getItem();
+			final Item it = item.getItem();
 			final int oldEnchant = item.getEnchantLevel();
 			
 			item.setEnchantLevel(ench);
@@ -138,12 +138,12 @@ public class AdminEnchant implements IAdminCommandHandler
 				final int currentEnchant = item.getEnchantLevel();
 				
 				// Skill bestowed by +4 duals.
-				if (it instanceof L2Weapon)
+				if (it instanceof Weapon)
 				{
 					// Old enchant was >= 4 and new is lower : we drop the skill.
 					if (oldEnchant >= 4 && currentEnchant < 4)
 					{
-						final L2Skill enchant4Skill = ((L2Weapon) it).getEnchant4Skill();
+						final L2Skill enchant4Skill = ((Weapon) it).getEnchant4Skill();
 						if (enchant4Skill != null)
 						{
 							player.removeSkill(enchant4Skill, false);
@@ -153,7 +153,7 @@ public class AdminEnchant implements IAdminCommandHandler
 					// Old enchant was < 4 and new is 4 or more : we add the skill.
 					else if (oldEnchant < 4 && currentEnchant >= 4)
 					{
-						final L2Skill enchant4Skill = ((L2Weapon) it).getEnchant4Skill();
+						final L2Skill enchant4Skill = ((Weapon) it).getEnchant4Skill();
 						if (enchant4Skill != null)
 						{
 							player.addSkill(enchant4Skill, false);
@@ -162,16 +162,16 @@ public class AdminEnchant implements IAdminCommandHandler
 					}
 				}
 				// Add skill bestowed by +6 armorset.
-				else if (it instanceof L2Armor)
+				else if (it instanceof Armor)
 				{
 					// Old enchant was >= 6 and new is lower : we drop the skill.
 					if (oldEnchant >= 6 && currentEnchant < 6)
 					{
 						// Checks if player is wearing a chest item
-						final L2ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
+						final ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
 						if (chestItem != null)
 						{
-							final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
+							final ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
 							if (armorSet != null)
 							{
 								final int skillId = armorSet.getEnchant6skillId();
@@ -191,10 +191,10 @@ public class AdminEnchant implements IAdminCommandHandler
 					else if (oldEnchant < 6 && currentEnchant >= 6)
 					{
 						// Checks if player is wearing a chest item
-						final L2ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
+						final ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
 						if (chestItem != null)
 						{
-							final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
+							final ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
 							if (armorSet != null && armorSet.isEnchanted6(player)) // has all parts of set enchanted to 6 or more
 							{
 								final int skillId = armorSet.getEnchant6skillId();

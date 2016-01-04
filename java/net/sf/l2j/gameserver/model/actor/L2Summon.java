@@ -22,7 +22,6 @@ import net.sf.l2j.gameserver.ai.L2SummonAI;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.handler.ItemHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -36,7 +35,11 @@ import net.sf.l2j.gameserver.model.actor.instance.L2SummonInstance;
 import net.sf.l2j.gameserver.model.actor.knownlist.SummonKnownList;
 import net.sf.l2j.gameserver.model.actor.stat.SummonStat;
 import net.sf.l2j.gameserver.model.actor.status.SummonStatus;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.base.Experience;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
+import net.sf.l2j.gameserver.model.item.type.ActionType;
 import net.sf.l2j.gameserver.model.itemcontainer.PetInventory;
 import net.sf.l2j.gameserver.model.olympiad.OlympiadGameManager;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -54,9 +57,6 @@ import net.sf.l2j.gameserver.network.serverpackets.RelationChanged;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.TeleportToLocation;
 import net.sf.l2j.gameserver.taskmanager.DecayTaskManager;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
-import net.sf.l2j.gameserver.templates.item.L2ActionType;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 
 public abstract class L2Summon extends L2Playable
 {
@@ -88,7 +88,7 @@ public abstract class L2Summon extends L2Playable
 		}
 	}
 	
-	public L2Summon(int objectId, L2NpcTemplate template, L2PcInstance owner)
+	public L2Summon(int objectId, NpcTemplate template, L2PcInstance owner)
 	{
 		super(objectId, template);
 		
@@ -152,9 +152,9 @@ public abstract class L2Summon extends L2Playable
 	}
 	
 	@Override
-	public L2NpcTemplate getTemplate()
+	public NpcTemplate getTemplate()
 	{
-		return (L2NpcTemplate) super.getTemplate();
+		return (NpcTemplate) super.getTemplate();
 	}
 	
 	// this defines the action buttons, 1 for Summon, 2 for Pets
@@ -349,7 +349,7 @@ public abstract class L2Summon extends L2Playable
 	
 	public void stopDecay()
 	{
-		DecayTaskManager.getInstance().cancelDecayTask(this);
+		DecayTaskManager.getInstance().cancel(this);
 	}
 	
 	@Override
@@ -449,7 +449,7 @@ public abstract class L2Summon extends L2Playable
 		return 0;
 	}
 	
-	public L2Weapon getActiveWeapon()
+	public Weapon getActiveWeapon()
 	{
 		return null;
 	}
@@ -469,25 +469,25 @@ public abstract class L2Summon extends L2Playable
 	}
 	
 	@Override
-	public L2ItemInstance getActiveWeaponInstance()
+	public ItemInstance getActiveWeaponInstance()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2Weapon getActiveWeaponItem()
+	public Weapon getActiveWeaponItem()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2ItemInstance getSecondaryWeaponInstance()
+	public ItemInstance getSecondaryWeaponInstance()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2Weapon getSecondaryWeaponItem()
+	public Weapon getSecondaryWeaponItem()
 	{
 		return null;
 	}
@@ -748,6 +748,12 @@ public abstract class L2Summon extends L2Playable
 	}
 	
 	@Override
+	public boolean isOutOfControl()
+	{
+		return super.isOutOfControl() || isBetrayed();
+	}
+	
+	@Override
 	public boolean isInCombat()
 	{
 		return getOwner() != null ? getOwner().isInCombat() : false;
@@ -911,17 +917,17 @@ public abstract class L2Summon extends L2Playable
 		
 		for (int itemId : getOwner().getAutoSoulShot())
 		{
-			L2ItemInstance item = getOwner().getInventory().getItemByItemId(itemId);
+			ItemInstance item = getOwner().getInventory().getItemByItemId(itemId);
 			if (item != null)
 			{
-				if (magic && item.getItem().getDefaultAction() == L2ActionType.summon_spiritshot)
+				if (magic && item.getItem().getDefaultAction() == ActionType.summon_spiritshot)
 				{
 					IItemHandler handler = ItemHandler.getInstance().getItemHandler(item.getEtcItem());
 					if (handler != null)
 						handler.useItem(getOwner(), item, false);
 				}
 				
-				if (physical && item.getItem().getDefaultAction() == L2ActionType.summon_soulshot)
+				if (physical && item.getItem().getDefaultAction() == ActionType.summon_soulshot)
 				{
 					IItemHandler handler = ItemHandler.getInstance().getItemHandler(item.getEtcItem());
 					if (handler != null)

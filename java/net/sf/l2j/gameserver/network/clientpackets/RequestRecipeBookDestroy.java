@@ -14,9 +14,9 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.gameserver.RecipeController;
-import net.sf.l2j.gameserver.model.L2RecipeList;
+import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.RecipeList;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.RecipeBookItemList;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -44,7 +44,7 @@ public final class RequestRecipeBookDestroy extends L2GameClientPacket
 			return;
 		}
 		
-		final L2RecipeList rp = RecipeController.getInstance().getRecipeList(_recipeID);
+		final RecipeList rp = RecipeTable.getInstance().getRecipeList(_recipeID);
 		if (rp == null)
 			return;
 		

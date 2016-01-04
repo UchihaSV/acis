@@ -26,11 +26,11 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.ItemsAutoDestroy;
 import net.sf.l2j.gameserver.ThreadPoolManager;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2World;
-import net.sf.l2j.gameserver.templates.item.L2EtcItemType;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.type.EtcItemType;
+import net.sf.l2j.gameserver.taskmanager.ItemsAutoDestroyTaskManager;
 
 /**
  * This class manage all items on ground
@@ -41,7 +41,7 @@ public class ItemsOnGroundManager
 {
 	static final Logger _log = Logger.getLogger(ItemsOnGroundManager.class.getName());
 	
-	protected List<L2ItemInstance> _items = null;
+	protected List<ItemInstance> _items = null;
 	private final StoreInDb _task = new StoreInDb();
 	
 	protected ItemsOnGroundManager()
@@ -92,7 +92,7 @@ public class ItemsOnGroundManager
 		}
 		
 		// Add items to world
-		L2ItemInstance item;
+		ItemInstance item;
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
 			Statement s = con.createStatement();
@@ -103,7 +103,7 @@ public class ItemsOnGroundManager
 			
 			while (result.next())
 			{
-				item = new L2ItemInstance(result.getInt(1), result.getInt(2));
+				item = new ItemInstance(result.getInt(1), result.getInt(2));
 				L2World.getInstance().storeObject(item);
 				
 				if (item.isStackable() && result.getInt(3) > 1) // this check and..
@@ -128,8 +128,8 @@ public class ItemsOnGroundManager
 				{
 					if (result.getLong(8) > -1)
 					{
-						if ((Config.AUTODESTROY_ITEM_AFTER > 0 && item.getItemType() != L2EtcItemType.HERB) || (Config.HERB_AUTO_DESTROY_TIME > 0 && item.getItemType() == L2EtcItemType.HERB))
-							ItemsAutoDestroy.getInstance().addItem(item);
+						if ((Config.ITEM_AUTO_DESTROY_TIME > 0 && item.getItemType() != EtcItemType.HERB) || (Config.HERB_AUTO_DESTROY_TIME > 0 && item.getItemType() == EtcItemType.HERB))
+							ItemsAutoDestroyTaskManager.getInstance().addItem(item);
 					}
 				}
 			}
@@ -150,13 +150,13 @@ public class ItemsOnGroundManager
 			emptyTable();
 	}
 	
-	public void save(L2ItemInstance item)
+	public void save(ItemInstance item)
 	{
 		if (Config.SAVE_DROPPED_ITEM)
 			_items.add(item);
 	}
 	
-	public void removeObject(L2ItemInstance item)
+	public void removeObject(ItemInstance item)
 	{
 		if (Config.SAVE_DROPPED_ITEM && _items != null)
 			_items.remove(item);
@@ -207,7 +207,7 @@ public class ItemsOnGroundManager
 			{
 				PreparedStatement statement = con.prepareStatement("INSERT INTO itemsonground(object_id,item_id,count,enchant_level,x,y,z,drop_time,equipable) VALUES(?,?,?,?,?,?,?,?,?)");
 				
-				for (L2ItemInstance item : _items)
+				for (ItemInstance item : _items)
 				{
 					if (item == null)
 						continue;

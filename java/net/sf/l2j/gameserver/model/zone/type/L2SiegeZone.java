@@ -103,7 +103,7 @@ public class L2SiegeZone extends L2ZoneType
 				if (activeChar.getMountType() == 2)
 					activeChar.exitedNoLanding();
 				
-				PvpFlagTaskManager.getInstance().addPvpFlagTask(activeChar, System.currentTimeMillis() + Config.PVP_NORMAL_TIME);
+				PvpFlagTaskManager.getInstance().add(activeChar, System.currentTimeMillis() + Config.PVP_NORMAL_TIME);
 				
 				// Set pvp flag
 				if (activeChar.getPvpFlag() == 0)

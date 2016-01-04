@@ -36,6 +36,8 @@ import net.sf.l2j.gameserver.datatables.AdminCommandAccessRights;
 import net.sf.l2j.gameserver.datatables.ArmorSetsTable;
 import net.sf.l2j.gameserver.datatables.AugmentationData;
 import net.sf.l2j.gameserver.datatables.BookmarkTable;
+import net.sf.l2j.gameserver.datatables.BufferTable;
+import net.sf.l2j.gameserver.datatables.BuyListTable;
 import net.sf.l2j.gameserver.datatables.CharNameTable;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.datatables.ClanTable;
@@ -47,9 +49,11 @@ import net.sf.l2j.gameserver.datatables.HennaTable;
 import net.sf.l2j.gameserver.datatables.HerbDropTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
+import net.sf.l2j.gameserver.datatables.MultisellData;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.NpcWalkerRoutesTable;
 import net.sf.l2j.gameserver.datatables.PetDataTable;
+import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTreeTable;
 import net.sf.l2j.gameserver.datatables.SoulCrystalsTable;
@@ -65,6 +69,7 @@ import net.sf.l2j.gameserver.handler.SkillHandler;
 import net.sf.l2j.gameserver.handler.UserCommandHandler;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.AuctionManager;
+import net.sf.l2j.gameserver.instancemanager.AutoSpawnManager;
 import net.sf.l2j.gameserver.instancemanager.BoatManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
@@ -83,21 +88,23 @@ import net.sf.l2j.gameserver.instancemanager.PetitionManager;
 import net.sf.l2j.gameserver.instancemanager.QuestManager;
 import net.sf.l2j.gameserver.instancemanager.RaidBossPointsManager;
 import net.sf.l2j.gameserver.instancemanager.RaidBossSpawnManager;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
+import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
-import net.sf.l2j.gameserver.model.AutoSpawnHandler;
+import net.sf.l2j.gameserver.instancemanager.games.MonsterRace;
 import net.sf.l2j.gameserver.model.L2Manor;
-import net.sf.l2j.gameserver.model.L2Multisell;
 import net.sf.l2j.gameserver.model.L2World;
-import net.sf.l2j.gameserver.model.PartyMatchRoomList;
-import net.sf.l2j.gameserver.model.PartyMatchWaitingList;
 import net.sf.l2j.gameserver.model.entity.Hero;
 import net.sf.l2j.gameserver.model.olympiad.Olympiad;
 import net.sf.l2j.gameserver.model.olympiad.OlympiadGameManager;
+import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoomList;
+import net.sf.l2j.gameserver.model.partymatching.PartyMatchWaitingList;
 import net.sf.l2j.gameserver.network.L2GameClient;
 import net.sf.l2j.gameserver.network.L2GamePacketHandler;
 import net.sf.l2j.gameserver.pathfinding.PathFinding;
 import net.sf.l2j.gameserver.scripting.L2ScriptEngineManager;
+import net.sf.l2j.gameserver.taskmanager.ItemsAutoDestroyTaskManager;
 import net.sf.l2j.gameserver.taskmanager.KnownListUpdateTaskManager;
 import net.sf.l2j.gameserver.taskmanager.TaskManager;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
@@ -152,9 +159,9 @@ public class GameServer
 		Util.printSection("Items");
 		ItemTable.getInstance();
 		SummonItemsData.getInstance();
-		TradeController.getInstance();
-		L2Multisell.getInstance();
-		RecipeController.getInstance();
+		BuyListTable.getInstance();
+		MultisellData.getInstance();
+		RecipeTable.getInstance();
 		ArmorSetsTable.getInstance();
 		FishTable.getInstance();
 		SpellbookTable.getInstance();
@@ -198,11 +205,12 @@ public class GameServer
 		if (Config.GEODATA == 2)
 			PathFinding.getInstance();
 		
+		Util.printSection("World Bosses");
+		GrandBossManager.getInstance();
+		
 		Util.printSection("Zones");
 		ZoneManager.getInstance();
-		
-		Util.printSection("World Bosses");
-		GrandBossManager.init();
+		GrandBossManager.getInstance().initZones();
 		
 		Util.printSection("Castles");
 		CastleManager.getInstance().load();
@@ -221,6 +229,7 @@ public class GameServer
 		L2Manor.getInstance();
 		
 		Util.printSection("NPCs");
+		BufferTable.getInstance();
 		HerbDropTable.getInstance();
 		PetDataTable.getInstance();
 		NpcTable.getInstance();
@@ -263,13 +272,14 @@ public class GameServer
 		if (Config.SAVE_DROPPED_ITEM)
 			ItemsOnGroundManager.getInstance();
 		
-		if (Config.AUTODESTROY_ITEM_AFTER > 0 || Config.HERB_AUTO_DESTROY_TIME > 0)
-			ItemsAutoDestroy.getInstance();
+		if (Config.ITEM_AUTO_DESTROY_TIME > 0 || Config.HERB_AUTO_DESTROY_TIME > 0)
+			ItemsAutoDestroyTaskManager.getInstance();
 		
+		Util.printSection("Monster Derby Track");
 		MonsterRace.getInstance();
 		
 		Util.printSection("Handlers");
-		_log.config("AutoSpawnHandler: Loaded " + AutoSpawnHandler.getInstance().size() + " handlers.");
+		_log.config("AutoSpawnHandler: Loaded " + AutoSpawnManager.getInstance().size() + " handlers.");
 		_log.config("AdminCommandHandler: Loaded " + AdminCommandHandler.getInstance().size() + " handlers.");
 		_log.config("ChatHandler: Loaded " + ChatHandler.getInstance().size() + " handlers.");
 		_log.config("ItemHandler: Loaded " + ItemHandler.getInstance().size() + " handlers.");

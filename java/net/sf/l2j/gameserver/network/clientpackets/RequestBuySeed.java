@@ -25,10 +25,10 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.instance.L2ManorManagerInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.entity.Castle;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 import net.sf.l2j.gameserver.util.Util;
 
 /**
@@ -107,7 +107,7 @@ public class RequestBuySeed extends L2GameClientPacket
 				return;
 			}
 			
-			L2Item template = ItemTable.getInstance().getTemplate(i.getSeedId());
+			Item template = ItemTable.getInstance().getTemplate(i.getSeedId());
 			totalWeight += i.getCount() * template.getWeight();
 			if (!template.isStackable())
 				slots += i.getCount();

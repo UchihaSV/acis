@@ -14,15 +14,17 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
+import java.util.List;
+
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.templates.item.L2Henna;
+import net.sf.l2j.gameserver.model.item.Henna;
 
 public class HennaEquipList extends L2GameServerPacket
 {
 	private final L2PcInstance _player;
-	private final L2Henna[] _hennaEquipList;
+	private final List<Henna> _hennaEquipList;
 	
-	public HennaEquipList(L2PcInstance player, L2Henna[] hennaEquipList)
+	public HennaEquipList(L2PcInstance player, List<Henna> hennaEquipList)
 	{
 		_player = player;
 		_hennaEquipList = hennaEquipList;
@@ -34,16 +36,16 @@ public class HennaEquipList extends L2GameServerPacket
 		writeC(0xe2);
 		writeD(_player.getAdena());
 		writeD(3);
-		writeD(_hennaEquipList.length);
+		writeD(_hennaEquipList.size());
 		
-		for (L2Henna temp : _hennaEquipList)
+		for (Henna temp : _hennaEquipList)
 		{
 			// Player must have at least one dye in inventory to be able to see the henna that can be applied with it.
 			if ((_player.getInventory().getItemByItemId(temp.getDyeId())) != null)
 			{
 				writeD(temp.getSymbolId()); // symbolid
 				writeD(temp.getDyeId()); // itemid of dye
-				writeD(L2Henna.getAmountDyeRequire()); // amount of dyes required
+				writeD(Henna.getAmountDyeRequire()); // amount of dyes required
 				writeD(temp.getPrice()); // amount of adenas required
 				writeD(1); // meet the requirement or not
 			}

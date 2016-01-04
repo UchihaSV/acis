@@ -14,10 +14,10 @@
  */
 package net.sf.l2j.gameserver.model.itemcontainer.listeners;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
-import net.sf.l2j.gameserver.templates.item.L2WeaponType;
 
 public class BowRodListener implements OnEquipListener
 {
@@ -29,34 +29,34 @@ public class BowRodListener implements OnEquipListener
 	}
 	
 	@Override
-	public void onEquip(int slot, L2ItemInstance item, L2Playable actor)
+	public void onEquip(int slot, ItemInstance item, L2Playable actor)
 	{
 		if (slot != Inventory.PAPERDOLL_RHAND)
 			return;
 		
-		if (item.getItemType() == L2WeaponType.BOW)
+		if (item.getItemType() == WeaponType.BOW)
 		{
-			final L2ItemInstance arrow = actor.getInventory().findArrowForBow(item.getItem());
+			final ItemInstance arrow = actor.getInventory().findArrowForBow(item.getItem());
 			if (arrow != null)
 				actor.getInventory().setPaperdollItem(Inventory.PAPERDOLL_LHAND, arrow);
 		}
 	}
 	
 	@Override
-	public void onUnequip(int slot, L2ItemInstance item, L2Playable actor)
+	public void onUnequip(int slot, ItemInstance item, L2Playable actor)
 	{
 		if (slot != Inventory.PAPERDOLL_RHAND)
 			return;
 		
-		if (item.getItemType() == L2WeaponType.BOW)
+		if (item.getItemType() == WeaponType.BOW)
 		{
-			final L2ItemInstance arrow = actor.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LHAND);
+			final ItemInstance arrow = actor.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LHAND);
 			if (arrow != null)
 				actor.getInventory().setPaperdollItem(Inventory.PAPERDOLL_LHAND, null);
 		}
-		else if (item.getItemType() == L2WeaponType.FISHINGROD)
+		else if (item.getItemType() == WeaponType.FISHINGROD)
 		{
-			final L2ItemInstance lure = actor.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LHAND);
+			final ItemInstance lure = actor.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LHAND);
 			if (lure != null)
 				actor.getInventory().setPaperdollItem(Inventory.PAPERDOLL_LHAND, null);
 		}

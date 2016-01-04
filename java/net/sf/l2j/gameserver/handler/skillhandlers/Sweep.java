@@ -14,13 +14,15 @@
  */
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
+import java.util.List;
+
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
-import net.sf.l2j.gameserver.model.actor.L2Attackable.RewardItem;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.holder.ItemHolder;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 /**
@@ -39,39 +41,29 @@ public class Sweep implements ISkillHandler
 		if (!(activeChar instanceof L2PcInstance))
 			return;
 		
-		L2PcInstance player = (L2PcInstance) activeChar;
+		final L2PcInstance player = (L2PcInstance) activeChar;
 		
-		for (int index = 0; index < targets.length; index++)
+		for (L2Object target : targets)
 		{
-			if (!(targets[index] instanceof L2Attackable))
+			if (!(target instanceof L2Attackable))
 				continue;
 			
-			L2Attackable target = (L2Attackable) targets[index];
-			RewardItem[] items = null;
-			boolean isSweeping = false;
+			final L2Attackable monster = ((L2Attackable) target);
+			if (!monster.isSpoiled())
+				continue;
 			
-			synchronized (target)
-			{
-				if (target.isSweepActive())
-				{
-					items = target.takeSweep();
-					isSweeping = true;
-				}
-			}
+			final List<ItemHolder> items = monster.getSweepItems();
+			if (items.isEmpty())
+				continue;
 			
-			if (isSweeping)
+			for (ItemHolder item : items)
 			{
-				if (items == null || items.length == 0)
-					continue;
-				
-				for (RewardItem ritem : items)
-				{
-					if (player.isInParty())
-						player.getParty().distributeItem(player, ritem, true, target);
-					else
-						player.addItem("Sweep", ritem.getItemId(), ritem.getCount(), player, true);
-				}
+				if (player.isInParty())
+					player.getParty().distributeItem(player, item, true, monster);
+				else
+					player.addItem("Sweep", item.getId(), item.getCount(), player, true);
 			}
+			items.clear();
 		}
 	}
 	

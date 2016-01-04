@@ -15,7 +15,6 @@
 package net.sf.l2j.gameserver.model.quest;
 
 import java.util.concurrent.ScheduledFuture;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.ThreadPoolManager;
@@ -26,16 +25,17 @@ public class QuestTimer
 {
 	protected static final Logger _log = Logger.getLogger(QuestTimer.class.getName());
 	
-	private final Quest _quest;
-	private final String _name;
-	private final L2Npc _npc;
-	private final L2PcInstance _player;
-
+	protected final Quest _quest;
+	protected final String _name;
+	protected final L2Npc _npc;
+	protected final L2PcInstance _player;
+	protected final boolean _isRepeating;
+	
+	protected boolean _isActive = true;
+	
 	private ScheduledFuture<?> _schedular;
-	private final boolean _isRepeating;
-	private boolean _isActive = true;
-
-	QuestTimer(Quest quest, String name, L2Npc npc, L2PcInstance player, long time, boolean repeating)
+	
+	public QuestTimer(Quest quest, String name, L2Npc npc, L2PcInstance player, long time, boolean repeating)
 	{
 		_quest = quest;
 		_name = name;
@@ -49,64 +49,28 @@ public class QuestTimer
 			_schedular = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleTimerTask(), time);
 	}
 	
-	final Quest getQuest()
-	{
-		return _quest;
-	}
-	
-	final String getName()
-	{
-		return _name;
-	}
-	
-	final L2Npc getNpc()
-	{
-		return _npc;
-	}
-	
-	final L2PcInstance getPlayer()
-	{
-		return _player;
-	}
-	
-	final boolean getIsRepeating()
-	{
-		return _isRepeating;
-	}
-	
-	final boolean getIsActive()
-	{
-		return _isActive;
-	}
-	
 	@Override
 	public final String toString()
 	{
 		return _name;
 	}
-
-	final class ScheduleTimerTask implements Runnable
+	
+	protected final class ScheduleTimerTask implements Runnable
 	{
 		@Override
 		public void run()
 		{
-			if (!getIsActive())
+			if (!_isActive)
 				return;
 			
-			try
-			{
-				if (!getIsRepeating())
-					cancel();
-				getQuest().notifyEvent(getName(), getNpc(), getPlayer());
-			}
-			catch (Exception e)
-			{
-				_log.log(Level.SEVERE, "", e);
-			}
+			if (!_isRepeating)
+				cancel();
+			
+			_quest.notifyEvent(_name, _npc, _player);
 		}
 	}
 	
-	final void cancel()
+	public final void cancel()
 	{
 		_isActive = false;
 		
@@ -124,7 +88,7 @@ public class QuestTimer
 	 * @param player : Player instance attached to the desired timer (null if no player attached)
 	 * @return boolean
 	 */
-	final boolean equals(Quest quest, String name, L2Npc npc, L2PcInstance player)
+	public final boolean equals(Quest quest, String name, L2Npc npc, L2PcInstance player)
 	{
 		if (quest == null || quest != _quest)
 			return false;

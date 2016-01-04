@@ -16,10 +16,10 @@ package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.HennaTable;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.Henna;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.templates.item.L2Henna;
 import net.sf.l2j.gameserver.util.Util;
 
 public final class RequestHennaEquip extends L2GameClientPacket
@@ -39,7 +39,7 @@ public final class RequestHennaEquip extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		final L2Henna henna = HennaTable.getInstance().getTemplate(_symbolId);
+		final Henna henna = HennaTable.getInstance().getTemplate(_symbolId);
 		if (henna == null)
 			return;
 		
@@ -56,10 +56,10 @@ public final class RequestHennaEquip extends L2GameClientPacket
 			return;
 		}
 		
-		final L2ItemInstance ownedDyes = activeChar.getInventory().getItemByItemId(henna.getDyeId());
+		final ItemInstance ownedDyes = activeChar.getInventory().getItemByItemId(henna.getDyeId());
 		final int count = (ownedDyes == null) ? 0 : ownedDyes.getCount();
 		
-		if (count < L2Henna.getAmountDyeRequire())
+		if (count < Henna.getAmountDyeRequire())
 		{
 			activeChar.sendPacket(SystemMessageId.CANT_DRAW_SYMBOL);
 			return;
@@ -70,7 +70,7 @@ public final class RequestHennaEquip extends L2GameClientPacket
 			return;
 		
 		// destroyItemByItemId sends a message.
-		if (!activeChar.destroyItemByItemId("Henna", henna.getDyeId(), L2Henna.getAmountDyeRequire(), activeChar, true))
+		if (!activeChar.destroyItemByItemId("Henna", henna.getDyeId(), Henna.getAmountDyeRequire(), activeChar, true))
 			return;
 		
 		activeChar.addHenna(henna);

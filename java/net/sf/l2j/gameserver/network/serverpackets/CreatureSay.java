@@ -17,7 +17,6 @@ package net.sf.l2j.gameserver.network.serverpackets;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 
 public class CreatureSay extends L2GameServerPacket
@@ -75,13 +74,5 @@ public class CreatureSay extends L2GameServerPacket
 					writeS(s);
 			}
 		}
-	}
-	
-	@Override
-	public final void runImpl()
-	{
-		L2PcInstance _pci = getClient().getActiveChar();
-		if (_pci != null)
-			_pci.broadcastSnoop(_textType, _charName, _text);
 	}
 }

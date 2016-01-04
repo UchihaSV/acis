@@ -14,17 +14,17 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 /**
  * format ddddd
  */
 public class GetItem extends L2GameServerPacket
 {
-	private final L2ItemInstance _item;
+	private final ItemInstance _item;
 	private final int _playerId;
 	
-	public GetItem(L2ItemInstance item, int playerId)
+	public GetItem(ItemInstance item, int playerId)
 	{
 		_item = item;
 		_playerId = playerId;

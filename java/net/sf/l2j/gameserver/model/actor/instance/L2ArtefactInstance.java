@@ -18,16 +18,16 @@ import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * This class manages all Castle Siege Artefacts.
  */
 public final class L2ArtefactInstance extends L2NpcInstance
 {
-	public L2ArtefactInstance(int objectId, L2NpcTemplate template)
+	public L2ArtefactInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

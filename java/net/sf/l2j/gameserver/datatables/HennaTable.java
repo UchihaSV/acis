@@ -14,16 +14,17 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.gameserver.model.item.Henna;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.item.L2Henna;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
 import org.w3c.dom.Document;
@@ -33,20 +34,10 @@ public class HennaTable
 {
 	private static Logger _log = Logger.getLogger(HennaTable.class.getName());
 	
-	private static final L2Henna[] EMPTY_HENNAS = new L2Henna[0];
-	
-	private final TIntObjectHashMap<L2Henna> _henna;
-	private final TIntObjectHashMap<List<L2Henna>> _hennaTrees;
+	private final Map<Integer, Henna> _henna = new HashMap<>();
+	private final Map<Integer, List<Henna>> _hennaTrees = new HashMap<>();
 	
 	protected HennaTable()
-	{
-		_henna = new TIntObjectHashMap<>();
-		_hennaTrees = new TIntObjectHashMap<>();
-		
-		restoreHennaData();
-	}
-	
-	private void restoreHennaData()
 	{
 		try
 		{
@@ -75,7 +66,7 @@ public class HennaTable
 				hennaDat.set("WIT", Integer.valueOf(d.getAttributes().getNamedItem("WIT").getNodeValue()));
 				final String[] classes = d.getAttributes().getNamedItem("classes").getNodeValue().split(",");
 				
-				final L2Henna template = new L2Henna(hennaDat);
+				final Henna template = new Henna(hennaDat);
 				_henna.put(id, template);
 				
 				for (String clas : classes)
@@ -83,7 +74,7 @@ public class HennaTable
 					final Integer classId = Integer.valueOf(clas);
 					if (!_hennaTrees.containsKey(classId))
 					{
-						List<L2Henna> list = new ArrayList<>();
+						List<Henna> list = new ArrayList<>();
 						list.add(template);
 						_hennaTrees.put(classId, list);
 					}
@@ -99,18 +90,18 @@ public class HennaTable
 		_log.config("HennaTable: Loaded " + _henna.size() + " templates.");
 	}
 	
-	public L2Henna getTemplate(int id)
+	public Henna getTemplate(int id)
 	{
 		return _henna.get(id);
 	}
 	
-	public L2Henna[] getAvailableHenna(int classId)
+	public List<Henna> getAvailableHenna(int classId)
 	{
-		final List<L2Henna> henna = _hennaTrees.get(classId);
-		if (henna == null || henna.isEmpty())
-			return EMPTY_HENNAS;
+		final List<Henna> henna = _hennaTrees.get(classId);
+		if (henna == null)
+			return Collections.emptyList();
 		
-		return henna.toArray(new L2Henna[henna.size()]);
+		return henna;
 	}
 	
 	public static HennaTable getInstance()

@@ -145,7 +145,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				if (pet.getFollowStatus() && Util.calculateDistance(activeChar, pet, true) > 2000)
 					return;
 				
-				if (pet.isBetrayed() || pet.isMovementDisabled())
+				if (pet.isOutOfControl())
 				{
 					activeChar.sendPacket(SystemMessageId.PET_REFUSING_ORDER);
 					return;
@@ -163,7 +163,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				if (Util.contains(PASSIVE_SUMMONS, pet.getNpcId()))
 					return;
 				
-				if (pet.isBetrayed() || pet.isMovementDisabled())
+				if (pet.isOutOfControl())
 				{
 					activeChar.sendPacket(SystemMessageId.PET_REFUSING_ORDER);
 					return;
@@ -220,7 +220,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				if (pet == null)
 					return;
 				
-				if (pet.isBetrayed() || pet.isMovementDisabled())
+				if (pet.isOutOfControl())
 				{
 					activeChar.sendPacket(SystemMessageId.PET_REFUSING_ORDER);
 					return;
@@ -235,7 +235,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				
 				if (pet.isDead())
 					activeChar.sendPacket(SystemMessageId.DEAD_PET_CANNOT_BE_RETURNED);
-				else if (pet.isBetrayed() || pet.isMovementDisabled())
+				else if (pet.isOutOfControl())
 					activeChar.sendPacket(SystemMessageId.PET_REFUSING_ORDER);
 				else if (pet.isAttackingNow() || pet.isInCombat())
 					activeChar.sendPacket(SystemMessageId.PET_CANNOT_SENT_BACK_DURING_BATTLE);
@@ -313,7 +313,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				
 				if (pet.isDead())
 					activeChar.sendPacket(SystemMessageId.DEAD_PET_CANNOT_BE_RETURNED);
-				else if (pet.isBetrayed() || pet.isMovementDisabled())
+				else if (pet.isOutOfControl())
 					activeChar.sendPacket(SystemMessageId.PET_REFUSING_ORDER);
 				else if (pet.isAttackingNow() || pet.isInCombat())
 					activeChar.sendPacket(SystemMessageId.PET_CANNOT_SENT_BACK_DURING_BATTLE);
@@ -326,7 +326,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				if (target == null || pet == null || pet == target)
 					return;
 				
-				if (pet.isBetrayed() || pet.isMovementDisabled())
+				if (pet.isOutOfControl())
 				{
 					activeChar.sendPacket(SystemMessageId.PET_REFUSING_ORDER);
 					return;
@@ -487,15 +487,20 @@ public final class RequestActionUse extends L2GameClientPacket
 			return false;
 		
 		final L2Summon activeSummon = activeChar.getPet();
-		
-		// No active summon or betrayed.
-		if (activeSummon == null || activeSummon.isBetrayed())
+		if (activeSummon == null)
 			return false;
 		
 		// Pet which is 20 levels higher than owner.
 		if (activeSummon instanceof L2PetInstance && activeSummon.getLevel() - activeChar.getLevel() > 20)
 		{
 			activeChar.sendPacket(SystemMessageId.PET_TOO_HIGH_TO_CONTROL);
+			return false;
+		}
+		
+		// Out of control pet.
+		if (activeSummon.isOutOfControl())
+		{
+			activeChar.sendPacket(SystemMessageId.PET_REFUSING_ORDER);
 			return false;
 		}
 		

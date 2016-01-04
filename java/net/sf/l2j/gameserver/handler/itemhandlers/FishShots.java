@@ -15,14 +15,15 @@
 package net.sf.l2j.gameserver.handler.itemhandlers;
 
 import net.sf.l2j.gameserver.handler.IItemHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
+import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
-import net.sf.l2j.gameserver.templates.item.L2WeaponType;
 import net.sf.l2j.gameserver.util.Broadcast;
 
 /**
@@ -30,27 +31,17 @@ import net.sf.l2j.gameserver.util.Broadcast;
  */
 public class FishShots implements IItemHandler
 {
-	private static final int[] SKILL_IDS =
-	{
-		2181,
-		2182,
-		2183,
-		2184,
-		2185,
-		2186
-	};
-	
 	@Override
-	public void useItem(L2Playable playable, L2ItemInstance item, boolean forceUse)
+	public void useItem(L2Playable playable, ItemInstance item, boolean forceUse)
 	{
 		if (!(playable instanceof L2PcInstance))
 			return;
 		
 		final L2PcInstance activeChar = (L2PcInstance) playable;
-		final L2ItemInstance weaponInst = activeChar.getActiveWeaponInstance();
-		final L2Weapon weaponItem = activeChar.getActiveWeaponItem();
+		final ItemInstance weaponInst = activeChar.getActiveWeaponInstance();
+		final Weapon weaponItem = activeChar.getActiveWeaponItem();
 		
-		if (weaponInst == null || weaponItem.getItemType() != L2WeaponType.FISHINGROD)
+		if (weaponInst == null || weaponItem.getItemType() != WeaponType.FISHINGROD)
 			return;
 		
 		// Fishshot is already active
@@ -58,8 +49,7 @@ public class FishShots implements IItemHandler
 			return;
 		
 		// Wrong grade of soulshot for that fishing pole.
-		final int grade = weaponItem.getCrystalType();
-		if (grade != item.getItem().getCrystalType())
+		if (weaponItem.getCrystalType() != item.getItem().getCrystalType())
 		{
 			activeChar.sendPacket(SystemMessageId.WRONG_FISHINGSHOT_GRADE);
 			return;
@@ -71,7 +61,9 @@ public class FishShots implements IItemHandler
 			return;
 		}
 		
+		final SkillHolder[] skills = item.getItem().getSkills();
+		
 		activeChar.setChargedShot(ShotType.FISH_SOULSHOT, true);
-		Broadcast.toSelfAndKnownPlayers(activeChar, new MagicSkillUse(activeChar, SKILL_IDS[grade], 1, 0, 0));
+		Broadcast.toSelfAndKnownPlayers(activeChar, new MagicSkillUse(activeChar, skills[0].getSkillId(), 1, 0, 0));
 	}
 }

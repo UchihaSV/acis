@@ -46,7 +46,6 @@ import net.sf.l2j.gameserver.model.FusionSkill;
 import net.sf.l2j.gameserver.model.IChanceSkillTrigger;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Effect;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -58,13 +57,20 @@ import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2NpcWalkerInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.SkillDat;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2RiftInvaderInstance;
 import net.sf.l2j.gameserver.model.actor.knownlist.CharKnownList;
 import net.sf.l2j.gameserver.model.actor.position.CharPosition;
 import net.sf.l2j.gameserver.model.actor.stat.CharStat;
 import net.sf.l2j.gameserver.model.actor.status.CharStatus;
+import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.holder.SkillUseHolder;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Armor;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
+import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.model.quest.QuestEventType;
@@ -111,12 +117,6 @@ import net.sf.l2j.gameserver.skills.funcs.FuncPAtkMod;
 import net.sf.l2j.gameserver.skills.funcs.FuncPAtkSpeed;
 import net.sf.l2j.gameserver.skills.funcs.FuncPDefMod;
 import net.sf.l2j.gameserver.taskmanager.AttackStanceTaskManager;
-import net.sf.l2j.gameserver.templates.chars.L2CharTemplate;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
-import net.sf.l2j.gameserver.templates.item.L2Armor;
-import net.sf.l2j.gameserver.templates.item.L2Item;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
-import net.sf.l2j.gameserver.templates.item.L2WeaponType;
 import net.sf.l2j.gameserver.templates.skills.L2EffectFlag;
 import net.sf.l2j.gameserver.templates.skills.L2EffectType;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
@@ -161,7 +161,7 @@ public abstract class L2Character extends L2Object
 	
 	private CharStat _stat;
 	private CharStatus _status;
-	private L2CharTemplate _template; // The link on the L2CharTemplate object containing generic and static properties
+	private CharTemplate _template; // The link on the L2CharTemplate object containing generic and static properties
 	private CharKnownList _knownList;
 	
 	private String _title;
@@ -206,7 +206,7 @@ public abstract class L2Character extends L2Object
 	 * @param objectId Identifier of the object to initialized
 	 * @param template The L2CharTemplate to apply to the object
 	 */
-	public L2Character(int objectId, L2CharTemplate template)
+	public L2Character(int objectId, CharTemplate template)
 	{
 		super(objectId);
 		initKnownList();
@@ -221,7 +221,7 @@ public abstract class L2Character extends L2Object
 		
 		if (this instanceof L2Npc || this instanceof L2Summon)
 		{
-			_skills.putAll(((L2NpcTemplate) template).getSkills());
+			_skills.putAll(((NpcTemplate) template).getSkills());
 			
 			if (!_skills.isEmpty())
 			{
@@ -421,9 +421,6 @@ public abstract class L2Character extends L2Object
 		if (!needHpUpdate(352))
 			return;
 		
-		if (Config.DEBUG)
-			_log.fine("Broadcast Status Update for " + getObjectId() + "(" + getName() + "). HP: " + getCurrentHp());
-		
 		// Create the Server->Client packet StatusUpdate with current HP
 		StatusUpdate su = new StatusUpdate(this);
 		su.addAttribute(StatusUpdate.CUR_HP, (int) getCurrentHp());
@@ -494,9 +491,6 @@ public abstract class L2Character extends L2Object
 		}
 		
 		z += 5;
-		
-		if (Config.DEBUG)
-			_log.fine("Teleporting to: " + x + ", " + y + ", " + z);
 		
 		// Send TeleportToLocationt to the L2Character AND to all L2PcInstance in the _KnownPlayers of the L2Character
 		broadcastPacket(new TeleportToLocation(this, x, y, z));
@@ -606,10 +600,10 @@ public abstract class L2Character extends L2Object
 		stopEffectsOnAction();
 		
 		// Get the active weapon item corresponding to the active weapon instance (always equipped in the right hand)
-		final L2Weapon weaponItem = getActiveWeaponItem();
-		final L2WeaponType weaponItemType = getAttackType();
+		final Weapon weaponItem = getActiveWeaponItem();
+		final WeaponType weaponItemType = getAttackType();
 		
-		if (weaponItemType == L2WeaponType.FISHINGROD)
+		if (weaponItemType == WeaponType.FISHINGROD)
 		{
 			// You can't make an attack with a fishing pole.
 			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANNOT_ATTACK_WITH_FISHING_POLE));
@@ -629,7 +623,7 @@ public abstract class L2Character extends L2Object
 		}
 		
 		// Check for a bow
-		if (weaponItemType == L2WeaponType.BOW)
+		if (weaponItemType == WeaponType.BOW)
 		{
 			// Check for arrows and MP
 			if (this instanceof L2PcInstance)
@@ -703,12 +697,12 @@ public abstract class L2Character extends L2Object
 		_attackEndTime -= 1;
 		
 		// Create Attack
-		Attack attack = new Attack(this, wasSSCharged, (weaponItem != null) ? weaponItem.getCrystalType() : 0);
+		Attack attack = new Attack(this, wasSSCharged, (weaponItem != null) ? weaponItem.getCrystalType().getId() : 0);
 		
 		// Make sure that char is facing selected target
 		setHeading(Util.calculateHeadingFrom(this, target));
 		
-		// Get the Attack Reuse Delay of the L2Weapon
+		// Get the Attack Reuse Delay of the Weapon
 		final int reuse = calculateReuseTime(target, weaponItem);
 		
 		boolean hitted;
@@ -730,7 +724,7 @@ public abstract class L2Character extends L2Object
 				break;
 			
 			case FIST:
-				if (getSecondaryWeaponItem() != null && getSecondaryWeaponItem() instanceof L2Armor)
+				if (getSecondaryWeaponItem() != null && getSecondaryWeaponItem() instanceof Armor)
 					hitted = doAttackHitSimple(attack, target, timeToHit);
 				else
 					hitted = doAttackHitByDual(attack, target, timeToHit);
@@ -744,7 +738,7 @@ public abstract class L2Character extends L2Object
 		// Flag the attacker if it's a L2PcInstance outside a PvP area
 		if (player != null)
 		{
-			AttackStanceTaskManager.getInstance().addAttackStanceTask(player);
+			AttackStanceTaskManager.getInstance().add(player);
 			
 			if (player.getPet() != target)
 				player.updatePvPStatus(target);
@@ -804,7 +798,7 @@ public abstract class L2Character extends L2Object
 			broadcastPacket(attack);
 		
 		// Notify AI with EVT_READY_TO_ACT
-		ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), (weaponItemType == L2WeaponType.BOW) ? timeAtk : timeAtk + reuse);
+		ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_READY_TO_ACT), (weaponItemType == WeaponType.BOW) ? timeAtk : timeAtk + reuse);
 	}
 	
 	/**
@@ -966,9 +960,6 @@ public abstract class L2Character extends L2Object
 	{
 		int maxRadius = getPhysicalAttackRange();
 		int maxAngleDiff = (int) getStat().calcStat(Stats.POWER_ATTACK_ANGLE, 120, null, null);
-		
-		if (Config.DEBUG)
-			_log.info("doAttackHitByPole: Max radius = " + maxRadius + " Max angle = " + maxAngleDiff);
 		
 		// Get the number of targets (-1 because the main target is already used)
 		int attackRandomCountMax = (int) getStat().calcStat(Stats.ATTACK_COUNT_MAX, 0, null, null) - 1;
@@ -1330,7 +1321,7 @@ public abstract class L2Character extends L2Object
 		}
 		
 		// Get the Display Identifier for a skill that client can't display
-		int displayId = skill.getDisplayId();
+		int displayId = skill.getId();
 		
 		// Get the level of the skill
 		int level = skill.getLevel();
@@ -1499,8 +1490,8 @@ public abstract class L2Character extends L2Object
 		// Check if the spell consumes an Item
 		if (skill.getItemConsumeId() > 0 && getInventory() != null)
 		{
-			// Get the L2ItemInstance consumed by the spell
-			L2ItemInstance requiredItems = getInventory().getItemByItemId(skill.getItemConsumeId());
+			// Get the ItemInstance consumed by the spell
+			ItemInstance requiredItems = getInventory().getItemByItemId(skill.getItemConsumeId());
 			
 			// Check if the caster owns enough consumed Item to cast
 			if (requiredItems == null || requiredItems.getCount() < skill.getItemConsume())
@@ -1881,7 +1872,7 @@ public abstract class L2Character extends L2Object
 	}
 	
 	/**
-	 * @return True if the L2Character can't move (stun, root, sleep, overload, paralyzed).
+	 * @return True if the L2Character is in a state where he can't move.
 	 */
 	public boolean isMovementDisabled()
 	{
@@ -1889,11 +1880,11 @@ public abstract class L2Character extends L2Object
 	}
 	
 	/**
-	 * @return True if the L2Character can be controlled by the player (confused, afraid).
+	 * @return True if the L2Character is in a state where he can't be controlled.
 	 */
-	public final boolean isOutOfControl()
+	public boolean isOutOfControl()
 	{
-		return isConfused() || isAfraid();
+		return isConfused() || isAfraid() || isParalyzed() || isStunned() || isSleeping();
 	}
 	
 	public final boolean isOverloaded()
@@ -2062,7 +2053,7 @@ public abstract class L2Character extends L2Object
 		return (CharPosition) super.getPosition();
 	}
 	
-	public L2CharTemplate getTemplate()
+	public CharTemplate getTemplate()
 	{
 		return _template;
 	}
@@ -2074,7 +2065,7 @@ public abstract class L2Character extends L2Object
 	 * L2Character is spawned, server just create a link between the instance and the template This link is stored in <B>_template</B>
 	 * @param template The template to set up.
 	 */
-	protected final void setTemplate(L2CharTemplate template)
+	protected final void setTemplate(CharTemplate template)
 	{
 		_template = template;
 	}
@@ -3596,14 +3587,11 @@ public abstract class L2Character extends L2Object
 			// If no distance to go through, the movement is canceled
 			if (distance < 1 || distance - offset <= 0)
 			{
-				if (Config.DEBUG)
-					_log.fine("already in range, no movement needed.");
-				
 				// Notify the AI that the L2Character is arrived at destination
 				getAI().notifyEvent(CtrlEvent.EVT_ARRIVED);
-				
 				return;
 			}
+			
 			// Calculate movement angles needed
 			sin = dy / distance;
 			cos = dx / distance;
@@ -3775,21 +3763,15 @@ public abstract class L2Character extends L2Object
 		if ((isFlying() || isInsideZone(ZoneId.WATER)) && !verticalMovementOnly)
 			distance = Math.sqrt(distance * distance + dz * dz);
 		
-		// Caclulate the Nb of ticks between the current position and the destination
-		// One tick added for rounding reasons
-		int ticksToMove = 1 + (int) (GameTimeController.TICKS_PER_SECOND * distance / speed);
 		m._xDestination = x;
 		m._yDestination = y;
-		m._zDestination = z; // this is what was requested from client
+		m._zDestination = z;
 		
 		// Calculate and set the heading of the L2Character
 		m._heading = 0; // initial value for coordinate sync
 		// Does not broke heading on vertical movements
 		if (!verticalMovementOnly)
 			setHeading(Util.calculateHeadingFrom(cos, sin));
-		
-		if (Config.DEBUG)
-			_log.fine("dist:" + distance + "speed:" + speed + " ttt:" + ticksToMove + " heading:" + getHeading());
 		
 		m._moveStartTime = GameTimeController.getGameTicks();
 		
@@ -3798,10 +3780,6 @@ public abstract class L2Character extends L2Object
 		
 		// Add the L2Character to movingObjects of the GameTimeController
 		GameTimeController.getInstance().registerMovingObject(this);
-		
-		// Create a task to notify the AI that L2Character arrives at a check point of the movement
-		if (ticksToMove * GameTimeController.MILLIS_IN_TICK > 3000)
-			ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_ARRIVED_REVALIDATE), 2000);
 	}
 	
 	public boolean moveToNextRoutePoint()
@@ -3849,22 +3827,17 @@ public abstract class L2Character extends L2Object
 			m._yDestination = md.geoPath.get(m.onGeodataPathIndex).getY();
 			m._zDestination = md.geoPath.get(m.onGeodataPathIndex).getZ();
 		}
+		
 		double dx = (m._xDestination - super.getX());
 		double dy = (m._yDestination - super.getY());
 		double distance = Math.sqrt(dx * dx + dy * dy);
+		
 		// Calculate and set the heading of the L2Character
 		if (distance != 0)
 			setHeading(Util.calculateHeadingFrom(getX(), getY(), m._xDestination, m._yDestination));
 		
-		// Caclulate the Nb of ticks between the current position and the destination
-		// One tick added for rounding reasons
-		int ticksToMove = 1 + (int) (GameTimeController.TICKS_PER_SECOND * distance / speed);
-		
 		m._heading = 0; // initial value for coordinate sync
 		m._moveStartTime = GameTimeController.getGameTicks();
-		
-		if (Config.DEBUG)
-			_log.fine("time to target:" + ticksToMove);
 		
 		// Set the L2Character _move object to MoveData object
 		_move = m;
@@ -3873,13 +3846,8 @@ public abstract class L2Character extends L2Object
 		// The GameTimeController manage objects movement
 		GameTimeController.getInstance().registerMovingObject(this);
 		
-		// Create a task to notify the AI that L2Character arrives at a check point of the movement
-		if (ticksToMove * GameTimeController.MILLIS_IN_TICK > 3000)
-			ThreadPoolManager.getInstance().scheduleAi(new NotifyAITask(CtrlEvent.EVT_ARRIVED_REVALIDATE), 2000);
-		
 		// Send MoveToLocation to the actor and all L2PcInstance in its _knownPlayers
-		MoveToLocation msg = new MoveToLocation(this);
-		broadcastPacket(msg);
+		broadcastPacket(new MoveToLocation(this));
 		
 		return true;
 	}
@@ -4019,22 +3987,22 @@ public abstract class L2Character extends L2Object
 	/**
 	 * @return the active weapon instance (always equipped in the right hand).
 	 */
-	public abstract L2ItemInstance getActiveWeaponInstance();
+	public abstract ItemInstance getActiveWeaponInstance();
 	
 	/**
 	 * @return the active weapon item (always equipped in the right hand).
 	 */
-	public abstract L2Weapon getActiveWeaponItem();
+	public abstract Weapon getActiveWeaponItem();
 	
 	/**
 	 * @return the secondary weapon instance (always equipped in the left hand).
 	 */
-	public abstract L2ItemInstance getSecondaryWeaponInstance();
+	public abstract ItemInstance getSecondaryWeaponInstance();
 	
 	/**
-	 * @return the secondary {@link L2Item} item (always equiped in the left hand).
+	 * @return the secondary {@link Item} item (always equiped in the left hand).
 	 */
-	public abstract L2Item getSecondaryWeaponItem();
+	public abstract Item getSecondaryWeaponItem();
 	
 	/**
 	 * Manage hit process (called by Hit Task).<BR>
@@ -4088,20 +4056,17 @@ public abstract class L2Character extends L2Object
 		sendDamageMessage(target, damage, false, crit, miss);
 		
 		// Character will be petrified if attacking a raid that's more than 8 levels lower
-		if (target.isRaid() && !Config.RAID_DISABLE_CURSE)
+		if (!Config.RAID_DISABLE_CURSE && target.isRaid() && getLevel() > target.getLevel() + 8)
 		{
-			if (getLevel() > target.getLevel() + 8)
+			final L2Skill skill = FrequentSkill.RAID_CURSE2.getSkill();
+			if (skill != null)
 			{
-				L2Skill skill = FrequentSkill.RAID_CURSE2.getSkill();
-				if (skill != null)
-				{
-					// Send visual and skill effects. Caster is the victim.
-					broadcastPacket(new MagicSkillUse(this, this, skill.getId(), skill.getLevel(), 300, 0));
-					skill.getEffects(this, this);
-				}
-				
-				damage = 0; // prevents messing up drop calculation
+				// Send visual and skill effects. Caster is the victim.
+				broadcastPacket(new MagicSkillUse(this, this, skill.getId(), skill.getLevel(), 300, 0));
+				skill.getEffects(this, this);
 			}
+			
+			damage = 0; // prevents messing up drop calculation
 		}
 		
 		// If the target is a player, start AutoAttack
@@ -4110,7 +4075,7 @@ public abstract class L2Character extends L2Object
 		
 		if (!miss && damage > 0)
 		{
-			boolean isBow = (getAttackType() == L2WeaponType.BOW);
+			boolean isBow = (getAttackType() == WeaponType.BOW);
 			int reflectedDamage = 0;
 			
 			// Reflect damage system - do not reflect if weapon is a bow or target is invulnerable
@@ -4183,7 +4148,7 @@ public abstract class L2Character extends L2Object
 		}
 		
 		// Launch weapon Special ability effect if available
-		final L2Weapon activeWeapon = getActiveWeaponItem();
+		final Weapon activeWeapon = getActiveWeaponItem();
 		if (activeWeapon != null)
 			activeWeapon.getSkillEffects(this, target, crit);
 	}
@@ -4391,7 +4356,7 @@ public abstract class L2Character extends L2Object
 	 * @param weapon The wepaon to test.
 	 * @return The Attack Speed of the L2Character (delay (in milliseconds) before next attack).
 	 */
-	public int calculateTimeBetweenAttacks(L2Character target, L2Weapon weapon)
+	public int calculateTimeBetweenAttacks(L2Character target, Weapon weapon)
 	{
 		double atkSpd = 0;
 		if (weapon != null)
@@ -4401,10 +4366,11 @@ public abstract class L2Character extends L2Object
 				case BOW:
 					atkSpd = getStat().getPAtkSpd();
 					return (int) (1500 * 345 / atkSpd);
+					
 				case DAGGER:
 					atkSpd = getStat().getPAtkSpd();
-					// atkSpd /= 1.15;
 					break;
+				
 				default:
 					atkSpd = getStat().getPAtkSpd();
 			}
@@ -4415,7 +4381,7 @@ public abstract class L2Character extends L2Object
 		return Formulas.calcPAtkSpd(this, target, atkSpd);
 	}
 	
-	public int calculateReuseTime(L2Character target, L2Weapon weapon)
+	public int calculateReuseTime(L2Character target, Weapon weapon)
 	{
 		if (weapon == null)
 			return 0;
@@ -4431,6 +4397,7 @@ public abstract class L2Character extends L2Object
 		{
 			case BOW:
 				return (int) (reuse * 345 / atkSpd);
+				
 			default:
 				return (int) (reuse * 312 / atkSpd);
 		}
@@ -4439,13 +4406,13 @@ public abstract class L2Character extends L2Object
 	/**
 	 * @return the type of attack, depending of the worn weapon.
 	 */
-	public L2WeaponType getAttackType()
+	public WeaponType getAttackType()
 	{
-		final L2Weapon weapon = getActiveWeaponItem();
+		final Weapon weapon = getActiveWeaponItem();
 		if (weapon != null)
 			return weapon.getItemType();
 		
-		return L2WeaponType.NONE;
+		return WeaponType.NONE;
 	}
 	
 	/**
@@ -4967,21 +4934,27 @@ public abstract class L2Character extends L2Object
 		
 		notifyQuestEventSkillFinished(skill, target);
 		
-		/*
-		 * If character is a player, then wipe their current cast state and check if a skill is queued. If there is a queued skill, launch it and wipe the queue.
-		 */
-		if (this instanceof L2PcInstance)
+		// If the current character is a summon, refresh _currentPetSkill, otherwise if it's a player, refresh _currentSkill and _queuedSkill.
+		if (this instanceof L2Playable)
 		{
-			L2PcInstance currPlayer = (L2PcInstance) this;
-			SkillDat queuedSkill = currPlayer.getQueuedSkill();
+			boolean isPlayer = this instanceof L2PcInstance;
+			final L2PcInstance player = getActingPlayer();
 			
-			currPlayer.setCurrentSkill(null, false, false);
-			
-			if (queuedSkill != null)
+			if (isPlayer)
 			{
-				currPlayer.setQueuedSkill(null, false, false);
-				ThreadPoolManager.getInstance().executeTask(new QueuedMagicUseTask(currPlayer, queuedSkill.getSkill(), queuedSkill.isCtrlPressed(), queuedSkill.isShiftPressed()));
+				// Wipe current cast state.
+				player.setCurrentSkill(null, false, false);
+				
+				// Check if a skill is queued.
+				final SkillUseHolder queuedSkill = player.getQueuedSkill();
+				if (queuedSkill.getSkill() != null)
+				{
+					ThreadPoolManager.getInstance().executeTask(new QueuedMagicUseTask(player, queuedSkill.getSkill(), queuedSkill.isCtrlPressed(), queuedSkill.isShiftPressed()));
+					player.setQueuedSkill(null, false, false);
+				}
 			}
+			else
+				player.setCurrentPetSkill(null, false, false);
 		}
 	}
 	
@@ -5079,8 +5052,6 @@ public abstract class L2Character extends L2Object
 	 */
 	public void disableAllSkills()
 	{
-		if (Config.DEBUG)
-			_log.fine("all skills disabled");
 		_allSkillsDisabled = true;
 	}
 	
@@ -5089,8 +5060,6 @@ public abstract class L2Character extends L2Object
 	 */
 	public void enableAllSkills()
 	{
-		if (Config.DEBUG)
-			_log.fine("all skills enabled");
 		_allSkillsDisabled = false;
 	}
 	
@@ -5103,10 +5072,6 @@ public abstract class L2Character extends L2Object
 	{
 		try
 		{
-			// Get the skill handler corresponding to the skill type (PDAM, MDAM, SWEEP...) started in gameserver
-			ISkillHandler handler = SkillHandler.getInstance().getSkillHandler(skill.getSkillType());
-			L2Weapon activeWeapon = getActiveWeaponItem();
-			
 			// Check if the toggle skill effects are already in progress on the L2Character
 			if (skill.isToggle() && getFirstEffect(skill.getId()) != null)
 				return;
@@ -5114,22 +5079,31 @@ public abstract class L2Character extends L2Object
 			// Initial checks
 			for (L2Object trg : targets)
 			{
-				if (trg instanceof L2Character)
+				if (!(trg instanceof L2Character))
+					continue;
+				
+				// Set some values inside target's instance for later use
+				final L2Character target = (L2Character) trg;
+				
+				if (this instanceof L2Playable)
 				{
-					// Set some values inside target's instance for later use
-					L2Character target = (L2Character) trg;
-					
+					// Raidboss curse.
 					if (!Config.RAID_DISABLE_CURSE)
 					{
-						// Raidboss curse.
-						L2Character targetsAttackTarget = null;
+						boolean isVictimTargetBoss = false;
 						
-						if (target.hasAI())
-							targetsAttackTarget = (L2Character) target.getAI().getTarget();
-						
-						if ((target.isRaid() && getLevel() > target.getLevel() + 8) || (!skill.isOffensive() && targetsAttackTarget != null && targetsAttackTarget.isRaid() && targetsAttackTarget.getAttackByList().contains(target) && getLevel() > targetsAttackTarget.getLevel() + 8))
+						// If the skill isn't offensive, we check extra things such as target's target.
+						if (!skill.isOffensive())
 						{
-							L2Skill curse = FrequentSkill.RAID_CURSE.getSkill();
+							final L2Object victimTarget = (target.hasAI()) ? target.getAI().getTarget() : null;
+							if (victimTarget != null)
+								isVictimTargetBoss = victimTarget instanceof L2Character && ((L2Character) victimTarget).isRaid() && getLevel() > ((L2Character) victimTarget).getLevel() + 8;
+						}
+						
+						// Target must be either a raid type, or if the skill is beneficial it checks the target's target.
+						if ((target.isRaid() && getLevel() > target.getLevel() + 8) || isVictimTargetBoss)
+						{
+							final L2Skill curse = FrequentSkill.RAID_CURSE.getSkill();
 							if (curse != null)
 							{
 								// Send visual and skill effects. Caster is the victim.
@@ -5141,37 +5115,35 @@ public abstract class L2Character extends L2Object
 					}
 					
 					// Check if over-hit is possible
-					if (skill.isOverhit())
-					{
-						if (target instanceof L2Attackable)
-							((L2Attackable) target).overhitEnabled(true);
-					}
+					if (skill.isOverhit() && target instanceof L2Attackable)
+						((L2Attackable) target).overhitEnabled(true);
+				}
+				
+				switch (skill.getSkillType())
+				{
+					case COMMON_CRAFT: // Crafting does not trigger any chance skills.
+					case DWARVEN_CRAFT:
+						break;
 					
-					switch (skill.getSkillType())
-					{
-						case COMMON_CRAFT: // Crafting does not trigger any chance skills.
-						case DWARVEN_CRAFT:
-							break;
+					default: // Launch weapon Special ability skill effect if available
+						if (getActiveWeaponItem() != null && !target.isDead())
+						{
+							if (this instanceof L2PcInstance && !getActiveWeaponItem().getSkillEffects(this, target, skill).isEmpty())
+								sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_HAS_BEEN_ACTIVATED).addSkillName(skill));
+						}
 						
-						default: // Launch weapon Special ability skill effect if available
-							if (activeWeapon != null && !target.isDead())
-							{
-								if (this instanceof L2PcInstance && !activeWeapon.getSkillEffects(this, target, skill).isEmpty())
-									sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_HAS_BEEN_ACTIVATED).addSkillName(skill));
-							}
-							
-							// Maybe launch chance skills on us
-							if (_chanceSkills != null)
-								_chanceSkills.onSkillHit(target, false, skill.isMagic(), skill.isOffensive(), skill.getElement());
-							
-							// Maybe launch chance skills on target
-							if (target.getChanceSkills() != null)
-								target.getChanceSkills().onSkillHit(this, true, skill.isMagic(), skill.isOffensive(), skill.getElement());
-					}
+						// Maybe launch chance skills on us
+						if (_chanceSkills != null)
+							_chanceSkills.onSkillHit(target, false, skill.isMagic(), skill.isOffensive(), skill.getElement());
+						
+						// Maybe launch chance skills on target
+						if (target.getChanceSkills() != null)
+							target.getChanceSkills().onSkillHit(this, true, skill.isMagic(), skill.isOffensive(), skill.getElement());
 				}
 			}
 			
 			// Launch the magic skill and calculate its effects
+			final ISkillHandler handler = SkillHandler.getInstance().getSkillHandler(skill.getSkillType());
 			if (handler != null)
 				handler.useSkill(this, skill, targets);
 			else
@@ -5416,8 +5388,7 @@ public abstract class L2Character extends L2Object
 	 */
 	public final int getRandomDamage(L2Character target)
 	{
-		L2Weapon weaponItem = getActiveWeaponItem();
-		
+		Weapon weaponItem = getActiveWeaponItem();
 		if (weaponItem == null)
 			return 5 + (int) Math.sqrt(getLevel());
 		
@@ -5797,7 +5768,7 @@ public abstract class L2Character extends L2Object
 	 */
 	public final double getRandomDamageMultiplier()
 	{
-		L2Weapon activeWeapon = getActiveWeaponItem();
+		Weapon activeWeapon = getActiveWeaponItem();
 		int random;
 		
 		if (activeWeapon != null)

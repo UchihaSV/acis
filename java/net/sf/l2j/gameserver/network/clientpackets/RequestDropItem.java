@@ -15,12 +15,12 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 import net.sf.l2j.gameserver.util.IllegalPlayerAction;
 import net.sf.l2j.gameserver.util.Util;
 
@@ -52,8 +52,8 @@ public final class RequestDropItem extends L2GameClientPacket
 		if (!getClient().getFloodProtectors().getDropItem().tryPerformAction("dropItem"))
 			return;
 		
-		final L2ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
-		if (item == null || _count == 0 || !activeChar.validateItemManipulation(_objectId, "drop") || (!Config.ALLOW_DISCARDITEM && !activeChar.isGM()) || !item.isDropable())
+		final ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
+		if (item == null || _count == 0 || !activeChar.validateItemManipulation(_objectId) || (!Config.ALLOW_DISCARDITEM && !activeChar.isGM()) || !item.isDropable())
 		{
 			activeChar.sendPacket(SystemMessageId.CANNOT_DISCARD_THIS_ITEM);
 			return;
@@ -95,7 +95,6 @@ public final class RequestDropItem extends L2GameClientPacket
 		
 		if (activeChar.isFishing())
 		{
-			// You can't mount, dismount, break and drop items while fishing
 			activeChar.sendPacket(SystemMessageId.CANNOT_DO_WHILE_FISHING_2);
 			return;
 		}
@@ -106,17 +105,15 @@ public final class RequestDropItem extends L2GameClientPacket
 			return;
 		}
 		
-		// Cannot discard item that the skill is consumming
 		if (activeChar.isCastingNow())
 		{
-			if (activeChar.getCurrentSkill() != null && activeChar.getCurrentSkill().getSkill().getItemConsumeId() == item.getItemId())
+			if (activeChar.getCurrentSkill().getSkill() != null && activeChar.getCurrentSkill().getSkill().getItemConsumeId() == item.getItemId())
 			{
 				activeChar.sendPacket(SystemMessageId.CANNOT_DISCARD_THIS_ITEM);
 				return;
 			}
 		}
 		
-		// Cannot discard item that the skill is consuming
 		if (activeChar.isCastingSimultaneouslyNow())
 		{
 			if (activeChar.getLastSimultaneousSkillCast() != null && activeChar.getLastSimultaneousSkillCast().getItemConsumeId() == item.getItemId())
@@ -126,32 +123,23 @@ public final class RequestDropItem extends L2GameClientPacket
 			}
 		}
 		
-		if (L2Item.TYPE2_QUEST == item.getItem().getType2() && !activeChar.isGM())
+		if (Item.TYPE2_QUEST == item.getItem().getType2() && !activeChar.isGM())
 		{
-			if (Config.DEBUG)
-				_log.finest(activeChar.getName() + " tried to drop a quest item.");
-			
 			activeChar.sendPacket(SystemMessageId.CANNOT_DISCARD_EXCHANGE_ITEM);
 			return;
 		}
 		
 		if (!activeChar.isInsideRadius(_x, _y, 150, false) || Math.abs(_z - activeChar.getZ()) > 50)
 		{
-			if (Config.DEBUG)
-				_log.finest(activeChar.getName() + " tried to drop too far away.");
-			
 			activeChar.sendPacket(SystemMessageId.CANNOT_DISCARD_DISTANCE_TOO_FAR);
 			return;
 		}
 		
-		if (Config.DEBUG)
-			_log.fine("Requested drop item " + _objectId + "(" + item.getCount() + ") at " + _x + "/" + _y + "/" + _z);
-		
 		if (item.isEquipped() && (!item.isStackable() || (item.isStackable() && _count >= item.getCount())))
 		{
-			L2ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInBodySlotAndRecord(item.getItem().getBodyPart());
+			ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInBodySlotAndRecord(item.getItem().getBodyPart());
 			InventoryUpdate iu = new InventoryUpdate();
-			for (L2ItemInstance itm : unequipped)
+			for (ItemInstance itm : unequipped)
 			{
 				itm.unChargeAllShots();
 				iu.addModifiedItem(itm);
@@ -163,8 +151,5 @@ public final class RequestDropItem extends L2GameClientPacket
 		}
 		
 		activeChar.dropItem("Drop", _objectId, _count, _x, _y, _z, null, false, false);
-		
-		if (Config.DEBUG)
-			_log.fine("Successfully dropped " + _objectId + " item(" + _count + ") at: " + _x + " " + _y + " " + _z);
 	}
 }

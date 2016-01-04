@@ -14,11 +14,9 @@
  */
 package net.sf.l2j.gameserver.handler;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.logging.Logger;
-
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.handler.chathandlers.ChatAll;
 import net.sf.l2j.gameserver.handler.chathandlers.ChatAlliance;
 import net.sf.l2j.gameserver.handler.chathandlers.ChatClan;
@@ -34,9 +32,7 @@ import net.sf.l2j.gameserver.handler.chathandlers.ChatTrade;
 
 public class ChatHandler
 {
-	private static Logger _log = Logger.getLogger(ChatHandler.class.getName());
-	
-	private final TIntObjectHashMap<IChatHandler> _datatable;
+	private final Map<Integer, IChatHandler> _datatable = new HashMap<>();
 	
 	public static ChatHandler getInstance()
 	{
@@ -45,7 +41,6 @@ public class ChatHandler
 	
 	protected ChatHandler()
 	{
-		_datatable = new TIntObjectHashMap<>();
 		registerChatHandler(new ChatAll());
 		registerChatHandler(new ChatAlliance());
 		registerChatHandler(new ChatClan());
@@ -62,14 +57,8 @@ public class ChatHandler
 	
 	public void registerChatHandler(IChatHandler handler)
 	{
-		int[] ids = handler.getChatTypeList();
-		for (int id : ids)
-		{
-			if (Config.DEBUG)
-				_log.fine("Adding handler for chat type " + id);
-			
+		for (int id : handler.getChatTypeList())
 			_datatable.put(id, handler);
-		}
 	}
 	
 	public IChatHandler getChatHandler(int chatType)

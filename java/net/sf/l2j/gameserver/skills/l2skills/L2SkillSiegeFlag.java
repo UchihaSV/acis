@@ -22,12 +22,12 @@ import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SiegeFlagInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2SkillSiegeFlag extends L2Skill
 {
@@ -76,7 +76,7 @@ public class L2SkillSiegeFlag extends L2Skill
 		npcDat.set("runSpd", 0); // Have to keep this, static object MUST BE 0 (critical error otherwise).
 		
 		// Spawn a new flag.
-		final L2SiegeFlagInstance flag = new L2SiegeFlagInstance(player, IdFactory.getInstance().getNextId(), new L2NpcTemplate(npcDat));
+		final L2SiegeFlagInstance flag = new L2SiegeFlagInstance(player, IdFactory.getInstance().getNextId(), new NpcTemplate(npcDat));
 		flag.setCurrentHp(flag.getMaxHp());
 		flag.setHeading(player.getHeading());
 		flag.spawnMe(player.getX(), player.getY(), player.getZ() + 50);
@@ -104,7 +104,7 @@ public class L2SkillSiegeFlag extends L2Skill
 			sm = SystemMessage.getSystemMessage(SystemMessageId.S1_CANNOT_BE_USED).addSkillName(247);
 		else if (!player.isClanLeader())
 			sm = SystemMessage.getSystemMessage(SystemMessageId.ONLY_CLAN_LEADER_CAN_ISSUE_COMMANDS);
-		else if (castle.getSiege().getAttackerClan(player.getClan()).getNumFlags() >= SiegeManager.FLAGS_MAX_COUNT)
+		else if (castle.getSiege().getAttackerClan(player.getClan()).getFlags().size() >= SiegeManager.FLAGS_MAX_COUNT)
 			sm = SystemMessage.getSystemMessage(SystemMessageId.NOT_ANOTHER_HEADQUARTERS);
 		else if (!player.isInsideZone(ZoneId.HQ))
 			sm = SystemMessage.getSystemMessage(SystemMessageId.NOT_SET_UP_BASE_HERE);

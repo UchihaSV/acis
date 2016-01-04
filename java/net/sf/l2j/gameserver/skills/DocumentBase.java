@@ -24,10 +24,12 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.model.ChanceCondition;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.base.Race;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.type.ArmorType;
+import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.skills.basefuncs.FuncTemplate;
 import net.sf.l2j.gameserver.skills.basefuncs.Lambda;
 import net.sf.l2j.gameserver.skills.basefuncs.LambdaCalc;
@@ -69,7 +71,6 @@ import net.sf.l2j.gameserver.skills.conditions.ConditionWithSkill;
 import net.sf.l2j.gameserver.skills.effects.EffectChanceSkillTrigger;
 import net.sf.l2j.gameserver.skills.effects.EffectTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
@@ -195,8 +196,8 @@ abstract class DocumentBase
 		Condition applayCond = parseCondition(n.getFirstChild(), template);
 		FuncTemplate ft = new FuncTemplate(attachCond, applayCond, name, stat, ord, lambda);
 		
-		if (template instanceof L2Item)
-			((L2Item) template).attach(ft);
+		if (template instanceof Item)
+			((Item) template).attach(ft);
 		else if (template instanceof L2Skill)
 			((L2Skill) template).attach(ft);
 		else if (template instanceof EffectTemplate)
@@ -313,8 +314,8 @@ abstract class DocumentBase
 		lt = new EffectTemplate(attachCond, applayCond, name, lambda, count, time, abnormal, stackType, stackOrder, icon, effectPower, type, trigId, trigLvl, chance);
 		
 		parseTemplate(n, lt);
-		if (template instanceof L2Item)
-			((L2Item) template).attach(lt);
+		if (template instanceof Item)
+			((Item) template).attach(lt);
 		else if (template instanceof L2Skill)
 		{
 			if (self)
@@ -664,12 +665,24 @@ abstract class DocumentBase
 				while (st.hasMoreTokens())
 				{
 					int old = mask;
-					String item = st.nextToken().trim();
-					if (ItemTable._weaponTypes.containsKey(item))
-						mask |= ItemTable._weaponTypes.get(item).mask();
+					String item = st.nextToken();
+					for (WeaponType wt : WeaponType.values())
+					{
+						if (wt.name().equals(item))
+						{
+							mask |= wt.mask();
+							break;
+						}
+					}
 					
-					if (ItemTable._armorTypes.containsKey(item))
-						mask |= ItemTable._armorTypes.get(item).mask();
+					for (ArmorType at : ArmorType.values())
+					{
+						if (at.name().equals(item))
+						{
+							mask |= at.mask();
+							break;
+						}
+					}
 					
 					if (old == mask)
 						_log.info("[parseUsingCondition=\"kind\"] Unknown item type name: " + item);

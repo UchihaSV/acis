@@ -14,23 +14,21 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import java.util.logging.Logger;
-
-import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.TradeController;
+import net.sf.l2j.gameserver.datatables.BuyListTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
-import net.sf.l2j.gameserver.model.L2TradeList;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
+import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
 import net.sf.l2j.gameserver.network.serverpackets.BuyList;
 
 /**
- * This class handles following admin commands: - gmshop = shows menu - buy id = shows shop with respective id
+ * This class handles following admin commands:
+ * <ul>
+ * <li>gmshop = shows menu</li>
+ * <li>buy id = shows shop with respective id</li>
+ * </ul>
  */
 public class AdminShop implements IAdminCommandHandler
 {
-	private static Logger _log = Logger.getLogger(AdminShop.class.getName());
-	
 	private static final String[] ADMIN_COMMANDS =
 	{
 		"admin_buy",
@@ -44,11 +42,17 @@ public class AdminShop implements IAdminCommandHandler
 		{
 			try
 			{
-				handleBuyRequest(activeChar, command.substring(10));
+				final int val = Integer.parseInt(command.substring(10));
+				
+				final NpcBuyList list = BuyListTable.getInstance().getBuyList(val);
+				if (list == null)
+					activeChar.sendMessage("Invalid buylist id.");
+				else
+					activeChar.sendPacket(new BuyList(list, activeChar.getAdena(), 0));
 			}
-			catch (IndexOutOfBoundsException e)
+			catch (Exception e)
 			{
-				activeChar.sendMessage("Please specify buylist.");
+				activeChar.sendMessage("Invalid buylist id.");
 			}
 		}
 		else if (command.equals("admin_gmshop"))
@@ -61,31 +65,5 @@ public class AdminShop implements IAdminCommandHandler
 	public String[] getAdminCommandList()
 	{
 		return ADMIN_COMMANDS;
-	}
-	
-	private static void handleBuyRequest(L2PcInstance activeChar, String command)
-	{
-		int val = -1;
-		try
-		{
-			val = Integer.parseInt(command);
-		}
-		catch (Exception e)
-		{
-			_log.warning("admin buylist failed:" + command);
-		}
-		
-		L2TradeList list = TradeController.getInstance().getBuyList(val);
-		
-		if (list != null)
-		{
-			activeChar.sendPacket(new BuyList(list, activeChar.getAdena(), 0));
-			if (Config.DEBUG)
-				_log.fine("GM: " + activeChar.getName() + "(" + activeChar.getObjectId() + ") opened GM shop id " + val);
-		}
-		else
-			_log.warning("no buylist with id:" + val);
-		
-		activeChar.sendPacket(ActionFailed.STATIC_PACKET);
 	}
 }

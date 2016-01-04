@@ -22,11 +22,11 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.knownlist.PlayableKnownList;
 import net.sf.l2j.gameserver.model.actor.stat.PlayableStat;
 import net.sf.l2j.gameserver.model.actor.status.PlayableStatus;
+import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
 import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
-import net.sf.l2j.gameserver.templates.chars.L2CharTemplate;
 import net.sf.l2j.gameserver.templates.skills.L2EffectFlag;
 import net.sf.l2j.gameserver.templates.skills.L2EffectType;
 
@@ -50,7 +50,7 @@ public abstract class L2Playable extends L2Character
 	 * @param objectId Identifier of the object to initialized
 	 * @param template The L2CharTemplate to apply to the L2Playable
 	 */
-	public L2Playable(int objectId, L2CharTemplate template)
+	public L2Playable(int objectId, CharTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -158,7 +158,7 @@ public abstract class L2Playable extends L2Character
 		// Notify Quest of L2Playable's death
 		final L2PcInstance actingPlayer = getActingPlayer();
 		for (QuestState qs : actingPlayer.getNotifyQuestOfDeath())
-			qs.getQuest().notifyDeath((killer == null ? this : killer), this, actingPlayer);
+			qs.getQuest().notifyDeath((killer == null ? this : killer), actingPlayer);
 		
 		if (killer != null)
 		{

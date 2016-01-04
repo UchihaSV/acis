@@ -17,11 +17,11 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 
 public class L2CastleDoormenInstance extends L2DoormenInstance
 {
-	public L2CastleDoormenInstance(int objectID, L2NpcTemplate template)
+	public L2CastleDoormenInstance(int objectID, NpcTemplate template)
 	{
 		super(objectID, template);
 	}

@@ -34,7 +34,6 @@ import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.instancemanager.QuestManager;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Spawn;
@@ -42,13 +41,14 @@ import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.zone.L2ZoneType;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.scripting.ManagedScript;
 import net.sf.l2j.gameserver.scripting.ScriptManager;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -64,6 +64,7 @@ public class Quest extends ManagedScript
 	
 	private static final String HTML_NONE_AVAILABLE = "<html><body>You are either not on a quest that involves this NPC, or you don't meet this NPC's minimum quest requirements.</body></html>";
 	private static final String HTML_ALREADY_COMPLETED = "<html><body>This quest has already been completed.</body></html>";
+	private static final String HTML_TOO_MUCH_QUESTS = "<html><body>You have already accepted the maximum number of quests. No more than 25 quests may be undertaken simultaneously.<br>For quest information, enter Alt+U.</body></html>";
 	
 	public static final byte STATE_CREATED = 0;
 	public static final byte STATE_STARTED = 1;
@@ -590,7 +591,7 @@ public class Quest extends ManagedScript
 			return;
 		
 		// Get quest timers for this timer type.
-		List<QuestTimer> timers = _eventTimers.get(timer.getName().hashCode());
+		List<QuestTimer> timers = _eventTimers.get(timer.toString().hashCode());
 		
 		// Timer list does not exists or is empty, return.
 		if (timers == null || timers.isEmpty())
@@ -645,7 +646,7 @@ public class Quest extends ManagedScript
 		L2Npc result = null;
 		try
 		{
-			L2NpcTemplate template = NpcTable.getInstance().getTemplate(npcId);
+			NpcTemplate template = NpcTable.getInstance().getTemplate(npcId);
 			if (template != null)
 			{
 				// Sometimes, even if the quest script specifies some xyz (for example npc.getX() etc) by the time the code
@@ -704,11 +705,23 @@ public class Quest extends ManagedScript
 	}
 	
 	/**
+	 * @return default html page "You have already accepted the maximum number of quests. No more than 25 quests may be undertaken simultaneously. For quest information, enter Alt+U."
+	 */
+	public static String getTooMuchQuestsMsg()
+	{
+		return HTML_TOO_MUCH_QUESTS;
+	}
+	
+	/**
 	 * Show a message to player.<BR>
 	 * <BR>
 	 * <U><I>Concept : </I></U><BR>
-	 * 3 cases are managed according to the value of the parameter "res" :<BR>
-	 * <LI><U>"res" ends with string ".html" :</U> an HTML is opened in order to be shown in a dialog box</LI> <LI><U>"res" starts with "<html>" :</U> the message hold in "res" is shown in a dialog box</LI> <LI><U>otherwise :</U> the message held in "res" is shown in chat box</LI>
+	 * 3 cases are managed according to the value of the parameter "res" :
+	 * <UL>
+	 * <LI><U>"res" ends with string ".html" :</U> an HTML is opened in order to be shown in a dialog box</LI>
+	 * <LI><U>"res" starts with "<html>" :</U> the message hold in "res" is shown in a dialog box</LI>
+	 * <LI><U>otherwise :</U> the message held in "res" is shown in chat box</LI>
+	 * </UL>
 	 * @param npc : which launches the dialog, null in case of random scripts
 	 * @param player : the player.
 	 * @param result : String pointing out the message to show at the player
@@ -796,7 +809,7 @@ public class Quest extends ManagedScript
 	{
 		try
 		{
-			final L2NpcTemplate t = NpcTable.getInstance().getTemplate(npcId);
+			final NpcTemplate t = NpcTable.getInstance().getTemplate(npcId);
 			if (t != null)
 				t.addQuestEvent(eventType, this);
 		}
@@ -1000,12 +1013,12 @@ public class Quest extends ManagedScript
 		return null;
 	}
 	
-	public final boolean notifyDeath(L2Character killer, L2Character victim, L2PcInstance player)
+	public final boolean notifyDeath(L2Character killer, L2PcInstance player)
 	{
 		String res = null;
 		try
 		{
-			res = onDeath(killer, victim, player);
+			res = onDeath(killer, player);
 		}
 		catch (Exception e)
 		{
@@ -1017,7 +1030,7 @@ public class Quest extends ManagedScript
 		return showResult(null, player, res);
 	}
 	
-	public String onDeath(L2Character killer, L2Character victim, L2PcInstance player)
+	public String onDeath(L2Character killer, L2PcInstance player)
 	{
 		if (killer instanceof L2Npc)
 			return onAdvEvent("", (L2Npc) killer, player);
@@ -1222,13 +1235,13 @@ public class Quest extends ManagedScript
 	{
 		for (int itemId : itemIds)
 		{
-			L2Item t = ItemTable.getInstance().getTemplate(itemId);
+			Item t = ItemTable.getInstance().getTemplate(itemId);
 			if (t != null)
 				t.addQuestEvent(this);
 		}
 	}
 	
-	public final boolean notifyItemUse(L2ItemInstance item, L2PcInstance player, L2Object target)
+	public final boolean notifyItemUse(ItemInstance item, L2PcInstance player, L2Object target)
 	{
 		String res = null;
 		try
@@ -1242,7 +1255,7 @@ public class Quest extends ManagedScript
 		return showResult(null, player, res);
 	}
 	
-	public String onItemUse(L2ItemInstance item, L2PcInstance player, L2Object target)
+	public String onItemUse(ItemInstance item, L2PcInstance player, L2Object target)
 	{
 		return null;
 	}

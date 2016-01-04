@@ -1348,7 +1348,7 @@ public class Siege implements Siegable
 		{
 			L2SiegeClan sc = getAttackerClan(clan);
 			if (sc != null)
-				return sc.getFlag();
+				return sc.getFlags();
 		}
 		return null;
 	}

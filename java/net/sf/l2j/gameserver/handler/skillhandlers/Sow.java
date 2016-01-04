@@ -67,7 +67,7 @@ public class Sow implements ISkillHandler
 		if (calcSuccess(activeChar, target, seedId))
 		{
 			player.sendPacket(new PlaySound(QuestState.SOUND_ITEMGET));
-			target.setSeeded((L2PcInstance) activeChar);
+			target.setSeeded(activeChar.getObjectId());
 			sm = SystemMessage.getSystemMessage(SystemMessageId.THE_SEED_WAS_SUCCESSFULLY_SOWN);
 		}
 		else

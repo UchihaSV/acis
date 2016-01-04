@@ -19,9 +19,9 @@ import java.util.concurrent.ScheduledFuture;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * @author Drunkard Zabb0x Lets drink2code!
@@ -32,7 +32,7 @@ public class L2XmassTreeInstance extends L2NpcInstance
 	public static final int SPECIAL_TREE_ID = 13007;
 	protected ScheduledFuture<?> _aiTask;
 	
-	public L2XmassTreeInstance(int objectId, L2NpcTemplate template)
+	public L2XmassTreeInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		

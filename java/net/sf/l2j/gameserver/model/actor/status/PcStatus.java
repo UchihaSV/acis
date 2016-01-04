@@ -35,7 +35,7 @@ import net.sf.l2j.util.Rnd;
 
 public class PcStatus extends PlayableStatus
 {
-	private double _currentCp = 0; // Current CP of the L2PcInstance
+	private double _currentCp = 0;
 	
 	public PcStatus(L2PcInstance activeChar)
 	{
@@ -254,7 +254,6 @@ public class PcStatus extends PlayableStatus
 	
 	public final void setCurrentCp(double newCp, boolean broadcastPacket)
 	{
-		// Get the Max CP of the L2Character
 		int maxCp = getActiveChar().getStat().getMaxCp();
 		
 		synchronized (this)
@@ -286,7 +285,6 @@ public class PcStatus extends PlayableStatus
 			}
 		}
 		
-		// Send the Server->Client packet StatusUpdate with current HP and MP to all other L2PcInstance to inform
 		if (broadcastPacket)
 			getActiveChar().broadcastStatusUpdate();
 	}
@@ -294,21 +292,22 @@ public class PcStatus extends PlayableStatus
 	@Override
 	protected void doRegeneration()
 	{
-		final PcStat charstat = getActiveChar().getStat();
+		final PcStat pcStat = getActiveChar().getStat();
 		
-		// Modify the current CP of the L2Character and broadcast Server->Client packet StatusUpdate
-		if (getCurrentCp() < charstat.getMaxCp())
+		// Modify the current CP of the L2Character.
+		if (getCurrentCp() < pcStat.getMaxCp())
 			setCurrentCp(getCurrentCp() + Formulas.calcCpRegen(getActiveChar()), false);
 		
-		// Modify the current HP of the L2Character and broadcast Server->Client packet StatusUpdate
-		if (getCurrentHp() < charstat.getMaxHp())
+		// Modify the current HP of the L2Character.
+		if (getCurrentHp() < pcStat.getMaxHp())
 			setCurrentHp(getCurrentHp() + Formulas.calcHpRegen(getActiveChar()), false);
 		
-		// Modify the current MP of the L2Character and broadcast Server->Client packet StatusUpdate
-		if (getCurrentMp() < charstat.getMaxMp())
+		// Modify the current MP of the L2Character.
+		if (getCurrentMp() < pcStat.getMaxMp())
 			setCurrentMp(getCurrentMp() + Formulas.calcMpRegen(getActiveChar()), false);
 		
-		getActiveChar().broadcastStatusUpdate(); // send the StatusUpdate packet
+		// Send the StatusUpdate packet.
+		getActiveChar().broadcastStatusUpdate();
 	}
 	
 	@Override

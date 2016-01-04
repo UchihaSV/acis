@@ -39,12 +39,12 @@ public class TakeBreakTaskManager
 		return SingletonHolder._instance;
 	}
 	
-	public void addTakeBreakTask(L2PcInstance actor)
+	public void add(L2PcInstance actor)
 	{
 		_takeBreakTask.put(actor, System.currentTimeMillis() + 7200000);
 	}
 	
-	public void removeTakeBreakTask(L2Character actor)
+	public void remove(L2Character actor)
 	{
 		_takeBreakTask.remove(actor);
 	}

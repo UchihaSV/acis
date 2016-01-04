@@ -14,9 +14,6 @@
  */
 package net.sf.l2j.gameserver.instancemanager;
 
-import gnu.trove.map.hash.TIntIntHashMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,23 +40,27 @@ public class GrandBossManager
 {
 	protected static Logger _log = Logger.getLogger(GrandBossManager.class.getName());
 	
-	private static final String SELECT_GRAND_BOSS_LIST = "SELECT * from grandboss_list ORDER BY player_id";
+	private static final String SELECT_GRAND_BOSS_LIST = "SELECT * from grandboss_list ORDER BY zone";
 	private static final String DELETE_GRAND_BOSS_LIST = "DELETE FROM grandboss_list";
 	private static final String INSERT_GRAND_BOSS_LIST = "INSERT INTO grandboss_list (player_id,zone) VALUES (?,?)";
 	private static final String SELECT_GRAND_BOSS_DATA = "SELECT * from grandboss_data ORDER BY boss_id";
 	private static final String UPDATE_GRAND_BOSS_DATA = "UPDATE grandboss_data set loc_x = ?, loc_y = ?, loc_z = ?, heading = ?, respawn_time = ?, currentHP = ?, currentMP = ?, status = ? where boss_id = ?";
 	private static final String UPDATE_GRAND_BOSS_DATA2 = "UPDATE grandboss_data set status = ? where boss_id = ?";
 	
-	private static final Map<Integer, L2GrandBossInstance> _bosses = new HashMap<>();
-	private static final TIntObjectHashMap<StatsSet> _storedInfo = new TIntObjectHashMap<>();
-	private static final TIntIntHashMap _bossStatus = new TIntIntHashMap();
-	private static final List<L2BossZone> _zones = new ArrayList<>();
+	private final Map<Integer, L2GrandBossInstance> _bosses = new HashMap<>();
+	private final Map<Integer, StatsSet> _storedInfo = new HashMap<>();
+	private final Map<Integer, Integer> _bossStatus = new HashMap<>();
+	private final List<L2BossZone> _zones = new ArrayList<>();
 	
-	public static void init()
+	public static GrandBossManager getInstance()
+	{
+		return SingletonHolder._instance;
+	}
+	
+	protected GrandBossManager()
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			// Load grandbosses data.
 			PreparedStatement statement = con.prepareStatement(SELECT_GRAND_BOSS_DATA);
 			ResultSet rset = statement.executeQuery();
 			
@@ -83,45 +84,53 @@ public class GrandBossManager
 			rset.close();
 			statement.close();
 			
-			// Load grandbosses players lists.
-			statement = con.prepareStatement(SELECT_GRAND_BOSS_LIST);
-			rset = statement.executeQuery();
-			
-			final List<Integer> playersList = new ArrayList<>();
-			int index = 0;
-			
-			// Clean way to handle list loading on zones.
-			while (rset.next())
-			{
-				int zoneId = rset.getInt("zone");
-				if (index != zoneId && !rset.isFirst())
-				{
-					index = zoneId;
-					getZoneById(zoneId).setAllowedPlayers(playersList);
-					playersList.clear();
-				}
-				else
-					playersList.add(rset.getInt("player_id"));
-			}
-			rset.close();
-			statement.close();
-			
 			_log.info("GrandBossManager: Loaded " + _storedInfo.size() + " GrandBosses instances.");
-			_log.info("GrandBossManager: Initialized " + _zones.size() + " GrandBosses zones.");
 		}
 		catch (Exception e)
 		{
-			_log.log(Level.WARNING, "GrandBossManager: Could not load grandboss tables: " + e.getMessage(), e);
+			_log.log(Level.WARNING, "GrandBossManager: Could not load grandboss data: " + e.getMessage(), e);
 		}
 	}
 	
-	public static void addZone(L2BossZone zone)
+	/**
+	 * Load grandbosses players lists.
+	 */
+	public void initZones()
+	{
+		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
+		{
+			PreparedStatement statement = con.prepareStatement(SELECT_GRAND_BOSS_LIST);
+			ResultSet rset = statement.executeQuery();
+			
+			// Avoid to for loop a lot of time, using the zoneId as index.
+			L2BossZone zone = null;
+			
+			while (rset.next())
+			{
+				final int currentZoneId = rset.getInt("zone");
+				if (currentZoneId != ((zone == null) ? 0 : zone.getId()))
+					zone = getZoneById(currentZoneId);
+				
+				if (zone != null)
+					zone.addAllowedPlayer(rset.getInt("player_id"));
+			}
+			
+			rset.close();
+			statement.close();
+		}
+		catch (Exception e)
+		{
+			_log.log(Level.WARNING, "GrandBossManager: Could not load grandboss zones: " + e.getMessage(), e);
+		}
+	}
+	
+	public void addZone(L2BossZone zone)
 	{
 		if (!_zones.contains(zone))
 			_zones.add(zone);
 	}
 	
-	public static boolean isInBossZone(L2Character character)
+	public boolean isInBossZone(L2Character character)
 	{
 		for (L2BossZone temp : _zones)
 		{
@@ -131,7 +140,7 @@ public class GrandBossManager
 		return false;
 	}
 	
-	public static L2BossZone getZoneById(int id)
+	public L2BossZone getZoneById(int id)
 	{
 		for (L2BossZone temp : _zones)
 		{
@@ -141,7 +150,7 @@ public class GrandBossManager
 		return null;
 	}
 	
-	public static L2BossZone getZoneByXYZ(int x, int y, int z)
+	public L2BossZone getZoneByXYZ(int x, int y, int z)
 	{
 		for (L2BossZone temp : _zones)
 		{
@@ -151,12 +160,12 @@ public class GrandBossManager
 		return null;
 	}
 	
-	public static int getBossStatus(int bossId)
+	public int getBossStatus(int bossId)
 	{
 		return _bossStatus.get(bossId);
 	}
 	
-	public static void setBossStatus(int bossId, int status)
+	public void setBossStatus(int bossId, int status)
 	{
 		_bossStatus.put(bossId, status);
 		_log.info("GrandBossManager: Updated " + NpcTable.getInstance().getTemplate(bossId).getName() + " (id: " + bossId + ") status to " + status);
@@ -167,7 +176,7 @@ public class GrandBossManager
 	 * Adds a L2GrandBossInstance to the list of bosses.
 	 * @param boss The boss to add.
 	 */
-	public static void addBoss(L2GrandBossInstance boss)
+	public void addBoss(L2GrandBossInstance boss)
 	{
 		if (boss != null)
 			_bosses.put(boss.getNpcId(), boss);
@@ -178,29 +187,29 @@ public class GrandBossManager
 	 * @param npcId The npcId to use for registration.
 	 * @param boss The boss to add.
 	 */
-	public static void addBoss(int npcId, L2GrandBossInstance boss)
+	public void addBoss(int npcId, L2GrandBossInstance boss)
 	{
 		if (boss != null)
 			_bosses.put(npcId, boss);
 	}
 	
-	public static L2GrandBossInstance getBoss(int bossId)
+	public L2GrandBossInstance getBoss(int bossId)
 	{
 		return _bosses.get(bossId);
 	}
 	
-	public static StatsSet getStatsSet(int bossId)
+	public StatsSet getStatsSet(int bossId)
 	{
 		return _storedInfo.get(bossId);
 	}
 	
-	public static void setStatsSet(int bossId, StatsSet info)
+	public void setStatsSet(int bossId, StatsSet info)
 	{
 		_storedInfo.put(bossId, info);
 		updateDb(bossId, false);
 	}
 	
-	private static void storeToDb()
+	private void storeToDb()
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -224,7 +233,7 @@ public class GrandBossManager
 			
 			PreparedStatement updateStatement1 = con.prepareStatement(UPDATE_GRAND_BOSS_DATA2);
 			PreparedStatement updateStatement2 = con.prepareStatement(UPDATE_GRAND_BOSS_DATA);
-			for (int bossId : _storedInfo.keys())
+			for (int bossId : _storedInfo.keySet())
 			{
 				L2GrandBossInstance boss = _bosses.get(bossId);
 				StatsSet info = _storedInfo.get(bossId);
@@ -259,7 +268,7 @@ public class GrandBossManager
 		}
 	}
 	
-	private static void updateDb(int bossId, boolean statusOnly)
+	private void updateDb(int bossId, boolean statusOnly)
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -298,7 +307,7 @@ public class GrandBossManager
 	/**
 	 * Saves all Grand Boss info and then clears all info from memory, including all schedules.
 	 */
-	public static void cleanUp()
+	public void cleanUp()
 	{
 		storeToDb();
 		
@@ -308,8 +317,13 @@ public class GrandBossManager
 		_zones.clear();
 	}
 	
-	public static List<L2BossZone> getZones()
+	public List<L2BossZone> getZones()
 	{
 		return _zones;
+	}
+	
+	private static class SingletonHolder
+	{
+		protected static final GrandBossManager _instance = new GrandBossManager();
 	}
 }

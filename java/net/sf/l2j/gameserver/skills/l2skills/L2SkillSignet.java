@@ -25,8 +25,8 @@ import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2EffectPointInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.Point3D;
 
 public final class L2SkillSignet extends L2Skill
@@ -47,7 +47,7 @@ public final class L2SkillSignet extends L2Skill
 		if (caster.isAlikeDead())
 			return;
 		
-		L2NpcTemplate template = NpcTable.getInstance().getTemplate(_effectNpcId);
+		NpcTemplate template = NpcTable.getInstance().getTemplate(_effectNpcId);
 		L2EffectPointInstance effectPoint = new L2EffectPointInstance(IdFactory.getInstance().getNextId(), template, caster);
 		effectPoint.setCurrentHp(effectPoint.getMaxHp());
 		effectPoint.setCurrentMp(effectPoint.getMaxMp());

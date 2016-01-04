@@ -51,10 +51,6 @@ public enum CtrlEvent
 	 * The actor arrived to assigned location, or it's a time to modify movement destination (follow, interact, random move and others intentions).
 	 */
 	EVT_ARRIVED,
-	/**
-	 * The actor arrived to an intermidiate point, and needs revalidate destination. This is sent when follow/move to pawn if destination is far away.
-	 */
-	EVT_ARRIVED_REVALIDATE,
 	/** The actor cannot move anymore. */
 	EVT_ARRIVED_BLOCKED,
 	/** Forgets an object (if it's used as attack target, follow target and so on */

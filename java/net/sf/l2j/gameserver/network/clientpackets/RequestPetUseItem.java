@@ -18,9 +18,9 @@ import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.PetDataTable;
 import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.handler.ItemHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.PetItemList;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -44,7 +44,7 @@ public final class RequestPetUseItem extends L2GameClientPacket
 		
 		final L2PetInstance pet = (L2PetInstance) activeChar.getPet();
 		
-		final L2ItemInstance item = pet.getInventory().getItemByObjectId(_objectId);
+		final ItemInstance item = pet.getInventory().getItemByObjectId(_objectId);
 		if (item == null)
 			return;
 		

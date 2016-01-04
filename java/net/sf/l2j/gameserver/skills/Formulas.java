@@ -18,9 +18,9 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.GameTimeController;
-import net.sf.l2j.gameserver.SevenSigns;
-import net.sf.l2j.gameserver.SevenSignsFestival;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
+import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2SiegeClan;
@@ -33,15 +33,15 @@ import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
 import net.sf.l2j.gameserver.model.entity.Siege;
+import net.sf.l2j.gameserver.model.item.kind.Armor;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
+import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.model.zone.type.L2MotherTreeZone;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.skills.effects.EffectTemplate;
-import net.sf.l2j.gameserver.templates.item.L2Armor;
-import net.sf.l2j.gameserver.templates.item.L2Item;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
-import net.sf.l2j.gameserver.templates.item.L2WeaponType;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.util.Rnd;
@@ -426,7 +426,7 @@ public final class Formulas
 		if (siegeClan == null)
 			return false;
 		
-		for (L2Npc flag : siegeClan.getFlag())
+		for (L2Npc flag : siegeClan.getFlags())
 		{
 			if (Util.checkIfInRange(200, activeChar, flag, true))
 				return true;
@@ -538,7 +538,7 @@ public final class Formulas
 		}
 		
 		// defence modifier depending of the attacker weapon
-		L2Weapon weapon = attacker.getActiveWeaponItem();
+		Weapon weapon = attacker.getActiveWeaponItem();
 		Stats stat = null;
 		if (weapon != null)
 		{
@@ -1033,8 +1033,8 @@ public final class Formulas
 		if (skill != null && skill.ignoreShield())
 			return 0;
 		
-		L2Item item = target.getSecondaryWeaponItem();
-		if (item == null || !(item instanceof L2Armor))
+		Item item = target.getSecondaryWeaponItem();
+		if (item == null || !(item instanceof Armor))
 			return 0;
 		
 		double shldRate = target.calcStat(Stats.SHIELD_RATE, 0, attacker, null) * DEXbonus[target.getDEX()];
@@ -1048,7 +1048,7 @@ public final class Formulas
 		byte shldSuccess = SHIELD_DEFENSE_FAILED;
 		
 		// if attacker use bow and target wear shield, shield block rate is multiplied by 1.3 (30%)
-		if (attacker.getAttackType() == L2WeaponType.BOW)
+		if (attacker.getAttackType() == WeaponType.BOW)
 			shldRate *= 1.3;
 		
 		if (shldRate > 0 && 100 - Config.ALT_PERFECT_SHLD_BLOCK < Rnd.get(100))

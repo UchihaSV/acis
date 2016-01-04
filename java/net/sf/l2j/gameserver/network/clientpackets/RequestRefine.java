@@ -16,8 +16,8 @@ package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.datatables.AugmentationData;
 import net.sf.l2j.gameserver.model.L2Augmentation;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExVariationResult;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
@@ -50,7 +50,7 @@ public final class RequestRefine extends AbstractRefinePacket
 		if (activeChar == null)
 			return;
 		
-		final L2ItemInstance targetItem = activeChar.getInventory().getItemByObjectId(_targetItemObjId);
+		final ItemInstance targetItem = activeChar.getInventory().getItemByObjectId(_targetItemObjId);
 		if (targetItem == null)
 		{
 			activeChar.sendPacket(new ExVariationResult(0, 0, 0));
@@ -58,7 +58,7 @@ public final class RequestRefine extends AbstractRefinePacket
 			return;
 		}
 		
-		final L2ItemInstance refinerItem = activeChar.getInventory().getItemByObjectId(_refinerItemObjId);
+		final ItemInstance refinerItem = activeChar.getInventory().getItemByObjectId(_refinerItemObjId);
 		if (refinerItem == null)
 		{
 			activeChar.sendPacket(new ExVariationResult(0, 0, 0));
@@ -66,7 +66,7 @@ public final class RequestRefine extends AbstractRefinePacket
 			return;
 		}
 		
-		final L2ItemInstance gemStoneItem = activeChar.getInventory().getItemByObjectId(_gemStoneItemObjId);
+		final ItemInstance gemStoneItem = activeChar.getInventory().getItemByObjectId(_gemStoneItemObjId);
 		if (gemStoneItem == null)
 		{
 			activeChar.sendPacket(new ExVariationResult(0, 0, 0));
@@ -101,10 +101,10 @@ public final class RequestRefine extends AbstractRefinePacket
 		// unequip item
 		if (targetItem.isEquipped())
 		{
-			L2ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInSlotAndRecord(targetItem.getLocationSlot());
+			ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInSlotAndRecord(targetItem.getLocationSlot());
 			InventoryUpdate iu = new InventoryUpdate();
 			
-			for (L2ItemInstance itm : unequipped)
+			for (ItemInstance itm : unequipped)
 				iu.addModifiedItem(itm);
 			
 			activeChar.sendPacket(iu);

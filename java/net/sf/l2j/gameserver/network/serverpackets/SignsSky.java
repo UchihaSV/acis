@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.SevenSigns;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 
 /**
  * Changes the sky color depending on the outcome of the Seven Signs competition. packet type id 0xf8 format: c h

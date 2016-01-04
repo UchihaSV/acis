@@ -42,14 +42,15 @@ public class L2BossZone extends L2ZoneType
 	private final Map<Integer, Long> _playerAllowedReEntryTimes = new ConcurrentHashMap<>();
 	
 	// Track players admitted to the zone who should be allowed back in after reboot/server downtime, within 30min of server restart
-	private List<Integer> _playersAllowed = new CopyOnWriteArrayList<>();
+	private final List<Integer> _playersAllowed = new CopyOnWriteArrayList<>();
+	
 	private final int[] _oustLoc = new int[3];
 	
 	public L2BossZone(int id)
 	{
 		super(id);
 		
-		GrandBossManager.addZone(this);
+		GrandBossManager.getInstance().addZone(this);
 	}
 	
 	@Override
@@ -181,10 +182,10 @@ public class L2BossZone extends L2ZoneType
 			((L2Attackable) character).returnHome();
 	}
 	
-	public void setAllowedPlayers(List<Integer> players)
+	public void addAllowedPlayer(int objectId)
 	{
-		if (players != null)
-			_playersAllowed = players;
+		if (!_playersAllowed.contains(objectId))
+			_playersAllowed.add(objectId);
 	}
 	
 	public List<Integer> getAllowedPlayers()

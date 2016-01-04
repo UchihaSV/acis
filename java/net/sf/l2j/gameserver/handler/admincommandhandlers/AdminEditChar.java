@@ -244,7 +244,7 @@ public class AdminEditChar implements IAdminCommandHandler
 					if (!player.isSubClassActive())
 						player.setBaseClass(classidval);
 					
-					String newclass = player.getTemplate().className;
+					String newclass = player.getTemplate().getClassName();
 					
 					player.refreshOverloaded();
 					player.store();
@@ -279,7 +279,7 @@ public class AdminEditChar implements IAdminCommandHandler
 				
 				player.setTitle(val);
 				player.sendMessage("Your title has been changed by a GM.");
-				player.broadcastUserInfo();
+				player.broadcastTitleInfo();
 			}
 			catch (StringIndexOutOfBoundsException e)
 			{
@@ -555,18 +555,19 @@ public class AdminEditChar implements IAdminCommandHandler
 				st.nextToken();
 				
 				boolean changeCreateExpiryTime = st.nextToken().equalsIgnoreCase("create");
-				
 				String playerName = st.nextToken();
-				L2PcInstance player = null;
-				player = L2World.getInstance().getPlayer(playerName);
 				
+				L2PcInstance player = L2World.getInstance().getPlayer(playerName);
 				if (player == null)
 				{
-					Connection con = L2DatabaseFactory.getInstance().getConnection();
-					PreparedStatement ps = con.prepareStatement("UPDATE characters SET " + (changeCreateExpiryTime ? "clan_create_expiry_time" : "clan_join_expiry_time") + " WHERE char_name=? LIMIT 1");
-					
-					ps.setString(1, playerName);
-					ps.execute();
+					try (Connection con = L2DatabaseFactory.getInstance().getConnection())
+					{
+						PreparedStatement ps = con.prepareStatement("UPDATE characters SET " + (changeCreateExpiryTime ? "clan_create_expiry_time" : "clan_join_expiry_time") + " WHERE char_name=? LIMIT 1");
+						
+						ps.setString(1, playerName);
+						ps.execute();
+						ps.close();
+					}
 				}
 				else
 				{
@@ -630,7 +631,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		// Add player info into new Table row
 		for (int i = charactersStart; i < charactersEnd; i++)
 		{
-			replyMSG.append("<tr><td width=80><a action=\"bypass -h admin_character_info " + players[i].getName() + "\">" + players[i].getName() + "</a></td><td width=110>" + players[i].getTemplate().className + "</td><td width=40>" + players[i].getLevel() + "</td></tr>");
+			replyMSG.append("<tr><td width=80><a action=\"bypass -h admin_character_info " + players[i].getName() + "\">" + players[i].getName() + "</a></td><td width=110>" + players[i].getTemplate().getClassName() + "</td><td width=40>" + players[i].getLevel() + "</td></tr>");
 		}
 		adminReply.replace("%players%", replyMSG.toString());
 		activeChar.sendPacket(adminReply);
@@ -671,7 +672,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		adminReply.replace("%clan%", player.getClan() != null ? "<a action=\"bypass -h admin_clan_info " + player.getName() + "\">" + player.getClan().getName() + "</a>" : "none");
 		adminReply.replace("%xp%", player.getExp());
 		adminReply.replace("%sp%", player.getSp());
-		adminReply.replace("%class%", player.getTemplate().className);
+		adminReply.replace("%class%", player.getTemplate().getClassName());
 		adminReply.replace("%ordinal%", player.getClassId().ordinal());
 		adminReply.replace("%classid%", player.getClassId().toString());
 		adminReply.replace("%baseclass%", CharTemplateTable.getInstance().getClassNameById(player.getBaseClass()));
@@ -764,7 +765,7 @@ public class AdminEditChar implements IAdminCommandHandler
 			if (name.toLowerCase().contains(characterToFind.toLowerCase()))
 			{
 				charactersFound++;
-				replyMSG.append("<tr><td width=80><a action=\"bypass -h admin_character_list " + name + "\">" + name + "</a></td><td width=110>" + player.getTemplate().className + "</td><td width=40>" + player.getLevel() + "</td></tr>");
+				replyMSG.append("<tr><td width=80><a action=\"bypass -h admin_character_list " + name + "\">" + name + "</a></td><td width=110>" + player.getTemplate().getClassName() + "</td><td width=40>" + player.getLevel() + "</td></tr>");
 			}
 			if (charactersFound > 20)
 				break;
@@ -833,7 +834,7 @@ public class AdminEditChar implements IAdminCommandHandler
 			
 			String name = player.getName();
 			charactersFound++;
-			StringUtil.append(replyMSG, "<tr><td width=80><a action=\"bypass -h admin_character_list ", name, "\">", name, "</a></td><td width=110>", player.getTemplate().className, "</td><td width=40>", String.valueOf(player.getLevel()), "</td></tr>");
+			StringUtil.append(replyMSG, "<tr><td width=80><a action=\"bypass -h admin_character_list ", name, "\">", name, "</a></td><td width=110>", player.getTemplate().getClassName(), "</td><td width=40>", String.valueOf(player.getLevel()), "</td></tr>");
 			
 			if (charactersFound > 20)
 				break;

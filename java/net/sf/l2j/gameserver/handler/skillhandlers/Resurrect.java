@@ -54,7 +54,7 @@ public class Resurrect implements ISkillHandler
 			}
 			else
 			{
-				DecayTaskManager.getInstance().cancelDecayTask(target);
+				DecayTaskManager.getInstance().cancel(target);
 				target.doRevive(Formulas.calculateSkillResurrectRestorePercent(skill.getPower(), activeChar));
 			}
 		}

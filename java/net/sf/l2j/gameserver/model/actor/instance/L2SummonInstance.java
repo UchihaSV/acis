@@ -25,10 +25,10 @@ import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Attackable.AggroInfo;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.SetSummonRemainTime;
 import net.sf.l2j.gameserver.skills.l2skills.L2SkillSummon;
 import net.sf.l2j.gameserver.taskmanager.DecayTaskManager;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2SummonInstance extends L2Summon
 {
@@ -48,7 +48,7 @@ public class L2SummonInstance extends L2Summon
 	
 	private Future<?> _summonLifeTask;
 	
-	public L2SummonInstance(int objectId, L2NpcTemplate template, L2PcInstance owner, L2Skill skill)
+	public L2SummonInstance(int objectId, NpcTemplate template, L2PcInstance owner, L2Skill skill)
 	{
 		super(objectId, template, owner);
 		setShowSummonAnimation(true);
@@ -177,7 +177,7 @@ public class L2SummonInstance extends L2Summon
 		if (isPhoenixBlessed())
 			getOwner().reviveRequest(getOwner(), null, true);
 		
-		DecayTaskManager.getInstance().addDecayTask(this);
+		DecayTaskManager.getInstance().add(this);
 		
 		if (_summonLifeTask != null)
 		{

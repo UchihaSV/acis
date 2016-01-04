@@ -16,12 +16,12 @@ package net.sf.l2j.gameserver.handler.itemhandlers;
 
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.handler.IItemHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.holder.SkillHolder;
-import net.sf.l2j.gameserver.templates.item.L2EtcItem;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.EtcItem;
 
 /**
  * Template for item skills handler.
@@ -30,12 +30,12 @@ import net.sf.l2j.gameserver.templates.item.L2EtcItem;
 public class SoulCrystals implements IItemHandler
 {
 	@Override
-	public void useItem(L2Playable playable, L2ItemInstance item, boolean forceUse)
+	public void useItem(L2Playable playable, ItemInstance item, boolean forceUse)
 	{
 		if (!(playable instanceof L2PcInstance))
 			return;
 		
-		final L2EtcItem etcItem = item.getEtcItem();
+		final EtcItem etcItem = item.getEtcItem();
 		
 		final SkillHolder[] skills = etcItem.getSkills();
 		if (skills == null)

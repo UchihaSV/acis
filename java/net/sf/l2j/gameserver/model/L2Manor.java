@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.ItemTable;
-import net.sf.l2j.gameserver.templates.item.L2Item;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
 import org.w3c.dom.Document;
@@ -63,7 +63,7 @@ public class L2Manor
 	
 	public int getSeedBasicPrice(int seedId)
 	{
-		L2Item seedItem = ItemTable.getInstance().getTemplate(seedId);
+		Item seedItem = ItemTable.getInstance().getTemplate(seedId);
 		
 		if (seedItem != null)
 			return seedItem.getReferencePrice();
@@ -83,7 +83,7 @@ public class L2Manor
 	
 	public int getCropBasicPrice(int cropId)
 	{
-		L2Item cropItem = ItemTable.getInstance().getTemplate(cropId);
+		Item cropItem = ItemTable.getInstance().getTemplate(cropId);
 		
 		if (cropItem != null)
 			return cropItem.getReferencePrice();

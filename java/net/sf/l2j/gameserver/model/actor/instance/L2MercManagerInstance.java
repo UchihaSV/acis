@@ -16,13 +16,12 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.StringTokenizer;
 
-import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.TradeController;
+import net.sf.l2j.gameserver.datatables.BuyListTable;
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.model.L2TradeList;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
 import net.sf.l2j.gameserver.network.serverpackets.BuyList;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public final class L2MercManagerInstance extends L2NpcInstance
 {
@@ -30,7 +29,7 @@ public final class L2MercManagerInstance extends L2NpcInstance
 	private static final int COND_BUSY_BECAUSE_OF_SIEGE = 1;
 	private static final int COND_OWNER = 2;
 	
-	public L2MercManagerInstance(int objectId, L2NpcTemplate template)
+	public L2MercManagerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -68,17 +67,12 @@ public final class L2MercManagerInstance extends L2NpcInstance
 	
 	private void showBuyWindow(L2PcInstance player, int val)
 	{
+		final NpcBuyList buyList = BuyListTable.getInstance().getBuyList(val);
+		if (buyList == null || !buyList.isNpcAllowed(getNpcId()))
+			return;
+		
 		player.tempInventoryDisable();
-		
-		if (Config.DEBUG)
-			_log.fine("Showing buylist");
-		
-		L2TradeList list = TradeController.getInstance().getBuyList(val);
-		if ((list != null) && (list.getNpcId().equals(String.valueOf(getNpcId()))))
-		{
-			BuyList bl = new BuyList(list, player.getAdena(), 0);
-			player.sendPacket(bl);
-		}
+		player.sendPacket(new BuyList(buyList, player.getAdena(), 0));
 	}
 	
 	@Override

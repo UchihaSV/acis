@@ -17,13 +17,13 @@ package net.sf.l2j.gameserver.network.serverpackets;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.l2j.gameserver.templates.chars.L2PcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.PcTemplate;
 
 public class CharTemplates extends L2GameServerPacket
 {
-	private final List<L2PcTemplate> _chars = new ArrayList<>();
+	private final List<PcTemplate> _chars = new ArrayList<>();
 	
-	public void addChar(L2PcTemplate template)
+	public void addChar(PcTemplate template)
 	{
 		_chars.add(template);
 	}
@@ -34,13 +34,13 @@ public class CharTemplates extends L2GameServerPacket
 		writeC(0x17);
 		writeD(_chars.size());
 		
-		for (L2PcTemplate temp : _chars)
+		for (PcTemplate temp : _chars)
 		{
 			if (temp == null)
 				continue;
 			
-			writeD(temp.race.ordinal());
-			writeD(temp.classId.getId());
+			writeD(temp.getRace().ordinal());
+			writeD(temp.getClassId().getId());
 			writeD(0x46);
 			writeD(temp.getBaseSTR());
 			writeD(0x0a);

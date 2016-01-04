@@ -14,21 +14,21 @@
  */
 package net.sf.l2j.gameserver.skills;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2CubicInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 /**
- * An Env object is a class to pass parameters to a calculator such as L2PcInstance, L2ItemInstance, Initial value.
+ * An Env object is a class to pass parameters to a calculator such as L2PcInstance, ItemInstance, Initial value.
  */
 public final class Env
 {
 	private L2Character _character;
 	private L2CubicInstance _cubic;
 	private L2Character _target;
-	private L2ItemInstance _item;
+	private ItemInstance _item;
 	private L2Skill _skill;
 	
 	private double _value;
@@ -80,7 +80,7 @@ public final class Env
 	/**
 	 * @return the _item
 	 */
-	public L2ItemInstance getItem()
+	public ItemInstance getItem()
 	{
 		return _item;
 	}
@@ -184,7 +184,7 @@ public final class Env
 	/**
 	 * @param item the _item to set
 	 */
-	public void setItem(L2ItemInstance item)
+	public void setItem(ItemInstance item)
 	{
 		_item = item;
 	}

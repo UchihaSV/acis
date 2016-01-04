@@ -185,7 +185,7 @@ public class L2ClanMember
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
 			PreparedStatement statement = con.prepareStatement("UPDATE characters SET subpledge=? WHERE obj_id=?");
-			statement.setLong(1, _pledgeType);
+			statement.setInt(1, _pledgeType);
 			statement.setInt(2, getObjectId());
 			statement.execute();
 			statement.close();
@@ -218,7 +218,7 @@ public class L2ClanMember
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
 			PreparedStatement statement = con.prepareStatement("UPDATE characters SET power_grade=? WHERE obj_id=?");
-			statement.setLong(1, _powerGrade);
+			statement.setInt(1, _powerGrade);
 			statement.setInt(2, getObjectId());
 			statement.execute();
 			statement.close();
@@ -228,10 +228,10 @@ public class L2ClanMember
 		}
 	}
 	
-	public void setApprenticeAndSponsor(int apprenticeID, int sponsorID)
+	public void setApprenticeAndSponsor(int apprenticeId, int sponsorId)
 	{
-		_apprentice = apprenticeID;
-		_sponsor = sponsorID;
+		_apprentice = apprenticeId;
+		_sponsor = sponsorId;
 	}
 	
 	public int getRaceOrdinal()

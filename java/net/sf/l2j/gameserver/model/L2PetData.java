@@ -14,14 +14,20 @@
  */
 package net.sf.l2j.gameserver.model;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * This class is particular : <li>loads generic petdata (L2PetData), such as maxLoad, foodId,...</li> <li>loads generated data from XML (stats) aswell (L2PetLevelData) : patk, matk, pdef, mdef, HPs,...</li>
+ * This class is particular :
+ * <ul>
+ * <li>loads generic petdata (L2PetData), such as maxLoad, foodId,...</li>
+ * <li>loads generated data from XML (stats) aswell (L2PetLevelData) : patk, matk, pdef, mdef, HPs,...</li>
+ * </ul>
  **/
 public class L2PetData
 {
-	private final TIntObjectHashMap<L2PetLevelData> _levelStats = new TIntObjectHashMap<>();
+	private final Map<Integer, L2PetLevelData> _levelStats = new HashMap<>();
+	
 	private int _minlvl = Byte.MAX_VALUE;
 	private int[] _food = {};
 	

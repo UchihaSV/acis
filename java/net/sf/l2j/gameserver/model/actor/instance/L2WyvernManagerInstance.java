@@ -15,11 +15,11 @@
 package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.SevenSigns;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * This instance leads the behavior of Wyvern Managers.<br>
@@ -37,7 +37,7 @@ public class L2WyvernManagerInstance extends L2CastleChamberlainInstance
 	final private int neededCrystals = Config.WYVERN_REQUIRED_CRYSTALS;
 	final private int requiredLevel = Config.WYVERN_REQUIRED_LEVEL;
 	
-	public L2WyvernManagerInstance(int objectId, L2NpcTemplate template)
+	public L2WyvernManagerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

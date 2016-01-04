@@ -19,9 +19,9 @@ import java.util.StringTokenizer;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.model.L2World;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.NpcSay;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * @author Kerberos
@@ -31,7 +31,7 @@ public class L2CastleTeleporterInstance extends L2NpcInstance
 	protected boolean _currentTask;
 	private int _delay;
 	
-	public L2CastleTeleporterInstance(int objectId, L2NpcTemplate template)
+	public L2CastleTeleporterInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

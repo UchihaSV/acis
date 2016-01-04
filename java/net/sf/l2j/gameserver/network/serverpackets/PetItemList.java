@@ -14,9 +14,9 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
-import net.sf.l2j.gameserver.templates.item.L2Item;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 
 public class PetItemList extends L2GameServerPacket
 {
@@ -32,15 +32,15 @@ public class PetItemList extends L2GameServerPacket
 	{
 		writeC(0xB2);
 		
-		final L2ItemInstance[] items = _activeChar.getInventory().getItems();
+		final ItemInstance[] items = _activeChar.getInventory().getItems();
 		writeH(items.length);
 		
-		for (L2ItemInstance temp : items)
+		for (ItemInstance temp : items)
 		{
 			if (temp == null || temp.getItem() == null)
 				continue;
 			
-			L2Item item = temp.getItem();
+			Item item = temp.getItem();
 			
 			writeH(item.getType1());
 			writeD(temp.getObjectId());

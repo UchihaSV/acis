@@ -16,14 +16,14 @@ package net.sf.l2j.gameserver.network.serverpackets;
 
 import java.util.Arrays;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.TradeList;
 import net.sf.l2j.gameserver.model.TradeList.TradeItem;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 public class TradeItemUpdate extends L2GameServerPacket
 {
-	private L2ItemInstance[] _items;
+	private ItemInstance[] _items;
 	private TradeItem[] _currentTrade;
 	
 	public TradeItemUpdate(TradeList trade, L2PcInstance activeChar)
@@ -34,7 +34,7 @@ public class TradeItemUpdate extends L2GameServerPacket
 	
 	private int getItemCount(int objectId)
 	{
-		for (L2ItemInstance item : _items)
+		for (ItemInstance item : _items)
 			if (item.getObjectId() == objectId)
 				return item.getCount();
 		

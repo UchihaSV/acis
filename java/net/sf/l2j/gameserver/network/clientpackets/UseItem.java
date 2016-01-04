@@ -19,21 +19,21 @@ import net.sf.l2j.gameserver.GameTimeController;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.handler.ItemHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
+import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.type.ActionType;
+import net.sf.l2j.gameserver.model.item.type.EtcItemType;
+import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.PetItemList;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
-import net.sf.l2j.gameserver.templates.item.L2ActionType;
-import net.sf.l2j.gameserver.templates.item.L2EtcItemType;
-import net.sf.l2j.gameserver.templates.item.L2Item;
-import net.sf.l2j.gameserver.templates.item.L2WeaponType;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 public final class UseItem extends L2GameClientPacket
@@ -44,10 +44,10 @@ public final class UseItem extends L2GameClientPacket
 	/** Weapon Equip Task */
 	public static class WeaponEquipTask implements Runnable
 	{
-		L2ItemInstance item;
+		ItemInstance item;
 		L2PcInstance activeChar;
 		
-		public WeaponEquipTask(L2ItemInstance it, L2PcInstance character)
+		public WeaponEquipTask(ItemInstance it, L2PcInstance character)
 		{
 			item = it;
 			activeChar = character;
@@ -91,11 +91,11 @@ public final class UseItem extends L2GameClientPacket
 			return;
 		}
 		
-		final L2ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
+		final ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
 		if (item == null)
 			return;
 		
-		if (item.getItem().getType2() == L2Item.TYPE2_QUEST)
+		if (item.getItem().getType2() == Item.TYPE2_QUEST)
 		{
 			activeChar.sendPacket(SystemMessageId.CANNOT_USE_QUEST_ITEMS);
 			return;
@@ -118,7 +118,7 @@ public final class UseItem extends L2GameClientPacket
 			}
 		}
 		
-		if (activeChar.isFishing() && item.getItem().getDefaultAction() != L2ActionType.fishingshot)
+		if (activeChar.isFishing() && item.getItem().getDefaultAction() != ActionType.fishingshot)
 		{
 			activeChar.sendPacket(SystemMessageId.CANNOT_DO_WHILE_FISHING_3);
 			return;
@@ -197,9 +197,9 @@ public final class UseItem extends L2GameClientPacket
 			
 			switch (item.getItem().getBodyPart())
 			{
-				case L2Item.SLOT_LR_HAND:
-				case L2Item.SLOT_L_HAND:
-				case L2Item.SLOT_R_HAND:
+				case Item.SLOT_LR_HAND:
+				case Item.SLOT_L_HAND:
+				case Item.SLOT_R_HAND:
 				{
 					if (activeChar.isMounted())
 					{
@@ -232,7 +232,7 @@ public final class UseItem extends L2GameClientPacket
 			if (activeChar.isCastingNow() && !(item.isPotion() || item.isElixir()))
 				return;
 			
-			if (activeChar.getAttackType() == L2WeaponType.FISHINGROD && item.getItem().getItemType() == L2EtcItemType.LURE)
+			if (activeChar.getAttackType() == WeaponType.FISHINGROD && item.getItem().getItemType() == EtcItemType.LURE)
 			{
 				activeChar.getInventory().setPaperdollItem(Inventory.PAPERDOLL_LHAND, item);
 				activeChar.broadcastUserInfo();

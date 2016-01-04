@@ -21,15 +21,19 @@ import java.util.concurrent.Future;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.GameTimeController;
-import net.sf.l2j.gameserver.SevenSignsFestival;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.instancemanager.DuelManager;
+import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SummonInstance;
 import net.sf.l2j.gameserver.model.entity.DimensionalRift;
+import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoom;
+import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoomList;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
 import net.sf.l2j.gameserver.network.serverpackets.ExCloseMPCC;
@@ -353,70 +357,70 @@ public class L2Party
 	
 	public synchronized void removePartyMember(L2PcInstance player, boolean sendMessage)
 	{
-		if (_members.contains(player))
+		if (!_members.contains(player))
+			return;
+		
+		boolean isLeader = isLeader(player);
+		_members.remove(player);
+		recalculatePartyLevel();
+		
+		if (player.isFestivalParticipant())
+			SevenSignsFestival.getInstance().updateParticipants(player, this);
+		
+		if (player.isInDuel())
+			DuelManager.getInstance().onRemoveFromParty(player);
+		
+		if (player.getFusionSkill() != null)
+			player.abortCast();
+		
+		for (L2Character character : player.getKnownList().getKnownType(L2Character.class))
+			if (character.getFusionSkill() != null && character.getFusionSkill().getTarget() == player)
+				character.abortCast();
+		
+		if (sendMessage)
 		{
-			boolean isLeader = isLeader(player);
-			_members.remove(player);
-			recalculatePartyLevel();
-			
-			if (player.isFestivalParticipant())
-				SevenSignsFestival.getInstance().updateParticipants(player, this);
-			
-			if (player.isInDuel())
-				DuelManager.getInstance().onRemoveFromParty(player);
-			
-			if (player.getFusionSkill() != null)
-				player.abortCast();
-			
-			for (L2Character character : player.getKnownList().getKnownType(L2Character.class))
-				if (character.getFusionSkill() != null && character.getFusionSkill().getTarget() == player)
-					character.abortCast();
-			
-			if (sendMessage)
-			{
-				player.sendPacket(SystemMessageId.YOU_LEFT_PARTY);
-				broadcastToPartyMembers(SystemMessage.getSystemMessage(SystemMessageId.S1_LEFT_PARTY).addPcName(player));
-			}
-			
-			player.sendPacket(PartySmallWindowDeleteAll.STATIC_PACKET);
-			player.setParty(null);
-			
-			broadcastToPartyMembers(new PartySmallWindowDelete(player));
-			
-			if (isInDimensionalRift())
-				_dr.partyMemberExited(player);
-			
-			// Close the CCInfoWindow
+			player.sendPacket(SystemMessageId.YOU_LEFT_PARTY);
+			broadcastToPartyMembers(SystemMessage.getSystemMessage(SystemMessageId.S1_LEFT_PARTY).addPcName(player));
+		}
+		
+		player.sendPacket(PartySmallWindowDeleteAll.STATIC_PACKET);
+		player.setParty(null);
+		
+		broadcastToPartyMembers(new PartySmallWindowDelete(player));
+		
+		if (isInDimensionalRift())
+			_dr.partyMemberExited(player);
+		
+		// Close the CCInfoWindow
+		if (isInCommandChannel())
+			player.sendPacket(ExCloseMPCC.STATIC_PACKET);
+		
+		if (isLeader && _members.size() > 1)
+			broadcastToPartyMembersNewLeader();
+		else if (_members.size() == 1)
+		{
 			if (isInCommandChannel())
-				player.sendPacket(ExCloseMPCC.STATIC_PACKET);
-			
-			if (isLeader && _members.size() > 1)
-				broadcastToPartyMembersNewLeader();
-			else if (_members.size() == 1)
 			{
-				if (isInCommandChannel())
-				{
-					// delete the whole command channel when the party who opened the channel is disbanded
-					if (_commandChannel.getChannelLeader().equals(getLeader()))
-						_commandChannel.disbandChannel();
-					else
-						_commandChannel.removeParty(this);
-				}
-				
-				if (getLeader() != null)
-				{
-					getLeader().setParty(null);
-					if (getLeader().isInDuel())
-						DuelManager.getInstance().onRemoveFromParty(getLeader());
-				}
-				
-				if (_positionBroadcastTask != null)
-				{
-					_positionBroadcastTask.cancel(false);
-					_positionBroadcastTask = null;
-				}
-				_members.clear();
+				// delete the whole command channel when the party who opened the channel is disbanded
+				if (_commandChannel.getChannelLeader().equals(getLeader()))
+					_commandChannel.disbandChannel();
+				else
+					_commandChannel.removeParty(this);
 			}
+			
+			if (getLeader() != null)
+			{
+				getLeader().setParty(null);
+				if (getLeader().isInDuel())
+					DuelManager.getInstance().onRemoveFromParty(getLeader());
+			}
+			
+			if (_positionBroadcastTask != null)
+			{
+				_positionBroadcastTask.cancel(false);
+				_positionBroadcastTask = null;
+			}
+			_members.clear();
 		}
 	}
 	
@@ -483,7 +487,7 @@ public class L2Party
 	 * @param player
 	 * @param item
 	 */
-	public void distributeItem(L2PcInstance player, L2ItemInstance item)
+	public void distributeItem(L2PcInstance player, ItemInstance item)
 	{
 		if (item.getItemId() == 57)
 		{
@@ -511,19 +515,19 @@ public class L2Party
 	 * @param spoil
 	 * @param target
 	 */
-	public void distributeItem(L2PcInstance player, L2Attackable.RewardItem item, boolean spoil, L2Attackable target)
+	public void distributeItem(L2PcInstance player, ItemHolder item, boolean spoil, L2Attackable target)
 	{
 		if (item == null)
 			return;
 		
-		if (item.getItemId() == 57)
+		if (item.getId() == 57)
 		{
 			distributeAdena(player, item.getCount(), target);
 			return;
 		}
 		
-		L2PcInstance looter = getActualLooter(player, item.getItemId(), spoil, target);
-		looter.addItem(spoil ? "Sweep" : "Party", item.getItemId(), item.getCount(), player, true);
+		L2PcInstance looter = getActualLooter(player, item.getId(), spoil, target);
+		looter.addItem(spoil ? "Sweep" : "Party", item.getId(), item.getCount(), player, true);
 		
 		// Send messages to other party members about reward
 		SystemMessage msg;
@@ -531,17 +535,16 @@ public class L2Party
 		{
 			msg = spoil ? SystemMessage.getSystemMessage(SystemMessageId.S1_SWEEPED_UP_S3_S2) : SystemMessage.getSystemMessage(SystemMessageId.S1_OBTAINED_S3_S2);
 			msg.addPcName(looter);
-			msg.addItemName(item.getItemId());
+			msg.addItemName(item.getId());
 			msg.addItemNumber(item.getCount());
-			broadcastToPartyMembers(looter, msg);
 		}
 		else
 		{
 			msg = spoil ? SystemMessage.getSystemMessage(SystemMessageId.S1_SWEEPED_UP_S2) : SystemMessage.getSystemMessage(SystemMessageId.S1_OBTAINED_S2);
 			msg.addPcName(looter);
-			msg.addItemName(item.getItemId());
-			broadcastToPartyMembers(looter, msg);
+			msg.addItemName(item.getId());
 		}
+		broadcastToPartyMembers(looter, msg);
 	}
 	
 	/**

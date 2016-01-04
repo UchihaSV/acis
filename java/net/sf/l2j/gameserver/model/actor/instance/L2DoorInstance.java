@@ -26,7 +26,6 @@ import net.sf.l2j.gameserver.ai.L2DoorAI;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -34,8 +33,11 @@ import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.knownlist.DoorKnownList;
 import net.sf.l2j.gameserver.model.actor.stat.DoorStat;
 import net.sf.l2j.gameserver.model.actor.status.DoorStatus;
+import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
 import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ConfirmDlg;
@@ -43,10 +45,6 @@ import net.sf.l2j.gameserver.network.serverpackets.DoorInfo;
 import net.sf.l2j.gameserver.network.serverpackets.DoorStatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.skills.funcs.FuncGatesMDefMod;
-import net.sf.l2j.gameserver.skills.funcs.FuncGatesPDefMod;
-import net.sf.l2j.gameserver.templates.chars.L2CharTemplate;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 
 public class L2DoorInstance extends L2Character
 {
@@ -185,7 +183,7 @@ public class L2DoorInstance extends L2Character
 		}
 	}
 	
-	public L2DoorInstance(int objectId, L2CharTemplate template, int doorId, String name, boolean unlockable)
+	public L2DoorInstance(int objectId, CharTemplate template, int doorId, String name, boolean unlockable)
 	{
 		super(objectId, template);
 		
@@ -348,25 +346,25 @@ public class L2DoorInstance extends L2Character
 	}
 	
 	@Override
-	public L2ItemInstance getActiveWeaponInstance()
+	public ItemInstance getActiveWeaponInstance()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2Weapon getActiveWeaponItem()
+	public Weapon getActiveWeaponItem()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2ItemInstance getSecondaryWeaponInstance()
+	public ItemInstance getSecondaryWeaponInstance()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2Weapon getSecondaryWeaponItem()
+	public Weapon getSecondaryWeaponItem()
 	{
 		return null;
 	}
@@ -584,7 +582,7 @@ public class L2DoorInstance extends L2Character
 	@Override
 	public void reduceCurrentHpByDOT(double i, L2Character attacker, L2Skill skill)
 	{
-		// doors can't be damaged by DOTs
+		// Doors can't be damaged by DOTs.
 	}
 	
 	@Override
@@ -618,8 +616,7 @@ public class L2DoorInstance extends L2Character
 	@Override
 	public void addFuncsToNewCharacter()
 	{
-		addStatFunc(FuncGatesPDefMod.getInstance());
-		addStatFunc(FuncGatesMDefMod.getInstance());
+		// Doors haven't any Func.
 	}
 	
 	@Override

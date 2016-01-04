@@ -17,29 +17,23 @@ package net.sf.l2j.gameserver.network.serverpackets;
 import java.util.Collection;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.model.L2TradeList;
-import net.sf.l2j.gameserver.model.L2TradeList.L2TradeItem;
-import net.sf.l2j.gameserver.templates.item.L2Item;
+import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
+import net.sf.l2j.gameserver.model.buylist.Product;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 
 public class ShopPreviewList extends L2GameServerPacket
 {
-	private final int _listId, _money;
-	private int _expertise;
-	private final Collection<L2TradeItem> _list;
+	private final int _listId;
+	private final int _money;
+	private final int _expertise;
+	private final Collection<Product> _list;
 	
-	public ShopPreviewList(L2TradeList list, int currentMoney, int expertiseIndex)
+	public ShopPreviewList(NpcBuyList list, int currentMoney, int expertiseIndex)
 	{
 		_listId = list.getListId();
-		_list = list.getItems();
+		_list = list.getProducts();
 		_money = currentMoney;
 		_expertise = expertiseIndex;
-	}
-	
-	public ShopPreviewList(Collection<L2TradeItem> lst, int listId, int currentMoney)
-	{
-		_listId = listId;
-		_list = lst;
-		_money = currentMoney;
 	}
 	
 	@Override
@@ -54,22 +48,22 @@ public class ShopPreviewList extends L2GameServerPacket
 		writeD(_listId);
 		
 		int newlength = 0;
-		for (L2TradeItem item : _list)
+		for (Product product : _list)
 		{
-			if (item.getTemplate().getCrystalType() <= _expertise && item.getTemplate().isEquipable())
+			if (product.getItem().getCrystalType().getId() <= _expertise && product.getItem().isEquipable())
 				newlength++;
 		}
 		writeH(newlength);
 		
-		for (L2TradeItem item : _list)
+		for (Product product : _list)
 		{
-			if (item.getTemplate().getCrystalType() <= _expertise && item.getTemplate().isEquipable())
+			if (product.getItem().getCrystalType().getId() <= _expertise && product.getItem().isEquipable())
 			{
-				writeD(item.getItemId());
-				writeH(item.getTemplate().getType2()); // item type2
+				writeD(product.getItemId());
+				writeH(product.getItem().getType2()); // item type2
 				
-				if (item.getTemplate().getType1() != L2Item.TYPE1_ITEM_QUESTITEM_ADENA)
-					writeH(item.getTemplate().getBodyPart()); // slot
+				if (product.getItem().getType1() != Item.TYPE1_ITEM_QUESTITEM_ADENA)
+					writeH(product.getItem().getBodyPart()); // slot
 				else
 					writeH(0x00); // slot
 					

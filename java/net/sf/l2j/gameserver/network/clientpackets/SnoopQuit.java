@@ -41,7 +41,6 @@ public final class SnoopQuit extends L2GameClientPacket
 		if (target == null)
 			return;
 		
-		target.removeSnooper(activeChar);
-		activeChar.removeSnooped(target);
+		// No use
 	}
 }

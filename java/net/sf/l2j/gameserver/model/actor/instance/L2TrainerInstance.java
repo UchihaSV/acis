@@ -14,14 +14,14 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 
 /**
  * This class handles skills trainers.
  */
 public final class L2TrainerInstance extends L2NpcInstance
 {
-	public L2TrainerInstance(int objectId, L2NpcTemplate template)
+	public L2TrainerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

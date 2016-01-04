@@ -192,7 +192,7 @@ public class CharInfo extends L2GameServerPacket
 		writeD((int) _activeChar.getCurrentCp());
 		writeC(_activeChar.isMounted() ? 0 : _activeChar.getEnchantEffect());
 		
-		if (_activeChar.getTeam() == 1)
+		if (_activeChar.getTeam() == 1 || (Config.PLAYER_SPAWN_PROTECTION > 0 && _activeChar.isSpawnProtected()))
 			writeC(0x01); // team circle around feet 1= Blue, 2 = red
 		else if (_activeChar.getTeam() == 2)
 			writeC(0x02); // team circle around feet 1= Blue, 2 = red

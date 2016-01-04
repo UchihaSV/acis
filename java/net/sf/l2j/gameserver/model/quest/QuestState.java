@@ -24,9 +24,9 @@ import java.util.logging.Logger;
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.cache.HtmCache;
-import net.sf.l2j.gameserver.model.L2DropData;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.DropData;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.itemcontainer.PcInventory;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExShowQuestMark;
@@ -163,7 +163,7 @@ public final class QuestState
 			
 			setQuestVarInDb("<state>", String.valueOf(_state));
 			
-			_player.sendPacket(new QuestList());
+			_player.sendPacket(new QuestList(_player));
 		}
 	}
 	
@@ -183,7 +183,7 @@ public final class QuestState
 		if (repeatable)
 		{
 			_player.delQuestState(this);
-			_player.sendPacket(new QuestList());
+			_player.sendPacket(new QuestList(_player));
 		}
 		else
 			setState(Quest.STATE_COMPLETED);
@@ -362,7 +362,7 @@ public final class QuestState
 		}
 		
 		// send a packet to the client to inform it of the quest progress (step change)
-		_player.sendPacket(new QuestList());
+		_player.sendPacket(new QuestList(_player));
 		
 		if (_quest.isRealQuest() && cond > 0)
 			_player.sendPacket(new ExShowQuestMark(_quest.getQuestId()));
@@ -502,7 +502,7 @@ public final class QuestState
 	{
 		int count = 0;
 		
-		for (L2ItemInstance item : _player.getInventory().getItems())
+		for (ItemInstance item : _player.getInventory().getItems())
 			if (item != null && item.getItemId() == itemId)
 				count += item.getCount();
 		
@@ -525,7 +525,7 @@ public final class QuestState
 	 */
 	public int getEnchantLevel(int itemId)
 	{
-		final L2ItemInstance enchanteditem = _player.getInventory().getItemByItemId(itemId);
+		final ItemInstance enchanteditem = _player.getInventory().getItemByItemId(itemId);
 		if (enchanteditem == null)
 			return 0;
 		
@@ -555,7 +555,7 @@ public final class QuestState
 			return;
 		
 		// Add items to player's inventory.
-		final L2ItemInstance item = _player.getInventory().addItem("Quest", itemId, itemCount, _player, _player);
+		final ItemInstance item = _player.getInventory().addItem("Quest", itemId, itemCount, _player, _player);
 		if (item == null)
 			return;
 		
@@ -601,7 +601,7 @@ public final class QuestState
 	public void takeItems(int itemId, int itemCount)
 	{
 		// Find item in player's inventory.
-		final L2ItemInstance item = _player.getInventory().getItemByItemId(itemId);
+		final ItemInstance item = _player.getInventory().getItemByItemId(itemId);
 		if (item == null)
 			return;
 		
@@ -612,9 +612,9 @@ public final class QuestState
 		// Disarm item, if equipped.
 		if (item.isEquipped())
 		{
-			L2ItemInstance[] unequiped = _player.getInventory().unEquipItemInBodySlotAndRecord(item.getItem().getBodyPart());
+			ItemInstance[] unequiped = _player.getInventory().unEquipItemInBodySlotAndRecord(item.getItem().getBodyPart());
 			InventoryUpdate iu = new InventoryUpdate();
-			for (L2ItemInstance itm : unequiped)
+			for (ItemInstance itm : unequiped)
 				iu.addModifiedItem(itm);
 			
 			_player.sendPacket(iu);
@@ -634,7 +634,7 @@ public final class QuestState
 	 */
 	public boolean dropItemsAlways(int itemId, int count, int neededCount)
 	{
-		return dropItems(itemId, count, neededCount, L2DropData.MAX_CHANCE, DROP_FIXED_RATE);
+		return dropItems(itemId, count, neededCount, DropData.MAX_CHANCE, DROP_FIXED_RATE);
 	}
 	
 	/**
@@ -673,23 +673,23 @@ public final class QuestState
 		{
 			case DROP_DIVMOD:
 				dropChance *= Config.RATE_QUEST_DROP;
-				amount = count * (dropChance / L2DropData.MAX_CHANCE);
-				if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance % L2DropData.MAX_CHANCE)
+				amount = count * (dropChance / DropData.MAX_CHANCE);
+				if (Rnd.get(DropData.MAX_CHANCE) < dropChance % DropData.MAX_CHANCE)
 					amount += count;
 				break;
 			
 			case DROP_FIXED_RATE:
-				if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance)
+				if (Rnd.get(DropData.MAX_CHANCE) < dropChance)
 					amount = (int) (count * Config.RATE_QUEST_DROP);
 				break;
 			
 			case DROP_FIXED_COUNT:
-				if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance * Config.RATE_QUEST_DROP)
+				if (Rnd.get(DropData.MAX_CHANCE) < dropChance * Config.RATE_QUEST_DROP)
 					amount = count;
 				break;
 			
 			case DROP_FIXED_BOTH:
-				if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance)
+				if (Rnd.get(DropData.MAX_CHANCE) < dropChance)
 					amount = count;
 				break;
 		}
@@ -762,23 +762,23 @@ public final class QuestState
 			{
 				case DROP_DIVMOD:
 					dropChance *= Config.RATE_QUEST_DROP;
-					amount = count * (dropChance / L2DropData.MAX_CHANCE);
-					if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance % L2DropData.MAX_CHANCE)
+					amount = count * (dropChance / DropData.MAX_CHANCE);
+					if (Rnd.get(DropData.MAX_CHANCE) < dropChance % DropData.MAX_CHANCE)
 						amount += count;
 					break;
 				
 				case DROP_FIXED_RATE:
-					if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance)
+					if (Rnd.get(DropData.MAX_CHANCE) < dropChance)
 						amount = (int) (count * Config.RATE_QUEST_DROP);
 					break;
 				
 				case DROP_FIXED_COUNT:
-					if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance * Config.RATE_QUEST_DROP)
+					if (Rnd.get(DropData.MAX_CHANCE) < dropChance * Config.RATE_QUEST_DROP)
 						amount = count;
 					break;
 				
 				case DROP_FIXED_BOTH:
-					if (Rnd.get(L2DropData.MAX_CHANCE) < dropChance)
+					if (Rnd.get(DropData.MAX_CHANCE) < dropChance)
 						amount = count;
 					break;
 			}

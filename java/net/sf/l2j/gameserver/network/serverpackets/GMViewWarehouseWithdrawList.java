@@ -15,13 +15,13 @@
 package net.sf.l2j.gameserver.network.serverpackets;
 
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
 
 public class GMViewWarehouseWithdrawList extends L2GameServerPacket
 {
-	private final L2ItemInstance[] _items;
+	private final ItemInstance[] _items;
 	private final String _playerName;
 	private L2PcInstance _activeChar;
 	private final int _money;
@@ -49,7 +49,7 @@ public class GMViewWarehouseWithdrawList extends L2GameServerPacket
 		writeD(_money);
 		writeH(_items.length);
 		
-		for (L2ItemInstance item : _items)
+		for (ItemInstance item : _items)
 		{
 			writeH(item.getItem().getType1());
 			
@@ -60,8 +60,8 @@ public class GMViewWarehouseWithdrawList extends L2GameServerPacket
 			writeH(item.getCustomType1());
 			writeD(item.getItem().getBodyPart());
 			writeH(item.getEnchantLevel());
-			writeH(item.isWeapon() ? ((L2Weapon) item.getItem()).getSoulShotCount() : 0x00);
-			writeH(item.isWeapon() ? ((L2Weapon) item.getItem()).getSpiritShotCount() : 0x00);
+			writeH(item.isWeapon() ? ((Weapon) item.getItem()).getSoulShotCount() : 0x00);
+			writeH(item.isWeapon() ? ((Weapon) item.getItem()).getSpiritShotCount() : 0x00);
 			writeD(item.getObjectId());
 			writeD((item.isWeapon() && item.isAugmented()) ? 0x0000FFFF & item.getAugmentation().getAugmentationId() : 0);
 			writeD((item.isWeapon() && item.isAugmented()) ? item.getAugmentation().getAugmentationId() >> 16 : 0);

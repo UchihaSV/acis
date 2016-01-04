@@ -23,11 +23,11 @@ import net.sf.l2j.gameserver.instancemanager.RaidBossSpawnManager;
 import net.sf.l2j.gameserver.instancemanager.RaidBossSpawnManager.StatusEnum;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Hero;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -48,7 +48,7 @@ public class L2RaidBossInstance extends L2MonsterInstance
 	 * @param objectId Identifier of the object to initialized
 	 * @param template L2NpcTemplate to apply to the NPC
 	 */
-	public L2RaidBossInstance(int objectId, L2NpcTemplate template)
+	public L2RaidBossInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		setIsRaid(true);

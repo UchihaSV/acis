@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.util.StringUtil;
 
 /**
@@ -41,9 +41,9 @@ public class ItemLogFormatter extends Formatter
 			if (p == null)
 				continue;
 			output.append(", ");
-			if (p instanceof L2ItemInstance)
+			if (p instanceof ItemInstance)
 			{
-				L2ItemInstance item = (L2ItemInstance) p;
+				ItemInstance item = (ItemInstance) p;
 				StringUtil.append(output, "item ", String.valueOf(item.getObjectId()), ":");
 				if (item.getEnchantLevel() > 0)
 				{

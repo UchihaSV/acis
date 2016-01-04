@@ -14,15 +14,15 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.TradeList.TradeItem;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 public class PrivateStoreManageListBuy extends L2GameServerPacket
 {
 	private final int _objId;
 	private final int _playerAdena;
-	private final L2ItemInstance[] _itemList;
+	private final ItemInstance[] _itemList;
 	private final TradeItem[] _buyList;
 	
 	public PrivateStoreManageListBuy(L2PcInstance player)
@@ -41,7 +41,7 @@ public class PrivateStoreManageListBuy extends L2GameServerPacket
 		writeD(_playerAdena);
 		
 		writeD(_itemList.length); // inventory items for potential buy
-		for (L2ItemInstance item : _itemList)
+		for (ItemInstance item : _itemList)
 		{
 			writeD(item.getItemId());
 			writeH(item.getEnchantLevel());

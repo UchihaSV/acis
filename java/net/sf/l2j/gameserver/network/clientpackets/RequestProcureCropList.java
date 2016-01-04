@@ -19,15 +19,15 @@ import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager.CropProcure;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Manor;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2ManorManagerInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 
 public class RequestProcureCropList extends L2GameClientPacket
 {
@@ -86,7 +86,7 @@ public class RequestProcureCropList extends L2GameClientPacket
 			if (!i.getCrop())
 				continue;
 			
-			L2Item template = ItemTable.getInstance().getTemplate(i.getReward());
+			Item template = ItemTable.getInstance().getTemplate(i.getReward());
 			weight += i.getCount() * template.getWeight();
 			
 			if (!template.isStackable())
@@ -134,7 +134,7 @@ public class RequestProcureCropList extends L2GameClientPacket
 			}
 			
 			// check if player have correct items count
-			L2ItemInstance item = player.getInventory().getItemByObjectId(i.getObjectId());
+			ItemInstance item = player.getInventory().getItemByObjectId(i.getObjectId());
 			if (item == null || item.getCount() < i.getCount())
 				continue;
 			

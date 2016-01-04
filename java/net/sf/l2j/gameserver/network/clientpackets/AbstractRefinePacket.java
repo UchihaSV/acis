@@ -17,11 +17,11 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
+import net.sf.l2j.gameserver.model.item.type.CrystalType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.templates.item.L2Item;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 
 public abstract class AbstractRefinePacket extends L2GameClientPacket
 {
@@ -133,7 +133,7 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 	/*
 	 * Checks player, source item, lifestone and gemstone validity for augmentation process
 	 */
-	protected static final boolean isValid(L2PcInstance player, L2ItemInstance item, L2ItemInstance refinerItem, L2ItemInstance gemStones)
+	protected static final boolean isValid(L2PcInstance player, ItemInstance item, ItemInstance refinerItem, ItemInstance gemStones)
 	{
 		if (!isValid(player, item, refinerItem))
 			return false;
@@ -142,10 +142,10 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 		if (gemStones.getOwnerId() != player.getObjectId())
 			return false;
 		// .. and located in inventory
-		if (gemStones.getLocation() != L2ItemInstance.ItemLocation.INVENTORY)
+		if (gemStones.getLocation() != ItemInstance.ItemLocation.INVENTORY)
 			return false;
 		
-		final int grade = item.getItem().getCrystalType();
+		final CrystalType grade = item.getItem().getCrystalType();
 		
 		// Check for item id
 		if (getGemStoneId(grade) != gemStones.getItemId())
@@ -164,7 +164,7 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 	 * @param refinerItem The augmentation stone.
 	 * @return true if all checks are successfully passed, false otherwise.
 	 */
-	protected static final boolean isValid(L2PcInstance player, L2ItemInstance item, L2ItemInstance refinerItem)
+	protected static final boolean isValid(L2PcInstance player, ItemInstance item, ItemInstance refinerItem)
 	{
 		if (!isValid(player, item))
 			return false;
@@ -174,7 +174,7 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 			return false;
 		
 		// Lifestone must be located in inventory
-		if (refinerItem.getLocation() != L2ItemInstance.ItemLocation.INVENTORY)
+		if (refinerItem.getLocation() != ItemInstance.ItemLocation.INVENTORY)
 			return false;
 		
 		final LifeStone ls = _lifeStones.get(refinerItem.getItemId());
@@ -191,7 +191,7 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 	/*
 	 * Check both player and source item conditions for augmentation process
 	 */
-	protected static final boolean isValid(L2PcInstance player, L2ItemInstance item)
+	protected static final boolean isValid(L2PcInstance player, ItemInstance item)
 	{
 		if (!isValid(player))
 			return false;
@@ -205,7 +205,7 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 			return false;
 		if (item.isShadowItem())
 			return false;
-		if (item.getItem().getCrystalType() < L2Item.CRYSTAL_C)
+		if (item.getItem().getCrystalType().isLesser(CrystalType.C))
 			return false;
 		
 		// Source item can be equipped or in inventory
@@ -218,14 +218,15 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 				return false;
 		}
 		
-		if (item.getItem() instanceof L2Weapon)
+		if (item.getItem() instanceof Weapon)
 		{
 			// Rods and fists aren't augmentable
-			switch (((L2Weapon) item.getItem()).getItemType())
+			switch (((Weapon) item.getItem()).getItemType())
 			{
 				case NONE:
 				case FISHINGROD:
 					return false;
+					
 				default:
 					break;
 			}
@@ -282,16 +283,18 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 	/*
 	 * Returns GemStone itemId based on item grade
 	 */
-	protected static final int getGemStoneId(int itemGrade)
+	protected static final int getGemStoneId(CrystalType itemGrade)
 	{
 		switch (itemGrade)
 		{
-			case L2Item.CRYSTAL_C:
-			case L2Item.CRYSTAL_B:
+			case C:
+			case B:
 				return GEMSTONE_D;
-			case L2Item.CRYSTAL_A:
-			case L2Item.CRYSTAL_S:
+				
+			case A:
+			case S:
 				return GEMSTONE_C;
+				
 			default:
 				return 0;
 		}
@@ -300,18 +303,22 @@ public abstract class AbstractRefinePacket extends L2GameClientPacket
 	/*
 	 * Returns GemStone count based on item grade and lifestone grade (different for weapon and accessory augmentation)
 	 */
-	protected static final int getGemStoneCount(int itemGrade)
+	protected static final int getGemStoneCount(CrystalType itemGrade)
 	{
 		switch (itemGrade)
 		{
-			case L2Item.CRYSTAL_C:
+			case C:
 				return 20;
-			case L2Item.CRYSTAL_B:
+				
+			case B:
 				return 30;
-			case L2Item.CRYSTAL_A:
+				
+			case A:
 				return 20;
-			case L2Item.CRYSTAL_S:
+				
+			case S:
 				return 25;
+				
 			default:
 				return 0;
 		}

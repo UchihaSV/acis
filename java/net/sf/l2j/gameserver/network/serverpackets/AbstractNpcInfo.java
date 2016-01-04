@@ -24,8 +24,8 @@ import net.sf.l2j.gameserver.model.actor.instance.L2MonsterInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2NpcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public abstract class AbstractNpcInfo extends L2GameServerPacket
 {
@@ -290,9 +290,9 @@ public abstract class AbstractNpcInfo extends L2GameServerPacket
 	public static class PcMorphInfo extends AbstractNpcInfo
 	{
 		private final L2PcInstance _pc;
-		private final L2NpcTemplate _template;
+		private final NpcTemplate _template;
 		
-		public PcMorphInfo(L2PcInstance cha, L2NpcTemplate template)
+		public PcMorphInfo(L2PcInstance cha, NpcTemplate template)
 		{
 			super(cha);
 			_pc = cha;

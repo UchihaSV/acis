@@ -89,7 +89,7 @@ public class AdminPForge implements IAdminCommandHandler
 					}
 					else if (val.toLowerCase().equals("$clanid"))
 					{
-						val = String.valueOf(activeChar.getCharId());
+						val = String.valueOf(activeChar.getObjectId());
 					}
 					else if (val.toLowerCase().equals("$allyid"))
 					{
@@ -97,7 +97,7 @@ public class AdminPForge implements IAdminCommandHandler
 					}
 					else if (val.toLowerCase().equals("$tclanid"))
 					{
-						val = String.valueOf(((L2PcInstance) activeChar.getTarget()).getCharId());
+						val = String.valueOf(((L2PcInstance) activeChar.getTarget()).getObjectId());
 					}
 					else if (val.toLowerCase().equals("$tallyid"))
 					{

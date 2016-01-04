@@ -14,8 +14,9 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.type.CrystalType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExConfirmVariationRefiner;
 
@@ -42,11 +43,11 @@ public class RequestConfirmRefinerItem extends AbstractRefinePacket
 		if (activeChar == null)
 			return;
 		
-		final L2ItemInstance targetItem = activeChar.getInventory().getItemByObjectId(_targetItemObjId);
+		final ItemInstance targetItem = activeChar.getInventory().getItemByObjectId(_targetItemObjId);
 		if (targetItem == null)
 			return;
 		
-		final L2ItemInstance refinerItem = activeChar.getInventory().getItemByObjectId(_refinerItemObjId);
+		final ItemInstance refinerItem = activeChar.getInventory().getItemByObjectId(_refinerItemObjId);
 		if (refinerItem == null)
 			return;
 		
@@ -57,7 +58,7 @@ public class RequestConfirmRefinerItem extends AbstractRefinePacket
 		}
 		
 		final int refinerItemId = refinerItem.getItem().getItemId();
-		final int grade = targetItem.getItem().getCrystalType();
+		final CrystalType grade = targetItem.getItem().getCrystalType();
 		final int gemStoneId = getGemStoneId(grade);
 		final int gemStoneCount = getGemStoneCount(grade);
 		

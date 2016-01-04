@@ -228,7 +228,7 @@ public class AdminSkill implements IAdminCommandHandler
 			skillsEnd = skillsStart + maxSkillsPerPage;
 		
 		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		final StringBuilder replyMSG = StringUtil.startAppend(500 + maxPages * 50 + (skillsEnd - skillsStart + 1) * 50, "<html><body>" + "<table width=270><tr>" + "<td width=45><button value=\"Main\" action=\"bypass -h admin_admin\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td>" + "<td width=180><center>Delete Skills Menu</center></td>" + "<td width=45><button value=\"Back\" action=\"bypass -h admin_show_skills\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td>" + "</tr></table>" + "<br><br>" + "<center>Editing <font color=\"LEVEL\">", player.getName(), "</font>" + ", ", player.getTemplate().className, " lvl ", String.valueOf(player.getLevel()), ".<br><center><table width=270><tr>");
+		final StringBuilder replyMSG = StringUtil.startAppend(500 + maxPages * 50 + (skillsEnd - skillsStart + 1) * 50, "<html><body>" + "<table width=270><tr>" + "<td width=45><button value=\"Main\" action=\"bypass -h admin_admin\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td>" + "<td width=180><center>Delete Skills Menu</center></td>" + "<td width=45><button value=\"Back\" action=\"bypass -h admin_show_skills\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td>" + "</tr></table>" + "<br><br>" + "<center>Editing <font color=\"LEVEL\">", player.getName(), "</font>" + ", ", player.getTemplate().getClassName(), " lvl ", String.valueOf(player.getLevel()), ".<br><center><table width=270><tr>");
 		
 		for (int x = 0; x < maxPages; x++)
 		{
@@ -264,7 +264,7 @@ public class AdminSkill implements IAdminCommandHandler
 		adminReply.setFile("data/html/admin/charskills.htm");
 		adminReply.replace("%name%", player.getName());
 		adminReply.replace("%level%", player.getLevel());
-		adminReply.replace("%class%", player.getTemplate().className);
+		adminReply.replace("%class%", player.getTemplate().getClassName());
 		activeChar.sendPacket(adminReply);
 	}
 	

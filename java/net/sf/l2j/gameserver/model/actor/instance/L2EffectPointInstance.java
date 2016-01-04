@@ -16,14 +16,14 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2EffectPointInstance extends L2Npc
 {
 	private final L2PcInstance _owner;
 	
-	public L2EffectPointInstance(int objectId, L2NpcTemplate template, L2Character owner)
+	public L2EffectPointInstance(int objectId, NpcTemplate template, L2Character owner)
 	{
 		super(objectId, template);
 		_owner = owner == null ? null : owner.getActingPlayer();

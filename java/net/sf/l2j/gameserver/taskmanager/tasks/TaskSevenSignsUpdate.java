@@ -16,8 +16,8 @@ package net.sf.l2j.gameserver.taskmanager.tasks;
 
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.SevenSigns;
-import net.sf.l2j.gameserver.SevenSignsFestival;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
+import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
 import net.sf.l2j.gameserver.taskmanager.TaskManager;
 import net.sf.l2j.gameserver.taskmanager.TaskManager.ExecutedTask;
 import net.sf.l2j.gameserver.taskmanager.models.Task;
@@ -29,7 +29,7 @@ import net.sf.l2j.gameserver.taskmanager.models.TaskTypes;
  */
 public class TaskSevenSignsUpdate extends Task
 {
-	private static final Logger _log = Logger.getLogger(TaskOlympiadSave.class.getName());
+	private static final Logger _log = Logger.getLogger(TaskSevenSignsUpdate.class.getName());
 	public static final String NAME = "SevenSignsUpdate";
 	
 	@Override

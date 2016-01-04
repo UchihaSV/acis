@@ -24,9 +24,9 @@ import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.VehiclePathPoint;
 import net.sf.l2j.gameserver.model.actor.instance.L2BoatInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.chars.L2CharTemplate;
 
 public class BoatManager
 {
@@ -90,7 +90,7 @@ public class BoatManager
 		npcDat.set("walkSpd", 0);
 		npcDat.set("runSpd", 0);
 		
-		L2CharTemplate template = new L2CharTemplate(npcDat);
+		CharTemplate template = new CharTemplate(npcDat);
 		L2BoatInstance boat = new L2BoatInstance(IdFactory.getInstance().getNextId(), template);
 		
 		_boats.put(boat.getObjectId(), boat);

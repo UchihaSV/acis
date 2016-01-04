@@ -17,19 +17,19 @@ package net.sf.l2j.gameserver.network.serverpackets;
 import java.util.Collection;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.model.L2TradeList;
-import net.sf.l2j.gameserver.model.L2TradeList.L2TradeItem;
+import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
+import net.sf.l2j.gameserver.model.buylist.Product;
 
 public final class BuyList extends L2GameServerPacket
 {
 	private final int _listId, _money;
-	private final Collection<L2TradeItem> _list;
+	private final Collection<Product> _list;
 	private double _taxRate = 0;
 	
-	public BuyList(L2TradeList list, int currentMoney, double taxRate)
+	public BuyList(NpcBuyList list, int currentMoney, double taxRate)
 	{
 		_listId = list.getListId();
-		_list = list.getItems();
+		_list = list.getProducts();
 		_money = currentMoney;
 		_taxRate = taxRate;
 	}
@@ -42,25 +42,25 @@ public final class BuyList extends L2GameServerPacket
 		writeD(_listId);
 		writeH(_list.size());
 		
-		for (L2TradeItem item : _list)
+		for (Product product : _list)
 		{
-			if (item != null && (item.getCurrentCount() > 0 || !item.hasLimitedStock()))
+			if (product.getCount() > 0 || !product.hasLimitedStock())
 			{
-				writeH(item.getTemplate().getType1());
-				writeD(item.getItemId());
-				writeD(item.getItemId());
-				writeD(item.getCurrentCount() < 0 ? 0 : item.getCurrentCount());
-				writeH(item.getTemplate().getType2());
-				writeH(0x00); // TODO: L2ItemInstance getCustomType1()
-				writeD(item.getTemplate().getBodyPart());
-				writeH(0x00); // TODO: L2ItemInstance getEnchantLevel()
-				writeH(0x00); // TODO: L2ItemInstance getCustomType2()
+				writeH(product.getItem().getType1());
+				writeD(product.getItemId());
+				writeD(product.getItemId());
+				writeD((product.getCount() < 0) ? 0 : product.getCount());
+				writeH(product.getItem().getType2());
+				writeH(0x00); // TODO: ItemInstance getCustomType1()
+				writeD(product.getItem().getBodyPart());
+				writeH(0x00); // TODO: ItemInstance getEnchantLevel()
+				writeH(0x00); // TODO: ItemInstance getCustomType2()
 				writeH(0x00);
 				
-				if (item.getItemId() >= 3960 && item.getItemId() <= 4026)
-					writeD((int) (item.getPrice() * Config.RATE_SIEGE_GUARDS_PRICE * (1 + _taxRate)));
+				if (product.getItemId() >= 3960 && product.getItemId() <= 4026)
+					writeD((int) (product.getPrice() * Config.RATE_SIEGE_GUARDS_PRICE * (1 + _taxRate)));
 				else
-					writeD((int) (item.getPrice() * (1 + _taxRate)));
+					writeD((int) (product.getPrice() * (1 + _taxRate)));
 			}
 		}
 	}

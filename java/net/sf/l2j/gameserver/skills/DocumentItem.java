@@ -21,10 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
-import net.sf.l2j.gameserver.Item;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.skills.conditions.Condition;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -34,8 +33,18 @@ import org.w3c.dom.Node;
  */
 public final class DocumentItem extends DocumentBase
 {
-	private Item _currentItem = null;
-	private final List<L2Item> _itemsInFile = new ArrayList<>();
+	public class NewItem
+	{
+		public int id;
+		public String type;
+		public String name;
+		public StatsSet set;
+		public int currentLevel;
+		public Item item;
+	}
+	
+	private NewItem _currentItem;
+	private final List<Item> _itemsInFile = new ArrayList<>();
 	
 	public DocumentItem(File file)
 	{
@@ -74,7 +83,7 @@ public final class DocumentItem extends DocumentBase
 					{
 						try
 						{
-							_currentItem = new Item();
+							_currentItem = new NewItem();
 							parseItem(d);
 							_itemsInFile.add(_currentItem.item);
 							resetTable();
@@ -152,8 +161,8 @@ public final class DocumentItem extends DocumentBase
 			return; // item is already created
 		try
 		{
-			Constructor<?> c = Class.forName("net.sf.l2j.gameserver.templates.item.L2" + _currentItem.type).getConstructor(StatsSet.class);
-			_currentItem.item = (L2Item) c.newInstance(_currentItem.set);
+			Constructor<?> c = Class.forName("net.sf.l2j.gameserver.model.item.kind." + _currentItem.type).getConstructor(StatsSet.class);
+			_currentItem.item = (Item) c.newInstance(_currentItem.set);
 		}
 		catch (Exception e)
 		{
@@ -161,7 +170,7 @@ public final class DocumentItem extends DocumentBase
 		}
 	}
 	
-	public List<L2Item> getItemList()
+	public List<Item> getItemList()
 	{
 		return _itemsInFile;
 	}

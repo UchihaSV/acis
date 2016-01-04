@@ -14,19 +14,19 @@
  */
 package net.sf.l2j.gameserver.handler.itemhandlers;
 
-import net.sf.l2j.gameserver.RecipeController;
+import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.handler.IItemHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
-import net.sf.l2j.gameserver.model.L2RecipeList;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.RecipeList;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
 public class Recipes implements IItemHandler
 {
 	@Override
-	public void useItem(L2Playable playable, L2ItemInstance item, boolean forceUse)
+	public void useItem(L2Playable playable, ItemInstance item, boolean forceUse)
 	{
 		if (!(playable instanceof L2PcInstance))
 			return;
@@ -39,7 +39,7 @@ public class Recipes implements IItemHandler
 			return;
 		}
 		
-		final L2RecipeList rp = RecipeController.getInstance().getRecipeByItemId(item.getItemId());
+		final RecipeList rp = RecipeTable.getInstance().getRecipeByItemId(item.getItemId());
 		if (rp == null)
 			return;
 		
@@ -57,7 +57,7 @@ public class Recipes implements IItemHandler
 					activeChar.sendPacket(SystemMessageId.CANT_ALTER_RECIPEBOOK_WHILE_CRAFTING);
 				else if (rp.getLevel() > activeChar.getDwarvenCraft())
 					activeChar.sendPacket(SystemMessageId.CREATE_LVL_TOO_LOW_TO_REGISTER);
-				else if (activeChar.getDwarvenRecipeBook().length >= activeChar.getDwarfRecipeLimit())
+				else if (activeChar.getDwarvenRecipeBook().size() >= activeChar.getDwarfRecipeLimit())
 					activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.UP_TO_S1_RECIPES_CAN_REGISTER).addNumber(activeChar.getDwarfRecipeLimit()));
 				else
 				{
@@ -77,7 +77,7 @@ public class Recipes implements IItemHandler
 					activeChar.sendPacket(SystemMessageId.CANT_ALTER_RECIPEBOOK_WHILE_CRAFTING);
 				else if (rp.getLevel() > activeChar.getCommonCraft())
 					activeChar.sendPacket(SystemMessageId.CREATE_LVL_TOO_LOW_TO_REGISTER);
-				else if (activeChar.getCommonRecipeBook().length >= activeChar.getCommonRecipeLimit())
+				else if (activeChar.getCommonRecipeBook().size() >= activeChar.getCommonRecipeLimit())
 					activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.UP_TO_S1_RECIPES_CAN_REGISTER).addNumber(activeChar.getCommonRecipeLimit()));
 				else
 				{

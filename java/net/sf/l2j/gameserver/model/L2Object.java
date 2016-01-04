@@ -294,7 +294,7 @@ public abstract class L2Object
 	}
 	
 	/**
-	 * Sends the Server->Client info packet for the object. Is Overridden in: <li>L2BoatInstance</li> <li>L2DoorInstance</li> <li>L2PcInstance</li> <li>L2StaticObjectInstance</li> <li>L2Npc</li> <li>L2Summon</li> <li>L2ItemInstance</li>
+	 * Sends the Server->Client info packet for the object. Is Overridden in: <li>L2BoatInstance</li> <li>L2DoorInstance</li> <li>L2PcInstance</li> <li>L2StaticObjectInstance</li> <li>L2Npc</li> <li>L2Summon</li> <li>ItemInstance</li>
 	 * @param activeChar
 	 */
 	public void sendInfo(L2PcInstance activeChar)

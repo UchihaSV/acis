@@ -24,15 +24,15 @@ import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2TeleportLocation;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
 import net.sf.l2j.gameserver.model.entity.ClanHall.ClanHallFunction;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ClanHallDecoration;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.network.serverpackets.WareHouseDepositList;
-import net.sf.l2j.gameserver.network.serverpackets.WareHouseWithdrawalList;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.network.serverpackets.WarehouseDepositList;
+import net.sf.l2j.gameserver.network.serverpackets.WarehouseWithdrawList;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 public class L2ClanHallManagerInstance extends L2MerchantInstance
@@ -67,7 +67,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 	
 	private int _clanHallId = -1;
 	
-	public L2ClanHallManagerInstance(int objectId, L2NpcTemplate template)
+	public L2ClanHallManagerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -1501,7 +1501,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 				else
 				{
 					player.setActiveWarehouse(player.getClan().getWarehouse());
-					player.sendPacket(new WareHouseWithdrawalList(player, WareHouseWithdrawalList.CLAN));
+					player.sendPacket(new WarehouseWithdrawList(player, WarehouseWithdrawList.CLAN));
 				}
 			}
 			else if (actualCommand.equalsIgnoreCase("DepositC"))
@@ -1515,7 +1515,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 					{
 						player.setActiveWarehouse(player.getClan().getWarehouse());
 						player.tempInventoryDisable();
-						player.sendPacket(new WareHouseDepositList(player, WareHouseDepositList.CLAN));
+						player.sendPacket(new WarehouseDepositList(player, WarehouseDepositList.CLAN));
 					}
 				}
 			}

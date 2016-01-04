@@ -14,9 +14,9 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.model.L2TeleportLocation;
@@ -28,9 +28,9 @@ import org.w3c.dom.Node;
 
 public class TeleportLocationTable
 {
-	private static Logger _log = Logger.getLogger(TeleportLocationTable.class.getName());
+	private static final Logger _log = Logger.getLogger(TeleportLocationTable.class.getName());
 	
-	private final TIntObjectHashMap<L2TeleportLocation> _teleports;
+	private static final Map<Integer, L2TeleportLocation> _teleports = new HashMap<>();
 	
 	public static TeleportLocationTable getInstance()
 	{
@@ -39,7 +39,6 @@ public class TeleportLocationTable
 	
 	protected TeleportLocationTable()
 	{
-		_teleports = new TIntObjectHashMap<>();
 		load();
 	}
 	

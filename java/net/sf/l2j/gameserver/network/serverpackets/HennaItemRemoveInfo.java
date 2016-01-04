@@ -15,14 +15,14 @@
 package net.sf.l2j.gameserver.network.serverpackets;
 
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.templates.item.L2Henna;
+import net.sf.l2j.gameserver.model.item.Henna;
 
 public class HennaItemRemoveInfo extends L2GameServerPacket
 {
 	private final L2PcInstance _activeChar;
-	private final L2Henna _henna;
+	private final Henna _henna;
 	
-	public HennaItemRemoveInfo(L2Henna henna, L2PcInstance player)
+	public HennaItemRemoveInfo(Henna henna, L2PcInstance player)
 	{
 		_henna = henna;
 		_activeChar = player;
@@ -34,7 +34,7 @@ public class HennaItemRemoveInfo extends L2GameServerPacket
 		writeC(0xe6);
 		writeD(_henna.getSymbolId()); // symbol Id
 		writeD(_henna.getDyeId()); // item id of dye
-		writeD(L2Henna.getAmountDyeRequire() / 2); // amount of given dyes
+		writeD(Henna.getAmountDyeRequire() / 2); // amount of given dyes
 		writeD(_henna.getPrice() / 5); // amount of required adenas
 		writeD(1); // able to remove or not 0 is false and 1 is true
 		writeD(_activeChar.getAdena());

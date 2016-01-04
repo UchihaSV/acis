@@ -179,7 +179,7 @@ public final class L2GamePacketHandler implements IPacketHandler<L2GameClient>, 
 						msg = new RequestAnswerJoinPledge();
 						break;
 					case 0x26:
-						msg = new RequestWithdrawalPledge();
+						msg = new RequestWithdrawPledge();
 						break;
 					case 0x27:
 						msg = new RequestOustPledgeMember();
@@ -194,7 +194,7 @@ public final class L2GamePacketHandler implements IPacketHandler<L2GameClient>, 
 						msg = new RequestAnswerJoinParty();
 						break;
 					case 0x2b:
-						msg = new RequestWithDrawalParty();
+						msg = new RequestWithdrawParty();
 						break;
 					case 0x2c:
 						msg = new RequestOustPartyMember();
@@ -213,10 +213,10 @@ public final class L2GamePacketHandler implements IPacketHandler<L2GameClient>, 
 						break;
 					case 0x31:
 						if (Config.ALLOW_WAREHOUSE)
-							msg = new SendWareHouseDepositList();
+							msg = new SendWarehouseDepositList();
 						break;
 					case 0x32:
-						msg = new SendWareHouseWithDrawList();
+						msg = new SendWarehouseWithdrawList();
 						break;
 					case 0x33:
 						msg = new RequestShortCutReg();

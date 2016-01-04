@@ -40,9 +40,10 @@ import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.model.olympiad.Olympiad;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -52,7 +53,6 @@ import net.sf.l2j.gameserver.network.serverpackets.PledgeShowInfoUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.StringUtil;
 
 public class Hero
@@ -296,7 +296,7 @@ public class Hero
 				
 				if (action == ACTION_RAID_KILLED)
 				{
-					L2NpcTemplate template = NpcTable.getInstance().getTemplate(param);
+					NpcTemplate template = NpcTable.getInstance().getTemplate(param);
 					if (template != null)
 						_diaryentry.set("action", template.getName() + " was defeated");
 				}
@@ -641,12 +641,12 @@ public class Hero
 					
 					for (int i = 0; i < Inventory.PAPERDOLL_TOTALSLOTS; i++)
 					{
-						L2ItemInstance equippedItem = player.getInventory().getPaperdollItem(i);
+						ItemInstance equippedItem = player.getInventory().getPaperdollItem(i);
 						if ((equippedItem != null) && equippedItem.isHeroItem())
 							player.getInventory().unEquipItemInSlot(i);
 					}
 					
-					for (L2ItemInstance item : player.getInventory().getAvailableItems(false, false))
+					for (ItemInstance item : player.getInventory().getAvailableItems(false, false))
 					{
 						if ((item != null) && item.isHeroItem())
 						{
@@ -805,7 +805,7 @@ public class Hero
 	{
 		setDiaryData(charId, ACTION_RAID_KILLED, npcId);
 		
-		L2NpcTemplate template = NpcTable.getInstance().getTemplate(npcId);
+		NpcTemplate template = NpcTable.getInstance().getTemplate(npcId);
 		
 		if (_herodiary.containsKey(charId) && (template != null))
 		{

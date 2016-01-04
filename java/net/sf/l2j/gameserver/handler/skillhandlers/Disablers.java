@@ -107,7 +107,7 @@ public class Disablers implements ISkillHandler
 					else
 					{
 						if (activeChar instanceof L2PcInstance)
-							activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(skill.getDisplayId()));
+							activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(skill.getId()));
 					}
 					break;
 				
@@ -121,7 +121,7 @@ public class Disablers implements ISkillHandler
 					else
 					{
 						if (activeChar instanceof L2PcInstance)
-							activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(skill.getDisplayId()));
+							activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(skill.getId()));
 					}
 					break;
 				
@@ -143,7 +143,7 @@ public class Disablers implements ISkillHandler
 					else
 					{
 						if (activeChar instanceof L2PcInstance)
-							activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(skill.getDisplayId()));
+							activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(skill.getId()));
 					}
 					break;
 				

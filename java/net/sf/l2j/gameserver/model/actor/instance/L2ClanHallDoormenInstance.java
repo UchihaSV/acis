@@ -17,16 +17,16 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
 import net.sf.l2j.gameserver.model.L2Clan;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2ClanHallDoormenInstance extends L2DoormenInstance
 {
 	private ClanHall _clanHall = null;
 	
-	public L2ClanHallDoormenInstance(int objectID, L2NpcTemplate template)
+	public L2ClanHallDoormenInstance(int objectID, NpcTemplate template)
 	{
 		super(objectID, template);
 	}

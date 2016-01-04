@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.gameserver.RecipeController;
+import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
 /**
@@ -43,6 +43,6 @@ public final class RequestRecipeItemMakeSelf extends L2GameClientPacket
 		if (activeChar.getPrivateStoreType() == L2PcInstance.STORE_PRIVATE_MANUFACTURE || activeChar.isInCraftMode())
 			return;
 		
-		RecipeController.getInstance().requestMakeItem(activeChar, _id);
+		RecipeTable.getInstance().requestMakeItem(activeChar, _id);
 	}
 }

@@ -44,32 +44,42 @@ public class RequestGiveNickName extends L2GameClientPacket
 		{
 			activeChar.setTitle(_title);
 			activeChar.sendPacket(SystemMessageId.TITLE_CHANGED);
-			activeChar.broadcastUserInfo();
+			activeChar.broadcastTitleInfo();
 		}
-		// Can the player change/give a title?
-		else if ((activeChar.getClanPrivileges() & L2Clan.CP_CL_GIVE_TITLE) == L2Clan.CP_CL_GIVE_TITLE)
+		else
 		{
+			// Can the player change/give a title?
+			if ((activeChar.getClanPrivileges() & L2Clan.CP_CL_GIVE_TITLE) != L2Clan.CP_CL_GIVE_TITLE)
+			{
+				activeChar.sendPacket(SystemMessageId.YOU_ARE_NOT_AUTHORIZED_TO_DO_THAT);
+				return;
+			}
+			
 			if (activeChar.getClan().getLevel() < 3)
 			{
 				activeChar.sendPacket(SystemMessageId.CLAN_LVL_3_NEEDED_TO_ENDOWE_TITLE);
 				return;
 			}
 			
-			L2ClanMember member1 = activeChar.getClan().getClanMember(_target);
-			if (member1 != null)
+			final L2ClanMember member = activeChar.getClan().getClanMember(_target);
+			if (member != null)
 			{
-				L2PcInstance member = member1.getPlayerInstance();
-				if (member != null)
+				final L2PcInstance playerMember = member.getPlayerInstance();
+				if (playerMember != null)
 				{
-					member.setTitle(_title);
+					playerMember.setTitle(_title);
 					
-					member.sendPacket(SystemMessageId.TITLE_CHANGED);
-					if (activeChar != member)
-						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CLAN_MEMBER_S1_TITLE_CHANGED_TO_S2).addPcName(member).addString(_title));
+					playerMember.sendPacket(SystemMessageId.TITLE_CHANGED);
+					if (activeChar != playerMember)
+						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CLAN_MEMBER_S1_TITLE_CHANGED_TO_S2).addPcName(playerMember).addString(_title));
 					
-					member.broadcastUserInfo();
+					playerMember.broadcastTitleInfo();
 				}
+				else
+					activeChar.sendPacket(SystemMessageId.TARGET_IS_NOT_FOUND_IN_THE_GAME);
 			}
+			else
+				activeChar.sendPacket(SystemMessageId.TARGET_MUST_BE_IN_CLAN);
 		}
 	}
 }

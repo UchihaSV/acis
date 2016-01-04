@@ -372,10 +372,6 @@ abstract class AbstractAI implements Ctrl
 				if (!_actor.isCastingNow() && !_actor.isCastingSimultaneouslyNow())
 					onEvtArrived();
 				break;
-			case EVT_ARRIVED_REVALIDATE:
-				if (_actor.isMoving())
-					onEvtArrivedRevalidate();
-				break;
 			case EVT_ARRIVED_BLOCKED:
 				onEvtArrivedBlocked((L2CharPosition) arg0);
 				break;
@@ -445,8 +441,6 @@ abstract class AbstractAI implements Ctrl
 	protected abstract void onEvtUserCmd(Object arg0, Object arg1);
 	
 	protected abstract void onEvtArrived();
-	
-	protected abstract void onEvtArrivedRevalidate();
 	
 	protected abstract void onEvtArrivedBlocked(L2CharPosition blocked_at_pos);
 	
@@ -619,7 +613,7 @@ abstract class AbstractAI implements Ctrl
 			_actor.broadcastPacket(new AutoAttackStart(_actor.getObjectId()));
 			setAutoAttacking(true);
 		}
-		AttackStanceTaskManager.getInstance().addAttackStanceTask(_actor);
+		AttackStanceTaskManager.getInstance().add(_actor);
 	}
 	
 	/**
@@ -637,8 +631,8 @@ abstract class AbstractAI implements Ctrl
 		
 		if (_actor instanceof L2PcInstance)
 		{
-			if (!AttackStanceTaskManager.getInstance().getAttackStanceTask(_actor) && isAutoAttacking())
-				AttackStanceTaskManager.getInstance().addAttackStanceTask(_actor);
+			if (!AttackStanceTaskManager.getInstance().get(_actor) && isAutoAttacking())
+				AttackStanceTaskManager.getInstance().add(_actor);
 		}
 		else if (isAutoAttacking())
 		{

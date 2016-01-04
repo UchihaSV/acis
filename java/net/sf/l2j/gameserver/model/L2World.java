@@ -105,21 +105,6 @@ public final class L2World
 		_allObjects.remove(Integer.valueOf(object.getObjectId()));
 	}
 	
-	public void removeObjects(List<L2Object> list)
-	{
-		for (L2Object o : list)
-		{
-			if (o != null)
-				_allObjects.remove(Integer.valueOf(o.getObjectId())); // suggestion by whatev
-		}
-	}
-	
-	public void removeObjects(L2Object[] objects)
-	{
-		for (L2Object o : objects)
-			_allObjects.remove(Integer.valueOf(o.getObjectId())); // suggestion by whatev
-	}
-	
 	/**
 	 * @param oID Identifier of the L2Object
 	 * @return the L2Object object that belongs to an ID or null if no object found.

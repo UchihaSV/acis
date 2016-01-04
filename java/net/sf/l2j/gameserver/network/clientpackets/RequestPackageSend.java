@@ -18,9 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.itemcontainer.ItemContainer;
 import net.sf.l2j.gameserver.model.itemcontainer.PcFreight;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -101,7 +101,7 @@ public final class RequestPackageSend extends L2GameClientPacket
 			int count = i.count;
 			
 			// Check validity of requested item
-			L2ItemInstance item = player.checkItemManipulation(objectId, count);
+			ItemInstance item = player.checkItemManipulation(objectId, count);
 			if (item == null)
 			{
 				_log.warning("Error depositing a warehouse object for char " + player.getName() + " (validity check)");
@@ -148,7 +148,7 @@ public final class RequestPackageSend extends L2GameClientPacket
 			if (objectId == 0 && count == 0)
 				continue;
 			
-			L2ItemInstance oldItem = player.getInventory().getItemByObjectId(objectId);
+			ItemInstance oldItem = player.getInventory().getItemByObjectId(objectId);
 			if (oldItem == null)
 			{
 				_log.warning("Error depositing a warehouse object for char " + player.getName() + " (olditem == null)");
@@ -158,7 +158,7 @@ public final class RequestPackageSend extends L2GameClientPacket
 			if (oldItem.isHeroItem())
 				continue;
 			
-			L2ItemInstance newItem = player.getInventory().transferItem("Warehouse", objectId, count, warehouse, player, player.getCurrentFolkNPC());
+			ItemInstance newItem = player.getInventory().transferItem("Warehouse", objectId, count, warehouse, player, player.getCurrentFolkNPC());
 			if (newItem == null)
 			{
 				_log.warning("Error depositing a warehouse object for char " + player.getName() + " (newitem == null)");

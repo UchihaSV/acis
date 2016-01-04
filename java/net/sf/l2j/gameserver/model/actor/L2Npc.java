@@ -22,7 +22,6 @@ import java.util.logging.Level;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.GeoData;
-import net.sf.l2j.gameserver.SevenSigns;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.cache.HtmCache;
@@ -30,16 +29,16 @@ import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.datatables.HelperBuffTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
+import net.sf.l2j.gameserver.datatables.MultisellData;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.DimensionalRiftManager;
 import net.sf.l2j.gameserver.instancemanager.QuestManager;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.games.Lottery;
 import net.sf.l2j.gameserver.model.L2Clan;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
-import net.sf.l2j.gameserver.model.L2Multisell;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Spawn;
@@ -54,7 +53,12 @@ import net.sf.l2j.gameserver.model.actor.instance.L2WarehouseInstance;
 import net.sf.l2j.gameserver.model.actor.knownlist.NpcKnownList;
 import net.sf.l2j.gameserver.model.actor.stat.NpcStat;
 import net.sf.l2j.gameserver.model.actor.status.NpcStatus;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate.AIType;
 import net.sf.l2j.gameserver.model.entity.Castle;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.model.quest.QuestEventType;
 import net.sf.l2j.gameserver.model.quest.QuestState;
@@ -76,10 +80,6 @@ import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.taskmanager.DecayTaskManager;
 import net.sf.l2j.gameserver.templates.L2HelperBuff;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate.AIType;
-import net.sf.l2j.gameserver.templates.item.L2Item;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.util.Broadcast;
 import net.sf.l2j.util.Rnd;
@@ -264,7 +264,7 @@ public class L2Npc extends L2Character
 	 * @param objectId Identifier of the object to initialized
 	 * @param template The L2NpcTemplate to apply to the NPC
 	 */
-	public L2Npc(int objectId, L2NpcTemplate template)
+	public L2Npc(int objectId, NpcTemplate template)
 	{
 		// Call the L2Character constructor to set the _template of the L2Character, copy skills from template to object and link _calculators to NPC_STD_CALCULATOR
 		super(objectId, template);
@@ -322,9 +322,9 @@ public class L2Npc extends L2Character
 	
 	/** Return the L2NpcTemplate of the L2Npc. */
 	@Override
-	public final L2NpcTemplate getTemplate()
+	public final NpcTemplate getTemplate()
 	{
-		return (L2NpcTemplate) super.getTemplate();
+		return (NpcTemplate) super.getTemplate();
 	}
 	
 	/**
@@ -680,150 +680,147 @@ public class L2Npc extends L2Character
 	 */
 	public void onBypassFeedback(L2PcInstance player, String command)
 	{
-		if (canInteract(player))
+		if (command.equalsIgnoreCase("TerritoryStatus"))
 		{
-			if (command.equalsIgnoreCase("TerritoryStatus"))
+			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			
+			if (getCastle().getOwnerId() > 0)
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-				
-				if (getCastle().getOwnerId() > 0)
-				{
-					html.setFile("data/html/territorystatus.htm");
-					L2Clan clan = ClanTable.getInstance().getClan(getCastle().getOwnerId());
-					html.replace("%clanname%", clan.getName());
-					html.replace("%clanleadername%", clan.getLeaderName());
-				}
-				else
-					html.setFile("data/html/territorynoclan.htm");
-				
-				html.replace("%castlename%", getCastle().getName());
-				html.replace("%taxpercent%", getCastle().getTaxPercent());
-				html.replace("%objectId%", getObjectId());
-				
-				if (getCastle().getCastleId() > 6)
-					html.replace("%territory%", "The Kingdom of Elmore");
-				else
-					html.replace("%territory%", "The Kingdom of Aden");
-				
-				player.sendPacket(html);
+				html.setFile("data/html/territorystatus.htm");
+				L2Clan clan = ClanTable.getInstance().getClan(getCastle().getOwnerId());
+				html.replace("%clanname%", clan.getName());
+				html.replace("%clanleadername%", clan.getLeaderName());
 			}
-			else if (command.startsWith("Quest"))
+			else
+				html.setFile("data/html/territorynoclan.htm");
+			
+			html.replace("%castlename%", getCastle().getName());
+			html.replace("%taxpercent%", getCastle().getTaxPercent());
+			html.replace("%objectId%", getObjectId());
+			
+			if (getCastle().getCastleId() > 6)
+				html.replace("%territory%", "The Kingdom of Elmore");
+			else
+				html.replace("%territory%", "The Kingdom of Aden");
+			
+			player.sendPacket(html);
+		}
+		else if (command.startsWith("Quest"))
+		{
+			String quest = "";
+			try
 			{
-				String quest = "";
-				try
-				{
-					quest = command.substring(5).trim();
-				}
-				catch (IndexOutOfBoundsException ioobe)
-				{
-				}
-				
-				if (quest.isEmpty())
-					showQuestWindowGeneral(player, this);
-				else
-					showQuestWindowSingle(player, this, QuestManager.getInstance().getQuest(quest));
+				quest = command.substring(5).trim();
 			}
-			else if (command.startsWith("Chat"))
+			catch (IndexOutOfBoundsException ioobe)
 			{
-				int val = 0;
-				try
-				{
-					val = Integer.parseInt(command.substring(5));
-				}
-				catch (IndexOutOfBoundsException ioobe)
-				{
-				}
-				catch (NumberFormatException nfe)
-				{
-				}
-				
-				showChatWindow(player, val);
 			}
-			else if (command.startsWith("Link"))
+			
+			if (quest.isEmpty())
+				showQuestWindowGeneral(player, this);
+			else
+				showQuestWindowSingle(player, this, QuestManager.getInstance().getQuest(quest));
+		}
+		else if (command.startsWith("Chat"))
+		{
+			int val = 0;
+			try
 			{
-				String path = command.substring(5).trim();
-				if (path.indexOf("..") != -1)
-					return;
-				
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-				html.setFile("data/html/" + path);
-				html.replace("%objectId%", getObjectId());
-				player.sendPacket(html);
+				val = Integer.parseInt(command.substring(5));
 			}
-			else if (command.startsWith("Loto"))
+			catch (IndexOutOfBoundsException ioobe)
 			{
-				int val = 0;
-				try
-				{
-					val = Integer.parseInt(command.substring(5));
-				}
-				catch (IndexOutOfBoundsException ioobe)
-				{
-				}
-				catch (NumberFormatException nfe)
-				{
-				}
-				
-				if (val == 0)
-				{
-					// new loto ticket
-					for (int i = 0; i < 5; i++)
-						player.setLoto(i, 0);
-				}
-				showLotoWindow(player, val);
 			}
-			else if (command.startsWith("CPRecovery"))
+			catch (NumberFormatException nfe)
 			{
-				makeCPRecovery(player);
 			}
-			else if (command.startsWith("SupportMagic"))
+			
+			showChatWindow(player, val);
+		}
+		else if (command.startsWith("Link"))
+		{
+			String path = command.substring(5).trim();
+			if (path.indexOf("..") != -1)
+				return;
+			
+			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			html.setFile("data/html/" + path);
+			html.replace("%objectId%", getObjectId());
+			player.sendPacket(html);
+		}
+		else if (command.startsWith("Loto"))
+		{
+			int val = 0;
+			try
 			{
-				makeSupportMagic(player);
+				val = Integer.parseInt(command.substring(5));
 			}
-			else if (command.startsWith("multisell"))
+			catch (IndexOutOfBoundsException ioobe)
 			{
-				L2Multisell.getInstance().separateAndSend(Integer.parseInt(command.substring(9).trim()), player, false, getCastle().getTaxRate());
 			}
-			else if (command.startsWith("exc_multisell"))
+			catch (NumberFormatException nfe)
 			{
-				L2Multisell.getInstance().separateAndSend(Integer.parseInt(command.substring(13).trim()), player, true, getCastle().getTaxRate());
 			}
-			else if (command.startsWith("Augment"))
+			
+			if (val == 0)
 			{
-				int cmdChoice = Integer.parseInt(command.substring(8, 9).trim());
-				switch (cmdChoice)
-				{
-					case 1:
-						player.sendPacket(SystemMessageId.SELECT_THE_ITEM_TO_BE_AUGMENTED);
-						player.sendPacket(ExShowVariationMakeWindow.STATIC_PACKET);
-						break;
-					case 2:
-						player.sendPacket(SystemMessageId.SELECT_THE_ITEM_FROM_WHICH_YOU_WISH_TO_REMOVE_AUGMENTATION);
-						player.sendPacket(ExShowVariationCancelWindow.STATIC_PACKET);
-						break;
-				}
+				// new loto ticket
+				for (int i = 0; i < 5; i++)
+					player.setLoto(i, 0);
 			}
-			else if (command.startsWith("EnterRift"))
+			showLotoWindow(player, val);
+		}
+		else if (command.startsWith("CPRecovery"))
+		{
+			makeCPRecovery(player);
+		}
+		else if (command.startsWith("SupportMagic"))
+		{
+			makeSupportMagic(player);
+		}
+		else if (command.startsWith("multisell"))
+		{
+			MultisellData.getInstance().separateAndSend(Integer.parseInt(command.substring(9).trim()), player, false, getCastle().getTaxRate());
+		}
+		else if (command.startsWith("exc_multisell"))
+		{
+			MultisellData.getInstance().separateAndSend(Integer.parseInt(command.substring(13).trim()), player, true, getCastle().getTaxRate());
+		}
+		else if (command.startsWith("Augment"))
+		{
+			int cmdChoice = Integer.parseInt(command.substring(8, 9).trim());
+			switch (cmdChoice)
 			{
-				try
-				{
-					Byte b1 = Byte.parseByte(command.substring(10)); // Selected Area: Recruit, Soldier etc
-					DimensionalRiftManager.getInstance().start(player, b1, this);
-				}
-				catch (Exception e)
-				{
-				}
+				case 1:
+					player.sendPacket(SystemMessageId.SELECT_THE_ITEM_TO_BE_AUGMENTED);
+					player.sendPacket(ExShowVariationMakeWindow.STATIC_PACKET);
+					break;
+				case 2:
+					player.sendPacket(SystemMessageId.SELECT_THE_ITEM_FROM_WHICH_YOU_WISH_TO_REMOVE_AUGMENTATION);
+					player.sendPacket(ExShowVariationCancelWindow.STATIC_PACKET);
+					break;
 			}
-			else if (command.startsWith("ChangeRiftRoom"))
+		}
+		else if (command.startsWith("EnterRift"))
+		{
+			try
 			{
-				if (player.isInParty() && player.getParty().isInDimensionalRift())
-					player.getParty().getDimensionalRift().manualTeleport(player, this);
+				Byte b1 = Byte.parseByte(command.substring(10)); // Selected Area: Recruit, Soldier etc
+				DimensionalRiftManager.getInstance().start(player, b1, this);
 			}
-			else if (command.startsWith("ExitRift"))
+			catch (Exception e)
 			{
-				if (player.isInParty() && player.getParty().isInDimensionalRift())
-					player.getParty().getDimensionalRift().manualExitRift(player, this);
 			}
+		}
+		else if (command.startsWith("ChangeRiftRoom"))
+		{
+			if (player.isInParty() && player.getParty().isInDimensionalRift())
+				player.getParty().getDimensionalRift().manualTeleport(player, this);
+		}
+		else if (command.startsWith("ExitRift"))
+		{
+			if (player.isInParty() && player.getParty().isInDimensionalRift())
+				player.getParty().getDimensionalRift().manualExitRift(player, this);
 		}
 	}
 	
@@ -890,7 +887,6 @@ public class L2Npc extends L2Character
 		{
 			NpcHtmlMessage npcReply = new NpcHtmlMessage(npc.getObjectId());
 			npcReply.setHtml(Quest.getNoQuestMsg());
-			npcReply.replace("%objectId%", npc.getObjectId());
 			player.sendPacket(npcReply);
 			
 			player.sendPacket(ActionFailed.STATIC_PACKET);
@@ -908,7 +904,11 @@ public class L2Npc extends L2Character
 		{
 			if (quest.isRealQuest() && player.getAllQuests(false).size() >= 25)
 			{
-				player.sendPacket(SystemMessageId.TOO_MANY_QUESTS);
+				NpcHtmlMessage npcReply = new NpcHtmlMessage(npc.getObjectId());
+				npcReply.setHtml(Quest.getTooMuchQuestsMsg());
+				player.sendPacket(npcReply);
+				
+				player.sendPacket(ActionFailed.STATIC_PACKET);
 				return;
 			}
 			
@@ -962,17 +962,16 @@ public class L2Npc extends L2Character
 	 * <BR>
 	 */
 	@Override
-	public L2ItemInstance getActiveWeaponInstance()
+	public ItemInstance getActiveWeaponInstance()
 	{
 		return null;
 	}
 	
 	/**
-	 * Return the weapon item equipped in the right hand of the L2Npc or null.<BR>
-	 * <BR>
+	 * Return the weapon item equipped in the right hand of the L2Npc or null.
 	 */
 	@Override
-	public L2Weapon getActiveWeaponItem()
+	public Weapon getActiveWeaponItem()
 	{
 		// Get the weapon identifier equipped in the right hand of the L2Npc
 		int weaponId = getTemplate().getRightHand();
@@ -980,29 +979,27 @@ public class L2Npc extends L2Character
 			return null;
 		
 		// Get the weapon item equipped in the right hand of the L2Npc
-		L2Item item = ItemTable.getInstance().getTemplate(weaponId);
-		if (!(item instanceof L2Weapon))
+		Item item = ItemTable.getInstance().getTemplate(weaponId);
+		if (!(item instanceof Weapon))
 			return null;
 		
-		return (L2Weapon) item;
+		return (Weapon) item;
 	}
 	
 	/**
-	 * Return null (regular NPCs don't have weapons instancies).<BR>
-	 * <BR>
+	 * Return null (regular NPCs don't have weapons instancies).
 	 */
 	@Override
-	public L2ItemInstance getSecondaryWeaponInstance()
+	public ItemInstance getSecondaryWeaponInstance()
 	{
 		return null;
 	}
 	
 	/**
-	 * Return the item equipped in the left hand of the L2Npc or null.<BR>
-	 * <BR>
+	 * Return the item equipped in the left hand of the L2Npc or null.
 	 */
 	@Override
-	public L2Item getSecondaryWeaponItem()
+	public Item getSecondaryWeaponItem()
 	{
 		// Get the weapon identifier equipped in the right hand of the L2Npc
 		int itemId = getTemplate().getLeftHand();
@@ -1180,7 +1177,7 @@ public class L2Npc extends L2Character
 			
 			Lottery.getInstance().increasePrize(price);
 			
-			L2ItemInstance item = new L2ItemInstance(IdFactory.getInstance().getNextId(), 4442);
+			ItemInstance item = new ItemInstance(IdFactory.getInstance().getNextId(), 4442);
 			item.setCount(1);
 			item.setCustomType1(lotonumber);
 			item.setEnchantLevel(enchant);
@@ -1202,7 +1199,7 @@ public class L2Npc extends L2Character
 			
 			int lotonumber = Lottery.getInstance().getId();
 			String message = "";
-			for (L2ItemInstance item : player.getInventory().getItems())
+			for (ItemInstance item : player.getInventory().getItems())
 			{
 				if (item == null)
 					continue;
@@ -1246,7 +1243,7 @@ public class L2Npc extends L2Character
 		else if (val > 24) // >24 - check lottery ticket by item object id
 		{
 			int lotonumber = Lottery.getInstance().getId();
-			L2ItemInstance item = player.getInventory().getItemByObjectId(val);
+			ItemInstance item = player.getInventory().getItemByObjectId(val);
 			if (item == null || item.getItemId() != 4442 || item.getCustomType1() >= lotonumber)
 				return;
 			int[] check = Lottery.checkTicket(item);
@@ -1513,7 +1510,7 @@ public class L2Npc extends L2Character
 		_currentEnchant = getTemplate().getEnchantEffect();
 		_currentCollisionHeight = getTemplate().getCollisionHeight();
 		_currentCollisionRadius = getTemplate().getCollisionRadius();
-		DecayTaskManager.getInstance().addDecayTask(this);
+		DecayTaskManager.getInstance().add(this);
 		return true;
 	}
 	
@@ -1626,7 +1623,7 @@ public class L2Npc extends L2Character
 	{
 		if (!isDecayed())
 		{
-			DecayTaskManager.getInstance().cancelDecayTask(this);
+			DecayTaskManager.getInstance().cancel(this);
 			onDecay();
 		}
 	}

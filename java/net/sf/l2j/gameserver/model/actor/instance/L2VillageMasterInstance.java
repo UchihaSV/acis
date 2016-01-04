@@ -28,6 +28,7 @@ import net.sf.l2j.gameserver.model.L2Clan.SubPledge;
 import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.L2PledgeSkillLearn;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.base.ClassId;
 import net.sf.l2j.gameserver.model.base.PlayerClass;
 import net.sf.l2j.gameserver.model.base.SubClass;
@@ -42,7 +43,6 @@ import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListAll;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.util.StringUtil;
 
@@ -51,7 +51,7 @@ import net.sf.l2j.util.StringUtil;
  */
 public class L2VillageMasterInstance extends L2NpcInstance
 {
-	public L2VillageMasterInstance(int objectId, L2NpcTemplate template)
+	public L2VillageMasterInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

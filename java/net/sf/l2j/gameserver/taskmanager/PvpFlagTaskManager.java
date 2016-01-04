@@ -37,12 +37,12 @@ public class PvpFlagTaskManager
 		return SingletonHolder._instance;
 	}
 	
-	public void addPvpFlagTask(L2PcInstance actor, long time)
+	public void add(L2PcInstance actor, long time)
 	{
 		_pvpFlagTask.put(actor, time);
 	}
 	
-	public void removePvpFlagTask(L2PcInstance actor)
+	public void remove(L2PcInstance actor)
 	{
 		_pvpFlagTask.remove(actor);
 	}

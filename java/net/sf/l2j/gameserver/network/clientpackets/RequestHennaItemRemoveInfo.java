@@ -16,8 +16,8 @@ package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.datatables.HennaTable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.Henna;
 import net.sf.l2j.gameserver.network.serverpackets.HennaItemRemoveInfo;
-import net.sf.l2j.gameserver.templates.item.L2Henna;
 
 public final class RequestHennaItemRemoveInfo extends L2GameClientPacket
 {
@@ -36,7 +36,7 @@ public final class RequestHennaItemRemoveInfo extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		final L2Henna template = HennaTable.getInstance().getTemplate(_symbolId);
+		final Henna template = HennaTable.getInstance().getTemplate(_symbolId);
 		if (template == null)
 			return;
 		

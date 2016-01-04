@@ -14,18 +14,14 @@
  */
 package net.sf.l2j.gameserver.model.itemcontainer;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.sf.l2j.gameserver.datatables.ItemTable;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
-import net.sf.l2j.gameserver.model.L2ItemInstance.ItemLocation;
-import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
-import net.sf.l2j.gameserver.templates.item.L2EtcItemType;
-import net.sf.l2j.gameserver.templates.item.L2Item;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance.ItemLocation;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 
 public class PetInventory extends Inventory
 {
@@ -68,11 +64,11 @@ public class PetInventory extends Inventory
 		getOwner().updateAndBroadcastStatus(1);
 	}
 	
-	public boolean validateCapacity(L2ItemInstance item)
+	public boolean validateCapacity(ItemInstance item)
 	{
 		int slots = 0;
 		
-		if (!(item.isStackable() && getItemByItemId(item.getItemId()) != null) && item.getItemType() != L2EtcItemType.HERB)
+		if (!(item.isStackable() && getItemByItemId(item.getItemId()) != null) && item.getItemType() != EtcItemType.HERB)
 			slots++;
 		
 		return validateCapacity(slots);
@@ -84,11 +80,11 @@ public class PetInventory extends Inventory
 		return (_items.size() + slots <= _owner.getInventoryLimit());
 	}
 	
-	public boolean validateWeight(L2ItemInstance item, long count)
+	public boolean validateWeight(ItemInstance item, long count)
 	{
 		int weight = 0;
 		
-		L2Item template = ItemTable.getInstance().getTemplate(item.getItemId());
+		Item template = ItemTable.getInstance().getTemplate(item.getItemId());
 		if (template == null)
 			return false;
 		
@@ -120,7 +116,7 @@ public class PetInventory extends Inventory
 		super.restore();
 		
 		// check for equipped items from other pets
-		for (L2ItemInstance item : _items)
+		for (ItemInstance item : _items)
 		{
 			if (item.isEquipped())
 			{
@@ -141,18 +137,14 @@ public class PetInventory extends Inventory
 			if (petOwner != null)
 			{
 				// Transfer each item to master's inventory.
-				for (L2ItemInstance item : _items)
+				for (ItemInstance item : _items)
+				{
 					getOwner().transferItem("return", item.getObjectId(), item.getCount(), petOwner.getInventory(), petOwner, getOwner());
+					L2World.getInstance().removeObject(item);
+				}
 			}
-			
-			// Create a clone version (from L2ItemInstance to L2Object) items used just after for remove purpose.
-			List<L2Object> items = new ArrayList<L2Object>(_items);
-			
 			// Clear the internal inventory items list.
 			_items.clear();
-			
-			// Drop those items from the world.
-			L2World.getInstance().removeObjects(items);
 		}
 	}
 }

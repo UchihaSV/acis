@@ -16,7 +16,8 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.List;
 
-import net.sf.l2j.gameserver.model.L2Multisell;
+import net.sf.l2j.gameserver.datatables.MultisellData;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Hero;
 import net.sf.l2j.gameserver.model.olympiad.CompetitionType;
 import net.sf.l2j.gameserver.model.olympiad.Olympiad;
@@ -26,7 +27,6 @@ import net.sf.l2j.gameserver.model.olympiad.OlympiadManager;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ExHeroList;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.StringUtil;
 
 /**
@@ -37,7 +37,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 {
 	private static final int GATE_PASS = 6651;
 	
-	public L2OlympiadManagerInstance(int objectId, L2NpcTemplate template)
+	public L2OlympiadManagerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -169,7 +169,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 					break;
 				
 				case 7: // Rewards
-					L2Multisell.getInstance().separateAndSend(102, player, false, getCastle().getTaxRate());
+					MultisellData.getInstance().separateAndSend(102, player, false, getCastle().getTaxRate());
 					break;
 				
 				case 10: // Give tokens to player

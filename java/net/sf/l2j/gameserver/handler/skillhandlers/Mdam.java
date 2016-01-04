@@ -89,7 +89,7 @@ public class Mdam implements ISkillHandler
 						if (Formulas.calcSkillSuccess(activeChar, target, skill, shld, bsps))
 							skill.getEffects(activeChar, target, new Env(shld, sps, false, bsps));
 						else
-							activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(skill.getDisplayId()));
+							activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(skill.getId()));
 					}
 				}
 			}

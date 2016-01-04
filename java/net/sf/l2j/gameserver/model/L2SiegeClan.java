@@ -14,16 +14,16 @@
  */
 package net.sf.l2j.gameserver.model;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 
 public class L2SiegeClan
 {
-	private int _clanId = 0;
-	private List<L2Npc> _flag = new ArrayList<>();
-	private int _numFlagsAdded = 0;
+	private final List<L2Npc> _flags = new CopyOnWriteArrayList<>();
+	private final int _clanId;
+	
 	private SiegeClanType _type;
 	
 	public enum SiegeClanType
@@ -40,15 +40,9 @@ public class L2SiegeClan
 		_type = type;
 	}
 	
-	public int getNumFlags()
-	{
-		return _numFlagsAdded;
-	}
-	
 	public void addFlag(L2Npc flag)
 	{
-		_numFlagsAdded++;
-		getFlag().add(flag);
+		_flags.add(flag);
 	}
 	
 	public boolean removeFlag(L2Npc flag)
@@ -56,32 +50,26 @@ public class L2SiegeClan
 		if (flag == null)
 			return false;
 		
-		boolean ret = getFlag().remove(flag);
-		if (ret)
-			while (getFlag().remove(flag));
-		
 		flag.deleteMe();
-		_numFlagsAdded--;
-		return ret;
+		return _flags.remove(flag);
 	}
 	
 	public void removeFlags()
 	{
-		for (L2Npc flag : getFlag())
-			removeFlag(flag);
+		for (L2Npc flag : _flags)
+			flag.deleteMe();
+		
+		_flags.clear();
 	}
 	
-	public final int getClanId()
+	public List<L2Npc> getFlags()
+	{
+		return _flags;
+	}
+	
+	public int getClanId()
 	{
 		return _clanId;
-	}
-	
-	public final List<L2Npc> getFlag()
-	{
-		if (_flag == null)
-			_flag = new ArrayList<>();
-		
-		return _flag;
 	}
 	
 	public SiegeClanType getType()

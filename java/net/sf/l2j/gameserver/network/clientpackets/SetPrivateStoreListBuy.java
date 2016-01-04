@@ -42,7 +42,7 @@ public final class SetPrivateStoreListBuy extends L2GameClientPacket
 			int itemId = readD();
 			readH(); // TODO analyse this
 			readH(); // TODO analyse this
-			long cnt = readD();
+			int cnt = readD();
 			int price = readD();
 			
 			if (itemId < 1 || cnt < 1 || price < 0)
@@ -50,7 +50,7 @@ public final class SetPrivateStoreListBuy extends L2GameClientPacket
 				_items = null;
 				return;
 			}
-			_items[i] = new Item(itemId, (int) cnt, price);
+			_items[i] = new Item(itemId, cnt, price);
 		}
 	}
 	
@@ -75,7 +75,7 @@ public final class SetPrivateStoreListBuy extends L2GameClientPacket
 			return;
 		}
 		
-		if (AttackStanceTaskManager.getInstance().getAttackStanceTask(player) || (player.isCastingNow() || player.isCastingSimultaneouslyNow()) || player.isInDuel())
+		if (AttackStanceTaskManager.getInstance().get(player) || (player.isCastingNow() || player.isCastingSimultaneouslyNow()) || player.isInDuel())
 		{
 			player.sendPacket(SystemMessageId.YOU_ARE_NOT_AUTHORIZED_TO_DO_THAT);
 			player.sendPacket(new PrivateStoreManageListBuy(player));

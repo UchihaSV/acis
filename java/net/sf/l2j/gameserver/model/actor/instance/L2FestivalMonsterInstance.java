@@ -14,9 +14,9 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
-import net.sf.l2j.gameserver.SevenSignsFestival;
+import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
 import net.sf.l2j.gameserver.model.actor.L2Character;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 
 /**
  * L2FestivalMonsterInstance This class manages all attackable festival NPCs, spawned during the Festival of Darkness.
@@ -26,7 +26,7 @@ public class L2FestivalMonsterInstance extends L2MonsterInstance
 {
 	protected int _bonusMultiplier = 1;
 	
-	public L2FestivalMonsterInstance(int objectId, L2NpcTemplate template)
+	public L2FestivalMonsterInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

@@ -14,15 +14,15 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.model.L2DropCategory;
-import net.sf.l2j.gameserver.model.L2DropData;
+import net.sf.l2j.gameserver.model.item.DropCategory;
+import net.sf.l2j.gameserver.model.item.DropData;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
 import org.w3c.dom.Document;
@@ -36,7 +36,7 @@ public class HerbDropTable
 {
 	private static Logger _log = Logger.getLogger(HerbDropTable.class.getName());
 	
-	private final TIntObjectHashMap<List<L2DropCategory>> _herbGroups;
+	private final Map<Integer, List<DropCategory>> _herbGroups = new HashMap<>();
 	
 	public static HerbDropTable getInstance()
 	{
@@ -44,12 +44,6 @@ public class HerbDropTable
 	}
 	
 	protected HerbDropTable()
-	{
-		_herbGroups = new TIntObjectHashMap<>();
-		restoreData();
-	}
-	
-	private void restoreData()
 	{
 		try
 		{
@@ -64,8 +58,8 @@ public class HerbDropTable
 					NamedNodeMap attrs = d.getAttributes();
 					int groupId = Integer.parseInt(attrs.getNamedItem("id").getNodeValue());
 					
-					List<L2DropCategory> category;
-					if (_herbGroups.contains(groupId))
+					List<DropCategory> category;
+					if (_herbGroups.containsKey(groupId))
 						category = _herbGroups.get(groupId);
 					else
 					{
@@ -75,7 +69,7 @@ public class HerbDropTable
 					
 					for (Node cd = d.getFirstChild(); cd != null; cd = cd.getNextSibling())
 					{
-						L2DropData dropDat = new L2DropData();
+						DropData dropDat = new DropData();
 						if ("item".equalsIgnoreCase(cd.getNodeName()))
 						{
 							attrs = cd.getAttributes();
@@ -95,7 +89,7 @@ public class HerbDropTable
 							}
 							
 							boolean catExists = false;
-							for (L2DropCategory cat : category)
+							for (DropCategory cat : category)
 							{
 								// if the category exists, add the drop to this category.
 								if (cat.getCategoryType() == categoryType)
@@ -109,7 +103,7 @@ public class HerbDropTable
 							// if the category doesn't exit, create it and add the drop
 							if (!catExists)
 							{
-								L2DropCategory cat = new L2DropCategory(categoryType);
+								DropCategory cat = new DropCategory(categoryType);
 								cat.addDropData(dropDat, false);
 								category.add(cat);
 							}
@@ -125,7 +119,7 @@ public class HerbDropTable
 		_log.info("HerbDropTable: Loaded " + _herbGroups.size() + " herbs groups.");
 	}
 	
-	public List<L2DropCategory> getHerbDroplist(int groupId)
+	public List<DropCategory> getHerbDroplist(int groupId)
 	{
 		return _herbGroups.get(groupId);
 	}

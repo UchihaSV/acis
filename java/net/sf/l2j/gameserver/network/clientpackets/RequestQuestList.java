@@ -31,6 +31,6 @@ public final class RequestQuestList extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		activeChar.sendPacket(new QuestList());
+		activeChar.sendPacket(new QuestList(activeChar));
 	}
 }

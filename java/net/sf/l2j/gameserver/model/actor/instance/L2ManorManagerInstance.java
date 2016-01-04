@@ -20,6 +20,7 @@ import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
@@ -32,11 +33,10 @@ import net.sf.l2j.gameserver.network.serverpackets.ExShowSeedInfo;
 import net.sf.l2j.gameserver.network.serverpackets.ExShowSeedSetting;
 import net.sf.l2j.gameserver.network.serverpackets.ExShowSellCropList;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2ManorManagerInstance extends L2MerchantInstance
 {
-	public L2ManorManagerInstance(int objectId, L2NpcTemplate template)
+	public L2ManorManagerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

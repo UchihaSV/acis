@@ -14,8 +14,8 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 public class SpawnItemPoly extends L2GameServerPacket
 {
@@ -26,9 +26,9 @@ public class SpawnItemPoly extends L2GameServerPacket
 	
 	public SpawnItemPoly(L2Object object)
 	{
-		if (object instanceof L2ItemInstance)
+		if (object instanceof ItemInstance)
 		{
-			L2ItemInstance item = (L2ItemInstance) object;
+			ItemInstance item = (ItemInstance) object;
 			_objectId = object.getObjectId();
 			_itemId = object.getPoly().getPolyId();
 			_x = item.getX();

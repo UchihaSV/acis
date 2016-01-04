@@ -25,15 +25,14 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.CastleUpdater;
-import net.sf.l2j.gameserver.SevenSigns;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2ClanMember;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.entity.Castle;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 public class CastleManager
 {
@@ -283,7 +282,7 @@ public class CastleManager
 		if (player != null)
 		{
 			// Circlets removal for all members
-			L2ItemInstance circlet = player.getInventory().getItemByItemId(circletId);
+			ItemInstance circlet = player.getInventory().getItemByItemId(circletId);
 			if (circlet != null)
 			{
 				if (circlet.isEquipped())
@@ -295,7 +294,7 @@ public class CastleManager
 			// If the actual checked player is the clan leader, check for crown
 			if (player.isClanLeader())
 			{
-				L2ItemInstance crown = player.getInventory().getItemByItemId(6841);
+				ItemInstance crown = player.getInventory().getItemByItemId(6841);
 				if (crown != null)
 				{
 					if (crown.isEquipped())

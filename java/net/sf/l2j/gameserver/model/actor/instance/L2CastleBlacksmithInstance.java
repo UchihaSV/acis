@@ -2,8 +2,8 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
 import net.sf.l2j.gameserver.model.L2Clan;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * @author l3x
@@ -14,7 +14,7 @@ public class L2CastleBlacksmithInstance extends L2NpcInstance
 	protected static final int COND_BUSY_BECAUSE_OF_SIEGE = 1;
 	protected static final int COND_OWNER = 2;
 	
-	public L2CastleBlacksmithInstance(int objectId, L2NpcTemplate template)
+	public L2CastleBlacksmithInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

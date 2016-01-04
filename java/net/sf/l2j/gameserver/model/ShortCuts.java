@@ -24,9 +24,10 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.network.serverpackets.ExAutoSoulShot;
 import net.sf.l2j.gameserver.network.serverpackets.ShortCutInit;
-import net.sf.l2j.gameserver.templates.item.L2EtcItemType;
 
 public class ShortCuts
 {
@@ -67,7 +68,7 @@ public class ShortCuts
 		// verify shortcut
 		if (shortcut.getType() == L2ShortCut.TYPE_ITEM)
 		{
-			final L2ItemInstance item = _owner.getInventory().getItemByObjectId(shortcut.getId());
+			final ItemInstance item = _owner.getInventory().getItemByObjectId(shortcut.getId());
 			if (item == null)
 				return;
 			
@@ -115,9 +116,9 @@ public class ShortCuts
 		deleteShortCutFromDb(old);
 		if (old.getType() == L2ShortCut.TYPE_ITEM)
 		{
-			final L2ItemInstance item = _owner.getInventory().getItemByObjectId(old.getId());
+			final ItemInstance item = _owner.getInventory().getItemByObjectId(old.getId());
 			
-			if (item != null && item.getItemType() == L2EtcItemType.SHOT)
+			if (item != null && item.getItemType() == EtcItemType.SHOT)
 			{
 				if (_owner.removeAutoSoulShot(item.getItemId()))
 					_owner.sendPacket(new ExAutoSoulShot(item.getItemId(), 0));
@@ -199,7 +200,7 @@ public class ShortCuts
 		{
 			if (sc.getType() == L2ShortCut.TYPE_ITEM)
 			{
-				final L2ItemInstance item = _owner.getInventory().getItemByObjectId(sc.getId());
+				final ItemInstance item = _owner.getInventory().getItemByObjectId(sc.getId());
 				if (item == null)
 					deleteShortCut(sc.getSlot(), sc.getPage());
 				else if (item.isEtcItem())

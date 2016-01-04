@@ -14,9 +14,9 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntIntHashMap;
-
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,9 +30,9 @@ import org.w3c.dom.Node;
 
 public class SpellbookTable
 {
-	private static Logger _log = Logger.getLogger(SkillTreeTable.class.getName());
+	private static final Logger _log = Logger.getLogger(SkillTreeTable.class.getName());
 	
-	private static TIntIntHashMap _skillSpellbooks;
+	private static final Map<Integer, Integer> _skillSpellbooks = new HashMap<>();
 	
 	public static SpellbookTable getInstance()
 	{
@@ -41,8 +41,6 @@ public class SpellbookTable
 	
 	protected SpellbookTable()
 	{
-		_skillSpellbooks = new TIntIntHashMap();
-		
 		try
 		{
 			File f = new File("./data/xml/spellbooks.xml");
