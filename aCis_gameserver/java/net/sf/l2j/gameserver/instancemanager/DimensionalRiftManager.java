@@ -14,27 +14,27 @@
  */
 package net.sf.l2j.gameserver.instancemanager;
 
-import gnu.trove.map.hash.TByteObjectHashMap;
-
 import java.awt.Polygon;
 import java.awt.Shape;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.DimensionalRift;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 import net.sf.l2j.util.Rnd;
 
@@ -49,8 +49,8 @@ public class DimensionalRiftManager
 {
 	private static Logger _log = Logger.getLogger(DimensionalRiftManager.class.getName());
 	
-	private final TByteObjectHashMap<TByteObjectHashMap<DimensionalRiftRoom>> _rooms = new TByteObjectHashMap<>(7);
-	private final int DIMENSIONAL_FRAGMENT_ITEM_ID = 7079;
+	private static final Map<Byte, HashMap<Byte, DimensionalRiftRoom>> _rooms = new HashMap<>(7);
+	private static final int DIMENSIONAL_FRAGMENT_ITEM_ID = 7079;
 	
 	public static DimensionalRiftManager getInstance()
 	{
@@ -67,7 +67,7 @@ public class DimensionalRiftManager
 		return _rooms.get(type) == null ? null : _rooms.get(type).get(room);
 	}
 	
-	private void loadData()
+	private static void loadData()
 	{
 		int countGood = 0, countBad = 0;
 		try
@@ -101,7 +101,7 @@ public class DimensionalRiftManager
 									int yT = Integer.parseInt(attrs.getNamedItem("yT").getNodeValue());
 									
 									if (!_rooms.containsKey(type))
-										_rooms.put(type, new TByteObjectHashMap<DimensionalRiftRoom>(9));
+										_rooms.put(type, new HashMap<Byte, DimensionalRiftRoom>(9));
 									
 									_rooms.get(type).put(roomId, new DimensionalRiftRoom(type, roomId, xMin, xMax, yMin, yMax, xT, yT));
 									
@@ -114,7 +114,7 @@ public class DimensionalRiftManager
 											int delay = Integer.parseInt(attrs.getNamedItem("delay").getNodeValue());
 											int count = Integer.parseInt(attrs.getNamedItem("count").getNodeValue());
 											
-											L2NpcTemplate template = NpcTable.getInstance().getTemplate(mobId);
+											NpcTemplate template = NpcTable.getInstance().getTemplate(mobId);
 											if (template == null)
 												_log.log(Level.WARNING, "Template " + mobId + " not found!");
 											if (!_rooms.containsKey(type))
@@ -160,11 +160,11 @@ public class DimensionalRiftManager
 			_log.log(Level.WARNING, "Error on loading dimensional rift spawns: " + e);
 		}
 		
-		int typeSize = _rooms.keys().length;
+		int typeSize = _rooms.keySet().size();
 		int roomSize = 0;
 		
-		for (byte b : _rooms.keys())
-			roomSize += _rooms.get(b).keys().length;
+		for (byte b : _rooms.keySet())
+			roomSize += _rooms.get(b).keySet().size();
 		
 		_log.info("DimensionalRiftManager: Loaded " + typeSize + " room types with " + roomSize + " rooms.");
 		_log.info("DimensionalRiftManager: Loaded " + countGood + " dimensional rift spawns, " + countBad + " errors.");
@@ -172,9 +172,9 @@ public class DimensionalRiftManager
 	
 	public void reload()
 	{
-		for (byte b : _rooms.keys())
+		for (byte b : _rooms.keySet())
 		{
-			for (byte i : _rooms.get(b).keys())
+			for (byte i : _rooms.get(b).keySet())
 				_rooms.get(b).get(i).getSpawns().clear();
 			
 			_rooms.get(b).clear();
@@ -255,7 +255,7 @@ public class DimensionalRiftManager
 			}
 		}
 		
-		L2ItemInstance i;
+		ItemInstance i;
 		final int count = getNeededItems(type);
 		
 		for (L2PcInstance p : party.getPartyMembers())
@@ -470,7 +470,7 @@ public class DimensionalRiftManager
 	public boolean isAllowedEnter(byte type)
 	{
 		int count = 0;
-		for (DimensionalRiftRoom room : _rooms.get(type).valueCollection())
+		for (DimensionalRiftRoom room : _rooms.get(type).values())
 		{
 			if (room.isPartyInside())
 				count++;
@@ -481,7 +481,7 @@ public class DimensionalRiftManager
 	public List<Byte> getFreeRooms(byte type)
 	{
 		List<Byte> list = new ArrayList<>();
-		for (DimensionalRiftRoom room : _rooms.get(type).valueCollection())
+		for (DimensionalRiftRoom room : _rooms.get(type).values())
 		{
 			if (!room.isPartyInside())
 				list.add(room._room);

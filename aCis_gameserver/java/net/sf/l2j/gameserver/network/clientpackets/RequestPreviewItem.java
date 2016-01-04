@@ -15,26 +15,24 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ThreadPoolManager;
-import net.sf.l2j.gameserver.TradeController;
-import net.sf.l2j.gameserver.datatables.ItemTable;
+import net.sf.l2j.gameserver.datatables.BuyListTable;
 import net.sf.l2j.gameserver.model.L2Object;
-import net.sf.l2j.gameserver.model.L2TradeList;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
-import net.sf.l2j.gameserver.model.actor.instance.L2MercManagerInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2MerchantInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
+import net.sf.l2j.gameserver.model.buylist.Product;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ShopPreviewInfo;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 import net.sf.l2j.gameserver.util.Util;
 
 /**
@@ -83,7 +81,7 @@ public final class RequestPreviewItem extends L2GameClientPacket
 		
 		if (_count < 0)
 			_count = 0;
-		if (_count > 100)
+		else if (_count > 100)
 			return; // prevent too long lists
 			
 		// Create _items table that will contain all ItemID to Wear
@@ -117,7 +115,7 @@ public final class RequestPreviewItem extends L2GameClientPacket
 		
 		// Check current target of the player and the INTERACTION_DISTANCE
 		L2Object target = _activeChar.getTarget();
-		if (!_activeChar.isGM() && (target == null || !(target instanceof L2MerchantInstance || target instanceof L2MercManagerInstance) || !_activeChar.isInsideRadius(target, L2Npc.INTERACTION_DISTANCE, false, false)))
+		if (!_activeChar.isGM() && (target == null || !(target instanceof L2MerchantInstance) || !_activeChar.isInsideRadius(target, L2Npc.INTERACTION_DISTANCE, false, false)))
 			return;
 		
 		// Get the current merchant targeted by the player
@@ -128,41 +126,29 @@ public final class RequestPreviewItem extends L2GameClientPacket
 			return;
 		}
 		
-		final List<L2TradeList> lists = TradeController.getInstance().getBuyListByNpcId(merchant.getNpcId());
-		if (lists == null)
-		{
-			Util.handleIllegalPlayerAction(_activeChar, _activeChar.getName() + " of account " + _activeChar.getAccountName() + " sent a false BuyList list_id " + _listId, Config.DEFAULT_PUNISH);
-			return;
-		}
-		
-		L2TradeList list = null;
-		for (L2TradeList tradeList : lists)
-		{
-			if (tradeList.getListId() == _listId)
-				list = tradeList;
-		}
-		
-		if (list == null)
+		final NpcBuyList buyList = BuyListTable.getInstance().getBuyList(_listId);
+		if (buyList == null)
 		{
 			Util.handleIllegalPlayerAction(_activeChar, _activeChar.getName() + " of account " + _activeChar.getAccountName() + " sent a false BuyList list_id " + _listId, Config.DEFAULT_PUNISH);
 			return;
 		}
 		
 		int totalPrice = 0;
-		_listId = list.getListId();
+		_listId = buyList.getListId();
 		_itemList = new HashMap<>();
 		
 		for (int i = 0; i < _count; i++)
 		{
 			int itemId = _items[i];
 			
-			if (!list.containsItemId(itemId))
+			final Product product = buyList.getProductByItemId(itemId);
+			if (product == null)
 			{
 				Util.handleIllegalPlayerAction(_activeChar, _activeChar.getName() + " of account " + _activeChar.getAccountName() + " sent a false BuyList list_id " + _listId + " and item_id " + itemId, Config.DEFAULT_PUNISH);
 				return;
 			}
 			
-			final L2Item template = ItemTable.getInstance().getTemplate(itemId);
+			final Item template = product.getItem();
 			if (template == null)
 				continue;
 			

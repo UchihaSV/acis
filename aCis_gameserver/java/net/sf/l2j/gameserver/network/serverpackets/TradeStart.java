@@ -14,9 +14,9 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.templates.item.L2Item;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 
 /**
  * d h (h dddhh dhhh)
@@ -24,7 +24,7 @@ import net.sf.l2j.gameserver.templates.item.L2Item;
 public class TradeStart extends L2GameServerPacket
 {
 	private final L2PcInstance _activeChar;
-	private final L2ItemInstance[] _itemList;
+	private final ItemInstance[] _itemList;
 	
 	public TradeStart(L2PcInstance player)
 	{
@@ -42,12 +42,12 @@ public class TradeStart extends L2GameServerPacket
 		writeD(_activeChar.getActiveTradeList().getPartner().getObjectId());
 		writeH(_itemList.length);
 		
-		for (L2ItemInstance temp : _itemList)
+		for (ItemInstance temp : _itemList)
 		{
 			if (temp == null || temp.getItem() == null)
 				continue;
 			
-			L2Item item = temp.getItem();
+			Item item = temp.getItem();
 			
 			writeH(item.getType1());
 			writeD(temp.getObjectId());

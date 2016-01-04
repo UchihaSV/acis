@@ -25,11 +25,11 @@ import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.instancemanager.AuctionManager;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
 import net.sf.l2j.gameserver.model.L2Clan;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Auction;
 import net.sf.l2j.gameserver.model.entity.Auction.Bidder;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.gameserver.util.Util;
 
 public final class L2AuctioneerInstance extends L2NpcInstance
@@ -40,7 +40,7 @@ public final class L2AuctioneerInstance extends L2NpcInstance
 	
 	private final Map<Integer, Auction> _pendingAuctions = new HashMap<>();
 	
-	public L2AuctioneerInstance(int objectId, L2NpcTemplate template)
+	public L2AuctioneerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

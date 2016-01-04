@@ -14,9 +14,9 @@
  */
 package net.sf.l2j.gameserver.model.itemcontainer.listeners;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -31,14 +31,14 @@ public class ShadowWeaponListener implements OnEquipListener
 	}
 	
 	@Override
-	public void onEquip(int slot, L2ItemInstance item, L2Playable playable)
+	public void onEquip(int slot, ItemInstance item, L2Playable playable)
 	{
 		if (item.isShadowItem())
 			item.startTimer(new ShadowLifeTimeTask(item, playable));
 	}
 	
 	@Override
-	public void onUnequip(int slot, L2ItemInstance item, L2Playable playable)
+	public void onUnequip(int slot, ItemInstance item, L2Playable playable)
 	{
 		if (item.isShadowItem())
 			item.stopTimer();
@@ -46,10 +46,10 @@ public class ShadowWeaponListener implements OnEquipListener
 	
 	protected class ShadowLifeTimeTask implements Runnable
 	{
-		private final L2ItemInstance _item;
+		private final ItemInstance _item;
 		private final L2PcInstance _player;
 		
-		ShadowLifeTimeTask(L2ItemInstance item, L2Playable actor)
+		ShadowLifeTimeTask(ItemInstance item, L2Playable actor)
 		{
 			_item = item;
 			_player = (L2PcInstance) actor;

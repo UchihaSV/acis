@@ -16,12 +16,12 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.StringTokenizer;
 
+import net.sf.l2j.gameserver.datatables.MultisellData;
 import net.sf.l2j.gameserver.datatables.SkillTable;
-import net.sf.l2j.gameserver.model.L2Multisell;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * This instance leads behaviors of Golden Ram mofos, where shown htm is different according to your quest condition. Abercrombie shows you multisells, Selina shows you Buffs list, when Pierce shows you "Quest" link.<br>
@@ -79,7 +79,7 @@ public class L2GoldenRamInstance extends L2NpcInstance
 	
 	private static final int GOLDEN_RAM = 7251;
 	
-	public L2GoldenRamInstance(int objectId, L2NpcTemplate template)
+	public L2GoldenRamInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -156,7 +156,7 @@ public class L2GoldenRamInstance extends L2NpcInstance
 		else if (command.startsWith("gmultisell"))
 		{
 			if (qs != null && qs.getInt("cond") == 3)
-				L2Multisell.getInstance().separateAndSend(Integer.parseInt(command.substring(10).trim()), player, false, getCastle().getTaxRate());
+				MultisellData.getInstance().separateAndSend(Integer.parseInt(command.substring(10).trim()), player, false, getCastle().getTaxRate());
 		}
 		else
 			super.onBypassFeedback(player, command);

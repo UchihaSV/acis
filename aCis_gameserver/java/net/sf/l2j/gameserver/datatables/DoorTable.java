@@ -14,11 +14,12 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,11 +28,11 @@ import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
 import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
+import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
 import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
 import net.sf.l2j.gameserver.pathfinding.AbstractNodeLoc;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.chars.L2CharTemplate;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
 import org.w3c.dom.Document;
@@ -42,8 +43,8 @@ public class DoorTable
 {
 	private static final Logger _log = Logger.getLogger(DoorTable.class.getName());
 	
-	private final TIntObjectHashMap<L2DoorInstance> _staticItems;
-	private final TIntObjectHashMap<ArrayList<L2DoorInstance>> _regions;
+	private final Map<Integer, L2DoorInstance> _staticItems = new HashMap<>();
+	private final Map<Integer, ArrayList<L2DoorInstance>> _regions = new HashMap<>();
 	
 	public static DoorTable getInstance()
 	{
@@ -52,9 +53,6 @@ public class DoorTable
 	
 	protected DoorTable()
 	{
-		_staticItems = new TIntObjectHashMap<>();
-		_regions = new TIntObjectHashMap<>();
-		
 		parseData();
 		onStart();
 	}
@@ -198,7 +196,7 @@ public class DoorTable
 							
 							npcDat.set("runSpd", 0); // Have to keep this, static object MUST BE 0 (critical error otherwise).
 							
-							final L2DoorInstance door = new L2DoorInstance(IdFactory.getInstance().getNextId(), new L2CharTemplate(npcDat), id, name, unlockable);
+							final L2DoorInstance door = new L2DoorInstance(IdFactory.getInstance().getNextId(), new CharTemplate(npcDat), id, name, unlockable);
 							door.setRange(rangeXMin, rangeYMin, rangeZMin, rangeXMax, rangeYMax, rangeZMax);
 							door.setCurrentHpMp(door.getMaxHp(), door.getMaxMp());
 							door.setXYZInvisible(x, y, z);
@@ -235,7 +233,18 @@ public class DoorTable
 								}
 							}
 							
-							putDoor(door);
+							_staticItems.put(door.getDoorId(), door);
+							
+							if (_regions.containsKey(door.getMapRegion()))
+								_regions.get(door.getMapRegion()).add(door);
+							else
+							{
+								final ArrayList<L2DoorInstance> region = new ArrayList<>();
+								region.add(door);
+								
+								_regions.put(door.getMapRegion(), region);
+							}
+							
 							door.spawnMe(door.getX(), door.getY(), door.getZ());
 						}
 					}
@@ -255,23 +264,9 @@ public class DoorTable
 		return _staticItems.get(id);
 	}
 	
-	public void putDoor(L2DoorInstance door)
+	public Collection<L2DoorInstance> getDoors()
 	{
-		_staticItems.put(door.getDoorId(), door);
-		
-		if (_regions.contains(door.getMapRegion()))
-			_regions.get(door.getMapRegion()).add(door);
-		else
-		{
-			final ArrayList<L2DoorInstance> region = new ArrayList<>();
-			region.add(door);
-			_regions.put(door.getMapRegion(), region);
-		}
-	}
-	
-	public L2DoorInstance[] getDoors()
-	{
-		return _staticItems.values(new L2DoorInstance[0]);
+		return _staticItems.values();
 	}
 	
 	public boolean checkIfDoorsBetween(AbstractNodeLoc start, AbstractNodeLoc end)

@@ -15,11 +15,10 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExConfirmCancelItem;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 import net.sf.l2j.gameserver.util.Util;
 
 /**
@@ -43,7 +42,7 @@ public final class RequestConfirmCancelItem extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		final L2ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
+		final ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
 		if (item == null)
 			return;
 		
@@ -62,7 +61,7 @@ public final class RequestConfirmCancelItem extends L2GameClientPacket
 		int price = 0;
 		switch (item.getItem().getCrystalType())
 		{
-			case L2Item.CRYSTAL_C:
+			case C:
 				if (item.getCrystalCount() < 1720)
 					price = 95000;
 				else if (item.getCrystalCount() < 2452)
@@ -70,13 +69,15 @@ public final class RequestConfirmCancelItem extends L2GameClientPacket
 				else
 					price = 210000;
 				break;
-			case L2Item.CRYSTAL_B:
+			
+			case B:
 				if (item.getCrystalCount() < 1746)
 					price = 240000;
 				else
 					price = 270000;
 				break;
-			case L2Item.CRYSTAL_A:
+			
+			case A:
 				if (item.getCrystalCount() < 2160)
 					price = 330000;
 				else if (item.getCrystalCount() < 2824)
@@ -84,7 +85,8 @@ public final class RequestConfirmCancelItem extends L2GameClientPacket
 				else
 					price = 420000;
 				break;
-			case L2Item.CRYSTAL_S:
+			
+			case S:
 				price = 480000;
 				break;
 			// any other item type is not augmentable

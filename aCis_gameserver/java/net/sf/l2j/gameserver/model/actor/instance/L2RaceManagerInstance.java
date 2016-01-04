@@ -14,17 +14,20 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
-import net.sf.l2j.gameserver.MonsterRace;
-import net.sf.l2j.gameserver.MonsterRace.HistoryInfo;
-import net.sf.l2j.gameserver.MonsterRace.RaceState;
+import java.util.List;
+import java.util.Locale;
+
 import net.sf.l2j.gameserver.idfactory.IdFactory;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
+import net.sf.l2j.gameserver.instancemanager.games.MonsterRace;
+import net.sf.l2j.gameserver.instancemanager.games.MonsterRace.HistoryInfo;
+import net.sf.l2j.gameserver.instancemanager.games.MonsterRace.RaceState;
 import net.sf.l2j.gameserver.model.actor.knownlist.RaceManagerKnownList;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.StringUtil;
 
 public class L2RaceManagerInstance extends L2NpcInstance
@@ -41,7 +44,7 @@ public class L2RaceManagerInstance extends L2NpcInstance
 		100000
 	};
 	
-	public L2RaceManagerInstance(int objectId, L2NpcTemplate template)
+	public L2RaceManagerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -156,15 +159,19 @@ public class L2RaceManagerInstance extends L2NpcInstance
 				
 				player.setRace(0, 0);
 				player.setRace(1, 0);
-				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.ACQUIRED_S1_S2).addNumber(MonsterRace.getInstance().getRaceNumber()).addItemName(4443));
 				
-				L2ItemInstance item = new L2ItemInstance(IdFactory.getInstance().getNextId(), 4443);
+				ItemInstance item = new ItemInstance(IdFactory.getInstance().getNextId(), 4443);
 				item.setCount(1);
 				item.setEnchantLevel(MonsterRace.getInstance().getRaceNumber());
 				item.setCustomType1(ticket);
 				item.setCustomType2(_cost[priceId - 1] / 100);
 				
-				player.addItem("Race", item, player, true);
+				player.addItem("Race", item, player, false);
+				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.ACQUIRED_S1_S2).addNumber(MonsterRace.getInstance().getRaceNumber()).addItemName(4443));
+				
+				// Refresh lane bet.
+				MonsterRace.setBetOnLane(ticket, _cost[priceId - 1], true);
+				super.onBypassFeedback(player, "Chat 0");
 				return;
 			}
 			html.replace("1race", MonsterRace.getInstance().getRaceNumber());
@@ -185,9 +192,13 @@ public class L2RaceManagerInstance extends L2NpcInstance
 			html.setFile(getHtmlPath(getTemplate().getNpcId(), 5));
 			for (int i = 0; i < 8; i++)
 			{
-				int n = i + 1;
-				String search = "Mob" + n;
-				html.replace(search, MonsterRace.getInstance().getMonsters()[i].getTemplate().getName());
+				final int n = i + 1;
+				
+				html.replace("Mob" + n, MonsterRace.getInstance().getMonsters()[i].getTemplate().getName());
+				
+				// Odd
+				final double odd = MonsterRace.getInstance().getOdds().get(i);
+				html.replace("Odd" + n, (odd > 0D) ? String.format(Locale.ENGLISH, "%.1f", odd) : "&$804;");
 			}
 			html.replace("1race", MonsterRace.getInstance().getRaceNumber());
 			html.replace("%objectId%", getObjectId());
@@ -209,9 +220,107 @@ public class L2RaceManagerInstance extends L2NpcInstance
 			player.sendPacket(html);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 		}
-		else if (command.equals("calculateWin"))
+		else if (command.equals("ShowTickets"))
 		{
-			// displayCalculateWinnings(player);
+			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			html.setFile(getHtmlPath(getTemplate().getNpcId(), 7));
+			
+			// Generate data.
+			final StringBuilder replyMSG = new StringBuilder();
+			
+			// Retrieve player's tickets.
+			for (ItemInstance ticket : player.getInventory().getAllItemsByItemId(4443))
+			{
+				// Don't list current race tickets.
+				if (ticket.getEnchantLevel() == MonsterRace.getInstance().getRaceNumber())
+					continue;
+				
+				StringUtil.append(replyMSG, "<tr><td><a action=\"bypass -h npc_%objectId%_ShowTicket ", Integer.toString(ticket.getObjectId()), "\">", Integer.toString(ticket.getEnchantLevel()), " Race Number</a></td><td align=right><font color=\"LEVEL\">", Integer.toString(ticket.getCustomType1()), "</font> Number</td><td align=right><font color=\"LEVEL\">", Integer.toString(ticket.getCustomType2() * 100), "</font> Adena</td></tr>");
+			}
+			
+			html.replace("%tickets%", replyMSG.toString());
+			html.replace("%objectId%", getObjectId());
+			player.sendPacket(html);
+			player.sendPacket(ActionFailed.STATIC_PACKET);
+		}
+		else if (command.startsWith("ShowTicket"))
+		{
+			// Retrieve ticket objectId.
+			final int val = Integer.parseInt(command.substring(11));
+			if (val == 0)
+			{
+				super.onBypassFeedback(player, "Chat 0");
+				return;
+			}
+			
+			// Retrieve ticket on player's inventory.
+			final ItemInstance ticket = player.getInventory().getItemByObjectId(val);
+			if (ticket == null)
+			{
+				super.onBypassFeedback(player, "Chat 0");
+				return;
+			}
+			
+			final int raceId = ticket.getEnchantLevel();
+			final int lane = ticket.getCustomType1();
+			final int bet = ticket.getCustomType2() * 100;
+			
+			// Retrieve HistoryInfo for that race.
+			final HistoryInfo info = MonsterRace.getInstance().getHistory().get(raceId - 1);
+			if (info == null)
+			{
+				super.onBypassFeedback(player, "Chat 0");
+				return;
+			}
+			
+			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			html.setFile(getHtmlPath(getTemplate().getNpcId(), 8));
+			html.replace("%raceId%", raceId);
+			html.replace("%lane%", lane);
+			html.replace("%bet%", bet);
+			html.replace("%firstLane%", info.getFirst());
+			html.replace("%odd%", (lane == info.getFirst()) ? String.format(Locale.ENGLISH, "%.2f", info.getOddRate()) : "0.01");
+			html.replace("%objectId%", getObjectId());
+			html.replace("%ticketObjectId%", val);
+			player.sendPacket(html);
+			player.sendPacket(ActionFailed.STATIC_PACKET);
+		}
+		else if (command.startsWith("CalculateWin"))
+		{
+			// Retrieve ticket objectId.
+			final int val = Integer.parseInt(command.substring(13));
+			if (val == 0)
+			{
+				super.onBypassFeedback(player, "Chat 0");
+				return;
+			}
+			
+			// Delete ticket on player's inventory.
+			final ItemInstance ticket = player.getInventory().getItemByObjectId(val);
+			if (ticket == null)
+			{
+				super.onBypassFeedback(player, "Chat 0");
+				return;
+			}
+			
+			final int raceId = ticket.getEnchantLevel();
+			final int lane = ticket.getCustomType1();
+			final int bet = ticket.getCustomType2() * 100;
+			
+			// Retrieve HistoryInfo for that race.
+			final HistoryInfo info = MonsterRace.getInstance().getHistory().get(raceId - 1);
+			if (info == null)
+			{
+				super.onBypassFeedback(player, "Chat 0");
+				return;
+			}
+			
+			// Destroy the ticket.
+			if (player.destroyItem("MonsterTrack", ticket, this, true))
+				player.addAdena("MonsterTrack", (int) (bet * ((lane == info.getFirst()) ? info.getOddRate() : 0.01)), this, true);
+			
+			super.onBypassFeedback(player, "Chat 0");
+			return;
 		}
 		else if (command.equals("ViewHistory"))
 		{
@@ -220,8 +329,14 @@ public class L2RaceManagerInstance extends L2NpcInstance
 			
 			// Generate data.
 			final StringBuilder replyMSG = new StringBuilder();
-			for (HistoryInfo info : MonsterRace.getInstance().getHistory())
-				StringUtil.append(replyMSG,"<tr><td><font color=\"LEVEL\">",String.valueOf(info.getRaceId()),"</font> th</td><td><font color=\"LEVEL\">",String.valueOf(info.getFirst()),"</font> Lane </td><td><font color=\"LEVEL\">",String.valueOf(info.getSecond()),"</font> Lane</td><td align=right><font color=00ffff>",String.valueOf(info.getOddRate()),"</font> Times</td></tr>");
+			
+			// Use whole history, pickup from 'last element' and stop at 'latest element - 7'.
+			final List<HistoryInfo> history = MonsterRace.getInstance().getHistory();
+			for (int i = history.size() - 1; i >= Math.max(0, history.size() - 7); i--)
+			{
+				final HistoryInfo info = history.get(i);
+				StringUtil.append(replyMSG, "<tr><td><font color=\"LEVEL\">", String.valueOf(info.getRaceId()), "</font> th</td><td><font color=\"LEVEL\">", String.valueOf(info.getFirst()), "</font> Lane </td><td><font color=\"LEVEL\">", String.valueOf(info.getSecond()), "</font> Lane</td><td align=right><font color=00ffff>", String.format(Locale.ENGLISH, "%.2f", info.getOddRate()), "</font> Times</td></tr>");
+			}
 			
 			html.replace("%infos%", replyMSG.toString());
 			html.replace("%objectId%", getObjectId());

@@ -14,8 +14,8 @@
  */
 package net.sf.l2j.gameserver.model.itemcontainer.listeners;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 public class StatsListener implements OnEquipListener
 {
@@ -27,13 +27,13 @@ public class StatsListener implements OnEquipListener
 	}
 	
 	@Override
-	public void onEquip(int slot, L2ItemInstance item, L2Playable playable)
+	public void onEquip(int slot, ItemInstance item, L2Playable playable)
 	{
 		playable.addStatFuncs(item.getStatFuncs(playable));
 	}
 	
 	@Override
-	public void onUnequip(int slot, L2ItemInstance item, L2Playable playable)
+	public void onUnequip(int slot, ItemInstance item, L2Playable playable)
 	{
 		playable.removeStatsByOwner(item);
 	}

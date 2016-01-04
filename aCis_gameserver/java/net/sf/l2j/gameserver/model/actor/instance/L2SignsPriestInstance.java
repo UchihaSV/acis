@@ -18,14 +18,14 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.SevenSigns;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.itemcontainer.PcInventory;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * Dawn/Dusk Seven Signs Priest Instance
@@ -33,7 +33,7 @@ import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
  */
 public class L2SignsPriestInstance extends L2NpcInstance
 {
-	public L2SignsPriestInstance(int objectId, L2NpcTemplate template)
+	public L2SignsPriestInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -155,8 +155,8 @@ public class L2SignsPriestInstance extends L2NpcInstance
 					break;
 				
 				case 34: // Pay the participation fee request
-					L2ItemInstance adena = player.getInventory().getItemByItemId(PcInventory.ADENA_ID); // adena
-					L2ItemInstance certif = player.getInventory().getItemByItemId(6388); // Lord of the Manor's Certificate of Approval
+					ItemInstance adena = player.getInventory().getItemByItemId(PcInventory.ADENA_ID); // adena
+					ItemInstance certif = player.getInventory().getItemByItemId(6388); // Lord of the Manor's Certificate of Approval
 					boolean fee = true;
 					
 					if (player.getClassId().level() < 2 || (adena != null && adena.getCount() >= SevenSigns.ADENA_JOIN_DAWN_COST) || (certif != null && certif.getCount() >= 1))
@@ -251,9 +251,9 @@ public class L2SignsPriestInstance extends L2NpcInstance
 				case 21:
 					int contribStoneId = Integer.parseInt(command.substring(14, 18));
 					
-					L2ItemInstance contribBlueStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_BLUE_ID);
-					L2ItemInstance contribGreenStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_GREEN_ID);
-					L2ItemInstance contribRedStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_RED_ID);
+					ItemInstance contribBlueStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_BLUE_ID);
+					ItemInstance contribGreenStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_GREEN_ID);
+					ItemInstance contribRedStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_RED_ID);
 					
 					int contribBlueStoneCount = contribBlueStones == null ? 0 : contribBlueStones.getCount();
 					int contribGreenStoneCount = contribGreenStones == null ? 0 : contribGreenStones.getCount();
@@ -333,9 +333,9 @@ public class L2SignsPriestInstance extends L2NpcInstance
 				case 6: // Contribute Seal Stones - SevenSigns 6 x
 					stoneType = Integer.parseInt(command.substring(13));
 					
-					L2ItemInstance blueStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_BLUE_ID);
-					L2ItemInstance greenStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_GREEN_ID);
-					L2ItemInstance redStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_RED_ID);
+					ItemInstance blueStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_BLUE_ID);
+					ItemInstance greenStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_GREEN_ID);
+					ItemInstance redStones = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_RED_ID);
 					
 					int blueStoneCount = blueStones == null ? 0 : blueStones.getCount();
 					int greenStoneCount = greenStones == null ? 0 : greenStones.getCount();
@@ -569,9 +569,9 @@ public class L2SignsPriestInstance extends L2NpcInstance
 							break;
 						
 						case 4:
-							L2ItemInstance blueStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_BLUE_ID);
-							L2ItemInstance greenStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_GREEN_ID);
-							L2ItemInstance redStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_RED_ID);
+							ItemInstance blueStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_BLUE_ID);
+							ItemInstance greenStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_GREEN_ID);
+							ItemInstance redStonesAll = player.getInventory().getItemByItemId(SevenSigns.SEAL_STONE_RED_ID);
 							
 							int blueStoneCountAll = blueStonesAll == null ? 0 : blueStonesAll.getCount();
 							int greenStoneCountAll = greenStonesAll == null ? 0 : greenStonesAll.getCount();
@@ -605,7 +605,7 @@ public class L2SignsPriestInstance extends L2NpcInstance
 							return;
 					}
 					
-					L2ItemInstance stoneInstance = player.getInventory().getItemByItemId(stoneId);
+					ItemInstance stoneInstance = player.getInventory().getItemByItemId(stoneId);
 					if (stoneInstance != null)
 						stoneCount = stoneInstance.getCount();
 					
@@ -641,7 +641,7 @@ public class L2SignsPriestInstance extends L2NpcInstance
 						break;
 					}
 					
-					L2ItemInstance convertItem = player.getInventory().getItemByItemId(convertStoneId);
+					ItemInstance convertItem = player.getInventory().getItemByItemId(convertStoneId);
 					
 					if (convertItem != null)
 					{

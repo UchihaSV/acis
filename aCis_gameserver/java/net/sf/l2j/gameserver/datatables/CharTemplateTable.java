@@ -23,9 +23,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.model.L2SkillLearn;
+import net.sf.l2j.gameserver.model.actor.template.PcTemplate;
 import net.sf.l2j.gameserver.model.base.ClassId;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.chars.L2PcTemplate;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
 import org.w3c.dom.Document;
@@ -39,7 +39,7 @@ public class CharTemplateTable
 {
 	private static final Logger _log = Logger.getLogger(CharTemplateTable.class.getName());
 	
-	private final Map<Integer, L2PcTemplate> _templates = new HashMap<>();
+	private final Map<Integer, PcTemplate> _templates = new HashMap<>();
 	
 	public static CharTemplateTable getInstance()
 	{
@@ -119,7 +119,7 @@ public class CharTemplateTable
 							items = attrs.getNamedItem("val").getNodeValue().trim();
 						}
 					}
-					L2PcTemplate pcT = new L2PcTemplate(set);
+					PcTemplate pcT = new PcTemplate(set);
 					
 					// Add items listed in "items" if class possess a filled "items" string.
 					if (items != null)
@@ -129,7 +129,7 @@ public class CharTemplateTable
 							pcT.addItem(Integer.parseInt(element));
 					}
 					
-					_templates.put(pcT.classId.getId(), pcT);
+					_templates.put(pcT.getClassId().getId(), pcT);
 				}
 			}
 		}
@@ -139,23 +139,23 @@ public class CharTemplateTable
 		}
 	}
 	
-	public L2PcTemplate getTemplate(ClassId classId)
+	public PcTemplate getTemplate(ClassId classId)
 	{
 		return _templates.get(classId.getId());
 	}
 	
-	public L2PcTemplate getTemplate(int classId)
+	public PcTemplate getTemplate(int classId)
 	{
 		return _templates.get(classId);
 	}
 	
 	public final String getClassNameById(int classId)
 	{
-		L2PcTemplate pcTemplate = _templates.get(classId);
+		PcTemplate pcTemplate = _templates.get(classId);
 		if (pcTemplate == null)
 			throw new IllegalArgumentException("No template for classId: " + classId);
 		
-		return pcTemplate.className;
+		return pcTemplate.getClassName();
 	}
 	
 	private static class SingletonHolder

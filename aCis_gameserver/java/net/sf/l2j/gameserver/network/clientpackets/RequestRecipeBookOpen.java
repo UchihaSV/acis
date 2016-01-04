@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.gameserver.RecipeController;
+import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 
@@ -41,6 +41,6 @@ public final class RequestRecipeBookOpen extends L2GameClientPacket
 			return;
 		}
 		
-		RecipeController.getInstance().requestBookOpen(activeChar, _isDwarvenCraft);
+		RecipeTable.getInstance().requestBookOpen(activeChar, _isDwarvenCraft);
 	}
 }

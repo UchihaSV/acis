@@ -15,14 +15,14 @@
 package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.gameserver.datatables.HennaTable;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.HennaEquipList;
 import net.sf.l2j.gameserver.network.serverpackets.HennaRemoveList;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2SymbolMakerInstance extends L2NpcInstance
 {
-	public L2SymbolMakerInstance(int objectID, L2NpcTemplate template)
+	public L2SymbolMakerInstance(int objectID, NpcTemplate template)
 	{
 		super(objectID, template);
 	}

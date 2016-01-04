@@ -21,14 +21,14 @@ import java.util.Map;
 
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager.CropProcure;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 public class SellListProcure extends L2GameServerPacket
 {
 	private final L2PcInstance _activeChar;
 	private final int _money;
-	private final Map<L2ItemInstance, Integer> _sellList = new HashMap<>();
+	private final Map<ItemInstance, Integer> _sellList = new HashMap<>();
 	private List<CropProcure> _procureList = new ArrayList<>();
 	private final int _castle;
 	
@@ -40,7 +40,7 @@ public class SellListProcure extends L2GameServerPacket
 		_procureList = CastleManager.getInstance().getCastleById(_castle).getCropProcure(0);
 		for (CropProcure c : _procureList)
 		{
-			L2ItemInstance item = _activeChar.getInventory().getItemByItemId(c.getId());
+			ItemInstance item = _activeChar.getInventory().getItemByItemId(c.getId());
 			if (item != null && c.getAmount() > 0)
 				_sellList.put(item, c.getAmount());
 		}
@@ -54,7 +54,7 @@ public class SellListProcure extends L2GameServerPacket
 		writeD(0x00); // lease ?
 		writeH(_sellList.size()); // list size
 		
-		for (L2ItemInstance item : _sellList.keySet())
+		for (ItemInstance item : _sellList.keySet())
 		{
 			writeH(item.getItem().getType1());
 			writeD(item.getObjectId());

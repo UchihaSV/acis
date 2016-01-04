@@ -15,12 +15,12 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 
 /**
  * format: cd
@@ -45,12 +45,12 @@ public class RequestUnEquipItem extends L2GameClientPacket
 		if (Config.DEBUG)
 			_log.fine(activeChar.getName() + "requests to unequip slot: " + _slot);
 		
-		L2ItemInstance item = activeChar.getInventory().getPaperdollItemByL2ItemId(_slot);
+		ItemInstance item = activeChar.getInventory().getPaperdollItemByL2ItemId(_slot);
 		if (item == null)
 			return;
 		
 		// Prevent of unequiping a cursed weapon
-		if (_slot == L2Item.SLOT_LR_HAND && activeChar.isCursedWeaponEquipped())
+		if (_slot == Item.SLOT_LR_HAND && activeChar.isCursedWeaponEquipped())
 			return;
 		
 		// Prevent player from unequipping items in special conditions
@@ -66,11 +66,11 @@ public class RequestUnEquipItem extends L2GameClientPacket
 		if (!activeChar.getInventory().canManipulateWithItemId(item.getItemId()))
 			return;
 		
-		L2ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInBodySlotAndRecord(_slot);
+		ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInBodySlotAndRecord(_slot);
 		
 		// show the update in the inventory
 		InventoryUpdate iu = new InventoryUpdate();
-		for (L2ItemInstance itm : unequipped)
+		for (ItemInstance itm : unequipped)
 		{
 			itm.unChargeAllShots();
 			iu.addModifiedItem(itm);

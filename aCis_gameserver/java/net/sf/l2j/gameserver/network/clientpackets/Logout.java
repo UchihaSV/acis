@@ -15,7 +15,7 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.SevenSignsFestival;
+import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
@@ -60,7 +60,7 @@ public final class Logout extends L2GameClientPacket
 			return;
 		}
 		
-		if (AttackStanceTaskManager.getInstance().getAttackStanceTask(player) && !player.isGM())
+		if (AttackStanceTaskManager.getInstance().get(player) && !player.isGM())
 		{
 			if (Config.DEBUG)
 				_log.fine(player.getName() + " tried to logout while fighting.");

@@ -15,8 +15,8 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.Henna;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.templates.item.L2Henna;
 
 /**
  * format cd
@@ -40,7 +40,7 @@ public final class RequestHennaRemove extends L2GameClientPacket
 		
 		for (int i = 1; i <= 3; i++)
 		{
-			L2Henna henna = activeChar.getHenna(i);
+			Henna henna = activeChar.getHenna(i);
 			if (henna != null && henna.getSymbolId() == _symbolId)
 			{
 				if (activeChar.getAdena() >= (henna.getPrice() / 5))

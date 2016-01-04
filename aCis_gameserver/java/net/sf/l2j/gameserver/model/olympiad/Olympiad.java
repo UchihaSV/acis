@@ -18,8 +18,6 @@
  */
 package net.sf.l2j.gameserver.model.olympiad;
 
-import gnu.trove.map.hash.TIntIntHashMap;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,6 +37,7 @@ import net.sf.l2j.gameserver.Announcements;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.base.ClassId;
 import net.sf.l2j.gameserver.model.entity.Hero;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -48,9 +47,10 @@ public class Olympiad
 {
 	protected static final Logger _log = Logger.getLogger(Olympiad.class.getName());
 	
-	private static Map<Integer, StatsSet> _nobles;
-	protected static List<StatsSet> _heroesToBe;
-	private static final TIntIntHashMap _noblesRank = new TIntIntHashMap();
+	private static final Map<Integer, StatsSet> _nobles = new HashMap<>();
+	private static final Map<Integer, Integer> _noblesRank = new HashMap<>();
+	
+	protected static final List<StatsSet> _heroesToBe = new ArrayList<>();
 	
 	public static final String OLYMPIAD_HTML_PATH = "data/html/olympiad/";
 	
@@ -67,41 +67,6 @@ public class Olympiad
 	private static final String OLYMPIAD_DELETE_ALL = "TRUNCATE olympiad_nobles";
 	private static final String OLYMPIAD_MONTH_CLEAR = "TRUNCATE olympiad_nobles_eom";
 	private static final String OLYMPIAD_MONTH_CREATE = "INSERT INTO olympiad_nobles_eom SELECT char_id, class_id, olympiad_points, competitions_done, competitions_won, competitions_lost, competitions_drawn FROM olympiad_nobles";
-	
-	private static final int[] HERO_IDS =
-	{
-		88,
-		89,
-		90,
-		91,
-		92,
-		93,
-		94,
-		95,
-		96,
-		97,
-		98,
-		99,
-		100,
-		101,
-		102,
-		103,
-		104,
-		105,
-		106,
-		107,
-		108,
-		109,
-		110,
-		111,
-		112,
-		113,
-		114,
-		115,
-		116,
-		117,
-		118
-	};
 	
 	private static final int COMP_START = Config.ALT_OLY_START_TIME; // 6PM
 	private static final int COMP_MIN = Config.ALT_OLY_MIN; // 00 mins
@@ -160,8 +125,6 @@ public class Olympiad
 	
 	private void load()
 	{
-		_nobles = new HashMap<>();
-		
 		boolean loaded = false;
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -281,7 +244,8 @@ public class Olympiad
 	public void loadNoblesRank()
 	{
 		_noblesRank.clear();
-		TIntIntHashMap tmpPlace = new TIntIntHashMap();
+		
+		final Map<Integer, Integer> tmpPlace = new HashMap<>();
 		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -290,9 +254,7 @@ public class Olympiad
 			
 			int place = 1;
 			while (rset.next())
-			{
 				tmpPlace.put(rset.getInt(CHAR_ID), place++);
-			}
 			
 			rset.close();
 			statement.close();
@@ -306,6 +268,7 @@ public class Olympiad
 		int rank2 = (int) Math.round(tmpPlace.size() * 0.10);
 		int rank3 = (int) Math.round(tmpPlace.size() * 0.25);
 		int rank4 = (int) Math.round(tmpPlace.size() * 0.50);
+		
 		if (rank1 == 0)
 		{
 			rank1 = 1;
@@ -314,7 +277,7 @@ public class Olympiad
 			rank4++;
 		}
 		
-		for (int charId : tmpPlace.keys())
+		for (int charId : tmpPlace.keySet())
 		{
 			if (tmpPlace.get(charId) <= rank1)
 				_noblesRank.put(charId, 1);
@@ -360,7 +323,7 @@ public class Olympiad
 			saveNobleData();
 			
 			_period = 1;
-			sortHerosToBe();
+			sortHeroesToBe();
 			Hero.getInstance().resetData();
 			Hero.getInstance().computeNewHeroes(_heroesToBe);
 			
@@ -725,38 +688,26 @@ public class Olympiad
 		}
 	}
 	
-	protected void sortHerosToBe()
+	protected void sortHeroesToBe()
 	{
-		if (_period != 1)
-			return;
-		
-		if (_nobles != null)
-		{
-			for (Integer nobleId : _nobles.keySet())
-			{
-				StatsSet nobleInfo = _nobles.get(nobleId);
-				if (nobleInfo == null)
-					continue;
-			}
-		}
-		
-		_heroesToBe = new ArrayList<>();
+		_heroesToBe.clear();
 		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement = con.prepareStatement(OLYMPIAD_GET_HEROS);
-			ResultSet rset;
-			StatsSet hero;
-			for (int element : HERO_IDS)
+			final PreparedStatement statement = con.prepareStatement(OLYMPIAD_GET_HEROS);
+			for (ClassId id : ClassId.values())
 			{
-				statement.setInt(1, element);
-				rset = statement.executeQuery();
+				if (id.level() != 3)
+					continue;
+				
+				statement.setInt(1, id.getId());
+				ResultSet rset = statement.executeQuery();
 				statement.clearParameters();
 				
 				if (rset.next())
 				{
-					hero = new StatsSet();
-					hero.set(CLASS_ID, element);
+					StatsSet hero = new StatsSet();
+					hero.set(CLASS_ID, id.getId());
 					hero.set(CHAR_ID, rset.getInt(CHAR_ID));
 					hero.set(CHAR_NAME, rset.getString(CHAR_NAME));
 					
@@ -768,7 +719,7 @@ public class Olympiad
 		}
 		catch (SQLException e)
 		{
-			_log.warning("Olympiad: Couldnt load heros from DB");
+			_log.warning("Olympiad: Couldnt load heroes to be from DB");
 		}
 	}
 	

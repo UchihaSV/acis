@@ -14,8 +14,8 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.serverpackets.PackageSendableList;
 
 /**
@@ -39,7 +39,7 @@ public final class RequestPackageSendableItemList extends L2GameClientPacket
 		if (player == null)
 			return;
 		
-		final L2ItemInstance[] items = player.getInventory().getAvailableItems(true, false);
+		final ItemInstance[] items = player.getInventory().getAvailableItems(true, false);
 		if (items == null)
 			return;
 		

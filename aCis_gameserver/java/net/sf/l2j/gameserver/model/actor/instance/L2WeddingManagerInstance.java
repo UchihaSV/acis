@@ -22,24 +22,24 @@ import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CoupleManager;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Couple;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ConfirmDlg;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * @author evill33t & squeezed, rework Tryskell
  */
 public class L2WeddingManagerInstance extends L2NpcInstance
 {
-	public L2WeddingManagerInstance(int objectId, L2NpcTemplate template)
+	public L2WeddingManagerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -161,11 +161,11 @@ public class L2WeddingManagerInstance extends L2NpcInstance
 	 */
 	private static boolean wearsFormalWear(L2PcInstance p1, L2PcInstance p2)
 	{
-		L2ItemInstance fw1 = p1.getChestArmorInstance();
+		ItemInstance fw1 = p1.getChestArmorInstance();
 		if (fw1 == null || fw1.getItemId() != 6408)
 			return false;
 		
-		L2ItemInstance fw2 = p2.getChestArmorInstance();
+		ItemInstance fw2 = p2.getChestArmorInstance();
 		if (fw2 == null || fw2.getItemId() != 6408)
 			return false;
 		

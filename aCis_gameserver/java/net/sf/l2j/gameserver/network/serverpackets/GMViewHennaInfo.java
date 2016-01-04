@@ -15,7 +15,7 @@
 package net.sf.l2j.gameserver.network.serverpackets;
 
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.templates.item.L2Henna;
+import net.sf.l2j.gameserver.model.item.Henna;
 
 /**
  * @author KenM
@@ -23,7 +23,7 @@ import net.sf.l2j.gameserver.templates.item.L2Henna;
 public class GMViewHennaInfo extends L2GameServerPacket
 {
 	private final L2PcInstance _activeChar;
-	private final L2Henna[] _hennas = new L2Henna[3];
+	private final Henna[] _hennas = new Henna[3];
 	private int _count;
 	
 	public GMViewHennaInfo(L2PcInstance activeChar)
@@ -33,7 +33,7 @@ public class GMViewHennaInfo extends L2GameServerPacket
 		
 		for (int i = 0; i < 3; i++)
 		{
-			L2Henna h = _activeChar.getHenna(i + 1);
+			Henna h = _activeChar.getHenna(i + 1);
 			if (h != null)
 				_hennas[_count++] = h;
 		}

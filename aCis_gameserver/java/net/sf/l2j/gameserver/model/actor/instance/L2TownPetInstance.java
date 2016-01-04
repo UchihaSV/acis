@@ -18,16 +18,16 @@ import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.Rnd;
 
 public class L2TownPetInstance extends L2NpcInstance
 {
 	int randomX, randomY, spawnX, spawnY;
 	
-	public L2TownPetInstance(int objectId, L2NpcTemplate template)
+	public L2TownPetInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		setRunning();

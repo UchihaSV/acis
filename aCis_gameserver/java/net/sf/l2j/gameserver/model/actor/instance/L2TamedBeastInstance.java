@@ -20,10 +20,10 @@ import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.AbstractNpcInfo.NpcInfo;
 import net.sf.l2j.gameserver.network.serverpackets.NpcSay;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -63,7 +63,7 @@ public final class L2TamedBeastInstance extends L2FeedableBeastInstance
 		"Yam, yam, yam, yam, yam!"
 	};
 	
-	public L2TamedBeastInstance(int objectId, L2NpcTemplate template, L2PcInstance owner, int foodSkillId, int x, int y, int z)
+	public L2TamedBeastInstance(int objectId, NpcTemplate template, L2PcInstance owner, int foodSkillId, int x, int y, int z)
 	{
 		super(objectId, template);
 		

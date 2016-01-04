@@ -16,7 +16,7 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 
 /**
  * This class manages all chest.
@@ -27,7 +27,7 @@ public final class L2ChestInstance extends L2MonsterInstance
 	private volatile boolean _isInteracted;
 	private volatile boolean _specialDrop;
 	
-	public L2ChestInstance(int objectId, L2NpcTemplate template)
+	public L2ChestInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		setIsNoRndWalk(true);
@@ -66,7 +66,7 @@ public final class L2ChestInstance extends L2MonsterInstance
 	}
 	
 	@Override
-	public void doItemDrop(L2NpcTemplate npcTemplate, L2Character lastAttacker)
+	public void doItemDrop(NpcTemplate npcTemplate, L2Character lastAttacker)
 	{
 		int id = getTemplate().getNpcId();
 		

@@ -16,15 +16,15 @@ package net.sf.l2j.gameserver.handler.skillhandlers;
 
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.model.L2Fishing;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 public class FishingSkill implements ISkillHandler
@@ -59,8 +59,8 @@ public class FishingSkill implements ISkillHandler
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 			return;
 		}
-		L2Weapon weaponItem = player.getActiveWeaponItem();
-		L2ItemInstance weaponInst = activeChar.getActiveWeaponInstance();
+		Weapon weaponItem = player.getActiveWeaponItem();
+		ItemInstance weaponInst = activeChar.getActiveWeaponInstance();
 		
 		if (weaponInst == null || weaponItem == null)
 			return;
@@ -69,7 +69,7 @@ public class FishingSkill implements ISkillHandler
 		int pen = 0;
 		if (activeChar.isChargedShot(ShotType.FISH_SOULSHOT))
 			SS = 2;
-		double gradebonus = 1 + weaponItem.getCrystalType() * 0.1;
+		double gradebonus = 1 + weaponItem.getCrystalType().getId() * 0.1;
 		int dmg = (int) (skill.getPower() * gradebonus * SS);
 		
 		if (player.getSkillLevel(1315) <= skill.getLevel() - 2) // 1315 - Fish Expertise

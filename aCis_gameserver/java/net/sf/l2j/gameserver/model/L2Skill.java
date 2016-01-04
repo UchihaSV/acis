@@ -21,7 +21,6 @@ import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.GeoData;
-import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTreeTable;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
@@ -38,6 +37,9 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SiegeFlagInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SummonInstance;
 import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.item.kind.Armor;
+import net.sf.l2j.gameserver.model.item.type.ArmorType;
+import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -50,8 +52,6 @@ import net.sf.l2j.gameserver.skills.conditions.Condition;
 import net.sf.l2j.gameserver.skills.effects.EffectTemplate;
 import net.sf.l2j.gameserver.taskmanager.DecayTaskManager;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.item.L2Armor;
-import net.sf.l2j.gameserver.templates.item.L2ArmorType;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.util.Util;
 
@@ -124,7 +124,6 @@ public abstract class L2Skill implements IChanceSkillTrigger
 	private final int _id;
 	private final int _level;
 	
-	private int _displayId;
 	private final String _name;
 	private final SkillOpType _operateType;
 	
@@ -264,7 +263,6 @@ public abstract class L2Skill implements IChanceSkillTrigger
 		_id = set.getInteger("skill_id");
 		_level = set.getInteger("level");
 		
-		_displayId = set.getInteger("displayId", _id);
 		_name = set.getString("name");
 		_operateType = set.getEnum("operateType", SkillOpType.class);
 		
@@ -393,19 +391,31 @@ public abstract class L2Skill implements IChanceSkillTrigger
 		_isSiegeSummonSkill = set.getBool("isSiegeSummonSkill", false);
 		
 		String weaponsAllowedString = set.getString("weaponsAllowed", null);
-		if (weaponsAllowedString != null && !weaponsAllowedString.trim().isEmpty())
+		if (weaponsAllowedString != null)
 		{
 			int mask = 0;
 			StringTokenizer st = new StringTokenizer(weaponsAllowedString, ",");
 			while (st.hasMoreTokens())
 			{
 				int old = mask;
-				String item = st.nextToken().trim();
-				if (ItemTable._weaponTypes.containsKey(item))
-					mask |= ItemTable._weaponTypes.get(item).mask();
+				String item = st.nextToken();
+				for (WeaponType wt : WeaponType.values())
+				{
+					if (wt.name().equals(item))
+					{
+						mask |= wt.mask();
+						break;
+					}
+				}
 				
-				if (ItemTable._armorTypes.containsKey(item)) // for shield
-					mask |= ItemTable._armorTypes.get(item).mask();
+				for (ArmorType at : ArmorType.values())
+				{
+					if (at.name().equals(item))
+					{
+						mask |= at.mask();
+						break;
+					}
+				}
 				
 				if (old == mask)
 					_log.info("[weaponsAllowed] Unknown item type name: " + item);
@@ -773,16 +783,6 @@ public abstract class L2Skill implements IChanceSkillTrigger
 	public final int getId()
 	{
 		return _id;
-	}
-	
-	public int getDisplayId()
-	{
-		return _displayId;
-	}
-	
-	public void setDisplayId(int id)
-	{
-		_displayId = id;
 	}
 	
 	public final Stats getStat()
@@ -1206,8 +1206,8 @@ public abstract class L2Skill implements IChanceSkillTrigger
 		
 		if (activeChar.getActiveWeaponItem() != null)
 			mask |= activeChar.getActiveWeaponItem().getItemType().mask();
-		if (activeChar.getSecondaryWeaponItem() != null && activeChar.getSecondaryWeaponItem() instanceof L2Armor)
-			mask |= ((L2ArmorType) activeChar.getSecondaryWeaponItem().getItemType()).mask();
+		if (activeChar.getSecondaryWeaponItem() != null && activeChar.getSecondaryWeaponItem() instanceof Armor)
+			mask |= ((ArmorType) activeChar.getSecondaryWeaponItem().getItemType()).mask();
 		
 		if ((mask & weaponsAllowed) != 0)
 			return true;

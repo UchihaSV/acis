@@ -45,17 +45,17 @@ public class DecayTaskManager
 		return SingletonHolder._instance;
 	}
 	
-	public void addDecayTask(L2Character actor)
+	public void add(L2Character actor)
 	{
 		_decayTasks.put(actor, System.currentTimeMillis());
 	}
 	
-	public void addDecayTask(L2Character actor, int interval)
+	public void add(L2Character actor, int interval)
 	{
 		_decayTasks.put(actor, System.currentTimeMillis() + interval);
 	}
 	
-	public void cancelDecayTask(L2Character actor)
+	public void cancel(L2Character actor)
 	{
 		try
 		{

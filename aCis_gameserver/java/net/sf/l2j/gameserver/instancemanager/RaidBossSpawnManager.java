@@ -31,8 +31,8 @@ import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.instance.L2RaidBossInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.util.Rnd;
 
@@ -74,7 +74,7 @@ public class RaidBossSpawnManager
 			
 			while (rset.next())
 			{
-				final L2NpcTemplate template = getValidTemplate(rset.getInt("boss_id"));
+				final NpcTemplate template = getValidTemplate(rset.getInt("boss_id"));
 				if (template != null)
 				{
 					final L2Spawn spawnDat = new L2Spawn(template);
@@ -358,9 +358,9 @@ public class RaidBossSpawnManager
 		return StatusEnum.UNDEFINED;
 	}
 	
-	public L2NpcTemplate getValidTemplate(int bossId)
+	public NpcTemplate getValidTemplate(int bossId)
 	{
-		L2NpcTemplate template = NpcTable.getInstance().getTemplate(bossId);
+		NpcTemplate template = NpcTable.getInstance().getTemplate(bossId);
 		if (template == null)
 			return null;
 		

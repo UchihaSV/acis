@@ -15,14 +15,14 @@
 package net.sf.l2j.gameserver.network.serverpackets;
 
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.templates.item.L2Henna;
+import net.sf.l2j.gameserver.model.item.Henna;
 
 public class HennaItemInfo extends L2GameServerPacket
 {
 	private final L2PcInstance _activeChar;
-	private final L2Henna _henna;
+	private final Henna _henna;
 	
-	public HennaItemInfo(L2Henna henna, L2PcInstance player)
+	public HennaItemInfo(Henna henna, L2PcInstance player)
 	{
 		_henna = henna;
 		_activeChar = player;
@@ -34,7 +34,7 @@ public class HennaItemInfo extends L2GameServerPacket
 		writeC(0xe3);
 		writeD(_henna.getSymbolId()); // symbol Id
 		writeD(_henna.getDyeId()); // item id of dye
-		writeD(L2Henna.getAmountDyeRequire()); // total amount of dye required
+		writeD(Henna.getAmountDyeRequire()); // total amount of dye required
 		writeD(_henna.getPrice()); // total amount of adenas required to draw symbol
 		writeD(1); // able to draw or not 0 is false and 1 is true
 		writeD(_activeChar.getAdena());

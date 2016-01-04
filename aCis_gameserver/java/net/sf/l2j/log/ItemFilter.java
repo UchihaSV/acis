@@ -17,7 +17,7 @@ package net.sf.l2j.log;
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 /**
  * @author Advi
@@ -43,7 +43,7 @@ public class ItemFilter implements Filter
 		
 		if (_excludeItemType != null)
 		{
-			L2ItemInstance item = ((L2ItemInstance) record.getParameters()[0]);
+			ItemInstance item = ((ItemInstance) record.getParameters()[0]);
 			if (!_excludeItemType.contains(item.getItemType().toString()))
 				return true;
 		}

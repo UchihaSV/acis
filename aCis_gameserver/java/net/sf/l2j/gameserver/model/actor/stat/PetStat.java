@@ -15,10 +15,10 @@
 package net.sf.l2j.gameserver.model.actor.stat;
 
 import net.sf.l2j.gameserver.datatables.PetDataTable;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
@@ -47,11 +47,7 @@ public class PetStat extends SummonStat
 		if (!super.addExpAndSp(addToExp, addToSp))
 			return false;
 		
-		SystemMessage sm = SystemMessage.getSystemMessage(SystemMessageId.PET_EARNED_S1_EXP);
-		sm.addNumber((int) addToExp);
-		
-		getActiveChar().getOwner().sendPacket(sm);
-		
+		getActiveChar().getOwner().sendPacket(SystemMessage.getSystemMessage(SystemMessageId.PET_EARNED_S1_EXP).addNumber((int) addToExp));
 		return true;
 	}
 	
@@ -105,7 +101,7 @@ public class PetStat extends SummonStat
 		getActiveChar().startFeed();
 		
 		// If a control item exists and its level is different of the new level.
-		final L2ItemInstance controlItem = getActiveChar().getControlItem();
+		final ItemInstance controlItem = getActiveChar().getControlItem();
 		if (controlItem != null && controlItem.getEnchantLevel() != getLevel())
 		{
 			getActiveChar().sendPetInfosToOwner();

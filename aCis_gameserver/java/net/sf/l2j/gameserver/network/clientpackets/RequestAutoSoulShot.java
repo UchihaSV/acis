@@ -14,8 +14,8 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExAutoSoulShot;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -41,7 +41,7 @@ public final class RequestAutoSoulShot extends L2GameClientPacket
 		
 		if (!activeChar.isInStoreMode() && activeChar.getActiveRequester() == null && !activeChar.isDead())
 		{
-			L2ItemInstance item = activeChar.getInventory().getItemByItemId(_itemId);
+			ItemInstance item = activeChar.getInventory().getItemByItemId(_itemId);
 			if (item == null)
 				return;
 			

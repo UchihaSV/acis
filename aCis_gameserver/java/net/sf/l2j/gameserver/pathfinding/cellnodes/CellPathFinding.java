@@ -24,8 +24,8 @@ import java.util.logging.Logger;
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.GeoData;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2World;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.pathfinding.AbstractNode;
 import net.sf.l2j.gameserver.pathfinding.AbstractNodeLoc;
 import net.sf.l2j.gameserver.pathfinding.PathFinding;
@@ -45,7 +45,7 @@ public class CellPathFinding extends PathFinding
 	private int _postFilterPasses = 0;
 	private long _postFilterElapsed = 0;
 	
-	private List<L2ItemInstance> _debugItems = null;
+	private List<ItemInstance> _debugItems = null;
 	
 	public static CellPathFinding getInstance()
 	{
@@ -111,7 +111,7 @@ public class CellPathFinding extends PathFinding
 				_debugItems = new ArrayList<>();
 			else
 			{
-				for (L2ItemInstance item : _debugItems)
+				for (ItemInstance item : _debugItems)
 				{
 					if (item == null)
 						continue;
@@ -311,7 +311,7 @@ public class CellPathFinding extends PathFinding
 	
 	private final void dropDebugItem(int itemId, int num, AbstractNodeLoc loc)
 	{
-		final L2ItemInstance item = new L2ItemInstance(IdFactory.getInstance().getNextId(), itemId);
+		final ItemInstance item = new ItemInstance(IdFactory.getInstance().getNextId(), itemId);
 		item.setCount(num);
 		item.spawnMe(loc.getX(), loc.getY(), loc.getZ());
 		_debugItems.add(item);

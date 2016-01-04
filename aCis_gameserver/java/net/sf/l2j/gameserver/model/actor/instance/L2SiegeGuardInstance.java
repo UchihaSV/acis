@@ -23,16 +23,16 @@ import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.knownlist.SiegeGuardKnownList;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * This class represents all guards in the world.
  */
 public final class L2SiegeGuardInstance extends L2Attackable
 {
-	public L2SiegeGuardInstance(int objectId, L2NpcTemplate template)
+	public L2SiegeGuardInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

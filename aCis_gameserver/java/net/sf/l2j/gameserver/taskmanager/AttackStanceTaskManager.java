@@ -42,7 +42,7 @@ public class AttackStanceTaskManager
 		return SingletonHolder._instance;
 	}
 	
-	public void addAttackStanceTask(L2Character actor)
+	public void add(L2Character actor)
 	{
 		if (actor instanceof L2Playable)
 		{
@@ -53,7 +53,7 @@ public class AttackStanceTaskManager
 		_attackStanceTasks.put(actor, System.currentTimeMillis());
 	}
 	
-	public void removeAttackStanceTask(L2Character actor)
+	public void remove(L2Character actor)
 	{
 		if (actor instanceof L2Summon)
 			actor = actor.getActingPlayer();
@@ -61,7 +61,7 @@ public class AttackStanceTaskManager
 		_attackStanceTasks.remove(actor);
 	}
 	
-	public boolean getAttackStanceTask(L2Character actor)
+	public boolean get(L2Character actor)
 	{
 		if (actor instanceof L2Summon)
 			actor = actor.getActingPlayer();

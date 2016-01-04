@@ -17,9 +17,9 @@ package net.sf.l2j.gameserver.network.serverpackets;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.l2j.gameserver.model.ItemInfo;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
-import net.sf.l2j.gameserver.templates.item.L2Item;
+import net.sf.l2j.gameserver.model.item.instance.ItemInfo;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 
 /**
  * @author Yme, Advi
@@ -38,34 +38,34 @@ public class PetInventoryUpdate extends L2GameServerPacket
 		this(new ArrayList<ItemInfo>());
 	}
 	
-	public void addItem(L2ItemInstance item)
+	public void addItem(ItemInstance item)
 	{
 		if (item != null)
 			_items.add(new ItemInfo(item));
 	}
 	
-	public void addNewItem(L2ItemInstance item)
+	public void addNewItem(ItemInstance item)
 	{
 		if (item != null)
 			_items.add(new ItemInfo(item, 1));
 	}
 	
-	public void addModifiedItem(L2ItemInstance item)
+	public void addModifiedItem(ItemInstance item)
 	{
 		if (item != null)
 			_items.add(new ItemInfo(item, 2));
 	}
 	
-	public void addRemovedItem(L2ItemInstance item)
+	public void addRemovedItem(ItemInstance item)
 	{
 		if (item != null)
 			_items.add(new ItemInfo(item, 3));
 	}
 	
-	public void addItems(List<L2ItemInstance> items)
+	public void addItems(List<ItemInstance> items)
 	{
 		if (items != null)
-			for (L2ItemInstance item : items)
+			for (ItemInstance item : items)
 				if (item != null)
 					_items.add(new ItemInfo(item));
 	}
@@ -81,7 +81,7 @@ public class PetInventoryUpdate extends L2GameServerPacket
 			if (temp == null || temp.getItem() == null)
 				continue;
 			
-			L2Item item = temp.getItem();
+			Item item = temp.getItem();
 			
 			writeH(temp.getChange());
 			writeH(item.getType1());

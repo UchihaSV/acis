@@ -25,7 +25,7 @@ import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.instancemanager.DayNightSpawnManager;
 import net.sf.l2j.gameserver.model.L2Spawn;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 
 /**
  * @author Nightmare
@@ -60,7 +60,7 @@ public class SpawnTable
 			ResultSet rset = statement.executeQuery();
 			
 			L2Spawn spawnDat;
-			L2NpcTemplate template1;
+			NpcTemplate template1;
 			
 			while (rset.next())
 			{

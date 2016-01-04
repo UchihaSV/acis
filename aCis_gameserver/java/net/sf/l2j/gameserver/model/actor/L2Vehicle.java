@@ -25,7 +25,6 @@ import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.L2CharacterAI;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.model.L2CharPosition;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.L2WorldRegion;
 import net.sf.l2j.gameserver.model.Location;
@@ -33,12 +32,13 @@ import net.sf.l2j.gameserver.model.VehiclePathPoint;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.knownlist.VehicleKnownList;
 import net.sf.l2j.gameserver.model.actor.stat.VehicleStat;
+import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
-import net.sf.l2j.gameserver.templates.chars.L2CharTemplate;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 import net.sf.l2j.gameserver.util.Util;
 
 /**
@@ -54,7 +54,7 @@ public abstract class L2Vehicle extends L2Character
 	protected VehiclePathPoint[] _currentPath = null;
 	protected int _runState = 0;
 	
-	public L2Vehicle(int objectId, L2CharTemplate template)
+	public L2Vehicle(int objectId, CharTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -290,7 +290,7 @@ public abstract class L2Vehicle extends L2Character
 			{
 				if (itemId > 0)
 				{
-					final L2ItemInstance ticket = player.getInventory().getItemByItemId(itemId);
+					final ItemInstance ticket = player.getInventory().getItemByItemId(itemId);
 					if (ticket == null || player.getInventory().destroyItem("Boat", ticket, count, player, this) == null)
 					{
 						player.sendPacket(SystemMessageId.NOT_CORRECT_BOAT_TICKET);
@@ -421,25 +421,25 @@ public abstract class L2Vehicle extends L2Character
 	}
 	
 	@Override
-	public L2ItemInstance getActiveWeaponInstance()
+	public ItemInstance getActiveWeaponInstance()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2Weapon getActiveWeaponItem()
+	public Weapon getActiveWeaponItem()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2ItemInstance getSecondaryWeaponInstance()
+	public ItemInstance getSecondaryWeaponInstance()
 	{
 		return null;
 	}
 	
 	@Override
-	public L2Weapon getSecondaryWeaponItem()
+	public Weapon getSecondaryWeaponItem()
 	{
 		return null;
 	}

@@ -17,15 +17,14 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.TradeController;
-import net.sf.l2j.gameserver.model.L2Multisell;
-import net.sf.l2j.gameserver.model.L2TradeList;
-import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
+import net.sf.l2j.gameserver.datatables.BuyListTable;
+import net.sf.l2j.gameserver.datatables.MultisellData;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
 import net.sf.l2j.gameserver.network.serverpackets.BuyList;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SellList;
 import net.sf.l2j.gameserver.network.serverpackets.ShopPreviewList;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * L2Merchant type, it got buy/sell methods && bypasses.<br>
@@ -33,7 +32,7 @@ import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
  */
 public class L2MerchantInstance extends L2NpcInstance
 {
-	public L2MerchantInstance(int objectId, L2NpcTemplate template)
+	public L2MerchantInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
@@ -51,57 +50,24 @@ public class L2MerchantInstance extends L2NpcInstance
 		return "data/html/merchant/" + filename + ".htm";
 	}
 	
-	private static void showWearWindow(L2PcInstance player, int val)
+	private final void showWearWindow(L2PcInstance player, int val)
 	{
+		final NpcBuyList buyList = BuyListTable.getInstance().getBuyList(val);
+		if (buyList == null || !buyList.isNpcAllowed(getNpcId()))
+			return;
+		
 		player.tempInventoryDisable();
-		
-		if (Config.DEBUG)
-			_log.fine("Showing wearlist");
-		
-		L2TradeList list = TradeController.getInstance().getBuyList(val);
-		
-		if (list != null)
-			player.sendPacket(new ShopPreviewList(list, player.getAdena(), player.getExpertiseIndex()));
-		else
-		{
-			_log.warning("no buylist with id:" + val);
-			player.sendPacket(ActionFailed.STATIC_PACKET);
-		}
+		player.sendPacket(new ShopPreviewList(buyList, player.getAdena(), player.getExpertiseIndex()));
 	}
 	
 	protected final void showBuyWindow(L2PcInstance player, int val)
 	{
-		double taxRate = 0;
-		
-		if (getIsInTown())
-			taxRate = getCastle().getTaxRate();
+		final NpcBuyList buyList = BuyListTable.getInstance().getBuyList(val);
+		if (buyList == null || !buyList.isNpcAllowed(getNpcId()))
+			return;
 		
 		player.tempInventoryDisable();
-		
-		if (Config.DEBUG)
-			_log.fine("Showing buylist");
-		
-		L2TradeList list = TradeController.getInstance().getBuyList(val);
-		
-		if (list != null && list.getNpcId().equals(String.valueOf(getNpcId())))
-			player.sendPacket(new BuyList(list, player.getAdena(), taxRate));
-		else
-		{
-			_log.warning(player.getName() + " attempted to buy from GM shop.");
-			_log.warning("buylist id:" + val);
-		}
-		
-		player.sendPacket(ActionFailed.STATIC_PACKET);
-	}
-	
-	private static void showSellWindow(L2PcInstance player)
-	{
-		if (Config.DEBUG)
-			_log.fine("Showing sellList");
-		
-		player.sendPacket(new SellList(player));
-		
-		player.sendPacket(ActionFailed.STATIC_PACKET);
+		player.sendPacket(new BuyList(buyList, player.getAdena(), (getIsInTown()) ? getCastle().getTaxRate() : 0));
 	}
 	
 	@Override
@@ -115,28 +81,25 @@ public class L2MerchantInstance extends L2NpcInstance
 			if (st.countTokens() < 1)
 				return;
 			
-			int val = Integer.parseInt(st.nextToken());
-			showBuyWindow(player, val);
+			showBuyWindow(player, Integer.parseInt(st.nextToken()));
 		}
 		else if (actualCommand.equalsIgnoreCase("Sell"))
 		{
-			showSellWindow(player);
+			player.sendPacket(new SellList(player));
 		}
 		else if (actualCommand.equalsIgnoreCase("Wear") && Config.ALLOW_WEAR)
 		{
 			if (st.countTokens() < 1)
 				return;
 			
-			int val = Integer.parseInt(st.nextToken());
-			showWearWindow(player, val);
+			showWearWindow(player, Integer.parseInt(st.nextToken()));
 		}
 		else if (actualCommand.equalsIgnoreCase("Multisell"))
 		{
 			if (st.countTokens() < 1)
 				return;
 			
-			int val = Integer.parseInt(st.nextToken());
-			L2Multisell.getInstance().separateAndSend(val, player, false, getCastle().getTaxRate());
+			MultisellData.getInstance().separateAndSend(Integer.parseInt(st.nextToken()), player, false, getCastle().getTaxRate());
 		}
 		else if (actualCommand.equalsIgnoreCase("Multisell_Shadow"))
 		{
@@ -144,11 +107,11 @@ public class L2MerchantInstance extends L2NpcInstance
 			
 			if (player.getLevel() < 40)
 				html.setFile("data/html/common/shadow_item-lowlevel.htm");
-			else if (player.getLevel() >= 40 && player.getLevel() < 46)
+			else if (player.getLevel() < 46)
 				html.setFile("data/html/common/shadow_item_mi_c.htm");
-			else if (player.getLevel() >= 46 && player.getLevel() < 52)
+			else if (player.getLevel() < 52)
 				html.setFile("data/html/common/shadow_item_hi_c.htm");
-			else if (player.getLevel() >= 52)
+			else
 				html.setFile("data/html/common/shadow_item_b.htm");
 			
 			html.replace("%objectId%", getObjectId());
@@ -159,8 +122,7 @@ public class L2MerchantInstance extends L2NpcInstance
 			if (st.countTokens() < 1)
 				return;
 			
-			int val = Integer.parseInt(st.nextToken());
-			L2Multisell.getInstance().separateAndSend(val, player, true, getCastle().getTaxRate());
+			MultisellData.getInstance().separateAndSend(Integer.parseInt(st.nextToken()), player, true, getCastle().getTaxRate());
 		}
 		else
 			super.onBypassFeedback(player, command);

@@ -26,8 +26,8 @@ import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Castle;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class SiegeGuardManager
 {
@@ -202,7 +202,7 @@ public class SiegeGuardManager
 			ResultSet rs = statement.executeQuery();
 			
 			L2Spawn spawn1;
-			L2NpcTemplate template1;
+			NpcTemplate template1;
 			
 			while (rs.next())
 			{

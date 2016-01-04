@@ -17,11 +17,11 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import net.sf.l2j.gameserver.instancemanager.BoatManager;
 import net.sf.l2j.gameserver.model.actor.instance.L2BoatInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToLocationInVehicle;
 import net.sf.l2j.gameserver.network.serverpackets.StopMoveInVehicle;
-import net.sf.l2j.gameserver.templates.item.L2WeaponType;
 import net.sf.l2j.util.Point3D;
 
 public final class RequestMoveToLocationInVehicle extends L2GameClientPacket
@@ -55,7 +55,7 @@ public final class RequestMoveToLocationInVehicle extends L2GameClientPacket
 			return;
 		}
 		
-		if (activeChar.isAttackingNow() && activeChar.getAttackType() == L2WeaponType.BOW)
+		if (activeChar.isAttackingNow() && activeChar.getAttackType() == WeaponType.BOW)
 		{
 			activeChar.sendPacket(ActionFailed.STATIC_PACKET);
 			return;

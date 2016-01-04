@@ -124,7 +124,7 @@ public class L2SkillDrain extends L2Skill
 							if (Formulas.calcSkillSuccess(activeChar, target, this, shld, bsps))
 								getEffects(activeChar, target);
 							else
-								activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(getDisplayId()));
+								activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_RESISTED_YOUR_S2).addCharName(target).addSkillName(getId()));
 						}
 					}
 					target.reduceCurrentHp(damage, activeChar, this);

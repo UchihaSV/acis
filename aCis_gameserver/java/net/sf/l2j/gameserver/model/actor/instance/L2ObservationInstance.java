@@ -17,16 +17,16 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * @author NightMarez
  */
 public final class L2ObservationInstance extends L2NpcInstance
 {
-	public L2ObservationInstance(int objectId, L2NpcTemplate template)
+	public L2ObservationInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

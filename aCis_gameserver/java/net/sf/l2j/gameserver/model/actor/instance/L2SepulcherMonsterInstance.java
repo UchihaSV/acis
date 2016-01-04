@@ -21,9 +21,9 @@ import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.instancemanager.FourSepulchersManager;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.network.serverpackets.NpcSay;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * @author sandman
@@ -37,7 +37,7 @@ public class L2SepulcherMonsterInstance extends L2MonsterInstance
 	protected Future<?> _changeImmortalTask = null;
 	protected Future<?> _onDeadEventTask = null;
 	
-	public L2SepulcherMonsterInstance(int objectId, L2NpcTemplate template)
+	public L2SepulcherMonsterInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		setShowSummonAnimation(true);

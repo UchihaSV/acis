@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 public class SpawnItem extends L2GameServerPacket
 {
@@ -23,7 +23,7 @@ public class SpawnItem extends L2GameServerPacket
 	private final int _x, _y, _z;
 	private final int _stackable, _count;
 	
-	public SpawnItem(L2ItemInstance item)
+	public SpawnItem(ItemInstance item)
 	{
 		_objectId = item.getObjectId();
 		_itemId = item.getItemId();

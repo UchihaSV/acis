@@ -14,11 +14,11 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
-import net.sf.l2j.gameserver.SevenSigns;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.gameserver.templates.skills.L2EffectType;
 
 /**
@@ -30,7 +30,7 @@ public class L2CastleMagicianInstance extends L2NpcInstance
 	protected static final int COND_BUSY_BECAUSE_OF_SIEGE = 1;
 	protected static final int COND_OWNER = 2;
 	
-	public L2CastleMagicianInstance(int objectId, L2NpcTemplate template)
+	public L2CastleMagicianInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

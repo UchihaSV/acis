@@ -14,10 +14,9 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntIntHashMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -27,10 +26,8 @@ public class SkillTable
 {
 	private static final Logger _log = Logger.getLogger(SkillTable.class.getName());
 	
-	private static final L2Skill[] EMPTY_SKILLS = new L2Skill[0];
-	
-	private final TIntObjectHashMap<L2Skill> _skills;
-	private final TIntIntHashMap _skillMaxLevel;
+	private static final Map<Integer, L2Skill> _skills = new HashMap<>();
+	private static final Map<Integer, Integer> _skillMaxLevel = new HashMap<>();
 	
 	private static final L2Skill[] _heroSkills = new L2Skill[5];
 	private static final int[] _heroSkillsId =
@@ -62,9 +59,6 @@ public class SkillTable
 	
 	protected SkillTable()
 	{
-		_skills = new TIntObjectHashMap<>();
-		_skillMaxLevel = new TIntIntHashMap();
-		
 		load();
 	}
 	
@@ -84,15 +78,15 @@ public class SkillTable
 		_log.info("SkillTable: Loaded " + _skills.size() + " skills.");
 		
 		// Stores max level of skills in a map for future uses.
-		for (final L2Skill skill : _skills.values(EMPTY_SKILLS))
+		for (final L2Skill skill : _skills.values())
 		{
-			final int skillId = skill.getId();
-			final int skillLvl = skill.getLevel();
-			
 			// Only non-enchanted skills
+			final int skillLvl = skill.getLevel();
 			if (skillLvl < 99)
 			{
-				final int maxLvl = _skillMaxLevel.get(skillId);
+				final int skillId = skill.getId();
+				final int maxLvl = getMaxLevel(skillId);
+				
 				if (skillLvl > maxLvl)
 					_skillMaxLevel.put(skillId, skillLvl);
 			}
@@ -145,7 +139,8 @@ public class SkillTable
 	
 	public int getMaxLevel(int skillId)
 	{
-		return _skillMaxLevel.get(skillId);
+		final Integer maxLevel = _skillMaxLevel.get(skillId);
+		return (maxLevel != null) ? maxLevel : 0;
 	}
 	
 	/**

@@ -16,11 +16,11 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.gameserver.instancemanager.RaidBossPointsManager;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Hero;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -33,7 +33,7 @@ public final class L2GrandBossInstance extends L2MonsterInstance
 	 * @param objectId ID of the instance
 	 * @param template L2NpcTemplate of the instance
 	 */
-	public L2GrandBossInstance(int objectId, L2NpcTemplate template)
+	public L2GrandBossInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		setIsRaid(true);

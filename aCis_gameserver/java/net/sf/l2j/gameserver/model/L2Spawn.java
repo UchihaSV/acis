@@ -28,7 +28,7 @@ import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2MonsterInstance;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -43,7 +43,7 @@ public class L2Spawn
 	protected static final Logger _log = Logger.getLogger(L2Spawn.class.getName());
 	
 	/** The link on the L2NpcTemplate object containing generic and static properties of this spawn (ex : RewardExp, RewardSP, AggroRange...) */
-	private L2NpcTemplate _template;
+	private NpcTemplate _template;
 	
 	/** The X position of the spawn point */
 	private int _locX;
@@ -114,7 +114,7 @@ public class L2Spawn
 	 * @throws ClassNotFoundException
 	 * @throws NoSuchMethodException
 	 */
-	public L2Spawn(L2NpcTemplate mobTemplate) throws SecurityException, ClassNotFoundException, NoSuchMethodException
+	public L2Spawn(NpcTemplate mobTemplate) throws SecurityException, ClassNotFoundException, NoSuchMethodException
 	{
 		// Set the _template of the L2Spawn
 		_template = mobTemplate;
@@ -125,7 +125,7 @@ public class L2Spawn
 		Class<?>[] parameters =
 		{
 			int.class,
-			Class.forName("net.sf.l2j.gameserver.templates.chars.L2NpcTemplate")
+			Class.forName("net.sf.l2j.gameserver.model.actor.template.NpcTemplate")
 		};
 		_constructor = Class.forName("net.sf.l2j.gameserver.model.actor.instance." + _template.getType() + "Instance").getConstructor(parameters);
 	}
@@ -499,7 +499,7 @@ public class L2Spawn
 		}
 	}
 	
-	public L2NpcTemplate getTemplate()
+	public NpcTemplate getTemplate()
 	{
 		return _template;
 	}

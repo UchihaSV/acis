@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.Location;
@@ -28,6 +27,7 @@ import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.zone.type.L2OlympiadStadiumZone;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExOlympiadMode;
@@ -228,7 +228,7 @@ public abstract class AbstractOlympiadGame
 			player.disableAutoShotsAll();
 			
 			// Discharge any active shots
-			L2ItemInstance item = player.getActiveWeaponInstance();
+			ItemInstance item = player.getActiveWeaponInstance();
 			if (item != null)
 				item.unChargeAllShots();
 			
@@ -372,7 +372,7 @@ public abstract class AbstractOlympiadGame
 				if (it == null || it.length != 2)
 					continue;
 				
-				final L2ItemInstance item = player.getInventory().addItem("Olympiad", it[0], it[1], player, null);
+				final ItemInstance item = player.getInventory().addItem("Olympiad", it[0], it[1], player, null);
 				if (item == null)
 					continue;
 				

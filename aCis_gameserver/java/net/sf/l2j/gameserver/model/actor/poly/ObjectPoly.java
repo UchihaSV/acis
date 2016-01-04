@@ -17,15 +17,15 @@ package net.sf.l2j.gameserver.model.actor.poly;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class ObjectPoly
 {
 	private final L2Object _activeObject;
 	private int _polyId;
 	private String _polyType;
-	private L2NpcTemplate _npcTemplate;
+	private NpcTemplate _npcTemplate;
 	
 	public ObjectPoly(L2Object activeObject)
 	{
@@ -37,7 +37,7 @@ public class ObjectPoly
 		int id = Integer.parseInt(polyId);
 		if ("npc".equals(polyType))
 		{
-			L2NpcTemplate template = NpcTable.getInstance().getTemplate(id);
+			NpcTemplate template = NpcTable.getInstance().getTemplate(id);
 			if (template == null)
 				return false;
 			
@@ -86,7 +86,7 @@ public class ObjectPoly
 		_polyType = value;
 	}
 	
-	public final L2NpcTemplate getNpcTemplate()
+	public final NpcTemplate getNpcTemplate()
 	{
 		return _npcTemplate;
 	}

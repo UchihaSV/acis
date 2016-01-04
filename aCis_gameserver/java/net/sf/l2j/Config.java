@@ -14,9 +14,6 @@
  */
 package net.sf.l2j;
 
-import gnu.trove.map.hash.TIntIntHashMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,12 +21,15 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
 import net.sf.l2j.commons.config.ExProperties;
+import net.sf.l2j.gameserver.model.holder.BuffSkillHolder;
 import net.sf.l2j.gameserver.util.FloodProtectorConfig;
 import net.sf.l2j.util.StringUtil;
 
@@ -294,6 +294,13 @@ public final class Config
 	public static int CHAMPION_REWARD_ID;
 	public static int CHAMPION_REWARD_QTY;
 	
+	/** Buffer */
+	public static int BUFFER_MAX_SCHEMES;
+	public static int BUFFER_MAX_SKILLS;
+	public static int BUFFER_STATIC_BUFF_COST;
+	public static String BUFFER_BUFFS;
+	public static Map<Integer, BuffSkillHolder> BUFFER_BUFFLIST;
+	
 	/** Misc */
 	public static boolean ALLOW_CLASS_MASTERS;
 	public static ClassMasterSettings CLASS_MASTER_SETTINGS;
@@ -337,6 +344,7 @@ public final class Config
 	
 	public static int SPAWN_INTERVAL_FRINTEZZA;
 	public static int RANDOM_SPAWN_TIME_FRINTEZZA;
+	public static int WAIT_TIME_FRINTEZZA;
 	
 	public static int SPAWN_INTERVAL_ORFEN;
 	public static int RANDOM_SPAWN_TIME_ORFEN;
@@ -528,7 +536,7 @@ public final class Config
 	/** Items Management */
 	public static boolean ALLOW_DISCARDITEM;
 	public static boolean MULTIPLE_ITEM_DROP;
-	public static int AUTODESTROY_ITEM_AFTER;
+	public static int ITEM_AUTO_DESTROY_TIME;
 	public static int HERB_AUTO_DESTROY_TIME;
 	public static String PROTECTED_ITEMS;
 	
@@ -904,6 +912,18 @@ public final class Config
 			CHAMPION_REWARD_ID = npcs.getProperty("ChampionRewardItemID", 6393);
 			CHAMPION_REWARD_QTY = npcs.getProperty("ChampionRewardItemQty", 1);
 			
+			BUFFER_MAX_SCHEMES = npcs.getProperty("BufferMaxSchemesPerChar", 4);
+			BUFFER_MAX_SKILLS = npcs.getProperty("BufferMaxSkillsPerScheme", 24);
+			BUFFER_STATIC_BUFF_COST = npcs.getProperty("BufferStaticCostPerBuff", -1);
+			BUFFER_BUFFS = npcs.getProperty("BufferBuffs");
+			
+			BUFFER_BUFFLIST = new HashMap<>();
+			for (String skillInfo : BUFFER_BUFFS.split(";"))
+			{
+				final String[] infos = skillInfo.split(",");
+				BUFFER_BUFFLIST.put(Integer.valueOf(infos[0]), new BuffSkillHolder(Integer.valueOf(infos[0]), Integer.valueOf(infos[1]), infos[2]));
+			}
+			
 			ALLOW_CLASS_MASTERS = npcs.getProperty("AllowClassMasters", false);
 			ALLOW_ENTIRE_TREE = npcs.getProperty("AllowEntireTree", false);
 			if (ALLOW_CLASS_MASTERS)
@@ -945,6 +965,7 @@ public final class Config
 			
 			SPAWN_INTERVAL_FRINTEZZA = npcs.getProperty("FrintezzaSpawnInterval", 48);
 			RANDOM_SPAWN_TIME_FRINTEZZA = npcs.getProperty("FrintezzaRandomSpawn", 8);
+			WAIT_TIME_FRINTEZZA = npcs.getProperty("FrintezzaWaitTime", 1) * 60000;
 			
 			SPAWN_INTERVAL_ORFEN = npcs.getProperty("OrfenSpawnInterval", 48);
 			RANDOM_SPAWN_TIME_ORFEN = npcs.getProperty("OrfenRandomSpawn", 20);
@@ -1134,7 +1155,7 @@ public final class Config
 			
 			ALLOW_DISCARDITEM = server.getProperty("AllowDiscardItem", true);
 			MULTIPLE_ITEM_DROP = server.getProperty("MultipleItemDrop", true);
-			AUTODESTROY_ITEM_AFTER = server.getProperty("AutoDestroyDroppedItemAfter", 0);
+			ITEM_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyItemTime", 0) * 1000;
 			HERB_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyHerbTime", 15) * 1000;
 			PROTECTED_ITEMS = server.getProperty("ListOfProtectedItems");
 			
@@ -1335,22 +1356,23 @@ public final class Config
 	
 	public static class ClassMasterSettings
 	{
-		private final TIntObjectHashMap<TIntIntHashMap> _claimItems;
-		private final TIntObjectHashMap<TIntIntHashMap> _rewardItems;
-		private final TIntObjectHashMap<Boolean> _allowedClassChange;
+		private final Map<Integer, HashMap<Integer, Integer>> _claimItems;
+		private final Map<Integer, HashMap<Integer, Integer>> _rewardItems;
+		private final Map<Integer, Boolean> _allowedClassChange;
 		
-		public ClassMasterSettings(String _configLine)
+		public ClassMasterSettings(String configLine)
 		{
-			_claimItems = new TIntObjectHashMap<>(3);
-			_rewardItems = new TIntObjectHashMap<>(3);
-			_allowedClassChange = new TIntObjectHashMap<>(3);
-			if (_configLine != null)
-				parseConfigLine(_configLine.trim());
+			_claimItems = new HashMap<>(3);
+			_rewardItems = new HashMap<>(3);
+			_allowedClassChange = new HashMap<>(3);
+			
+			if (configLine != null)
+				parseConfigLine(configLine.trim());
 		}
 		
-		private void parseConfigLine(String _configLine)
+		private void parseConfigLine(String configLine)
 		{
-			StringTokenizer st = new StringTokenizer(_configLine, ";");
+			StringTokenizer st = new StringTokenizer(configLine, ";");
 			
 			while (st.hasMoreTokens())
 			{
@@ -1359,7 +1381,7 @@ public final class Config
 				
 				_allowedClassChange.put(job, true);
 				
-				TIntIntHashMap _items = new TIntIntHashMap();
+				HashMap<Integer, Integer> _items = new HashMap<>();
 				// parse items needed for class change
 				if (st.hasMoreTokens())
 				{
@@ -1376,7 +1398,7 @@ public final class Config
 				
 				_claimItems.put(job, _items);
 				
-				_items = new TIntIntHashMap();
+				_items.clear();
 				// parse gifts after class change
 				if (st.hasMoreTokens())
 				{
@@ -1406,20 +1428,14 @@ public final class Config
 			return false;
 		}
 		
-		public TIntIntHashMap getRewardItems(int job)
+		public Map<Integer, Integer> getRewardItems(int job)
 		{
-			if (_rewardItems.containsKey(job))
-				return _rewardItems.get(job);
-			
-			return null;
+			return _rewardItems.get(job);
 		}
 		
-		public TIntIntHashMap getRequireItems(int job)
+		public Map<Integer, Integer> getRequiredItems(int job)
 		{
-			if (_claimItems.containsKey(job))
-				return _claimItems.get(job);
-			
-			return null;
+			return _claimItems.get(job);
 		}
 	}
 	

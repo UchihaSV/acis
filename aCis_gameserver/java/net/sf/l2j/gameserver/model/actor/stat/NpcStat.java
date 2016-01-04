@@ -45,9 +45,6 @@ public class NpcStat extends CharStat
 	@Override
 	public float getMovementSpeedMultiplier()
 	{
-		if (getActiveChar() == null)
-			return 1;
-		
 		if (getActiveChar().isRunning())
 			return getRunSpeed() * 1f / getActiveChar().getTemplate().getBaseRunSpd();
 		

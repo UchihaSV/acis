@@ -34,7 +34,7 @@ public class CharSelected extends L2GameServerPacket
 		writeC(0x15);
 		
 		writeS(_activeChar.getName());
-		writeD(_activeChar.getCharId());
+		writeD(_activeChar.getObjectId());
 		writeS(_activeChar.getTitle());
 		writeD(_sessionId);
 		writeD(_activeChar.getClanId());

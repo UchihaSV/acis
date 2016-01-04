@@ -19,11 +19,11 @@ import java.util.StringTokenizer;
 import net.sf.l2j.gameserver.datatables.ArmorSetsTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
-import net.sf.l2j.gameserver.model.L2ArmorSet;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.ArmorSet;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 
 /**
  * This class handles following admin commands:<br>
@@ -127,7 +127,7 @@ public class AdminCreateItem implements IAdminCommandHandler
 				try
 				{
 					final int chestId = Integer.parseInt(st.nextToken());
-					final L2ArmorSet set = ArmorSetsTable.getInstance().getSet(chestId);
+					final ArmorSet set = ArmorSetsTable.getInstance().getSet(chestId);
 					if (set == null)
 					{
 						activeChar.sendMessage("This chest has no set.");
@@ -159,7 +159,7 @@ public class AdminCreateItem implements IAdminCommandHandler
 	
 	private static void createItem(L2PcInstance activeChar, L2PcInstance target, int id, int num, int radius, boolean sendGmMessage)
 	{
-		final L2Item template = ItemTable.getInstance().getTemplate(id);
+		final Item template = ItemTable.getInstance().getTemplate(id);
 		if (template == null)
 		{
 			activeChar.sendMessage("This item doesn't exist.");

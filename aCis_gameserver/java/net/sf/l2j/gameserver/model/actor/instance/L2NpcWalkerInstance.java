@@ -18,7 +18,7 @@ import net.sf.l2j.gameserver.ai.L2CharacterAI;
 import net.sf.l2j.gameserver.ai.L2NpcWalkerAI;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 
 /**
  * This class manages npcs who can walk using nodes.
@@ -26,7 +26,7 @@ import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
  */
 public class L2NpcWalkerInstance extends L2NpcInstance
 {
-	public L2NpcWalkerInstance(int objectId, L2NpcTemplate template)
+	public L2NpcWalkerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		setAI(new L2NpcWalkerAI(new L2NpcWalkerAIAccessor()));

@@ -14,13 +14,15 @@
  */
 package net.sf.l2j.gameserver.idfactory;
 
-import gnu.trove.list.array.TIntArrayList;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
@@ -28,6 +30,26 @@ import net.sf.l2j.L2DatabaseFactory;
 public abstract class IdFactory
 {
 	private static Logger _log = Logger.getLogger(IdFactory.class.getName());
+	
+	private static final String[][] EXTRACT_OBJ_ID_TABLES =
+	{
+		{
+			"characters",
+			"obj_Id"
+		},
+		{
+			"items",
+			"object_id"
+		},
+		{
+			"clan_data",
+			"clan_id"
+		},
+		{
+			"itemsonground",
+			"object_id"
+		}
+	};
 	
 	protected boolean _initialized;
 	
@@ -156,47 +178,25 @@ public abstract class IdFactory
 		}
 	}
 	
-	protected final static int[] extractUsedObjectIDTable() throws SQLException
+	protected static Collection<Integer> extractUsedObjectIDTable() throws SQLException
 	{
+		final List<Integer> temp = new ArrayList<>();
+		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			final TIntArrayList temp = new TIntArrayList();
-			
-			Statement statement = con.createStatement();
-			ResultSet rset = statement.executeQuery("SELECT COUNT(*) FROM characters");
-			rset.next();
-			
-			temp.ensureCapacity(rset.getInt(1));
-			
-			rset = statement.executeQuery("SELECT obj_Id FROM characters");
-			while (rset.next())
-				temp.add(rset.getInt(1));
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM items");
-			rset.next();
-			temp.ensureCapacity(temp.size() + rset.getInt(1));
-			rset = statement.executeQuery("SELECT object_id FROM items");
-			while (rset.next())
-				temp.add(rset.getInt(1));
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM clan_data");
-			rset.next();
-			temp.ensureCapacity(temp.size() + rset.getInt(1));
-			rset = statement.executeQuery("SELECT clan_id FROM clan_data");
-			while (rset.next())
-				temp.add(rset.getInt(1));
-			
-			rset = statement.executeQuery("SELECT COUNT(*) FROM itemsonground");
-			rset.next();
-			temp.ensureCapacity(temp.size() + rset.getInt(1));
-			rset = statement.executeQuery("SELECT object_id FROM itemsonground");
-			while (rset.next())
-				temp.add(rset.getInt(1));
-			
-			temp.sort();
-			
-			return temp.toArray();
+			final Statement st = con.createStatement();
+			for (String[] table : EXTRACT_OBJ_ID_TABLES)
+			{
+				final ResultSet rs = st.executeQuery("SELECT " + table[1] + " FROM " + table[0]);
+				while (rs.next())
+					temp.add(rs.getInt(1));
+				
+				rs.close();
+			}
+			st.close();
 		}
+		Collections.sort(temp);
+		return temp;
 	}
 	
 	public boolean isInitialized()

@@ -14,11 +14,9 @@
  */
 package net.sf.l2j.gameserver.handler;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.logging.Logger;
-
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.handler.usercommandhandlers.ChannelDelete;
 import net.sf.l2j.gameserver.handler.usercommandhandlers.ChannelLeave;
 import net.sf.l2j.gameserver.handler.usercommandhandlers.ChannelListUpdate;
@@ -35,9 +33,7 @@ import net.sf.l2j.gameserver.handler.usercommandhandlers.Time;
 
 public class UserCommandHandler
 {
-	private static Logger _log = Logger.getLogger(UserCommandHandler.class.getName());
-	
-	private final TIntObjectHashMap<IUserCommandHandler> _datatable;
+	private final Map<Integer, IUserCommandHandler> _datatable = new HashMap<>();
 	
 	public static UserCommandHandler getInstance()
 	{
@@ -46,7 +42,6 @@ public class UserCommandHandler
 	
 	protected UserCommandHandler()
 	{
-		_datatable = new TIntObjectHashMap<>();
 		registerUserCommandHandler(new ChannelDelete());
 		registerUserCommandHandler(new ChannelLeave());
 		registerUserCommandHandler(new ChannelListUpdate());
@@ -64,27 +59,15 @@ public class UserCommandHandler
 	
 	public void registerUserCommandHandler(IUserCommandHandler handler)
 	{
-		int[] ids = handler.getUserCommandList();
-		for (int id : ids)
-		{
-			if (Config.DEBUG)
-				_log.fine("Adding handler for user command " + id);
-			
-			_datatable.put(new Integer(id), handler);
-		}
+		for (int id : handler.getUserCommandList())
+			_datatable.put(id, handler);
 	}
 	
 	public IUserCommandHandler getUserCommandHandler(int userCommand)
 	{
-		if (Config.DEBUG)
-			_log.fine("getting handler for user command: " + userCommand);
-		
-		return _datatable.get(new Integer(userCommand));
+		return _datatable.get(userCommand);
 	}
 	
-	/**
-	 * @return
-	 */
 	public int size()
 	{
 		return _datatable.size();

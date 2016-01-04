@@ -16,17 +16,17 @@ package net.sf.l2j.gameserver.handler.itemhandlers;
 
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.handler.IItemHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SummonInstance;
+import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExUseSharedGroupItem;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
-import net.sf.l2j.gameserver.templates.item.L2EtcItemType;
 
 /**
  * Template for item skills handler.
@@ -34,7 +34,7 @@ import net.sf.l2j.gameserver.templates.item.L2EtcItemType;
 public class ItemSkills implements IItemHandler
 {
 	@Override
-	public void useItem(L2Playable playable, L2ItemInstance item, boolean forceUse)
+	public void useItem(L2Playable playable, ItemInstance item, boolean forceUse)
 	{
 		if (playable instanceof L2SummonInstance)
 			return;
@@ -105,7 +105,7 @@ public class ItemSkills implements IItemHandler
 				
 				playable.doSimultaneousCast(itemSkill);
 				// Summons should be affected by herbs too, self time effect is handled at L2Effect constructor.
-				if (!isPet && item.getItemType() == L2EtcItemType.HERB && activeChar.hasServitor())
+				if (!isPet && item.getItemType() == EtcItemType.HERB && activeChar.hasServitor())
 					activeChar.getPet().doSimultaneousCast(itemSkill);
 			}
 			else

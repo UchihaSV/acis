@@ -116,7 +116,7 @@ public final class RequestRestartPoint extends L2GameClientPacket
 					
 					// If a player was waiting with flag option and then the flag dies before the
 					// player pushes the button, he is send back to closest/second closest town.
-					if (siegeClan.getFlag().isEmpty())
+					if (siegeClan.getFlags().isEmpty())
 						loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.Town);
 					else
 						loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.SiegeFlag);

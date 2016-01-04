@@ -17,11 +17,14 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.ArmorSetsTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
-import net.sf.l2j.gameserver.model.L2ArmorSet;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.ArmorSet;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Armor;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.EnchantResult;
@@ -29,9 +32,6 @@ import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.item.L2Armor;
-import net.sf.l2j.gameserver.templates.item.L2Item;
-import net.sf.l2j.gameserver.templates.item.L2Weapon;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.util.Rnd;
 
@@ -66,8 +66,8 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 			return;
 		}
 		
-		L2ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
-		L2ItemInstance scroll = activeChar.getActiveEnchantItem();
+		ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
+		ItemInstance scroll = activeChar.getActiveEnchantItem();
 		
 		if (item == null || scroll == null)
 		{
@@ -148,12 +148,12 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 				// If item is equipped, verify the skill obtention (+4 duals, +6 armorset).
 				if (item.isEquipped())
 				{
-					final L2Item it = item.getItem();
+					final Item it = item.getItem();
 					
 					// Add skill bestowed by +4 duals.
-					if (it instanceof L2Weapon && item.getEnchantLevel() == 4)
+					if (it instanceof Weapon && item.getEnchantLevel() == 4)
 					{
-						final L2Skill enchant4Skill = ((L2Weapon) it).getEnchant4Skill();
+						final L2Skill enchant4Skill = ((Weapon) it).getEnchant4Skill();
 						if (enchant4Skill != null)
 						{
 							activeChar.addSkill(enchant4Skill, false);
@@ -161,13 +161,13 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 						}
 					}
 					// Add skill bestowed by +6 armorset.
-					else if (it instanceof L2Armor && item.getEnchantLevel() == 6)
+					else if (it instanceof Armor && item.getEnchantLevel() == 6)
 					{
 						// Checks if player is wearing a chest item
-						final L2ItemInstance chestItem = activeChar.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
+						final ItemInstance chestItem = activeChar.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
 						if (chestItem != null)
 						{
-							final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
+							final ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
 							if (armorSet != null && armorSet.isEnchanted6(activeChar)) // has all parts of set enchanted to 6 or more
 							{
 								final int skillId = armorSet.getEnchant6skillId();
@@ -191,12 +191,12 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 				// Drop passive skills from items.
 				if (item.isEquipped())
 				{
-					final L2Item it = item.getItem();
+					final Item it = item.getItem();
 					
 					// Remove skill bestowed by +4 duals.
-					if (it instanceof L2Weapon && item.getEnchantLevel() >= 4)
+					if (it instanceof Weapon && item.getEnchantLevel() >= 4)
 					{
-						final L2Skill enchant4Skill = ((L2Weapon) it).getEnchant4Skill();
+						final L2Skill enchant4Skill = ((Weapon) it).getEnchant4Skill();
 						if (enchant4Skill != null)
 						{
 							activeChar.removeSkill(enchant4Skill, false);
@@ -204,13 +204,13 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 						}
 					}
 					// Add skill bestowed by +6 armorset.
-					else if (it instanceof L2Armor && item.getEnchantLevel() >= 6)
+					else if (it instanceof Armor && item.getEnchantLevel() >= 6)
 					{
 						// Checks if player is wearing a chest item
-						final L2ItemInstance chestItem = activeChar.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
+						final ItemInstance chestItem = activeChar.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
 						if (chestItem != null)
 						{
-							final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
+							final ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
 							if (armorSet != null && armorSet.isEnchanted6(activeChar)) // has all parts of set enchanted to 6 or more
 							{
 								final int skillId = armorSet.getEnchant6skillId();
@@ -245,7 +245,7 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 					if (count < 1)
 						count = 1;
 					
-					L2ItemInstance destroyItem = activeChar.getInventory().destroyItem("Enchant", item, activeChar, null);
+					ItemInstance destroyItem = activeChar.getInventory().destroyItem("Enchant", item, activeChar, null);
 					if (destroyItem == null)
 					{
 						// unable to destroy item, cheater ?

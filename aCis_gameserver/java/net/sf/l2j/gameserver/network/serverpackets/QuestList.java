@@ -22,17 +22,13 @@ import net.sf.l2j.gameserver.model.quest.QuestState;
 
 public class QuestList extends L2GameServerPacket
 {
-	private List<Quest> _quests;
-	private L2PcInstance _activeChar;
+	private final List<Quest> _quests;
+	private final L2PcInstance _activeChar;
 	
-	@Override
-	public void runImpl()
+	public QuestList(L2PcInstance player)
 	{
-		if (getClient() != null && getClient().getActiveChar() != null)
-		{
-			_activeChar = getClient().getActiveChar();
-			_quests = _activeChar.getAllQuests(true);
-		}
+		_activeChar = player;
+		_quests = player.getAllQuests(true);
 	}
 	
 	@Override

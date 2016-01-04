@@ -14,11 +14,11 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -74,7 +74,7 @@ public class AugmentationData
 	private final ArrayList<?>[] _purpleSkills = new ArrayList[10];
 	private final ArrayList<?>[] _redSkills = new ArrayList[10];
 	
-	private final TIntObjectHashMap<AugmentationSkill> _allSkills = new TIntObjectHashMap<>();
+	private final Map<Integer, AugmentationSkill> _allSkills = new HashMap<>();
 	
 	protected AugmentationData()
 	{

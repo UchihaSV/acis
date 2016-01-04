@@ -14,10 +14,10 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import net.sf.l2j.gameserver.SevenSigns;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
-import net.sf.l2j.gameserver.model.AutoSpawnHandler;
-import net.sf.l2j.gameserver.model.AutoSpawnHandler.AutoSpawnInstance;
+import net.sf.l2j.gameserver.instancemanager.AutoSpawnManager;
+import net.sf.l2j.gameserver.instancemanager.AutoSpawnManager.AutoSpawnInstance;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -60,7 +60,7 @@ public class AdminMammon implements IAdminCommandHandler
 			
 			if (teleportIndex == 1)
 			{
-				final AutoSpawnInstance blackSpawnInst = AutoSpawnHandler.getInstance().getAutoSpawnInstance(SevenSigns.MAMMON_BLACKSMITH_ID, false);
+				final AutoSpawnInstance blackSpawnInst = AutoSpawnManager.getInstance().getAutoSpawnInstance(SevenSigns.MAMMON_BLACKSMITH_ID, false);
 				if (blackSpawnInst != null)
 				{
 					final L2Npc[] blackInst = blackSpawnInst.getNPCInstanceList();
@@ -76,7 +76,7 @@ public class AdminMammon implements IAdminCommandHandler
 			}
 			else if (teleportIndex == 2)
 			{
-				final AutoSpawnInstance merchSpawnInst = AutoSpawnHandler.getInstance().getAutoSpawnInstance(SevenSigns.MAMMON_MERCHANT_ID, false);
+				final AutoSpawnInstance merchSpawnInst = AutoSpawnManager.getInstance().getAutoSpawnInstance(SevenSigns.MAMMON_MERCHANT_ID, false);
 				if (merchSpawnInst != null)
 				{
 					final L2Npc[] merchInst = merchSpawnInst.getNPCInstanceList();
@@ -101,19 +101,19 @@ public class AdminMammon implements IAdminCommandHandler
 				return true;
 			}
 			
-			final AutoSpawnInstance merchSpawnInst = AutoSpawnHandler.getInstance().getAutoSpawnInstance(SevenSigns.MAMMON_MERCHANT_ID, false);
+			final AutoSpawnInstance merchSpawnInst = AutoSpawnManager.getInstance().getAutoSpawnInstance(SevenSigns.MAMMON_MERCHANT_ID, false);
 			if (merchSpawnInst != null)
 			{
-				long merchRespawn = AutoSpawnHandler.getInstance().getTimeToNextSpawn(merchSpawnInst);
+				long merchRespawn = AutoSpawnManager.getInstance().getTimeToNextSpawn(merchSpawnInst);
 				activeChar.sendMessage("The Merchant of Mammon will respawn in " + (merchRespawn / 60000) + " minute(s).");
 			}
 			else
 				activeChar.sendMessage("Merchant of Mammon isn't registered.");
 			
-			final AutoSpawnInstance blackSpawnInst = AutoSpawnHandler.getInstance().getAutoSpawnInstance(SevenSigns.MAMMON_BLACKSMITH_ID, false);
+			final AutoSpawnInstance blackSpawnInst = AutoSpawnManager.getInstance().getAutoSpawnInstance(SevenSigns.MAMMON_BLACKSMITH_ID, false);
 			if (blackSpawnInst != null)
 			{
-				long blackRespawn = AutoSpawnHandler.getInstance().getTimeToNextSpawn(blackSpawnInst);
+				long blackRespawn = AutoSpawnManager.getInstance().getTimeToNextSpawn(blackSpawnInst);
 				activeChar.sendMessage("The Blacksmith of Mammon will respawn in " + (blackRespawn / 60000) + " minute(s).");
 			}
 			else

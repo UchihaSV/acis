@@ -25,7 +25,7 @@ import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.L2MinionData;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2MonsterInstance;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.util.Rnd;
 
 /**
@@ -232,7 +232,7 @@ public class MinionList
 	public static final L2MonsterInstance spawnMinion(L2MonsterInstance master, int minionId)
 	{
 		// Get the template of the Minion to spawn
-		L2NpcTemplate minionTemplate = NpcTable.getInstance().getTemplate(minionId);
+		NpcTemplate minionTemplate = NpcTable.getInstance().getTemplate(minionId);
 		if (minionTemplate == null)
 			return null;
 		

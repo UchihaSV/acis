@@ -45,16 +45,14 @@ public class PcStat extends PlayableStat
 	@Override
 	public boolean addExp(long value)
 	{
-		final L2PcInstance activeChar = getActiveChar();
-		
 		// Allowed to gain exp?
-		if (!activeChar.getAccessLevel().canGainExp())
+		if (!getActiveChar().getAccessLevel().canGainExp())
 			return false;
 		
 		if (!super.addExp(value))
 			return false;
 		
-		activeChar.sendPacket(new UserInfo(activeChar));
+		getActiveChar().sendPacket(new UserInfo(getActiveChar()));
 		return true;
 	}
 	
@@ -74,19 +72,17 @@ public class PcStat extends PlayableStat
 	@Override
 	public boolean addExpAndSp(long addToExp, int addToSp)
 	{
-		final L2PcInstance activeChar = getActiveChar();
-		
 		// GM check concerning canGainExp().
-		if (!activeChar.getAccessLevel().canGainExp())
+		if (!getActiveChar().getAccessLevel().canGainExp())
 			return false;
 		
 		// If this player has a pet, give the xp to the pet now (if any).
-		if (activeChar.hasPet())
+		if (getActiveChar().hasPet())
 		{
-			final L2PetInstance pet = (L2PetInstance) activeChar.getPet();
+			final L2PetInstance pet = (L2PetInstance) getActiveChar().getPet();
 			if (pet.getStat().getExp() <= (PetDataTable.getInstance().getPetLevelData(pet.getNpcId(), 81).getPetMaxExp() + 10000))
 			{
-				if (Util.checkIfInShortRadius(Config.ALT_PARTY_RANGE, pet, activeChar, true))
+				if (Util.checkIfInShortRadius(Config.ALT_PARTY_RANGE, pet, getActiveChar(), true))
 				{
 					float ratioTakenByPet = pet.getPetLevelData().getOwnerExpTaken();
 					
@@ -106,25 +102,16 @@ public class PcStat extends PlayableStat
 		if (!super.addExpAndSp(addToExp, addToSp))
 			return false;
 		
+		SystemMessage sm;
+		
 		if (addToExp == 0 && addToSp > 0)
-		{
-			SystemMessage sm = SystemMessage.getSystemMessage(SystemMessageId.ACQUIRED_S1_SP);
-			sm.addNumber(addToSp);
-			activeChar.sendPacket(sm);
-		}
+			sm = SystemMessage.getSystemMessage(SystemMessageId.ACQUIRED_S1_SP).addNumber(addToSp);
 		else if (addToExp > 0 && addToSp == 0)
-		{
-			SystemMessage sm = SystemMessage.getSystemMessage(SystemMessageId.EARNED_S1_EXPERIENCE);
-			sm.addNumber((int) addToExp);
-			activeChar.sendPacket(sm);
-		}
+			sm = SystemMessage.getSystemMessage(SystemMessageId.EARNED_S1_EXPERIENCE).addNumber((int) addToExp);
 		else
-		{
-			SystemMessage sm = SystemMessage.getSystemMessage(SystemMessageId.YOU_EARNED_S1_EXP_AND_S2_SP);
-			sm.addNumber((int) addToExp);
-			sm.addNumber(addToSp);
-			activeChar.sendPacket(sm);
-		}
+			sm = SystemMessage.getSystemMessage(SystemMessageId.YOU_EARNED_S1_EXP_AND_S2_SP).addNumber((int) addToExp).addNumber(addToSp);
+		
+		getActiveChar().sendPacket(sm);
 		
 		return true;
 	}
@@ -261,7 +248,7 @@ public class PcStat extends PlayableStat
 	public final int getMaxCp()
 	{
 		// Get the Max CP (base+modifier) of the L2PcInstance
-		int val = super.getMaxCp();
+		int val = (int) calcStat(Stats.MAX_CP, getActiveChar().getTemplate().getBaseCpMax(getActiveChar().getLevel()), null, null);
 		if (val != _oldMaxCp)
 		{
 			_oldMaxCp = val;
@@ -333,9 +320,6 @@ public class PcStat extends PlayableStat
 	@Override
 	public int getRunSpeed()
 	{
-		if (getActiveChar() == null)
-			return 1;
-		
 		int val;
 		
 		if (getActiveChar().isMounted())
@@ -356,9 +340,6 @@ public class PcStat extends PlayableStat
 	@Override
 	public int getMAtkSpd()
 	{
-		if (getActiveChar() == null)
-			return 1;
-		
 		int val = super.getMAtkSpd();
 		
 		final int penalty = getActiveChar().getExpertiseArmorPenalty();
@@ -371,9 +352,6 @@ public class PcStat extends PlayableStat
 	@Override
 	public int getEvasionRate(L2Character target)
 	{
-		if (getActiveChar() == null)
-			return 1;
-		
 		int val = super.getEvasionRate(target);
 		
 		final int penalty = getActiveChar().getExpertiseArmorPenalty();
@@ -386,9 +364,6 @@ public class PcStat extends PlayableStat
 	@Override
 	public int getAccuracy()
 	{
-		if (getActiveChar() == null)
-			return 1;
-		
 		int val = super.getAccuracy();
 		
 		if (getActiveChar().getExpertiseWeaponPenalty())
@@ -400,9 +375,6 @@ public class PcStat extends PlayableStat
 	@Override
 	public float getMovementSpeedMultiplier()
 	{
-		if (getActiveChar() == null)
-			return 1;
-		
 		if (getActiveChar().isMounted())
 			return getRunSpeed() * 1f / NpcTable.getInstance().getTemplate(getActiveChar().getMountNpcId()).getBaseRunSpd();
 		
@@ -410,11 +382,14 @@ public class PcStat extends PlayableStat
 	}
 	
 	@Override
+	public int getPhysicalAttackRange()
+	{
+		return (int) calcStat(Stats.POWER_ATTACK_RANGE, getActiveChar().getAttackType().getRange(), null, null);
+	}
+	
+	@Override
 	public int getWalkSpeed()
 	{
-		if (getActiveChar() == null)
-			return 1;
-		
 		return (getRunSpeed() * 70) / 100;
 	}
 }

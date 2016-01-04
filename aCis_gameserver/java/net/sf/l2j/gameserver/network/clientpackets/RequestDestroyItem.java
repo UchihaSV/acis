@@ -22,8 +22,8 @@ import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.datatables.PetDataTable;
 import net.sf.l2j.gameserver.instancemanager.CursedWeaponsManager;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
@@ -63,7 +63,7 @@ public final class RequestDestroyItem extends L2GameClientPacket
 			return;
 		}
 		
-		final L2ItemInstance itemToRemove = activeChar.getInventory().getItemByObjectId(_objectId);
+		final ItemInstance itemToRemove = activeChar.getInventory().getItemByObjectId(_objectId);
 		if (itemToRemove == null)
 			return;
 		
@@ -72,7 +72,7 @@ public final class RequestDestroyItem extends L2GameClientPacket
 		// Cannot discard item that the skill is consumming
 		if (activeChar.isCastingNow())
 		{
-			if (activeChar.getCurrentSkill() != null && activeChar.getCurrentSkill().getSkill().getItemConsumeId() == itemId)
+			if (activeChar.getCurrentSkill().getSkill() != null && activeChar.getCurrentSkill().getSkill().getItemConsumeId() == itemId)
 			{
 				activeChar.sendPacket(SystemMessageId.CANNOT_DISCARD_THIS_ITEM);
 				return;
@@ -115,9 +115,9 @@ public final class RequestDestroyItem extends L2GameClientPacket
 		
 		if (itemToRemove.isEquipped() && (!itemToRemove.isStackable() || (itemToRemove.isStackable() && count >= itemToRemove.getCount())))
 		{
-			L2ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInSlotAndRecord(itemToRemove.getLocationSlot());
+			ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInSlotAndRecord(itemToRemove.getLocationSlot());
 			InventoryUpdate iu = new InventoryUpdate();
-			for (L2ItemInstance item : unequipped)
+			for (ItemInstance item : unequipped)
 			{
 				item.unChargeAllShots();
 				iu.addModifiedItem(item);
@@ -150,7 +150,7 @@ public final class RequestDestroyItem extends L2GameClientPacket
 			}
 		}
 		
-		L2ItemInstance removedItem = activeChar.getInventory().destroyItem("Destroy", _objectId, count, activeChar, null);
+		ItemInstance removedItem = activeChar.getInventory().destroyItem("Destroy", _objectId, count, activeChar, null);
 		if (removedItem == null)
 			return;
 		

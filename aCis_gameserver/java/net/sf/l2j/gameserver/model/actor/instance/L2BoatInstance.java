@@ -20,10 +20,10 @@ import net.sf.l2j.gameserver.ai.L2BoatAI;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Vehicle;
+import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.VehicleDeparture;
 import net.sf.l2j.gameserver.network.serverpackets.VehicleInfo;
 import net.sf.l2j.gameserver.network.serverpackets.VehicleStarted;
-import net.sf.l2j.gameserver.templates.chars.L2CharTemplate;
 
 /**
  * @author Maktakien, reworked by DS
@@ -32,7 +32,7 @@ public class L2BoatInstance extends L2Vehicle
 {
 	protected static final Logger _logBoat = Logger.getLogger(L2BoatInstance.class.getName());
 	
-	public L2BoatInstance(int objectId, L2CharTemplate template)
+	public L2BoatInstance(int objectId, CharTemplate template)
 	{
 		super(objectId, template);
 		setAI(new L2BoatAI(new AIAccessor()));

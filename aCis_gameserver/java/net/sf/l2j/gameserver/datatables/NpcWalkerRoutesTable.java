@@ -14,11 +14,11 @@
  */
 package net.sf.l2j.gameserver.datatables;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,7 +37,7 @@ public class NpcWalkerRoutesTable
 {
 	private final static Logger _log = Logger.getLogger(NpcWalkerRoutesTable.class.getName());
 	
-	private final TIntObjectHashMap<List<L2NpcWalkerNode>> _routes = new TIntObjectHashMap<>();
+	private final Map<Integer, List<L2NpcWalkerNode>> _routes = new HashMap<>();
 	
 	public static NpcWalkerRoutesTable getInstance()
 	{
@@ -96,9 +96,6 @@ public class NpcWalkerRoutesTable
 							list.add(new L2NpcWalkerNode(id, x, y, z, running, delay, chat));
 						}
 					}
-					
-					// ArrayList has initial capacity of 10, let's trim them to size before putting it into the map.
-					((ArrayList<L2NpcWalkerNode>) list).trimToSize();
 					
 					_routes.put(npcId, list);
 				}

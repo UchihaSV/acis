@@ -51,7 +51,7 @@ public class L2SkillTeleport extends L2Skill
 		if (activeChar instanceof L2PcInstance)
 		{
 			// Check invalid states.
-			if (activeChar.isAfraid() || ((L2PcInstance) activeChar).isInOlympiadMode() || GrandBossManager.isInBossZone(activeChar))
+			if (activeChar.isAfraid() || ((L2PcInstance) activeChar).isInOlympiadMode() || GrandBossManager.getInstance().isInBossZone(activeChar))
 				return;
 		}
 		
@@ -77,7 +77,7 @@ public class L2SkillTeleport extends L2Skill
 					if (targetChar.isInOlympiadMode())
 						continue;
 					
-					if (GrandBossManager.isInBossZone(targetChar))
+					if (GrandBossManager.getInstance().isInBossZone(targetChar))
 						continue;
 				}
 			}

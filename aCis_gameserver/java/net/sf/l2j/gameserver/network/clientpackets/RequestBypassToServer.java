@@ -107,9 +107,9 @@ public final class RequestBypassToServer extends L2GameClientPacket
 				
 				try
 				{
-					L2Object object = L2World.getInstance().findObject(Integer.parseInt(id));
+					final L2Object object = L2World.getInstance().findObject(Integer.parseInt(id));
 					
-					if (object != null && object instanceof L2Npc && endOfId > 0 && activeChar.isInsideRadius(object, L2Npc.INTERACTION_DISTANCE, false, false))
+					if (object != null && object instanceof L2Npc && endOfId > 0 && ((L2Npc) object).canInteract(activeChar))
 						((L2Npc) object).onBypassFeedback(activeChar, _command.substring(endOfId + 1));
 					
 					activeChar.sendPacket(ActionFailed.STATIC_PACKET);

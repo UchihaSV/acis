@@ -16,11 +16,11 @@ package net.sf.l2j.gameserver.model.itemcontainer.listeners;
 
 import net.sf.l2j.gameserver.datatables.ArmorSetsTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
-import net.sf.l2j.gameserver.model.L2ArmorSet;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.item.ArmorSet;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 
 public class ArmorSetListener implements OnEquipListener
@@ -33,7 +33,7 @@ public class ArmorSetListener implements OnEquipListener
 	}
 	
 	@Override
-	public void onEquip(int slot, L2ItemInstance item, L2Playable actor)
+	public void onEquip(int slot, ItemInstance item, L2Playable actor)
 	{
 		if (!item.isEquipable())
 			return;
@@ -41,12 +41,12 @@ public class ArmorSetListener implements OnEquipListener
 		final L2PcInstance player = (L2PcInstance) actor;
 		
 		// Checks if player is wearing a chest item
-		final L2ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
+		final ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
 		if (chestItem == null)
 			return;
 		
 		// checks if there is armorset for chest item that player worns
-		final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
+		final ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
 		if (armorSet == null)
 			return;
 		
@@ -103,7 +103,7 @@ public class ArmorSetListener implements OnEquipListener
 	}
 	
 	@Override
-	public void onUnequip(int slot, L2ItemInstance item, L2Playable actor)
+	public void onUnequip(int slot, ItemInstance item, L2Playable actor)
 	{
 		final L2PcInstance player = (L2PcInstance) actor;
 		
@@ -114,7 +114,7 @@ public class ArmorSetListener implements OnEquipListener
 		
 		if (slot == Inventory.PAPERDOLL_CHEST)
 		{
-			final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(item.getItemId());
+			final ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(item.getItemId());
 			if (armorSet == null)
 				return;
 			
@@ -125,11 +125,11 @@ public class ArmorSetListener implements OnEquipListener
 		}
 		else
 		{
-			final L2ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
+			final ItemInstance chestItem = player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST);
 			if (chestItem == null)
 				return;
 			
-			final L2ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
+			final ArmorSet armorSet = ArmorSetsTable.getInstance().getSet(chestItem.getItemId());
 			if (armorSet == null)
 				return;
 			

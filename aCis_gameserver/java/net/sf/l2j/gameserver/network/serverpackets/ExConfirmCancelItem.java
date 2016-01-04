@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.L2ItemInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 /**
  * Format: (ch)ddd
@@ -27,7 +27,7 @@ public class ExConfirmCancelItem extends L2GameServerPacket
 	private final int _itemAug2;
 	private final int _price;
 	
-	public ExConfirmCancelItem(L2ItemInstance item, int price)
+	public ExConfirmCancelItem(ItemInstance item, int price)
 	{
 		_itemObjId = item.getObjectId();
 		_itemId = item.getItemId();

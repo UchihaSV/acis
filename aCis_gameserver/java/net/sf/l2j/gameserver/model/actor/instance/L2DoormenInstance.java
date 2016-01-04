@@ -19,16 +19,16 @@ import java.util.StringTokenizer;
 import net.sf.l2j.gameserver.datatables.DoorTable;
 import net.sf.l2j.gameserver.datatables.TeleportLocationTable;
 import net.sf.l2j.gameserver.model.L2TeleportLocation;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 /**
  * L2Doormen is the mother class of L2ClanHallDoormen and L2CastleDoormen.
  */
 public class L2DoormenInstance extends L2NpcInstance
 {
-	public L2DoormenInstance(int objectID, L2NpcTemplate template)
+	public L2DoormenInstance(int objectID, NpcTemplate template)
 	{
 		super(objectID, template);
 	}
@@ -85,7 +85,7 @@ public class L2DoormenInstance extends L2NpcInstance
 		else
 			html.setFile("data/html/doormen/" + getTemplate().getNpcId() + ".htm");
 		
-		html.replace("%objectId%",getObjectId());
+		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
 	}
 	

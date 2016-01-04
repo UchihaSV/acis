@@ -16,7 +16,7 @@ package net.sf.l2j.gameserver.model.zone;
 
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 /**
  * Abstract base class for any zone form
@@ -45,7 +45,7 @@ public abstract class L2ZoneForm
 	
 	protected final static void dropDebugItem(int itemId, int num, int x, int y, int z)
 	{
-		L2ItemInstance item = new L2ItemInstance(IdFactory.getInstance().getNextId(), itemId);
+		ItemInstance item = new ItemInstance(IdFactory.getInstance().getNextId(), itemId);
 		item.setCount(num);
 		item.spawnMe(x, y, z + 5);
 		ZoneManager.getInstance().getDebugItems().add(item);

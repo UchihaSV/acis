@@ -19,17 +19,17 @@ import static net.sf.l2j.gameserver.model.actor.L2Npc.INTERACTION_DISTANCE;
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Manor;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.instance.L2ManorManagerInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.entity.Castle;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 
 public class RequestBuyProcure extends L2GameClientPacket
 {
@@ -95,7 +95,7 @@ public class RequestBuyProcure extends L2GameClientPacket
 		{
 			i.setReward(castle);
 			
-			L2Item template = ItemTable.getInstance().getTemplate(i.getReward());
+			Item template = ItemTable.getInstance().getTemplate(i.getReward());
 			weight += i.getCount() * template.getWeight();
 			
 			if (!template.isStackable())
@@ -122,11 +122,11 @@ public class RequestBuyProcure extends L2GameClientPacket
 		for (Procure i : _items)
 		{
 			// check if player have correct items count
-			L2ItemInstance item = player.getInventory().getItemByItemId(i.getItemId());
+			ItemInstance item = player.getInventory().getItemByItemId(i.getItemId());
 			if (item == null || item.getCount() < i.getCount())
 				continue;
 			
-			L2ItemInstance iteme = player.getInventory().destroyItemByItemId("Manor", i.getItemId(), i.getCount(), player, manager);
+			ItemInstance iteme = player.getInventory().destroyItemByItemId("Manor", i.getItemId(), i.getCount(), player, manager);
 			if (iteme == null)
 				continue;
 			

@@ -14,14 +14,16 @@
  */
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
+import java.util.List;
+
 import net.sf.l2j.gameserver.handler.ISkillHandler;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
-import net.sf.l2j.gameserver.model.actor.L2Attackable.RewardItem;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2MonsterInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -65,19 +67,19 @@ public class Harvest implements ISkillHandler
 		{
 			if (calcSuccess(player, target))
 			{
-				final RewardItem[] items = target.takeHarvest();
-				if (items != null && items.length > 0)
+				final List<ItemHolder> items = target.getHarvestItems();
+				if (!items.isEmpty())
 				{
 					InventoryUpdate iu = new InventoryUpdate();
-					for (RewardItem ritem : items)
+					for (ItemHolder ritem : items)
 					{
-						cropId = ritem.getItemId(); // always got 1 type of crop as reward
+						cropId = ritem.getId(); // always got 1 type of crop as reward
 						
 						if (player.isInParty())
 							player.getParty().distributeItem(player, ritem, true, target);
 						else
 						{
-							L2ItemInstance item = player.getInventory().addItem("Manor", ritem.getItemId(), ritem.getCount(), player, target);
+							ItemInstance item = player.getInventory().addItem("Manor", ritem.getId(), ritem.getCount(), player, target);
 							iu.addItem(item);
 							
 							send = true;
@@ -94,6 +96,7 @@ public class Harvest implements ISkillHandler
 						
 						player.sendPacket(iu);
 					}
+					items.clear();
 				}
 			}
 			else

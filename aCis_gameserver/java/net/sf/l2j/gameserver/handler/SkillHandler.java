@@ -14,7 +14,8 @@
  */
 package net.sf.l2j.gameserver.handler;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.sf.l2j.gameserver.handler.skillhandlers.BalanceLife;
 import net.sf.l2j.gameserver.handler.skillhandlers.Blow;
@@ -51,7 +52,7 @@ import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 public class SkillHandler
 {
-	private final TIntObjectHashMap<ISkillHandler> _datatable;
+	private final Map<Integer, ISkillHandler> _datatable = new HashMap<>();
 	
 	public static SkillHandler getInstance()
 	{
@@ -60,7 +61,6 @@ public class SkillHandler
 	
 	protected SkillHandler()
 	{
-		_datatable = new TIntObjectHashMap<>();
 		registerSkillHandler(new BalanceLife());
 		registerSkillHandler(new Blow());
 		registerSkillHandler(new Cancel());
@@ -96,8 +96,7 @@ public class SkillHandler
 	
 	public void registerSkillHandler(ISkillHandler handler)
 	{
-		L2SkillType[] types = handler.getSkillIds();
-		for (L2SkillType t : types)
+		for (L2SkillType t : handler.getSkillIds())
 			_datatable.put(t.ordinal(), handler);
 	}
 	
@@ -106,9 +105,6 @@ public class SkillHandler
 		return _datatable.get(skillType.ordinal());
 	}
 	
-	/**
-	 * @return
-	 */
 	public int size()
 	{
 		return _datatable.size();

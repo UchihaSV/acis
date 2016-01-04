@@ -14,11 +14,9 @@
  */
 package net.sf.l2j.gameserver.handler;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.logging.Logger;
-
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.handler.admincommandhandlers.AdminAdmin;
 import net.sf.l2j.gameserver.handler.admincommandhandlers.AdminAnnouncements;
 import net.sf.l2j.gameserver.handler.admincommandhandlers.AdminBan;
@@ -71,8 +69,7 @@ import net.sf.l2j.gameserver.handler.admincommandhandlers.AdminZone;
 
 public class AdminCommandHandler
 {
-	private static Logger _log = Logger.getLogger(AdminCommandHandler.class.getName());
-	private final TIntObjectHashMap<IAdminCommandHandler> _datatable;
+	private final Map<Integer, IAdminCommandHandler> _datatable = new HashMap<>();
 	
 	public static AdminCommandHandler getInstance()
 	{
@@ -81,7 +78,6 @@ public class AdminCommandHandler
 	
 	protected AdminCommandHandler()
 	{
-		_datatable = new TIntObjectHashMap<>();
 		registerAdminCommandHandler(new AdminAdmin());
 		registerAdminCommandHandler(new AdminAnnouncements());
 		registerAdminCommandHandler(new AdminBan());
@@ -135,13 +131,8 @@ public class AdminCommandHandler
 	
 	public void registerAdminCommandHandler(IAdminCommandHandler handler)
 	{
-		String[] ids = handler.getAdminCommandList();
-		for (String id : ids)
-		{
-			if (Config.DEBUG)
-				_log.fine("Adding handler for command " + id);
+		for (String id : handler.getAdminCommandList())
 			_datatable.put(id.hashCode(), handler);
-		}
 	}
 	
 	public IAdminCommandHandler getAdminCommandHandler(String adminCommand)
@@ -151,14 +142,9 @@ public class AdminCommandHandler
 		if (adminCommand.indexOf(" ") != -1)
 			command = adminCommand.substring(0, adminCommand.indexOf(" "));
 		
-		if (Config.DEBUG)
-			_log.fine("getting handler for command: " + command + " -> " + (_datatable.get(command.hashCode()) != null));
 		return _datatable.get(command.hashCode());
 	}
 	
-	/**
-	 * @return
-	 */
 	public int size()
 	{
 		return _datatable.size();

@@ -20,14 +20,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
+import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.base.Race;
 import net.sf.l2j.gameserver.model.entity.Castle;
 import net.sf.l2j.gameserver.model.entity.ClanHall;
 import net.sf.l2j.gameserver.model.zone.L2ZoneType;
@@ -335,7 +336,7 @@ public class MapRegionTable
 			
 			// Karma player land out of city
 			if (player.getKarma() > 0)
-				return getClosestTown(activeChar.getX(), activeChar.getY()).getChaoticSpawnLoc();
+				return getClosestTown(player.getTemplate().getRace(), activeChar.getX(), activeChar.getY()).getChaoticSpawnLoc();
 			
 			// Checking if in arena
 			L2ArenaZone arena = ZoneManager.getArena(player);
@@ -353,6 +354,9 @@ public class MapRegionTable
 						return getSecondClosestTown(activeChar.getX(), activeChar.getY()).getSpawnLoc();
 				}
 			}
+			
+			// Get the nearest town
+			return getClosestTown(player.getTemplate().getRace(), activeChar.getX(), activeChar.getY()).getSpawnLoc();
 		}
 		
 		// Get the nearest town
@@ -360,11 +364,80 @@ public class MapRegionTable
 	}
 	
 	/**
-	 * @param x
-	 * @param y
+	 * A specific method, used ONLY by players. There's a Race condition.
+	 * @param race : The Race of the player, got an effect for Elf and Dark Elf.
+	 * @param x : The current player's X location.
+	 * @param y : The current player's Y location.
 	 * @return the closest L2TownZone based on a X/Y location.
 	 */
-	public final static L2TownZone getClosestTown(int x, int y)
+	private final static L2TownZone getClosestTown(Race race, int x, int y)
+	{
+		switch (getMapRegion(x, y))
+		{
+			case 0: // TI
+				return getTown(2);
+				
+			case 1:// Elven
+				return getTown((race == Race.DarkElf) ? 1 : 3);
+				
+			case 2:// DE
+				return getTown((race == Race.Elf) ? 3 : 1);
+				
+			case 3: // Orc
+				return getTown(4);
+				
+			case 4:// Dwarven
+				return getTown(6);
+				
+			case 5:// Gludio
+				return getTown(7);
+				
+			case 6:// Gludin
+				return getTown(5);
+				
+			case 7: // Dion
+				return getTown(8);
+				
+			case 8: // Giran
+			case 12: // Giran Harbor
+				return getTown(9);
+				
+			case 9: // Oren
+				return getTown(10);
+				
+			case 10: // Aden
+				return getTown(12);
+				
+			case 11: // HV
+				return getTown(11);
+				
+			case 13: // Heine
+				return getTown(15);
+				
+			case 14: // Rune
+				return getTown(14);
+				
+			case 15: // Goddard
+				return getTown(13);
+				
+			case 16: // Schuttgart
+				return getTown(17);
+				
+			case 17:// Floran
+				return getTown(16);
+				
+			case 18:// Primeval Isle
+				return getTown(19);
+		}
+		return getTown(16); // Default to floran
+	}
+	
+	/**
+	 * @param x : The current character's X location.
+	 * @param y : The current character's Y location.
+	 * @return the closest L2TownZone based on a X/Y location.
+	 */
+	private final static L2TownZone getClosestTown(int x, int y)
 	{
 		switch (getMapRegion(x, y))
 		{
@@ -427,11 +500,11 @@ public class MapRegionTable
 	}
 	
 	/**
-	 * @param x
-	 * @param y
+	 * @param x : The current character's X location.
+	 * @param y : The current character's Y location.
 	 * @return the second closest L2TownZone based on a X/Y location.
 	 */
-	public final static L2TownZone getSecondClosestTown(int x, int y)
+	private final static L2TownZone getSecondClosestTown(int x, int y)
 	{
 		switch (getMapRegion(x, y))
 		{
@@ -476,8 +549,8 @@ public class MapRegionTable
 	}
 	
 	/**
-	 * @param x
-	 * @param y
+	 * @param x : The current character's X location.
+	 * @param y : The current character's Y location.
 	 * @return the closest region based on a X/Y location.
 	 */
 	public final static int getClosestLocation(int x, int y)

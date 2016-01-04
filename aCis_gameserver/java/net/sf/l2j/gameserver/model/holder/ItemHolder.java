@@ -20,21 +20,12 @@ package net.sf.l2j.gameserver.model.holder;
  */
 public class ItemHolder
 {
-	private final int _id;
-	private final int _objectId;
-	private final int _count;
+	private int _id;
+	private int _count;
 	
 	public ItemHolder(int id, int count)
 	{
 		_id = id;
-		_objectId = -1;
-		_count = count;
-	}
-	
-	public ItemHolder(int id, int objectId, int count)
-	{
-		_id = id;
-		_objectId = objectId;
 		_count = count;
 	}
 	
@@ -47,19 +38,27 @@ public class ItemHolder
 	}
 	
 	/**
-	 * @return the object Id
-	 */
-	public int getObjectId()
-	{
-		return _objectId;
-	}
-	
-	/**
 	 * @return the item count.
 	 */
 	public int getCount()
 	{
 		return _count;
+	}
+	
+	/**
+	 * @param id : The new value to set.
+	 */
+	public void setId(int id)
+	{
+		_id = id;
+	}
+	
+	/**
+	 * @param count : The new value to set.
+	 */
+	public void setCount(int count)
+	{
+		_count = count;
 	}
 	
 	@Override

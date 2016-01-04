@@ -25,11 +25,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.L2WorldRegion;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.zone.L2SpawnZone;
 import net.sf.l2j.gameserver.model.zone.L2ZoneType;
 import net.sf.l2j.gameserver.model.zone.form.ZoneCuboid;
@@ -53,7 +53,7 @@ public class ZoneManager
 	
 	private final Map<Class<? extends L2ZoneType>, Map<Integer, ? extends L2ZoneType>> _classZones = new HashMap<>();
 	private int _lastDynamicId = 0;
-	private final List<L2ItemInstance> _debugItems = new ArrayList<>();
+	private final List<ItemInstance> _debugItems = new ArrayList<>();
 	
 	public static final ZoneManager getInstance()
 	{
@@ -78,7 +78,7 @@ public class ZoneManager
 				count++;
 			}
 		}
-		GrandBossManager.getZones().clear();
+		GrandBossManager.getInstance().getZones().clear();
 		_log.info("Removed zones in " + count + " regions.");
 		
 		// Load the zones
@@ -541,7 +541,7 @@ public class ZoneManager
 	 * General storage for debug items used for visualizing zones.
 	 * @return list of items
 	 */
-	public List<L2ItemInstance> getDebugItems()
+	public List<ItemInstance> getDebugItems()
 	{
 		return _debugItems;
 	}
@@ -551,7 +551,7 @@ public class ZoneManager
 	 */
 	public void clearDebugItems()
 	{
-		for (L2ItemInstance item : _debugItems)
+		for (ItemInstance item : _debugItems)
 			item.decayMe();
 		
 		_debugItems.clear();

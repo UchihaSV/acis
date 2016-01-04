@@ -22,12 +22,12 @@ import net.sf.l2j.gameserver.model.L2SiegeClan;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Siegable;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public class L2SiegeFlagInstance extends L2Npc
 {
@@ -35,7 +35,7 @@ public class L2SiegeFlagInstance extends L2Npc
 	private final L2PcInstance _player;
 	private final Siegable _siege;
 	
-	public L2SiegeFlagInstance(L2PcInstance player, int objectId, L2NpcTemplate template)
+	public L2SiegeFlagInstance(L2PcInstance player, int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		

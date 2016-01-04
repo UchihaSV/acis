@@ -22,8 +22,8 @@ import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 import net.sf.l2j.util.Rnd;
 
 public class L2SkillSpawn extends L2Skill
@@ -54,7 +54,7 @@ public class L2SkillSpawn extends L2Skill
 			return;
 		}
 		
-		final L2NpcTemplate template = NpcTable.getInstance().getTemplate(_npcId);
+		final NpcTemplate template = NpcTable.getInstance().getTemplate(_npcId);
 		if (template == null)
 		{
 			_log.warning("Spawn of the nonexisting NPC ID: " + _npcId + ", skill ID: " + getId());

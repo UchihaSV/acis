@@ -40,12 +40,12 @@ public class WaterTaskManager
 		return SingletonHolder._instance;
 	}
 	
-	public void addWaterTask(L2PcInstance actor, long time)
+	public void add(L2PcInstance actor, long time)
 	{
 		_waterTask.put(actor, time);
 	}
 	
-	public void removeWaterTask(L2Character actor)
+	public void remove(L2Character actor)
 	{
 		_waterTask.remove(actor);
 	}

@@ -76,7 +76,7 @@ public final class SetPrivateStoreListSell extends L2GameClientPacket
 			return;
 		}
 		
-		if (AttackStanceTaskManager.getInstance().getAttackStanceTask(player) || (player.isCastingNow() || player.isCastingSimultaneouslyNow()) || player.isInDuel())
+		if (AttackStanceTaskManager.getInstance().get(player) || (player.isCastingNow() || player.isCastingSimultaneouslyNow()) || player.isInDuel())
 		{
 			player.sendPacket(SystemMessageId.YOU_ARE_NOT_AUTHORIZED_TO_DO_THAT);
 			player.sendPacket(new PrivateStoreManageListSell(player, _packageSale));

@@ -18,15 +18,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.l2j.gameserver.model.L2Effect;
-import net.sf.l2j.gameserver.model.L2ItemInstance;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
-import net.sf.l2j.gameserver.templates.item.L2Item;
 
 /**
  * @author kombat Format: cd d[d s/d/dd/ddd]
@@ -109,7 +109,7 @@ public class ConfirmDlg extends L2GameServerPacket
 		return addNpcName(npc.getNpcId());
 	}
 	
-	public ConfirmDlg addNpcName(L2NpcTemplate tpl)
+	public ConfirmDlg addNpcName(NpcTemplate tpl)
 	{
 		return addNpcName(tpl.getNpcId());
 	}
@@ -120,12 +120,12 @@ public class ConfirmDlg extends L2GameServerPacket
 		return this;
 	}
 	
-	public ConfirmDlg addItemName(L2ItemInstance item)
+	public ConfirmDlg addItemName(ItemInstance item)
 	{
 		return addItemName(item.getItem().getItemId());
 	}
 	
-	public ConfirmDlg addItemName(L2Item item)
+	public ConfirmDlg addItemName(Item item)
 	{
 		return addItemName(item.getItemId());
 	}
@@ -155,9 +155,6 @@ public class ConfirmDlg extends L2GameServerPacket
 	
 	public ConfirmDlg addSkillName(L2Skill skill)
 	{
-		if (skill.getId() != skill.getDisplayId()) // custom skill - need nameId or smth like this.
-			return addString(skill.getName());
-		
 		return addSkillName(skill.getId(), skill.getLevel());
 	}
 	

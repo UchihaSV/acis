@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 
 /**
  * This class is here to avoid hardcoded IDs.<br>
@@ -24,7 +24,7 @@ import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
  */
 public class L2FeedableBeastInstance extends L2MonsterInstance
 {
-	public L2FeedableBeastInstance(int objectId, L2NpcTemplate template)
+	public L2FeedableBeastInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}

@@ -14,14 +14,14 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.base.ClassType;
 import net.sf.l2j.gameserver.model.base.PlayerClass;
 import net.sf.l2j.gameserver.model.base.Race;
-import net.sf.l2j.gameserver.templates.chars.L2NpcTemplate;
 
 public final class L2VillageMasterPriestInstance extends L2VillageMasterInstance
 {
-	public L2VillageMasterPriestInstance(int objectId, L2NpcTemplate template)
+	public L2VillageMasterPriestInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 	}
