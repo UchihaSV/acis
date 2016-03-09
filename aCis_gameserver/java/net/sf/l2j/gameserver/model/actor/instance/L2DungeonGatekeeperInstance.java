@@ -39,7 +39,6 @@ public class L2DungeonGatekeeperInstance extends L2NpcInstance
 		StringTokenizer st = new StringTokenizer(command, " ");
 		String actualCommand = st.nextToken(); // Get actual command
 		
-		String filename = SevenSigns.SEVEN_SIGNS_HTML_PATH;
 		int sealAvariceOwner = SevenSigns.getInstance().getSealOwner(SevenSigns.SEAL_AVARICE);
 		int sealGnosisOwner = SevenSigns.getInstance().getSealOwner(SevenSigns.SEAL_GNOSIS);
 		int playerCabal = SevenSigns.getInstance().getPlayerCabal(player.getObjectId());
@@ -74,9 +73,8 @@ public class L2DungeonGatekeeperInstance extends L2NpcInstance
 			
 			if (!canPort)
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-				filename += "necro_no.htm";
-				html.setFile(filename);
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				html.setFile(SevenSigns.SEVEN_SIGNS_HTML_PATH + "necro_no.htm");
 				player.sendPacket(html);
 			}
 			else
@@ -113,9 +111,8 @@ public class L2DungeonGatekeeperInstance extends L2NpcInstance
 			
 			if (!canPort)
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-				filename += "cata_no.htm";
-				html.setFile(filename);
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				html.setFile(SevenSigns.SEVEN_SIGNS_HTML_PATH + "cata_no.htm");
 				player.sendPacket(html);
 			}
 			else

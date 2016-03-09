@@ -16,7 +16,7 @@ package net.sf.l2j.loginserver.crypt;
 
 import java.io.IOException;
 
-import net.sf.l2j.util.Rnd;
+import net.sf.l2j.commons.random.Rnd;
 
 /**
  * @author KenM

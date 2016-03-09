@@ -17,16 +17,17 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.List;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.base.ClassId;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
+import net.sf.l2j.gameserver.network.serverpackets.HennaInfo;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * Custom class allowing you to choose your class.<br>
@@ -57,8 +58,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 		if (Config.ALLOW_CLASS_MASTERS)
 			filename = "data/html/classmaster/" + getNpcId() + ".htm";
 		
-		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
@@ -82,7 +82,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 			
 			if (checkAndChangeClass(player, val))
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile("data/html/classmaster/ok.htm");
 				html.replace("%name%", CharTemplateTable.getInstance().getClassNameById(val));
 				player.sendPacket(html);
@@ -90,7 +90,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 		}
 		else if (command.startsWith("become_noble"))
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			
 			if (!player.isNoble())
 			{
@@ -116,14 +116,14 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 	
 	private static final void showHtmlMenu(L2PcInstance player, int objectId, int level)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(objectId);
+		final NpcHtmlMessage html = new NpcHtmlMessage(objectId);
 		
 		if (!Config.CLASS_MASTER_SETTINGS.isAllowed(level))
 		{
-			int jobLevel = player.getClassId().level();
 			final StringBuilder sb = new StringBuilder(100);
 			sb.append("<html><body>");
-			switch (jobLevel)
+			
+			switch (player.getClassId().level())
 			{
 				case 0:
 					if (Config.CLASS_MASTER_SETTINGS.isAllowed(1))
@@ -135,6 +135,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 					else
 						sb.append("I can't change your occupation.<br>");
 					break;
+				
 				case 1:
 					if (Config.CLASS_MASTER_SETTINGS.isAllowed(2))
 						sb.append("Come back here when you reached level 40 to change your class.<br>");
@@ -143,12 +144,14 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 					else
 						sb.append("I can't change your occupation.<br>");
 					break;
+				
 				case 2:
 					if (Config.CLASS_MASTER_SETTINGS.isAllowed(3))
 						sb.append("Come back here when you reached level 76 to change your class.<br>");
 					else
 						sb.append("I can't change your occupation.<br>");
 					break;
+				
 				case 3:
 					sb.append("There is no class change available for you anymore.<br>");
 					break;
@@ -170,7 +173,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 					for (ClassId cid : ClassId.values())
 					{
 						if (validateClassId(currentClassId, cid) && cid.level() == level)
-							StringUtil.append(menu, "<a action=\"bypass -h npc_%objectId%_change_class ", String.valueOf(cid.getId()), "\">", CharTemplateTable.getInstance().getClassNameById(cid.getId()), "</a><br>");
+							StringUtil.append(menu, "<a action=\"bypass -h npc_%objectId%_change_class ", cid.getId(), "\">", CharTemplateTable.getInstance().getClassNameById(cid.getId()), "</a><br>");
 					}
 					
 					if (menu.length() > 0)
@@ -224,12 +227,12 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 			}
 		}
 		
-		final List<ItemHolder> neededItems = Config.CLASS_MASTER_SETTINGS.getRequiredItems(newJobLevel);
+		final List<IntIntHolder> neededItems = Config.CLASS_MASTER_SETTINGS.getRequiredItems(newJobLevel);
 		
 		// check if player have all required items for class transfer
-		for (ItemHolder item : neededItems)
+		for (IntIntHolder item : neededItems)
 		{
-			if (player.getInventory().getInventoryItemCount(item.getId(), -1) < item.getCount())
+			if (player.getInventory().getInventoryItemCount(item.getId(), -1) < item.getValue())
 			{
 				player.sendPacket(SystemMessageId.NOT_ENOUGH_ITEMS);
 				return false;
@@ -237,15 +240,15 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 		}
 		
 		// get all required items for class transfer
-		for (ItemHolder item : neededItems)
+		for (IntIntHolder item : neededItems)
 		{
-			if (!player.destroyItemByItemId("ClassMaster", item.getId(), item.getCount(), player, true))
+			if (!player.destroyItemByItemId("ClassMaster", item.getId(), item.getValue(), player, true))
 				return false;
 		}
 		
 		// reward player with items
-		for (ItemHolder item : Config.CLASS_MASTER_SETTINGS.getRewardItems(newJobLevel))
-			player.addItem("ClassMaster", item.getId(), item.getCount(), player, true);
+		for (IntIntHolder item : Config.CLASS_MASTER_SETTINGS.getRewardItems(newJobLevel))
+			player.addItem("ClassMaster", item.getId(), item.getValue(), player, true);
 		
 		player.setClassId(val);
 		
@@ -254,6 +257,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 		else
 			player.setBaseClass(player.getActiveClass());
 		
+		player.sendPacket(new HennaInfo(player));
 		player.broadcastUserInfo();
 		return true;
 	}
@@ -318,13 +322,13 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 	
 	private static String getRequiredItems(int level)
 	{
-		final List<ItemHolder> neededItems = Config.CLASS_MASTER_SETTINGS.getRequiredItems(level);
+		final List<IntIntHolder> neededItems = Config.CLASS_MASTER_SETTINGS.getRequiredItems(level);
 		if (neededItems == null || neededItems.isEmpty())
 			return "<tr><td>none</td></r>";
 		
-		StringBuilder sb = new StringBuilder();
-		for (ItemHolder item : neededItems)
-			sb.append("<tr><td><font color=\"LEVEL\">" + item.getCount() + "</font></td><td>" + ItemTable.getInstance().getTemplate(item.getId()).getName() + "</td></tr>");
+		final StringBuilder sb = new StringBuilder();
+		for (IntIntHolder item : neededItems)
+			StringUtil.append(sb, "<tr><td><font color=\"LEVEL\">", item.getValue(), "</font></td><td>", ItemTable.getInstance().getTemplate(item.getId()).getName(), "</td></tr>");
 		
 		return sb.toString();
 	}

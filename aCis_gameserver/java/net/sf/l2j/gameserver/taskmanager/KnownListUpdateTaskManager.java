@@ -61,7 +61,7 @@ public final class KnownListUpdateTaskManager implements Runnable
 		_flagForgetAdd = !_flagForgetAdd;
 		
 		// Go through all world regions.
-		for (L2WorldRegion regions[] : L2World.getInstance().getAllWorldRegions())
+		for (L2WorldRegion regions[] : L2World.getInstance().getWorldRegions())
 		{
 			for (L2WorldRegion region : regions)
 			{

@@ -32,6 +32,8 @@ import net.sf.l2j.gameserver.model.olympiad.OlympiadManager;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 import net.sf.l2j.gameserver.util.GMAudit;
 
 public final class RequestBypassToServer extends L2GameClientPacket
@@ -47,11 +49,11 @@ public final class RequestBypassToServer extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		final L2PcInstance activeChar = getClient().getActiveChar();
-		if (activeChar == null)
+		if (!FloodProtectors.performAction(getClient(), Action.SERVER_BYPASS))
 			return;
 		
-		if (!getClient().getFloodProtectors().getServerBypass().tryPerformAction(_command))
+		final L2PcInstance activeChar = getClient().getActiveChar();
+		if (activeChar == null)
 			return;
 		
 		if (_command.isEmpty())
@@ -107,7 +109,7 @@ public final class RequestBypassToServer extends L2GameClientPacket
 				
 				try
 				{
-					final L2Object object = L2World.getInstance().findObject(Integer.parseInt(id));
+					final L2Object object = L2World.getInstance().getObject(Integer.parseInt(id));
 					
 					if (object != null && object instanceof L2Npc && endOfId > 0 && ((L2Npc) object).canInteract(activeChar))
 						((L2Npc) object).onBypassFeedback(activeChar, _command.substring(endOfId + 1));
@@ -194,7 +196,7 @@ public final class RequestBypassToServer extends L2GameClientPacket
 		final StringTokenizer st = new StringTokenizer(path);
 		final String[] cmd = st.nextToken().split("#");
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(0);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
 		html.setFile("data/html/help/" + cmd[0]);
 		if (cmd.length > 1)
 			html.setItemId(Integer.parseInt(cmd[1]));

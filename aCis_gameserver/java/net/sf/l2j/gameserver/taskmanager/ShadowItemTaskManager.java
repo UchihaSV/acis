@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,13 +79,8 @@ public class ShadowItemTaskManager implements Runnable, OnEquipListener
 		if (_shadowItems.isEmpty())
 			return;
 		
-		// For all items.
-		for (Iterator<Entry<ItemInstance, L2PcInstance>> iterator = _shadowItems.entrySet().iterator(); iterator.hasNext();)
-		{
-			// Item is from player, remove from the list.
-			if (iterator.next().getValue() == player)
-				iterator.remove();
-		}
+		// Remove ALL associated items.
+		_shadowItems.values().removeAll(Collections.singleton(player));
 	}
 	
 	@Override

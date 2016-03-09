@@ -22,23 +22,19 @@ import java.util.List;
 import java.util.logging.Level;
 
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.model.L2Object;
-import net.sf.l2j.gameserver.model.TradeList;
-import net.sf.l2j.gameserver.model.TradeList.TradeItem;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance.ItemLocation;
-import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.model.itemcontainer.listeners.ArmorSetListener;
 import net.sf.l2j.gameserver.model.itemcontainer.listeners.BowRodListener;
 import net.sf.l2j.gameserver.model.itemcontainer.listeners.ItemPassiveSkillsListener;
+import net.sf.l2j.gameserver.model.tradelist.TradeItem;
+import net.sf.l2j.gameserver.model.tradelist.TradeList;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
-import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.taskmanager.ShadowItemTaskManager;
-import net.sf.l2j.gameserver.util.Util;
 
 public class PcInventory extends Inventory
 {
@@ -48,19 +44,6 @@ public class PcInventory extends Inventory
 	private final L2PcInstance _owner;
 	private ItemInstance _adena;
 	private ItemInstance _ancientAdena;
-	
-	private int[] _blockItems = null;
-	
-	private int _questSlots;
-	/**
-	 * Block modes:
-	 * <UL>
-	 * <LI>-1 - no block
-	 * <LI>0 - block items from _invItems, allow usage of other items
-	 * <LI>1 - allow usage of items from _invItems, block other items
-	 * </UL>
-	 */
-	private int _blockMode = -1;
 	
 	public PcInventory(L2PcInstance owner)
 	{
@@ -266,7 +249,7 @@ public class PcInventory extends Inventory
 		List<ItemInstance> list = new ArrayList<>();
 		for (ItemInstance item : _items)
 		{
-			if (item != null && item.isAvailable(getOwner(), allowAdena, allowNonTradeable) && canManipulateWithItemId(item.getItemId()))
+			if (item != null && item.isAvailable(getOwner(), allowAdena, allowNonTradeable))
 				list.add(item);
 		}
 		return list.toArray(new ItemInstance[list.size()]);
@@ -621,19 +604,7 @@ public class PcInventory extends Inventory
 		else if (item.getItemId() == ANCIENT_ADENA_ID)
 			_ancientAdena = null;
 		
-		synchronized (_items)
-		{
-			if (item.isQuestItem())
-			{
-				_questSlots--;
-				if (_questSlots < 0)
-				{
-					_questSlots = 0;
-					_log.warning(this + ": QuestInventory size < 0!");
-				}
-			}
-			return super.removeItem(item);
-		}
+		return super.removeItem(item);
 	}
 	
 	/**
@@ -691,122 +662,30 @@ public class PcInventory extends Inventory
 		if (!(item.isStackable() && getItemByItemId(item.getItemId()) != null) && item.getItemType() != EtcItemType.HERB)
 			slots++;
 		
-		return validateCapacity(slots, item.isQuestItem());
+		return validateCapacity(slots);
 	}
 	
 	public boolean validateCapacityByItemId(int ItemId)
 	{
 		int slots = 0;
-		Item item = ItemTable.getInstance().getTemplate(ItemId);
+		
 		ItemInstance invItem = getItemByItemId(ItemId);
 		if (!(invItem != null && invItem.isStackable()))
 			slots++;
 		
-		return validateCapacity(slots, item.isQuestItem());
+		return validateCapacity(slots);
 	}
 	
 	@Override
 	public boolean validateCapacity(int slots)
 	{
-		return validateCapacity(slots, false);
-	}
-	
-	public boolean validateCapacity(int slots, boolean questItem)
-	{
-		if (!questItem)
-			return (_items.size() - _questSlots + slots <= _owner.getInventoryLimit());
-		
-		return _questSlots + slots <= L2PcInstance.getQuestInventoryLimit();
+		return (_items.size() + slots <= _owner.getInventoryLimit());
 	}
 	
 	@Override
 	public boolean validateWeight(int weight)
 	{
 		return (_totalWeight + weight <= _owner.getMaxLoad());
-	}
-	
-	/**
-	 * Set inventory block for specified IDs<br>
-	 * array reference is used for {@link PcInventory#_blockItems}
-	 * @param items array of Ids to block/allow
-	 * @param mode blocking mode {@link PcInventory#_blockMode}
-	 */
-	public void setInventoryBlock(int[] items, int mode)
-	{
-		_blockMode = mode;
-		_blockItems = items;
-		
-		_owner.sendPacket(new ItemList(_owner, false));
-	}
-	
-	/**
-	 * Unblock blocked itemIds
-	 */
-	public void unblock()
-	{
-		_blockMode = -1;
-		_blockItems = null;
-		
-		_owner.sendPacket(new ItemList(_owner, false));
-	}
-	
-	/**
-	 * Check if player inventory is in block mode.
-	 * @return true if some itemIds blocked
-	 */
-	public boolean hasInventoryBlock()
-	{
-		return (_blockMode > -1 && _blockItems != null && _blockItems.length > 0);
-	}
-	
-	/**
-	 * Return block mode
-	 * @return int {@link PcInventory#_blockMode}
-	 */
-	public int getBlockMode()
-	{
-		return _blockMode;
-	}
-	
-	/**
-	 * Return TIntArrayList with blocked item ids
-	 * @return TIntArrayList
-	 */
-	public int[] getBlockItems()
-	{
-		return _blockItems;
-	}
-	
-	/**
-	 * Check if player can use item by itemid
-	 * @param itemId int
-	 * @return true if can use
-	 */
-	public boolean canManipulateWithItemId(int itemId)
-	{
-		if ((_blockMode == 0 && Util.contains(_blockItems, itemId)) || (_blockMode == 1 && !Util.contains(_blockItems, itemId)))
-			return false;
-		return true;
-	}
-	
-	@Override
-	protected void addItem(ItemInstance item)
-	{
-		synchronized (_items)
-		{
-			if (item.isQuestItem())
-				_questSlots++;
-			
-			super.addItem(item);
-		}
-	}
-	
-	public int getSize(boolean quest)
-	{
-		if (quest)
-			return _questSlots;
-		
-		return getSize() - _questSlots;
 	}
 	
 	@Override

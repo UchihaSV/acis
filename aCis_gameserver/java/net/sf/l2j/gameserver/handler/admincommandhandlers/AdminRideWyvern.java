@@ -41,13 +41,12 @@ public class AdminRideWyvern implements IAdminCommandHandler
 				return false;
 			}
 			
-			String mount = "";
 			StringTokenizer st = new StringTokenizer(command, " ");
 			st.nextToken(); // skip command
 			
 			if (st.hasMoreTokens())
 			{
-				mount = st.nextToken();
+				String mount = st.nextToken();
 				
 				if (mount.equals("wyvern") || mount.equals("2"))
 					_petRideId = 12621;

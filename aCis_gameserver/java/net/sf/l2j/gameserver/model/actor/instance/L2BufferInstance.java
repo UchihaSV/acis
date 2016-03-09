@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.BufferTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -46,7 +47,7 @@ public class L2BufferInstance extends L2NpcInstance
 		
 		if (currentCommand.startsWith("menu"))
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(1);
+			final NpcHtmlMessage html = new NpcHtmlMessage(0);
 			html.setFile(getHtmlPath(getNpcId(), 0));
 			html.replace("%objectId%", getObjectId());
 			player.sendPacket(html);
@@ -59,7 +60,7 @@ public class L2BufferInstance extends L2NpcInstance
 			if (summon != null)
 				summon.stopAllEffectsExceptThoseThatLastThroughDeath();
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(1);
+			final NpcHtmlMessage html = new NpcHtmlMessage(0);
 			html.setFile(getHtmlPath(getNpcId(), 0));
 			html.replace("%objectId%", getObjectId());
 			player.sendPacket(html);
@@ -73,7 +74,7 @@ public class L2BufferInstance extends L2NpcInstance
 			if (summon != null)
 				summon.setCurrentHpMp(summon.getMaxHp(), summon.getMaxMp());
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(1);
+			final NpcHtmlMessage html = new NpcHtmlMessage(0);
 			html.setFile(getHtmlPath(getNpcId(), 0));
 			html.replace("%objectId%", getObjectId());
 			player.sendPacket(html);
@@ -221,7 +222,7 @@ public class L2BufferInstance extends L2NpcInstance
 	 */
 	private void showGiveBuffsWindow(L2PcInstance player, String targetType)
 	{
-		final StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder(200);
 		
 		final Map<String, ArrayList<Integer>> schemes = BufferTable.getInstance().getPlayerSchemes(player.getObjectId());
 		if (schemes == null || schemes.isEmpty())
@@ -231,11 +232,11 @@ public class L2BufferInstance extends L2NpcInstance
 			for (Map.Entry<String, ArrayList<Integer>> scheme : schemes.entrySet())
 			{
 				final int cost = getFee(scheme.getValue());
-				sb.append("<font color=\"LEVEL\"><a action=\"bypass -h npc_%objectId%_givebuffs " + targetType + " " + scheme.getKey() + " " + cost + "\">" + scheme.getKey() + " (" + scheme.getValue().size() + " skill(s))</a>" + ((cost > 0) ? " - Adena cost: " + cost : "") + "</font><br1>");
+				StringUtil.append(sb, "<font color=\"LEVEL\"><a action=\"bypass -h npc_%objectId%_givebuffs ", targetType, " ", scheme.getKey(), " ", cost, "\">", scheme.getKey(), " (", scheme.getValue().size(), " skill(s))</a>", ((cost > 0) ? " - Adena cost: " + cost : ""), "</font><br1>");
 			}
 		}
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(1);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
 		html.setFile(getHtmlPath(getNpcId(), 1));
 		html.replace("%schemes%", sb.toString());
 		html.replace("%targettype%", (targetType.equalsIgnoreCase("pet") ? "&nbsp;<a action=\"bypass -h npc_%objectId%_support player\">yourself</a>&nbsp;|&nbsp;your pet" : "yourself&nbsp;|&nbsp;<a action=\"bypass -h npc_%objectId%_support pet\">your pet</a>"));
@@ -249,7 +250,7 @@ public class L2BufferInstance extends L2NpcInstance
 	 */
 	private void showManageSchemeWindow(L2PcInstance player)
 	{
-		final StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder(200);
 		
 		final Map<String, ArrayList<Integer>> schemes = BufferTable.getInstance().getPlayerSchemes(player.getObjectId());
 		if (schemes == null || schemes.isEmpty())
@@ -258,15 +259,12 @@ public class L2BufferInstance extends L2NpcInstance
 		{
 			sb.append("<table>");
 			for (Map.Entry<String, ArrayList<Integer>> scheme : schemes.entrySet())
-			{
-				sb.append("<tr><td width=140>" + scheme.getKey() + " (" + scheme.getValue().size() + " skill(s))</td>");
-				sb.append("<td width=60><button value=\"Clear\" action=\"bypass -h npc_%objectId%_clearscheme " + scheme.getKey() + "\" width=55 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td>");
-				sb.append("<td width=60><button value=\"Drop\" action=\"bypass -h npc_%objectId%_deletescheme " + scheme.getKey() + "\" width=55 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td></tr>");
-			}
+				StringUtil.append(sb, "<tr><td width=140>", scheme.getKey(), " (", scheme.getValue().size(), " skill(s))</td><td width=60><button value=\"Clear\" action=\"bypass -h npc_%objectId%_clearscheme ", scheme.getKey(), "\" width=55 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td><td width=60><button value=\"Drop\" action=\"bypass -h npc_%objectId%_deletescheme ", scheme.getKey(), "\" width=55 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td></tr>");
+			
 			sb.append("</table>");
 		}
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(1);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
 		html.setFile(getHtmlPath(getNpcId(), 2));
 		html.replace("%schemes%", sb.toString());
 		html.replace("%max_schemes%", Config.BUFFER_MAX_SCHEMES);
@@ -282,7 +280,7 @@ public class L2BufferInstance extends L2NpcInstance
 	 */
 	private void showEditSchemeWindow(L2PcInstance player, String groupType, String schemeName)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(1);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
 		
 		if (schemeName.equalsIgnoreCase("none"))
 			html.setFile(getHtmlPath(getNpcId(), 3));
@@ -315,20 +313,20 @@ public class L2BufferInstance extends L2NpcInstance
 		if (schemes == null || schemes.isEmpty())
 			return "Please create at least one scheme.";
 		
-		StringBuilder tb = new StringBuilder();
-		tb.append("<table>");
+		final StringBuilder sb = new StringBuilder(200);
+		sb.append("<table>");
 		
 		for (Map.Entry<String, ArrayList<Integer>> scheme : schemes.entrySet())
 		{
 			if (schemeName.equalsIgnoreCase(scheme.getKey()))
-				tb.append("<tr><td width=200>" + scheme.getKey() + " (<font color=\"LEVEL\">" + scheme.getValue().size() + "</font> / " + Config.BUFFER_MAX_SKILLS + " skill(s))</td></tr>");
+				StringUtil.append(sb, "<tr><td width=200>", scheme.getKey(), " (<font color=\"LEVEL\">", scheme.getValue().size(), "</font> / ", Config.BUFFER_MAX_SKILLS, " skill(s))</td></tr>");
 			else
-				tb.append("<tr><td width=200><a action=\"bypass -h npc_%objectId%_editschemes none " + scheme.getKey() + "\">" + scheme.getKey() + " (" + scheme.getValue().size() + " / " + Config.BUFFER_MAX_SKILLS + " skill(s))</a></td></tr>");
+				StringUtil.append(sb, "<tr><td width=200><a action=\"bypass -h npc_%objectId%_editschemes none ", scheme.getKey(), "\">", scheme.getKey(), " (", scheme.getValue().size(), " / ", Config.BUFFER_MAX_SKILLS, " skill(s))</a></td></tr>");
 		}
 		
-		tb.append("</table>");
+		sb.append("</table>");
 		
-		return tb.toString();
+		return sb.toString();
 	}
 	
 	/**
@@ -351,9 +349,9 @@ public class L2BufferInstance extends L2NpcInstance
 		if (skills.isEmpty())
 			return "That group doesn't contain any skills.";
 		
-		StringBuilder tb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder(500);
 		
-		tb.append("<table>");
+		sb.append("<table>");
 		int count = 0;
 		for (int skillId : skills)
 		{
@@ -361,29 +359,29 @@ public class L2BufferInstance extends L2NpcInstance
 				continue;
 			
 			if (count == 0)
-				tb.append("<tr>");
+				sb.append("<tr>");
 			
 			if (skillId < 100)
-				tb.append("<td><button action=\"bypass -h npc_%objectId%_skillselect " + groupType + " " + schemeName + " " + skillId + "\" width=32 height=32 back=\"icon.skill00" + skillId + "\" fore=\"icon.skill00" + skillId + "\"></td>");
+				StringUtil.append(sb, "<td><button action=\"bypass -h npc_%objectId%_skillselect ", groupType, " ", schemeName, " ", skillId, "\" width=32 height=32 back=\"icon.skill00", skillId, "\" fore=\"icon.skill00", skillId, "\"></td>");
 			else if (skillId < 1000)
-				tb.append("<td><button action=\"bypass -h npc_%objectId%_skillselect " + groupType + " " + schemeName + " " + skillId + "\" width=32 height=32 back=\"icon.skill0" + skillId + "\" fore=\"icon.skill0" + skillId + "\"></td>");
+				StringUtil.append(sb, "<td><button action=\"bypass -h npc_%objectId%_skillselect ", groupType, " ", schemeName, " ", skillId, "\" width=32 height=32 back=\"icon.skill0", skillId, "\" fore=\"icon.skill0", skillId, "\"></td>");
 			else
-				tb.append("<td><button action=\"bypass -h npc_%objectId%_skillselect " + groupType + " " + schemeName + " " + skillId + "\" width=32 height=32 back=\"icon.skill" + skillId + "\" fore=\"icon.skill" + skillId + "\"></td>");
+				StringUtil.append(sb, "<td><button action=\"bypass -h npc_%objectId%_skillselect ", groupType, " ", schemeName, " ", skillId, "\" width=32 height=32 back=\"icon.skill", skillId, "\" fore=\"icon.skill", skillId, "\"></td>");
 			
 			count++;
 			if (count == 6)
 			{
-				tb.append("</tr>");
+				sb.append("</tr>");
 				count = 0;
 			}
 		}
 		
-		if (!tb.toString().endsWith("</tr>"))
-			tb.append("</tr>");
+		if (!sb.toString().endsWith("</tr>"))
+			sb.append("</tr>");
 		
-		tb.append("</table>");
+		sb.append("</table>");
 		
-		return tb.toString();
+		return sb.toString();
 	}
 	
 	/**
@@ -398,36 +396,36 @@ public class L2BufferInstance extends L2NpcInstance
 		if (skills.isEmpty())
 			return "That scheme is empty.";
 		
-		StringBuilder tb = new StringBuilder();
-		tb.append("<table>");
+		final StringBuilder sb = new StringBuilder(500);
+		sb.append("<table>");
 		int count = 0;
 		
 		for (int sk : skills)
 		{
 			if (count == 0)
-				tb.append("<tr>");
+				sb.append("<tr>");
 			
 			if (sk < 100)
-				tb.append("<td><button action=\"bypass -h npc_%objectId%_skillunselect " + groupType + " " + schemeName + " " + sk + "\" width=32 height=32 back=\"icon.skill00" + sk + "\" fore=\"icon.skill00" + sk + "\"></td>");
+				StringUtil.append(sb, "<td><button action=\"bypass -h npc_%objectId%_skillunselect ", groupType, " ", schemeName, " ", sk, "\" width=32 height=32 back=\"icon.skill00", sk, "\" fore=\"icon.skill00", sk, "\"></td>");
 			else if (sk < 1000)
-				tb.append("<td><button action=\"bypass -h npc_%objectId%_skillunselect " + groupType + " " + schemeName + " " + sk + "\" width=32 height=32 back=\"icon.skill0" + sk + "\" fore=\"icon.skill0" + sk + "\"></td>");
+				StringUtil.append(sb, "<td><button action=\"bypass -h npc_%objectId%_skillunselect ", groupType, " ", schemeName, " ", sk, "\" width=32 height=32 back=\"icon.skill0", sk, "\" fore=\"icon.skill0", sk, "\"></td>");
 			else
-				tb.append("<td><button action=\"bypass -h npc_%objectId%_skillunselect " + groupType + " " + schemeName + " " + sk + "\" width=32 height=32 back=\"icon.skill" + sk + "\" fore=\"icon.skill" + sk + "\"></td>");
+				StringUtil.append(sb, "<td><button action=\"bypass -h npc_%objectId%_skillunselect ", groupType, " ", schemeName, " ", sk, "\" width=32 height=32 back=\"icon.skill", sk, "\" fore=\"icon.skill", sk, "\"></td>");
 			
 			count++;
 			if (count == 6)
 			{
-				tb.append("</tr>");
+				sb.append("</tr>");
 				count = 0;
 			}
 		}
 		
-		if (!tb.toString().endsWith("<tr>"))
-			tb.append("<tr>");
+		if (!sb.toString().endsWith("<tr>"))
+			sb.append("<tr>");
 		
-		tb.append("</table>");
+		sb.append("</table>");
 		
-		return tb.toString();
+		return sb.toString();
 	}
 	
 	/**
@@ -437,34 +435,34 @@ public class L2BufferInstance extends L2NpcInstance
 	 */
 	private static String getTypesFrame(String groupType, String schemeName)
 	{
-		StringBuilder tb = new StringBuilder();
-		tb.append("<table>");
+		final StringBuilder sb = new StringBuilder(500);
+		sb.append("<table>");
 		
 		int count = 0;
 		for (String s : BufferTable.getSkillTypes())
 		{
 			if (count == 0)
-				tb.append("<tr>");
+				sb.append("<tr>");
 			
 			if (groupType.equalsIgnoreCase(s))
-				tb.append("<td width=65>" + s + "</td>");
+				StringUtil.append(sb, "<td width=65>", s, "</td>");
 			else
-				tb.append("<td width=65><a action=\"bypass -h npc_%objectId%_editschemes " + s + " " + schemeName + "\">" + s + "</a></td>");
+				StringUtil.append(sb, "<td width=65><a action=\"bypass -h npc_%objectId%_editschemes ", s, " ", schemeName, "\">", s, "</a></td>");
 			
 			count++;
 			if (count == 4)
 			{
-				tb.append("</tr>");
+				sb.append("</tr>");
 				count = 0;
 			}
 		}
 		
-		if (!tb.toString().endsWith("</tr>"))
-			tb.append("</tr>");
+		if (!sb.toString().endsWith("</tr>"))
+			sb.append("</tr>");
 		
-		tb.append("</table>");
+		sb.append("</table>");
 		
-		return tb.toString();
+		return sb.toString();
 	}
 	
 	/**
@@ -478,7 +476,7 @@ public class L2BufferInstance extends L2NpcInstance
 		
 		int fee = 0;
 		for (int sk : list)
-			fee += Config.BUFFER_BUFFLIST.get(sk).getPrice();
+			fee += Config.BUFFER_BUFFLIST.get(sk).getValue();
 		
 		return fee;
 	}

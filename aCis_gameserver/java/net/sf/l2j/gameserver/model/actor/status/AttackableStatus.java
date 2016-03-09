@@ -46,10 +46,14 @@ public class AttackableStatus extends NpcStatus
 		else
 			getActiveChar().overhitEnabled(false);
 		
+		// Add attackers to npc's attacker list
+		if (attacker != null)
+			getActiveChar().addAttackerToAttackByList(attacker);
+		
 		super.reduceHp(value, attacker, awake, isDOT, isHpConsumption);
 		
+		// And the attacker's hit didn't kill the mob, clear the over-hit flag
 		if (!getActiveChar().isDead())
-			// And the attacker's hit didn't kill the mob, clear the over-hit flag
 			getActiveChar().overhitEnabled(false);
 	}
 	

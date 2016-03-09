@@ -168,6 +168,21 @@ public class L2CommandChannel
 	}
 	
 	/**
+	 * Check if a given player is in this command channel.
+	 * @param player the player to check
+	 * @return {@code true} if he does, {@code false} otherwise
+	 */
+	public boolean containsPlayer(L2PcInstance player)
+	{
+		for (L2Party party : _partys)
+		{
+			if (party.getPartyMembers().contains(player))
+				return true;
+		}
+		return false;
+	}
+	
+	/**
 	 * @return Level of CC
 	 */
 	public int getLevel()

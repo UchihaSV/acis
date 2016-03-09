@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.model.Announcement;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -59,7 +60,7 @@ public class AnnouncementTable
 	{
 		// Clean first tasks from automatic announcements.
 		for (Announcement announce : _announcements.values())
-			announce.stopDaemon();
+			announce.stopTask();
 		
 		load();
 	}
@@ -116,15 +117,21 @@ public class AnnouncementTable
 	/**
 	 * Send stored announcements from _announcements Map to a specific player.
 	 * @param activeChar : The player to send infos.
+	 * @param autoOrNot : If True, sends only automatic announcements, otherwise send classic ones.
 	 */
-	public void showAnnouncements(L2PcInstance activeChar)
+	public void showAnnouncements(L2PcInstance activeChar, boolean autoOrNot)
 	{
 		for (Announcement announce : _announcements.values())
 		{
-			if (announce.isAuto())
-				continue;
-			
-			activeChar.sendPacket(new CreatureSay(0, announce.isCritical() ? Say2.CRITICAL_ANNOUNCE : Say2.ANNOUNCEMENT, activeChar.getName(), announce.getMessage()));
+			if (autoOrNot)
+				announce.reloadTask();
+			else
+			{
+				if (announce.isAuto())
+					continue;
+				
+				activeChar.sendPacket(new CreatureSay(0, announce.isCritical() ? Say2.CRITICAL_ANNOUNCE : Say2.ANNOUNCEMENT, activeChar.getName(), announce.getMessage()));
+			}
 		}
 	}
 	
@@ -151,14 +158,9 @@ public class AnnouncementTable
 	 */
 	public void listAnnouncements(L2PcInstance activeChar)
 	{
-		String content = HtmCache.getInstance().getHtmForce("data/html/admin/announce_list.htm");
-		
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(5);
-		adminReply.setHtml(content);
-		
-		StringBuilder replyMSG = new StringBuilder("<br>");
+		final StringBuilder sb = new StringBuilder("<br>");
 		if (_announcements.isEmpty())
-			replyMSG.append("<tr><td>The XML file doesn't contain any content.</td></tr>");
+			sb.append("<tr><td>The XML file doesn't contain any content.</td></tr>");
 		else
 		{
 			for (Map.Entry<Integer, Announcement> entry : _announcements.entrySet())
@@ -166,12 +168,14 @@ public class AnnouncementTable
 				final int index = entry.getKey();
 				final Announcement announce = entry.getValue();
 				
-				replyMSG.append("<tr><td width=240>#" + index + " - " + announce.getMessage() + "</td><td></td></tr>");
-				replyMSG.append("<tr><td>Critical: " + announce.isCritical() + " | Auto: " + announce.isAuto() + "</td><td><button value=\"Delete\" action=\"bypass -h admin_announce del " + index + "\" width=65 height=19 back=\"L2UI_ch3.smallbutton2_over\" fore=\"L2UI_ch3.smallbutton2\"></td></tr>");
+				StringUtil.append(sb, "<tr><td width=240>#", index, " - ", announce.getMessage(), "</td><td></td></tr><tr><td>Critical: ", announce.isCritical(), " | Auto: ", announce.isAuto(), "</td><td><button value=\"Delete\" action=\"bypass -h admin_announce del ", index, "\" width=65 height=19 back=\"L2UI_ch3.smallbutton2_over\" fore=\"L2UI_ch3.smallbutton2\"></td></tr>");
 			}
 		}
-		adminReply.replace("%announces%", replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+		
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(HtmCache.getInstance().getHtmForce("data/html/admin/announce_list.htm"));
+		html.replace("%announces%", sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	/**
@@ -208,7 +212,7 @@ public class AnnouncementTable
 	public void delAnnouncement(int index)
 	{
 		// Stop the current task, if any.
-		_announcements.remove(index).stopDaemon();
+		_announcements.remove(index).stopTask();
 		
 		// Regenerate the XML.
 		regenerateXML();
@@ -219,21 +223,13 @@ public class AnnouncementTable
 	 */
 	private void regenerateXML()
 	{
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder(HEADER);
 		
-		sb.append(HEADER);
 		sb.append("<list> \n");
+		
 		for (Announcement announce : _announcements.values())
-		{
-			sb.append("<announcement ");
-			sb.append("message=\"" + announce.getMessage() + "\" ");
-			sb.append("critical=\"" + announce.isCritical() + "\" ");
-			sb.append("auto=\"" + announce.isAuto() + "\" ");
-			sb.append("initial_delay=\"" + announce.getInitialDelay() + "\" ");
-			sb.append("delay=\"" + announce.getDelay() + "\" ");
-			sb.append("limit=\"" + announce.getLimit() + "\" ");
-			sb.append("/> \n");
-		}
+			StringUtil.append(sb, "<announcement message=\"", announce.getMessage(), "\" critical=\"", announce.isCritical(), "\" auto=\"", announce.isAuto(), "\" initial_delay=\"", announce.getInitialDelay(), "\" delay=\"", announce.getDelay(), "\" limit=\"", announce.getLimit(), "\" /> \n");
+		
 		sb.append("</list>");
 		
 		try (FileWriter fw = new FileWriter(new File("./data/xml/announcements.xml")))

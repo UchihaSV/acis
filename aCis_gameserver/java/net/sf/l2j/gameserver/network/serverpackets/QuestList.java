@@ -17,8 +17,8 @@ package net.sf.l2j.gameserver.network.serverpackets;
 import java.util.List;
 
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestState;
+import net.sf.l2j.gameserver.scripting.Quest;
+import net.sf.l2j.gameserver.scripting.QuestState;
 
 public class QuestList extends L2GameServerPacket
 {

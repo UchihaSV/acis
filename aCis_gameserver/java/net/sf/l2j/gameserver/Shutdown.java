@@ -14,13 +14,14 @@
  */
 package net.sf.l2j.gameserver;
 
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.BufferTable;
+import net.sf.l2j.gameserver.datatables.ServerMemo;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
 import net.sf.l2j.gameserver.instancemanager.FishingChampionshipManager;
 import net.sf.l2j.gameserver.instancemanager.FourSepulchersManager;
@@ -40,7 +41,6 @@ import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.taskmanager.ItemsOnGroundTaskManager;
 import net.sf.l2j.gameserver.taskmanager.MovementTaskManager;
 import net.sf.l2j.gameserver.util.Broadcast;
-import net.sf.l2j.util.Util;
 
 /**
  * This class provides functions for shutting down and restarting the server. It closes all client connections and saves data.
@@ -100,15 +100,6 @@ public class Shutdown extends Thread
 	}
 	
 	/**
-	 * get the shutdown-hook instance the shutdown-hook instance is created by the first call of this function, but it has to be registrered externaly.
-	 * @return instance of Shutdown, to be used as shutdown hook
-	 */
-	public static Shutdown getInstance()
-	{
-		return SingletonHolder._instance;
-	}
-	
-	/**
 	 * this function is called, when a new thread starts if this thread is the thread of getInstance, then this is the shutdown hook and we save all data and disconnect all clients. after this thread ends, the server will completely exit if this is not the thread of getInstance, then this is a
 	 * countdown thread. we start the countdown, and when we finished it, and it was not aborted, we tell the shutdown-hook why we call exit, and then call exit when the exit status of the server is 1, startServer.sh / startServer.bat will restart the server.
 	 */
@@ -117,7 +108,7 @@ public class Shutdown extends Thread
 	{
 		if (this == SingletonHolder._instance)
 		{
-			Util.printSection("Under " + MODE_TEXT[_shutdownMode] + " process");
+			StringUtil.printSection("Under " + MODE_TEXT[_shutdownMode] + " process");
 			
 			// disconnect players
 			try
@@ -194,6 +185,10 @@ public class Shutdown extends Thread
 			// Schemes save.
 			BufferTable.getInstance().saveSchemes();
 			_log.info("BufferTable data has been saved.");
+			
+			// Save server memos.
+			ServerMemo.getInstance().storeMe();
+			_log.info("ServerMemo data has been saved.");
 			
 			// Save items on ground before closing
 			ItemsOnGroundTaskManager.getInstance().save();
@@ -422,13 +417,8 @@ public class Shutdown extends Thread
 	 */
 	private static void disconnectAllCharacters()
 	{
-		Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-		for (L2PcInstance player : pls)
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (player == null)
-				continue;
-			
-			// Logout Character
 			try
 			{
 				L2GameClient client = player.getClient();
@@ -445,6 +435,15 @@ public class Shutdown extends Thread
 				_log.log(Level.WARNING, "Failed to logout chararacter: " + player, t);
 			}
 		}
+	}
+	
+	/**
+	 * get the shutdown-hook instance the shutdown-hook instance is created by the first call of this function, but it has to be registrered externaly.
+	 * @return instance of Shutdown, to be used as shutdown hook
+	 */
+	public static Shutdown getInstance()
+	{
+		return SingletonHolder._instance;
 	}
 	
 	private static class SingletonHolder

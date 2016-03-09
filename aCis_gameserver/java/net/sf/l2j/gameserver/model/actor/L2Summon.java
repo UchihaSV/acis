@@ -16,8 +16,8 @@ package net.sf.l2j.gameserver.model.actor;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.ai.L2CharacterAI;
-import net.sf.l2j.gameserver.ai.L2SummonAI;
+import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
+import net.sf.l2j.gameserver.ai.model.L2SummonAI;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.geoengine.PathFinding;
 import net.sf.l2j.gameserver.handler.IItemHandler;
@@ -65,35 +65,13 @@ public abstract class L2Summon extends L2Playable
 	
 	private int _shotsMask = 0;
 	
-	public class AIAccessor extends L2Character.AIAccessor
-	{
-		protected AIAccessor()
-		{
-		}
-		
-		public L2Summon getSummon()
-		{
-			return L2Summon.this;
-		}
-		
-		public boolean isAutoFollow()
-		{
-			return getFollowStatus();
-		}
-		
-		public void doPickupItem(L2Object object)
-		{
-			L2Summon.this.doPickupItem(object);
-		}
-	}
-	
 	public L2Summon(int objectId, NpcTemplate template, L2PcInstance owner)
 	{
 		super(objectId, template);
 		
 		_showSummonAnimation = true;
 		_owner = owner;
-		_ai = new L2SummonAI(new AIAccessor());
+		_ai = new L2SummonAI(this);
 		
 		setXYZInvisible(owner.getX() + 50, owner.getY() + 100, owner.getZ() + 100);
 	}
@@ -137,13 +115,14 @@ public abstract class L2Summon extends L2Playable
 	@Override
 	public L2CharacterAI getAI()
 	{
-		L2CharacterAI ai = _ai; // copy handle
+		L2CharacterAI ai = _ai;
 		if (ai == null)
 		{
 			synchronized (this)
 			{
 				if (_ai == null)
-					_ai = new L2SummonAI(new AIAccessor());
+					_ai = new L2SummonAI(this);
+				
 				return _ai;
 			}
 		}
@@ -228,14 +207,12 @@ public abstract class L2Summon extends L2Playable
 	{
 		if (player.isGM())
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/admin/petinfo.htm");
-			String name = getName();
-			html.replace("%name%", name == null ? "N/A" : name);
+			html.replace("%name%", getName() == null ? "N/A" : getName());
 			html.replace("%level%", getLevel());
 			html.replace("%exp%", getStat().getExp());
-			String owner = getActingPlayer().getName();
-			html.replace("%owner%", " <a action=\"bypass -h admin_character_info " + owner + "\">" + owner + "</a>");
+			html.replace("%owner%", " <a action=\"bypass -h admin_character_info " + getActingPlayer().getName() + "\">" + getActingPlayer().getName() + "</a>");
 			html.replace("%class%", getClass().getSimpleName());
 			html.replace("%ai%", hasAI() ? getAI().getIntention().name() : "NULL");
 			html.replace("%hp%", (int) getStatus().getCurrentHp() + "/" + getStat().getMaxHp());
@@ -245,8 +222,7 @@ public abstract class L2Summon extends L2Playable
 			
 			if (this instanceof L2PetInstance)
 			{
-				int objId = getActingPlayer().getObjectId();
-				html.replace("%inv%", " <a action=\"bypass admin_show_pet_inv " + objId + "\">view</a>");
+				html.replace("%inv%", " <a action=\"bypass admin_show_pet_inv " + getActingPlayer().getObjectId() + "\">view</a>");
 				html.replace("%food%", ((L2PetInstance) this).getCurrentFed() + "/" + ((L2PetInstance) this).getPetLevelData().getPetMaxFeed());
 				html.replace("%load%", ((L2PetInstance) this).getInventory().getTotalWeight() + "/" + ((L2PetInstance) this).getMaxLoad());
 			}
@@ -452,10 +428,6 @@ public abstract class L2Summon extends L2Playable
 	public PetInventory getInventory()
 	{
 		return null;
-	}
-	
-	protected void doPickupItem(L2Object object)
-	{
 	}
 	
 	public void store()
@@ -728,7 +700,7 @@ public abstract class L2Summon extends L2Playable
 	public void doCast(L2Skill skill)
 	{
 		final L2PcInstance actingPlayer = getActingPlayer();
-		if (!actingPlayer.checkPvpSkill(getTarget(), skill, true) && !actingPlayer.getAccessLevel().allowPeaceAttack())
+		if (!actingPlayer.checkPvpSkill(getTarget(), skill) && !actingPlayer.getAccessLevel().allowPeaceAttack())
 		{
 			// Send a System Message to the L2PcInstance
 			actingPlayer.sendPacket(SystemMessageId.TARGET_IS_INCORRECT);

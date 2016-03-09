@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.network.serverpackets;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import net.sf.l2j.gameserver.model.L2ManufactureItem;
 import net.sf.l2j.gameserver.model.L2ManufactureList;
@@ -35,19 +36,20 @@ public class RecipeShopManageList extends L2GameServerPacket
 		_seller = seller;
 		_isDwarven = isDwarven;
 		
-		if (_isDwarven && _seller.hasDwarvenCraft())
-			_recipes = _seller.getDwarvenRecipeBook();
+		if (_isDwarven && seller.hasDwarvenCraft())
+			_recipes = seller.getDwarvenRecipeBook();
 		else
-			_recipes = _seller.getCommonRecipeBook();
+			_recipes = seller.getCommonRecipeBook();
 		
 		// clean previous recipes
-		if (_seller.getCreateList() != null)
+		if (seller.getCreateList() != null)
 		{
-			L2ManufactureList list = _seller.getCreateList();
-			for (L2ManufactureItem item : list.getList())
+			final Iterator<L2ManufactureItem> it = seller.getCreateList().getList().iterator();
+			while (it.hasNext())
 			{
-				if (item.isDwarven() != _isDwarven)
-					list.getList().remove(item);
+				L2ManufactureItem item = it.next();
+				if (item.isDwarven() != _isDwarven || !seller.hasRecipeList(item.getRecipeId()))
+					it.remove();
 			}
 		}
 	}

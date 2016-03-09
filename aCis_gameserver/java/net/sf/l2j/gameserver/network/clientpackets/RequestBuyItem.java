@@ -24,7 +24,7 @@ import net.sf.l2j.gameserver.model.actor.instance.L2MerchantInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
 import net.sf.l2j.gameserver.model.buylist.Product;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
@@ -36,7 +36,7 @@ public final class RequestBuyItem extends L2GameClientPacket
 	private static final int BATCH_LENGTH = 8; // length of the one item
 	
 	private int _listId;
-	private List<ItemHolder> _items = null;
+	private List<IntIntHolder> _items = null;
 	
 	@Override
 	protected void readImpl()
@@ -55,7 +55,7 @@ public final class RequestBuyItem extends L2GameClientPacket
 			if (itemId < 1 || cnt < 1)
 				return;
 			
-			_items.add(new ItemHolder(itemId, cnt));
+			_items.add(new IntIntHolder(itemId, cnt));
 		}
 	}
 	
@@ -69,7 +69,6 @@ public final class RequestBuyItem extends L2GameClientPacket
 		if (player == null)
 			return;
 		
-		// Alt game - Karma punishment
 		if (!Config.KARMA_PLAYER_CAN_SHOP && player.getKarma() > 0)
 			return;
 		
@@ -103,7 +102,7 @@ public final class RequestBuyItem extends L2GameClientPacket
 		int slots = 0;
 		int weight = 0;
 		
-		for (ItemHolder i : _items)
+		for (IntIntHolder i : _items)
 		{
 			int price = -1;
 			
@@ -114,7 +113,7 @@ public final class RequestBuyItem extends L2GameClientPacket
 				return;
 			}
 			
-			if (!product.getItem().isStackable() && i.getCount() > 1)
+			if (!product.getItem().isStackable() && i.getValue() > 1)
 			{
 				Util.handleIllegalPlayerAction(player, player.getName() + " of account " + player.getAccountName() + " tried to purchase invalid quantity of items at the same time.", Config.DEFAULT_PUNISH);
 				sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_HAVE_EXCEEDED_QUANTITY_THAT_CAN_BE_INPUTTED));
@@ -137,11 +136,11 @@ public final class RequestBuyItem extends L2GameClientPacket
 			if (product.hasLimitedStock())
 			{
 				// trying to buy more then available
-				if (i.getCount() > product.getCount())
+				if (i.getValue() > product.getCount())
 					return;
 			}
 			
-			if ((Integer.MAX_VALUE / i.getCount()) < price)
+			if ((Integer.MAX_VALUE / i.getValue()) < price)
 			{
 				Util.handleIllegalPlayerAction(player, player.getName() + " of account " + player.getAccountName() + " tried to purchase over " + Integer.MAX_VALUE + " adena worth of goods.", Config.DEFAULT_PUNISH);
 				return;
@@ -149,7 +148,7 @@ public final class RequestBuyItem extends L2GameClientPacket
 			
 			// first calculate price per item with tax, then multiply by count
 			price = (int) (price * (1 + castleTaxRate));
-			subTotal += i.getCount() * price;
+			subTotal += i.getValue() * price;
 			
 			if (subTotal > Integer.MAX_VALUE)
 			{
@@ -157,20 +156,20 @@ public final class RequestBuyItem extends L2GameClientPacket
 				return;
 			}
 			
-			weight += i.getCount() * product.getItem().getWeight();
+			weight += i.getValue() * product.getItem().getWeight();
 			if (!product.getItem().isStackable())
-				slots += i.getCount();
+				slots += i.getValue();
 			else if (player.getInventory().getItemByItemId(i.getId()) == null)
 				slots++;
 		}
 		
-		if (!player.isGM() && (weight > Integer.MAX_VALUE || weight < 0 || !player.getInventory().validateWeight(weight)))
+		if (weight > Integer.MAX_VALUE || weight < 0 || !player.getInventory().validateWeight(weight))
 		{
 			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.WEIGHT_LIMIT_EXCEEDED));
 			return;
 		}
 		
-		if (!player.isGM() && (slots > Integer.MAX_VALUE || slots < 0 || !player.getInventory().validateCapacity(slots)))
+		if (slots > Integer.MAX_VALUE || slots < 0 || !player.getInventory().validateCapacity(slots))
 		{
 			sendPacket(SystemMessage.getSystemMessage(SystemMessageId.SLOTS_FULL));
 			return;
@@ -184,7 +183,7 @@ public final class RequestBuyItem extends L2GameClientPacket
 		}
 		
 		// Proceed the purchase
-		for (ItemHolder i : _items)
+		for (IntIntHolder i : _items)
 		{
 			final Product product = buyList.getProductByItemId(i.getId());
 			if (product == null)
@@ -195,11 +194,11 @@ public final class RequestBuyItem extends L2GameClientPacket
 			
 			if (product.hasLimitedStock())
 			{
-				if (product.decreaseCount(i.getCount()))
-					player.getInventory().addItem("Buy", i.getId(), i.getCount(), player, merchant);
+				if (product.decreaseCount(i.getValue()))
+					player.getInventory().addItem("Buy", i.getId(), i.getValue(), player, merchant);
 			}
 			else
-				player.getInventory().addItem("Buy", i.getId(), i.getCount(), player, merchant);
+				player.getInventory().addItem("Buy", i.getId(), i.getValue(), player, merchant);
 		}
 		
 		// add to castle treasury

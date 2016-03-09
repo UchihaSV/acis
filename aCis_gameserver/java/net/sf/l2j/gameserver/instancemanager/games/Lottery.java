@@ -24,12 +24,12 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.util.Broadcast;
-import net.sf.l2j.util.Rnd;
 
 public class Lottery
 {
@@ -173,8 +173,6 @@ public class Lottery
 				_log.log(Level.WARNING, "Lottery: Could not restore lottery data: " + e.getMessage(), e);
 			}
 			
-			if (Config.DEBUG)
-				_log.info("Lottery: Starting ticket sell for lottery #" + getId() + ".");
 			_isSellingTickets = true;
 			_isStarted = true;
 			
@@ -228,8 +226,6 @@ public class Lottery
 		@Override
 		public void run()
 		{
-			if (Config.DEBUG)
-				_log.info("Lottery: Stopping ticket sell for lottery #" + getId() + ".");
 			_isSellingTickets = false;
 			
 			Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.LOTTERY_TICKET_SALES_TEMP_SUSPENDED));
@@ -246,9 +242,6 @@ public class Lottery
 		@Override
 		public void run()
 		{
-			if (Config.DEBUG)
-				_log.info("Lottery: Ending lottery #" + getId() + ".");
-			
 			int[] luckynums = new int[5];
 			int luckynum = 0;
 			
@@ -269,9 +262,6 @@ public class Lottery
 				luckynums[i] = luckynum;
 			}
 			
-			if (Config.DEBUG)
-				_log.info("Lottery: The lucky numbers are " + luckynums[0] + ", " + luckynums[1] + ", " + luckynums[2] + ", " + luckynums[3] + ", " + luckynums[4] + ".");
-			
 			int enchant = 0;
 			int type2 = 0;
 			
@@ -282,9 +272,6 @@ public class Lottery
 				else
 					type2 += Math.pow(2, luckynums[i] - 17);
 			}
-			
-			if (Config.DEBUG)
-				_log.info("Lottery: Encoded lucky numbers are " + enchant + ", " + type2);
 			
 			int count1 = 0;
 			int count2 = 0;
@@ -354,17 +341,7 @@ public class Lottery
 			if (count3 > 0)
 				prize3 = (int) ((getPrize() - prize4) * Config.ALT_LOTTERY_3_NUMBER_RATE / count3);
 			
-			if (Config.DEBUG)
-			{
-				_log.info("Lottery: " + count1 + " players with all FIVE numbers each win " + prize1 + ".");
-				_log.info("Lottery: " + count2 + " players with FOUR numbers each win " + prize2 + ".");
-				_log.info("Lottery: " + count3 + " players with THREE numbers each win " + prize3 + ".");
-				_log.info("Lottery: " + count4 + " players with ONE or TWO numbers each win " + prize4 + ".");
-			}
-			
 			int newprize = getPrize() - (prize1 + prize2 + prize3 + prize4);
-			if (Config.DEBUG)
-				_log.info("Lottery: Jackpot for next lottery is " + newprize + ".");
 			
 			if (count1 > 0) // There are winners.
 				Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.AMOUNT_FOR_WINNER_S1_IS_S2_ADENA_WE_HAVE_S3_PRIZE_WINNER).addNumber(getId()).addNumber(getPrize()).addNumber(count1));
@@ -492,11 +469,8 @@ public class Lottery
 						break;
 					default:
 						res[0] = 4;
-						res[1] = 200;
+						res[1] = Config.ALT_LOTTERY_2_AND_1_NUMBER_PRIZE;
 				}
-				
-				if (Config.DEBUG)
-					_log.warning("count: " + count + ", id: " + id + ", enchant: " + enchant + ", type2: " + type2);
 			}
 			
 			rset.close();

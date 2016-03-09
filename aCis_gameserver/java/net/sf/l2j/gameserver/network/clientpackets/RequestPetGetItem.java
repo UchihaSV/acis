@@ -38,7 +38,7 @@ public final class RequestPetGetItem extends L2GameClientPacket
 		if (activeChar == null || !activeChar.hasPet())
 			return;
 		
-		final L2Object item = L2World.getInstance().findObject(_objectId);
+		final L2Object item = L2World.getInstance().getObject(_objectId);
 		if (item == null)
 			return;
 		

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.model.L2Bookmark;
@@ -91,15 +92,9 @@ public class BookmarkTable
 	 * @param objId The player Id to make checks on.
 	 * @return an array of L2Bookmark.
 	 */
-	public L2Bookmark[] getBookmarks(int objId)
+	public List<L2Bookmark> getBookmarks(int objId)
 	{
-		List<L2Bookmark> _temp = new ArrayList<>();
-		for (L2Bookmark bk : _bks)
-		{
-			if (bk.getId() == objId)
-				_temp.add(bk);
-		}
-		return (_temp.isEmpty()) ? null : _temp.toArray(new L2Bookmark[_temp.size()]);
+		return _bks.stream().filter(bk -> bk.getId() == objId).collect(Collectors.toList());
 	}
 	
 	/**

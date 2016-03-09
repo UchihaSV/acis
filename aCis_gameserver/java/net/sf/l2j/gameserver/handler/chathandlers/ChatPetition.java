@@ -19,10 +19,6 @@ import net.sf.l2j.gameserver.instancemanager.PetitionManager;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 
-/**
- * A chat handler
- * @author durgus
- */
 public class ChatPetition implements IChatHandler
 {
 	private static final int[] COMMAND_IDS =
@@ -31,10 +27,6 @@ public class ChatPetition implements IChatHandler
 		7
 	};
 	
-	/**
-	 * Handle chat type 'petition player'
-	 * @see net.sf.l2j.gameserver.handler.IChatHandler#handleChat(int, net.sf.l2j.gameserver.model.actor.instance.L2PcInstance, java.lang.String, java.lang.String)
-	 */
 	@Override
 	public void handleChat(int type, L2PcInstance activeChar, String target, String text)
 	{
@@ -47,10 +39,6 @@ public class ChatPetition implements IChatHandler
 		PetitionManager.getInstance().sendActivePetitionMessage(activeChar, text);
 	}
 	
-	/**
-	 * Returns the chat types registered to this handler
-	 * @see net.sf.l2j.gameserver.handler.IChatHandler#getChatTypeList()
-	 */
 	@Override
 	public int[] getChatTypeList()
 	{

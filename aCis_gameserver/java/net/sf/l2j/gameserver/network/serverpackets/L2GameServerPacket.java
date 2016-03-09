@@ -30,7 +30,7 @@ public abstract class L2GameServerPacket extends SendablePacket<L2GameClient>
 	@Override
 	protected void write()
 	{
-		if (Config.DEBUG)
+		if (Config.PACKET_HANDLER_DEBUG)
 			_log.info(getType());
 		
 		try

@@ -26,19 +26,15 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ItemTable;
-import net.sf.l2j.gameserver.datatables.ServerVariables;
+import net.sf.l2j.gameserver.datatables.ServerMemo;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.util.Rnd;
 
-/**
- * @author n0nam3
- * @date 08/08/2010 15:11
- */
 public class FishingChampionshipManager
 {
 	protected static final Logger _log = Logger.getLogger(FishingChampionshipManager.class.getName());
@@ -46,13 +42,6 @@ public class FishingChampionshipManager
 	private static final String INSERT = "INSERT INTO fishing_championship(player_name,fish_length,rewarded) VALUES (?,?,?)";
 	private static final String DELETE = "DELETE FROM fishing_championship";
 	private static final String SELECT = "SELECT `player_name`, `fish_length`, `rewarded` FROM fishing_championship";
-	
-	private static final FishingChampionshipManager _instance = new FishingChampionshipManager();
-	
-	public static FishingChampionshipManager getInstance()
-	{
-		return _instance;
-	}
 	
 	protected long _enddate = 0;
 	protected final List<String> _playersName = new ArrayList<>();
@@ -64,7 +53,7 @@ public class FishingChampionshipManager
 	protected double _minFishLength = 0;
 	protected boolean _needRefresh = true;
 	
-	private FishingChampionshipManager()
+	protected FishingChampionshipManager()
 	{
 		restoreData();
 		refreshWinResult();
@@ -93,7 +82,7 @@ public class FishingChampionshipManager
 	
 	private void restoreData()
 	{
-		_enddate = ServerVariables.getLong("fishChampionshipEnd", 0);
+		_enddate = ServerMemo.getInstance().getLong("fishChampionshipEnd", 0);
 		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -279,7 +268,7 @@ public class FishingChampionshipManager
 					{
 						pl.addItem("fishing_reward", Config.ALT_FISH_CHAMPIONSHIP_REWARD_ITEM, rewardCnt, null, true);
 						
-						NpcHtmlMessage html = new NpcHtmlMessage(0);
+						final NpcHtmlMessage html = new NpcHtmlMessage(0);
 						html.setFile("data/html/fisherman/championship/fish_event_reward001.htm");
 						pl.sendPacket(html);
 					}
@@ -290,7 +279,7 @@ public class FishingChampionshipManager
 	
 	public void showMidResult(L2PcInstance pl)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(0);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
 		
 		if (_needRefresh)
 		{
@@ -323,7 +312,7 @@ public class FishingChampionshipManager
 	
 	public void showChampScreen(L2PcInstance pl, int objectId)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(objectId);
+		final NpcHtmlMessage html = new NpcHtmlMessage(objectId);
 		html.setFile("data/html/fisherman/championship/fish_event001.htm");
 		
 		String str = null;
@@ -347,7 +336,7 @@ public class FishingChampionshipManager
 	
 	public void shutdown()
 	{
-		ServerVariables.set("fishChampionshipEnd", _enddate);
+		ServerMemo.getInstance().set("fishChampionshipEnd", _enddate);
 		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -519,5 +508,15 @@ public class FishingChampionshipManager
 		{
 			return _length;
 		}
+	}
+	
+	public static final FishingChampionshipManager getInstance()
+	{
+		return SingletonHolder._instance;
+	}
+	
+	private static class SingletonHolder
+	{
+		protected static final FishingChampionshipManager _instance = new FishingChampionshipManager();
 	}
 }

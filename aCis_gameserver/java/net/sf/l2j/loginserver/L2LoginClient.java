@@ -24,6 +24,7 @@ import net.sf.l2j.Config;
 import net.sf.l2j.commons.mmocore.MMOClient;
 import net.sf.l2j.commons.mmocore.MMOConnection;
 import net.sf.l2j.commons.mmocore.SendablePacket;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.loginserver.crypt.LoginCrypt;
 import net.sf.l2j.loginserver.crypt.ScrambledKeyPair;
 import net.sf.l2j.loginserver.network.serverpackets.L2LoginServerPacket;
@@ -31,7 +32,6 @@ import net.sf.l2j.loginserver.network.serverpackets.LoginFail;
 import net.sf.l2j.loginserver.network.serverpackets.LoginFail.LoginFailReason;
 import net.sf.l2j.loginserver.network.serverpackets.PlayFail;
 import net.sf.l2j.loginserver.network.serverpackets.PlayFail.PlayFailReason;
-import net.sf.l2j.util.Rnd;
 
 /**
  * Represents a client connected into the LoginServer

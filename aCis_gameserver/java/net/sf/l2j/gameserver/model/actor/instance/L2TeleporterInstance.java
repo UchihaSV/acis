@@ -109,7 +109,7 @@ public final class L2TeleporterInstance extends L2NpcInstance
 		if (player == null)
 			return;
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		
 		String content = HtmCache.getInstance().getHtm("data/html/teleporter/half/" + getNpcId() + ".htm");
 		if (content == null)
@@ -140,7 +140,7 @@ public final class L2TeleporterInstance extends L2NpcInstance
 				filename = getHtmlPath(getNpcId(), 0); // Owner message window
 		}
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		html.replace("%npcname%", getName());
@@ -158,26 +158,30 @@ public final class L2TeleporterInstance extends L2NpcInstance
 				player.sendPacket(SystemMessageId.NO_PORT_THAT_IS_IN_SIGE);
 				return;
 			}
-			else if (MapRegionTable.townHasCastleInSiege(list.getLocX(), list.getLocY()) && isInsideZone(ZoneId.TOWN))
+			
+			if (MapRegionTable.townHasCastleInSiege(list.getLocX(), list.getLocY()) && isInsideZone(ZoneId.TOWN))
 			{
 				player.sendPacket(SystemMessageId.NO_PORT_THAT_IS_IN_SIGE);
 				return;
 			}
-			else if (!Config.KARMA_PLAYER_CAN_USE_GK && player.getKarma() > 0) // karma
+			
+			if (!Config.KARMA_PLAYER_CAN_USE_GK && player.getKarma() > 0) // karma
 			{
 				player.sendMessage("Go away, you're not welcome here.");
 				return;
 			}
-			else if (list.getIsForNoble() && !player.isNoble())
+			
+			if (list.getIsForNoble() && !player.isNoble())
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile("data/html/teleporter/nobleteleporter-no.htm");
 				html.replace("%objectId%", getObjectId());
 				html.replace("%npcname%", getName());
 				player.sendPacket(html);
 				return;
 			}
-			else if (player.isAlikeDead())
+			
+			if (player.isAlikeDead())
 				return;
 			
 			Calendar cal = Calendar.getInstance();
@@ -190,12 +194,7 @@ public final class L2TeleporterInstance extends L2NpcInstance
 			}
 			
 			if (Config.ALT_GAME_FREE_TELEPORT || player.destroyItemByItemId("Teleport " + (list.getIsForNoble() ? " nobless" : ""), 57, price, this, true))
-			{
-				if (Config.DEBUG)
-					_log.fine("Teleporting player " + player.getName() + " to new location: " + list.getLocX() + ":" + list.getLocY() + ":" + list.getLocZ());
-				
 				player.teleToLocation(list.getLocX(), list.getLocY(), list.getLocZ(), 20);
-			}
 		}
 		else
 			_log.warning("No teleport destination with id:" + val);
@@ -207,13 +206,12 @@ public final class L2TeleporterInstance extends L2NpcInstance
 	{
 		if (CastleManager.getInstance().getCastleIndex(this) < 0) // Teleporter isn't on castle ground
 			return COND_REGULAR; // Regular access
-		else if (getCastle().getSiege().isInProgress()) // Teleporter is on castle ground and siege is in progress
+			
+		if (getCastle().getSiege().isInProgress()) // Teleporter is on castle ground and siege is in progress
 			return COND_BUSY_BECAUSE_OF_SIEGE; // Busy because of siege
-		else if (player.getClan() != null) // Teleporter is on castle ground and player is in a clan
-		{
-			if (getCastle().getOwnerId() == player.getClanId()) // Clan owns castle
-				return COND_OWNER; // Owner
-		}
+			
+		if (player.getClan() != null && getCastle().getOwnerId() == player.getClanId()) // Teleporter is on castle ground and player is in a clan
+			return COND_OWNER;
 		
 		return COND_ALL_FALSE;
 	}

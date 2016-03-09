@@ -58,7 +58,7 @@ public final class Henna
 		return price;
 	}
 	
-	public final static int getAmountDyeRequire()
+	public static final int getAmountDyeRequire()
 	{
 		return 10;
 	}

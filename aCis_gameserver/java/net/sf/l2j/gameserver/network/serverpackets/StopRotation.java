@@ -34,6 +34,6 @@ public class StopRotation extends L2GameServerPacket
 		writeD(_charObjId);
 		writeD(_degree);
 		writeD(_speed);
-		writeC(0); // ?
+		writeC(_degree);
 	}
 }

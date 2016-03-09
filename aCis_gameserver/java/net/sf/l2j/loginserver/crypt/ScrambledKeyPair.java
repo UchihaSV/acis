@@ -39,7 +39,7 @@ public class ScrambledKeyPair
 		return _scrambledModulus;
 	}
 	
-	private final static byte[] scrambleModulus(BigInteger modulus)
+	private static final byte[] scrambleModulus(BigInteger modulus)
 	{
 		byte[] scrambledMod = modulus.toByteArray();
 		

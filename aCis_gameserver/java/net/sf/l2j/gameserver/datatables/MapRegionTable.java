@@ -118,7 +118,7 @@ public class MapRegionTable
 		_log.info("MapRegionTable: Loaded " + count + " regions.");
 	}
 	
-	public final static int getMapRegion(int posX, int posY)
+	public static final int getMapRegion(int posX, int posY)
 	{
 		try
 		{
@@ -134,13 +134,13 @@ public class MapRegionTable
 		}
 	}
 	
-	public final static int getMapRegionX(int posX)
+	public static final int getMapRegionX(int posX)
 	{
 		// +4 to shift coords center
 		return (posX >> 15) + 4;
 	}
 	
-	public final static int getMapRegionY(int posY)
+	public static final int getMapRegionY(int posY)
 	{
 		// +8 to shift coords center
 		return (posY >> 15) + 8;
@@ -151,7 +151,7 @@ public class MapRegionTable
 	 * @param y
 	 * @return the castle id associated to the town, based on X/Y points.
 	 */
-	public final static int getAreaCastle(int x, int y)
+	public static final int getAreaCastle(int x, int y)
 	{
 		switch (getMapRegion(x, y))
 		{
@@ -370,7 +370,7 @@ public class MapRegionTable
 	 * @param y : The current player's Y location.
 	 * @return the closest L2TownZone based on a X/Y location.
 	 */
-	private final static L2TownZone getClosestTown(Race race, int x, int y)
+	private static final L2TownZone getClosestTown(Race race, int x, int y)
 	{
 		switch (getMapRegion(x, y))
 		{
@@ -437,7 +437,7 @@ public class MapRegionTable
 	 * @param y : The current character's Y location.
 	 * @return the closest L2TownZone based on a X/Y location.
 	 */
-	private final static L2TownZone getClosestTown(int x, int y)
+	private static final L2TownZone getClosestTown(int x, int y)
 	{
 		switch (getMapRegion(x, y))
 		{
@@ -504,7 +504,7 @@ public class MapRegionTable
 	 * @param y : The current character's Y location.
 	 * @return the second closest L2TownZone based on a X/Y location.
 	 */
-	private final static L2TownZone getSecondClosestTown(int x, int y)
+	private static final L2TownZone getSecondClosestTown(int x, int y)
 	{
 		switch (getMapRegion(x, y))
 		{
@@ -553,7 +553,7 @@ public class MapRegionTable
 	 * @param y : The current character's Y location.
 	 * @return the closest region based on a X/Y location.
 	 */
-	public final static int getClosestLocation(int x, int y)
+	public static final int getClosestLocation(int x, int y)
 	{
 		switch (getMapRegion(x, y))
 		{
@@ -609,7 +609,7 @@ public class MapRegionTable
 	 * @param y coords to check.
 	 * @return true if a siege is currently in progress in that town.
 	 */
-	public final static boolean townHasCastleInSiege(int x, int y)
+	public static final boolean townHasCastleInSiege(int x, int y)
 	{
 		final int castleIndex = _castleIdArray[getMapRegion(x, y)];
 		if (castleIndex > 0)
@@ -625,7 +625,7 @@ public class MapRegionTable
 	 * @param townId the townId to match.
 	 * @return a L2TownZone based on the overall list of L2TownZone, matching the townId.
 	 */
-	public final static L2TownZone getTown(int townId)
+	public static final L2TownZone getTown(int townId)
 	{
 		for (L2TownZone temp : ZoneManager.getInstance().getAllZones(L2TownZone.class))
 		{
@@ -641,7 +641,7 @@ public class MapRegionTable
 	 * @param z coords to check.
 	 * @return a L2TownZone based on the overall list of zones, matching a 3D location.
 	 */
-	public final static L2TownZone getTown(int x, int y, int z)
+	public static final L2TownZone getTown(int x, int y, int z)
 	{
 		for (L2ZoneType temp : ZoneManager.getInstance().getZones(x, y, z))
 		{

@@ -15,10 +15,11 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.network.serverpackets.CharSelectInfo;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 
 public final class CharacterRestore extends L2GameClientPacket
 {
-	// cd
 	private int _charSlot;
 	
 	@Override
@@ -30,7 +31,7 @@ public final class CharacterRestore extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		if (!getClient().getFloodProtectors().getCharacterSelect().tryPerformAction("characterRestore"))
+		if (!FloodProtectors.performAction(getClient(), Action.CHARACTER_SELECT))
 			return;
 		
 		try

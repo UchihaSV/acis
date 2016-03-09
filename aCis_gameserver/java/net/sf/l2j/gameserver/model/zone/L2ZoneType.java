@@ -24,9 +24,9 @@ import java.util.logging.Logger;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestEventType;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
+import net.sf.l2j.gameserver.scripting.EventType;
+import net.sf.l2j.gameserver.scripting.Quest;
 
 /**
  * Abstract base class for any zone type.
@@ -40,7 +40,7 @@ public abstract class L2ZoneType
 	protected L2ZoneForm _zone;
 	protected List<L2Character> _characterList;
 	
-	private Map<QuestEventType, List<Quest>> _questEvents;
+	private Map<EventType, List<Quest>> _questEvents;
 	
 	protected L2ZoneType(int id)
 	{
@@ -147,7 +147,7 @@ public abstract class L2ZoneType
 			// Was the character not yet inside this zone?
 			if (!_characterList.contains(character))
 			{
-				List<Quest> quests = getQuestByEvent(QuestEventType.ON_ENTER_ZONE);
+				List<Quest> quests = getQuestByEvent(EventType.ON_ENTER_ZONE);
 				if (quests != null)
 				{
 					for (Quest quest : quests)
@@ -162,7 +162,7 @@ public abstract class L2ZoneType
 			// Was the character inside this zone?
 			if (_characterList.contains(character))
 			{
-				List<Quest> quests = getQuestByEvent(QuestEventType.ON_EXIT_ZONE);
+				List<Quest> quests = getQuestByEvent(EventType.ON_EXIT_ZONE);
 				if (quests != null)
 				{
 					for (Quest quest : quests)
@@ -182,7 +182,7 @@ public abstract class L2ZoneType
 	{
 		if (_characterList.contains(character))
 		{
-			List<Quest> quests = getQuestByEvent(QuestEventType.ON_EXIT_ZONE);
+			List<Quest> quests = getQuestByEvent(EventType.ON_EXIT_ZONE);
 			if (quests != null)
 			{
 				for (Quest quest : quests)
@@ -233,7 +233,7 @@ public abstract class L2ZoneType
 		return result;
 	}
 	
-	public void addQuestEvent(QuestEventType eventType, Quest quest)
+	public void addQuestEvent(EventType eventType, Quest quest)
 	{
 		if (_questEvents == null)
 			_questEvents = new HashMap<>();
@@ -252,7 +252,7 @@ public abstract class L2ZoneType
 		}
 	}
 	
-	public List<Quest> getQuestByEvent(QuestEventType EventType)
+	public List<Quest> getQuestByEvent(EventType EventType)
 	{
 		return (_questEvents == null) ? null : _questEvents.get(EventType);
 	}

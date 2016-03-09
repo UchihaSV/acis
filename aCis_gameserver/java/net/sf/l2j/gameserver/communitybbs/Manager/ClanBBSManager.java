@@ -16,18 +16,16 @@ package net.sf.l2j.gameserver.communitybbs.Manager;
 
 import java.util.StringTokenizer;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.util.StringUtil;
 
 public class ClanBBSManager extends BaseBBSManager
 {
-	private static final String HOME_BAR = "<table width=610 bgcolor=A7A19A><tr><td width=5></td><td width=605><a action=\"bypass _bbsclan;home;%clanid%\">[GO TO MY CLAN]</a></td></tr></table>";
-	
 	protected ClanBBSManager()
 	{
 	}
@@ -195,22 +193,21 @@ public class ClanBBSManager extends BaseBBSManager
 		String content = HtmCache.getInstance().getHtm(CB_PATH + "clan/clanlist.htm");
 		
 		// Player got a clan, show the associated header.
-		String homeBar = "";
+		final StringBuilder sb = new StringBuilder();
 		
 		final L2Clan playerClan = activeChar.getClan();
 		if (playerClan != null)
-		{
-			homeBar = HOME_BAR;
-			homeBar = homeBar.replace("%clanid%", Integer.toString(playerClan.getClanId()));
-		}
-		content = content.replace("%homebar%", homeBar);
+			StringUtil.append(sb, "<table width=610 bgcolor=A7A19A><tr><td width=5></td><td width=605><a action=\"bypass _bbsclan;home;", playerClan.getClanId(), "\">[GO TO MY CLAN]</a></td></tr></table>");
+		
+		content = content.replace("%homebar%", sb.toString());
 		
 		if (index < 1)
 			index = 1;
 		
-		// List of clans.
-		final StringBuilder html = new StringBuilder();
+		// Cleanup sb.
+		sb.setLength(0);
 		
+		// List of clans.
 		int i = 0;
 		for (L2Clan cl : ClanTable.getInstance().getClans())
 		{
@@ -218,14 +215,14 @@ public class ClanBBSManager extends BaseBBSManager
 				break;
 			
 			if (i++ >= (index - 1) * 7)
-				StringUtil.append(html, "<table width=610><tr><td width=5></td><td width=150 align=center><a action=\"bypass _bbsclan;home;", Integer.toString(cl.getClanId()), "\">", cl.getName(), "</a></td><td width=150 align=center>", cl.getLeaderName(), "</td><td width=100 align=center>", Integer.toString(cl.getLevel()), "</td><td width=200 align=center>", Integer.toString(cl.getMembersCount()), "</td><td width=5></td></tr></table><br1><img src=\"L2UI.Squaregray\" width=605 height=1><br1>");
+				StringUtil.append(sb, "<table width=610><tr><td width=5></td><td width=150 align=center><a action=\"bypass _bbsclan;home;", cl.getClanId(), "\">", cl.getName(), "</a></td><td width=150 align=center>", cl.getLeaderName(), "</td><td width=100 align=center>", cl.getLevel(), "</td><td width=200 align=center>", cl.getMembersCount(), "</td><td width=5></td></tr></table><br1><img src=\"L2UI.Squaregray\" width=605 height=1><br1>");
 		}
-		html.append("<table><tr>");
+		sb.append("<table><tr>");
 		
 		if (index == 1)
-			html.append("<td><button action=\"\" back=\"l2ui_ch3.prev1_down\" fore=\"l2ui_ch3.prev1\" width=16 height=16></td>");
+			sb.append("<td><button action=\"\" back=\"l2ui_ch3.prev1_down\" fore=\"l2ui_ch3.prev1\" width=16 height=16></td>");
 		else
-			StringUtil.append(html, "<td><button action=\"_bbsclan;clan;", Integer.toString(index - 1), "\" back=\"l2ui_ch3.prev1_down\" fore=\"l2ui_ch3.prev1\" width=16 height=16 ></td>");
+			StringUtil.append(sb, "<td><button action=\"_bbsclan;clan;", index - 1, "\" back=\"l2ui_ch3.prev1_down\" fore=\"l2ui_ch3.prev1\" width=16 height=16 ></td>");
 		
 		i = 0;
 		int nbp = ClanTable.getInstance().getClans().length / 8;
@@ -235,19 +232,19 @@ public class ClanBBSManager extends BaseBBSManager
 		for (i = 1; i <= nbp; i++)
 		{
 			if (i == index)
-				StringUtil.append(html, "<td> ", Integer.toString(i), " </td>");
+				StringUtil.append(sb, "<td> ", i, " </td>");
 			else
-				StringUtil.append(html, "<td><a action=\"bypass _bbsclan;clan;", Integer.toString(i), "\"> ", Integer.toString(i), " </a></td>");
+				StringUtil.append(sb, "<td><a action=\"bypass _bbsclan;clan;", i, "\"> ", i, " </a></td>");
 		}
 		
 		if (index == nbp)
-			html.append("<td><button action=\"\" back=\"l2ui_ch3.next1_down\" fore=\"l2ui_ch3.next1\" width=16 height=16></td>");
+			sb.append("<td><button action=\"\" back=\"l2ui_ch3.next1_down\" fore=\"l2ui_ch3.next1\" width=16 height=16></td>");
 		else
-			StringUtil.append(html, "<td><button action=\"bypass _bbsclan;clan;", Integer.toString(index + 1), "\" back=\"l2ui_ch3.next1_down\" fore=\"l2ui_ch3.next1\" width=16 height=16 ></td>");
+			StringUtil.append(sb, "<td><button action=\"bypass _bbsclan;clan;", index + 1, "\" back=\"l2ui_ch3.next1_down\" fore=\"l2ui_ch3.next1\" width=16 height=16 ></td>");
 		
-		html.append("</tr></table>");
+		sb.append("</tr></table>");
 		
-		content = content.replace("%clanlist%", html.toString());
+		content = content.replace("%clanlist%", sb.toString());
 		separateAndSend(content, activeChar);
 	}
 	

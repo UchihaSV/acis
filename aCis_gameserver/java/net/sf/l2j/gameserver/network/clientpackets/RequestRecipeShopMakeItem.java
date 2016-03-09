@@ -17,12 +17,12 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.PrivateStoreType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 import net.sf.l2j.gameserver.util.Util;
 
-/**
- * @author Administrator
- */
 public final class RequestRecipeShopMakeItem extends L2GameClientPacket
 {
 	private int _id;
@@ -41,7 +41,7 @@ public final class RequestRecipeShopMakeItem extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		if (!getClient().getFloodProtectors().getManufacture().tryPerformAction("shopMake"))
+		if (!FloodProtectors.performAction(getClient(), Action.MANUFACTURE))
 			return;
 		
 		final L2PcInstance activeChar = getClient().getActiveChar();
@@ -55,7 +55,7 @@ public final class RequestRecipeShopMakeItem extends L2GameClientPacket
 		if (activeChar.isInStoreMode())
 			return;
 		
-		if (manufacturer.getPrivateStoreType() != L2PcInstance.STORE_PRIVATE_MANUFACTURE)
+		if (manufacturer.getPrivateStoreType() != PrivateStoreType.MANUFACTURE)
 			return;
 		
 		if (activeChar.isInCraftMode() || manufacturer.isInCraftMode())

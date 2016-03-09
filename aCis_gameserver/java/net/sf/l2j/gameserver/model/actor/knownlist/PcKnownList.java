@@ -78,7 +78,7 @@ public class PcKnownList extends PlayableKnownList
 		final L2PcInstance player = (L2PcInstance) _activeObject;
 		
 		// send Server-Client Packet DeleteObject to the L2PcInstance
-		player.sendPacket(new DeleteObject(object));
+		player.sendPacket(new DeleteObject(object, (object instanceof L2PcInstance) && ((L2PcInstance) object).isSeated()));
 		return true;
 	}
 	

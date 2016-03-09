@@ -15,17 +15,17 @@
 package net.sf.l2j.gameserver.model.actor.status;
 
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.stat.CharStat;
 import net.sf.l2j.gameserver.skills.Formulas;
-import net.sf.l2j.util.Rnd;
 
 public class CharStatus
 {
@@ -33,17 +33,17 @@ public class CharStatus
 	
 	private final L2Character _activeChar;
 	
-	private double _currentHp = 0;
-	private double _currentMp = 0;
-	
-	private final Set<L2Character> _statusListener = new CopyOnWriteArraySet<>();
-	
-	private Future<?> _regTask;
-	protected byte _flagsRegenActive = 0;
+	private final Set<L2Character> _statusListener = ConcurrentHashMap.newKeySet();
 	
 	protected static final byte REGEN_FLAG_CP = 4;
 	private static final byte REGEN_FLAG_HP = 1;
 	private static final byte REGEN_FLAG_MP = 2;
+	
+	private double _currentHp = 0;
+	private double _currentMp = 0;
+	
+	private Future<?> _regTask;
+	protected byte _flagsRegenActive = 0;
 	
 	public CharStatus(L2Character activeChar)
 	{

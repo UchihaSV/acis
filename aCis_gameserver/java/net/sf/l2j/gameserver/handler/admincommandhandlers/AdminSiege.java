@@ -16,6 +16,7 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import java.util.StringTokenizer;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.instancemanager.AuctionManager;
@@ -205,83 +206,87 @@ public class AdminSiege implements IAdminCommandHandler
 	private static void showCastleSelectPage(L2PcInstance activeChar)
 	{
 		int i = 0;
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/castles.htm");
-		StringBuilder cList = new StringBuilder();
+		
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/castles.htm");
+		
+		final StringBuilder sb = new StringBuilder();
 		for (Castle castle : CastleManager.getInstance().getCastles())
 		{
 			if (castle != null)
 			{
-				String name = castle.getName();
-				cList.append("<td fixwidth=90><a action=\"bypass -h admin_siege " + name + "\">" + name + "</a></td>");
+				StringUtil.append(sb, "<td fixwidth=90><a action=\"bypass -h admin_siege ", castle.getName(), "\">", castle.getName(), "</a></td>");
 				i++;
 			}
+			
 			if (i > 2)
 			{
-				cList.append("</tr><tr>");
+				sb.append("</tr><tr>");
 				i = 0;
 			}
 		}
-		adminReply.replace("%castles%", cList.toString());
-		cList.setLength(0);
+		html.replace("%castles%", sb.toString());
 		
+		// Cleanup sb.
+		sb.setLength(0);
 		i = 0;
+		
 		for (ClanHall clanhall : ClanHallManager.getInstance().getClanHalls().values())
 		{
 			if (clanhall != null)
 			{
-				cList.append("<td fixwidth=134><a action=\"bypass -h admin_clanhall " + clanhall.getId() + "\">");
-				cList.append(clanhall.getName() + "</a></td>");
+				StringUtil.append(sb, "<td fixwidth=134><a action=\"bypass -h admin_clanhall ", clanhall.getId(), "\">", clanhall.getName(), "</a></td>");
 				i++;
 			}
+			
 			if (i > 1)
 			{
-				cList.append("</tr><tr>");
+				sb.append("</tr><tr>");
 				i = 0;
 			}
 		}
-		adminReply.replace("%clanhalls%", cList.toString());
-		cList.setLength(0);
+		html.replace("%clanhalls%", sb.toString());
 		
+		// Cleanup sb.
+		sb.setLength(0);
 		i = 0;
+		
 		for (ClanHall clanhall : ClanHallManager.getInstance().getFreeClanHalls().values())
 		{
 			if (clanhall != null)
 			{
-				cList.append("<td fixwidth=134><a action=\"bypass -h admin_clanhall " + clanhall.getId() + "\">");
-				cList.append(clanhall.getName() + "</a></td>");
+				StringUtil.append(sb, "<td fixwidth=134><a action=\"bypass -h admin_clanhall ", clanhall.getId(), "\">", clanhall.getName(), "</a></td>");
 				i++;
 			}
+			
 			if (i > 1)
 			{
-				cList.append("</tr><tr>");
+				sb.append("</tr><tr>");
 				i = 0;
 			}
 		}
-		adminReply.replace("%freeclanhalls%", cList.toString());
-		activeChar.sendPacket(adminReply);
+		html.replace("%freeclanhalls%", sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void showSiegePage(L2PcInstance activeChar, String castleName)
 	{
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/castle.htm");
-		adminReply.replace("%castleName%", castleName);
-		activeChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/castle.htm");
+		html.replace("%castleName%", castleName);
+		activeChar.sendPacket(html);
 	}
 	
 	private static void showClanHallPage(L2PcInstance activeChar, ClanHall clanhall)
 	{
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/clanhall.htm");
-		adminReply.replace("%clanhallName%", clanhall.getName());
-		adminReply.replace("%clanhallId%", clanhall.getId());
-		L2Clan owner = ClanTable.getInstance().getClan(clanhall.getOwnerId());
-		if (owner == null)
-			adminReply.replace("%clanhallOwner%", "None");
-		else
-			adminReply.replace("%clanhallOwner%", owner.getName());
-		activeChar.sendPacket(adminReply);
+		final L2Clan owner = ClanTable.getInstance().getClan(clanhall.getOwnerId());
+		
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/clanhall.htm");
+		html.replace("%clanhallName%", clanhall.getName());
+		html.replace("%clanhallId%", clanhall.getId());
+		html.replace("%clanhallOwner%", (owner == null) ? "None" : owner.getName());
+		activeChar.sendPacket(html);
 	}
 	
 	@Override

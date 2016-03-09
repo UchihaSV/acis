@@ -8686,7 +8686,7 @@ public final class SystemMessageId
 	
 	/**
 	 * ID: 1504<br>
-	 * Message: You have registered on the waiting list for the non-class-limited individual match event.
+	 * Message: You have been registered in the Grand Olympiad Games waiting list for a non-class specific match.
 	 */
 	public static final SystemMessageId YOU_HAVE_BEEN_REGISTERED_IN_A_WAITING_LIST_OF_NO_CLASS_GAMES;
 	
@@ -13784,7 +13784,7 @@ public final class SystemMessageId
 		buildFastLookupTable();
 	}
 	
-	private final static void buildFastLookupTable()
+	private static final void buildFastLookupTable()
 	{
 		final Field[] fields = SystemMessageId.class.getDeclaredFields();
 		final ArrayList<SystemMessageId> smIds = new ArrayList<>(fields.length);

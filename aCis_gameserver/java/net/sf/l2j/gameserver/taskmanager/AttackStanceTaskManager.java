@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,7 +35,7 @@ public final class AttackStanceTaskManager implements Runnable
 	
 	private final Map<L2Character, Long> _characters = new ConcurrentHashMap<>();
 	
-	public final static AttackStanceTaskManager getInstance()
+	public static final AttackStanceTaskManager getInstance()
 	{
 		return SingletonHolder._instance;
 	}
@@ -99,11 +98,8 @@ public final class AttackStanceTaskManager implements Runnable
 		final long time = System.currentTimeMillis();
 		
 		// Loop all characters.
-		for (Iterator<Map.Entry<L2Character, Long>> iterator = _characters.entrySet().iterator(); iterator.hasNext();)
+		for (Map.Entry<L2Character, Long> entry : _characters.entrySet())
 		{
-			// Get entry of current iteration.
-			Map.Entry<L2Character, Long> entry = iterator.next();
-			
 			// Time hasn't passed yet, skip.
 			if (time < entry.getValue())
 				continue;
@@ -120,7 +116,7 @@ public final class AttackStanceTaskManager implements Runnable
 			
 			// Inform character AI and remove task.
 			character.getAI().setAutoAttacking(false);
-			iterator.remove();
+			_characters.remove(character);
 		}
 	}
 	

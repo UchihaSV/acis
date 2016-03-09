@@ -14,19 +14,15 @@
  */
 package net.sf.l2j.gameserver.handler.chathandlers;
 
-import java.util.Collection;
-
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.handler.IChatHandler;
 import net.sf.l2j.gameserver.model.BlockList;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 
-/**
- * A chat handler
- * @author durgus
- */
 public class ChatShout implements IChatHandler
 {
 	private static final int[] COMMAND_IDS =
@@ -34,29 +30,22 @@ public class ChatShout implements IChatHandler
 		1
 	};
 	
-	/**
-	 * Handle chat type 'shout'
-	 * @see net.sf.l2j.gameserver.handler.IChatHandler#handleChat(int, net.sf.l2j.gameserver.model.actor.instance.L2PcInstance, java.lang.String, java.lang.String)
-	 */
 	@Override
 	public void handleChat(int type, L2PcInstance activeChar, String target, String text)
 	{
-		CreatureSay cs = new CreatureSay(activeChar.getObjectId(), type, activeChar.getName(), text);
-		Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-		int region = MapRegionTable.getMapRegion(activeChar.getX(), activeChar.getY());
+		if (!FloodProtectors.performAction(activeChar.getClient(), Action.GLOBAL_CHAT))
+			return;
 		
-		for (L2PcInstance player : pls)
+		final CreatureSay cs = new CreatureSay(activeChar.getObjectId(), type, activeChar.getName(), text);
+		final int region = MapRegionTable.getMapRegion(activeChar.getX(), activeChar.getY());
+		
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (!BlockList.isBlocked(player, activeChar))
-				if (region == MapRegionTable.getMapRegion(player.getX(), player.getY()))
-					player.sendPacket(cs);
+			if (!BlockList.isBlocked(player, activeChar) && region == MapRegionTable.getMapRegion(player.getX(), player.getY()))
+				player.sendPacket(cs);
 		}
 	}
 	
-	/**
-	 * Returns the chat types registered to this handler
-	 * @see net.sf.l2j.gameserver.handler.IChatHandler#getChatTypeList()
-	 */
 	@Override
 	public int[] getChatTypeList()
 	{

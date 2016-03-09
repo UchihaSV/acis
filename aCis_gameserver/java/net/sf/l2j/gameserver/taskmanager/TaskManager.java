@@ -39,7 +39,6 @@ import net.sf.l2j.gameserver.taskmanager.tasks.TaskOlympiadSave;
 import net.sf.l2j.gameserver.taskmanager.tasks.TaskRaidPointsReset;
 import net.sf.l2j.gameserver.taskmanager.tasks.TaskRecom;
 import net.sf.l2j.gameserver.taskmanager.tasks.TaskRestart;
-import net.sf.l2j.gameserver.taskmanager.tasks.TaskScript;
 import net.sf.l2j.gameserver.taskmanager.tasks.TaskSevenSignsUpdate;
 import net.sf.l2j.gameserver.taskmanager.tasks.TaskShutdown;
 
@@ -152,7 +151,6 @@ public final class TaskManager
 		// initialize all tasks
 		registerTask(new TaskClansLadder());
 		registerTask(new TaskCleanUp());
-		registerTask(new TaskScript());
 		registerTask(new TaskOlympiadSave());
 		registerTask(new TaskRaidPointsReset());
 		registerTask(new TaskRecom());
@@ -301,14 +299,15 @@ public final class TaskManager
 			
 			if (!rset.next())
 			{
-				statement = con.prepareStatement(SAVE_TASK);
-				statement.setString(1, task);
-				statement.setString(2, type.toString());
-				statement.setLong(3, lastActivation);
-				statement.setString(4, param1);
-				statement.setString(5, param2);
-				statement.setString(6, param3);
-				statement.execute();
+				PreparedStatement statement2 = con.prepareStatement(SAVE_TASK);
+				statement2.setString(1, task);
+				statement2.setString(2, type.toString());
+				statement2.setLong(3, lastActivation);
+				statement2.setString(4, param1);
+				statement2.setString(5, param2);
+				statement2.setString(6, param3);
+				statement2.execute();
+				statement2.close();
 			}
 			
 			rset.close();

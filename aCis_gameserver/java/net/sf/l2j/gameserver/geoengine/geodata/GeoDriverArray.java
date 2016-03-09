@@ -90,7 +90,7 @@ public final class GeoDriverArray extends GeoData
 		final String filename = String.format(Config.GEODATA_FORMAT.getFilename(), regionX, regionY);
 		
 		// standard load
-		try (FileChannel fc = new RandomAccessFile(Config.GEODATA_PATH + filename, "r").getChannel())
+		try (RandomAccessFile raf = new RandomAccessFile(Config.GEODATA_PATH + filename, "r"); FileChannel fc = raf.getChannel())
 		{
 			// initialize file buffer
 			MappedByteBuffer buffer = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size()).load();
@@ -526,7 +526,7 @@ public final class GeoDriverArray extends GeoData
 	 * @param buffer : Multilayer block data buffer.
 	 * @return int : Cell index.
 	 */
-	private final static int getCellIndexNearest(int geoX, int geoY, int worldZ, byte[] buffer)
+	private static final int getCellIndexNearest(int geoX, int geoY, int worldZ, byte[] buffer)
 	{
 		// move buffer index to cell
 		int index = 1;
@@ -571,7 +571,7 @@ public final class GeoDriverArray extends GeoData
 	 * @return int : Cell index.
 	 * @throws IndexOutOfBoundsException : When cell is above given Z coordinate.
 	 */
-	private final static int getCellIndexAbove(int geoX, int geoY, int worldZ, byte[] buffer)
+	private static final int getCellIndexAbove(int geoX, int geoY, int worldZ, byte[] buffer)
 	{
 		// move buffer index to cell
 		int index = 1;
@@ -613,7 +613,7 @@ public final class GeoDriverArray extends GeoData
 	 * @return int : Cell index.
 	 * @throws IndexOutOfBoundsException : When cell is above given Z coordinate.
 	 */
-	private final static int getCellIndexBelow(int geoX, int geoY, int worldZ, byte[] buffer)
+	private static final int getCellIndexBelow(int geoX, int geoY, int worldZ, byte[] buffer)
 	{
 		// move buffer index to cell
 		int index = 1;

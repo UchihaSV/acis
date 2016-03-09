@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
@@ -53,7 +54,6 @@ import net.sf.l2j.gameserver.network.serverpackets.SiegeInfo;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
 import net.sf.l2j.gameserver.util.Broadcast;
-import net.sf.l2j.util.Util;
 
 public class Siege implements Siegable
 {
@@ -1025,7 +1025,7 @@ public class Siege implements Siegable
 		if (launchTask)
 			startAutoTask(); // Prepare start siege task.
 			
-		Util.printSection(getCastle().getName());
+		StringUtil.printSection(getCastle().getName());
 		_log.info("SiegeManager: New date: " + getCastle().getSiegeDate().getTime());
 		_log.info("SiegeManager: New registration end date: " + getCastle().getSiegeRegistrationEndDate().getTime());
 	}

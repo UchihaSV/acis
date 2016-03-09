@@ -35,6 +35,7 @@ public class Announcement implements Runnable
 	protected int _initialDelay;
 	protected int _delay;
 	protected int _limit;
+	protected int _tempLimit; // Temporary limit, used by current timer.
 	
 	protected ScheduledFuture<?> _task = null;
 	
@@ -64,6 +65,7 @@ public class Announcement implements Runnable
 				
 				default:
 					_task = ThreadPoolManager.getInstance().scheduleGeneral(this, _initialDelay * 1000); // self schedule (initial)
+					_tempLimit = _limit;
 					break;
 			}
 		}
@@ -74,12 +76,13 @@ public class Announcement implements Runnable
 	{
 		if (!_unlimited)
 		{
-			Broadcast.announceToOnlinePlayers(_message, _critical);
+			if (_tempLimit == 0)
+				return;
+			
 			_task = ThreadPoolManager.getInstance().scheduleGeneral(this, _delay * 1000); // self schedule (worker)
-			_limit--;
+			_tempLimit--;
 		}
-		else
-			Broadcast.announceToOnlinePlayers(_message, _critical);
+		Broadcast.announceToOnlinePlayers(_message, _critical);
 	}
 	
 	public String getMessage()
@@ -112,12 +115,33 @@ public class Announcement implements Runnable
 		return _limit;
 	}
 	
-	public void stopDaemon()
+	public void stopTask()
 	{
 		if (_task != null)
 		{
 			_task.cancel(true);
 			_task = null;
+		}
+	}
+	
+	public void reloadTask()
+	{
+		stopTask();
+		
+		if (_auto)
+		{
+			switch (_limit)
+			{
+				case 0: // unlimited
+					_task = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(this, _initialDelay * 1000, _delay * 1000); // self schedule at fixed rate
+					_unlimited = true;
+					break;
+				
+				default:
+					_task = ThreadPoolManager.getInstance().scheduleGeneral(this, _initialDelay * 1000); // self schedule (initial)
+					_tempLimit = _limit;
+					break;
+			}
 		}
 	}
 }

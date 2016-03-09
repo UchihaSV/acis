@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Item;
@@ -42,9 +41,6 @@ public class RequestUnEquipItem extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		if (Config.DEBUG)
-			_log.fine(activeChar.getName() + "requests to unequip slot: " + _slot);
-		
 		ItemInstance item = activeChar.getInventory().getPaperdollItemByL2ItemId(_slot);
 		if (item == null)
 			return;
@@ -61,9 +57,6 @@ public class RequestUnEquipItem extends L2GameClientPacket
 		}
 		
 		if (activeChar.isCastingNow() || activeChar.isCastingSimultaneouslyNow())
-			return;
-		
-		if (!activeChar.getInventory().canManipulateWithItemId(item.getItemId()))
 			return;
 		
 		ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInBodySlotAndRecord(_slot);

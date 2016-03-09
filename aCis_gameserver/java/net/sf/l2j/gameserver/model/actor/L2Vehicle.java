@@ -15,13 +15,12 @@
 package net.sf.l2j.gameserver.model.actor;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.ai.L2CharacterAI;
+import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2World;
@@ -205,23 +204,19 @@ public abstract class L2Vehicle extends L2Character
 	
 	public void oustPlayers()
 	{
-		// Use iterator because oustPlayer will try to remove player from _passengers
-		final Iterator<L2PcInstance> iter = _passengers.iterator();
-		while (iter.hasNext())
-		{
-			L2PcInstance player = iter.next();
-			if (player != null)
-				oustPlayer(player);
-			
-			iter.remove();
-		}
+		for (L2PcInstance player : _passengers)
+			oustPlayer(player, false);
+		
+		_passengers.clear();
 	}
 	
-	public void oustPlayer(L2PcInstance player)
+	public void oustPlayer(L2PcInstance player, boolean removeFromList)
 	{
 		player.setVehicle(null);
 		player.setInVehiclePosition(null);
-		removePassenger(player);
+		
+		if (removeFromList)
+			removePassenger(player);
 		
 		player.setInsideZone(ZoneId.PEACE, false);
 		player.sendPacket(SystemMessageId.EXIT_PEACEFUL_ZONE);
@@ -246,13 +241,7 @@ public abstract class L2Vehicle extends L2Character
 	
 	public void removePassenger(L2PcInstance player)
 	{
-		try
-		{
-			_passengers.remove(player);
-		}
-		catch (Exception e)
-		{
-		}
+		_passengers.remove(player);
 	}
 	
 	public boolean isEmpty()
@@ -463,11 +452,8 @@ public abstract class L2Vehicle extends L2Character
 			_ai = newAI;
 	}
 	
-	public class AIAccessor extends L2Character.AIAccessor
+	@Override
+	public void detachAI()
 	{
-		@Override
-		public void detachAI()
-		{
-		}
 	}
 }

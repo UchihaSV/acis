@@ -77,7 +77,7 @@ public class PcFreight extends ItemContainer
 	 * @return ItemInstance : items in inventory
 	 */
 	@Override
-	public ItemInstance[] getItems()
+	public List<ItemInstance> getItems()
 	{
 		List<ItemInstance> list = new ArrayList<>();
 		for (ItemInstance item : _items)
@@ -85,7 +85,7 @@ public class PcFreight extends ItemContainer
 			if (item.getLocationSlot() == 0 || item.getLocationSlot() == _activeLocationId)
 				list.add(item);
 		}
-		return list.toArray(new ItemInstance[list.size()]);
+		return list;
 	}
 	
 	/**

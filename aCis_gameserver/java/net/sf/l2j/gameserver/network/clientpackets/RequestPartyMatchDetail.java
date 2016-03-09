@@ -24,9 +24,6 @@ import net.sf.l2j.gameserver.network.serverpackets.ExPartyRoomMember;
 import net.sf.l2j.gameserver.network.serverpackets.PartyMatchDetail;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
-/**
- * @author Gnacik
- */
 public final class RequestPartyMatchDetail extends L2GameClientPacket
 {
 	private int _roomid;
@@ -52,38 +49,38 @@ public final class RequestPartyMatchDetail extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		L2PcInstance _activeChar = getClient().getActiveChar();
-		if (_activeChar == null)
+		final L2PcInstance activeChar = getClient().getActiveChar();
+		if (activeChar == null)
 			return;
 		
-		PartyMatchRoom _room = PartyMatchRoomList.getInstance().getRoom(_roomid);
-		if (_room == null)
+		PartyMatchRoom room = PartyMatchRoomList.getInstance().getRoom(_roomid);
+		if (room == null)
 			return;
 		
-		if ((_activeChar.getLevel() >= _room.getMinLvl()) && (_activeChar.getLevel() <= _room.getMaxLvl()))
+		if ((activeChar.getLevel() >= room.getMinLvl()) && (activeChar.getLevel() <= room.getMaxLvl()))
 		{
 			// Remove from waiting list
-			PartyMatchWaitingList.getInstance().removePlayer(_activeChar);
+			PartyMatchWaitingList.getInstance().removePlayer(activeChar);
 			
-			_activeChar.setPartyRoom(_roomid);
+			activeChar.setPartyRoom(_roomid);
 			
-			_activeChar.sendPacket(new PartyMatchDetail(_room));
-			_activeChar.sendPacket(new ExPartyRoomMember(_room, 0));
+			activeChar.sendPacket(new PartyMatchDetail(room));
+			activeChar.sendPacket(new ExPartyRoomMember(room, 0));
 			
-			for (L2PcInstance _member : _room.getPartyMembers())
+			for (L2PcInstance member : room.getPartyMembers())
 			{
-				if (_member == null)
+				if (member == null)
 					continue;
 				
-				_member.sendPacket(new ExManagePartyRoomMember(_activeChar, _room, 0));
-				_member.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_ENTERED_PARTY_ROOM).addPcName(_activeChar));
+				member.sendPacket(new ExManagePartyRoomMember(activeChar, room, 0));
+				member.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_ENTERED_PARTY_ROOM).addPcName(activeChar));
 			}
-			_room.addMember(_activeChar);
+			room.addMember(activeChar);
 			
 			// Info Broadcast
-			_activeChar.broadcastUserInfo();
+			activeChar.broadcastUserInfo();
 		}
 		else
-			_activeChar.sendPacket(SystemMessageId.CANT_ENTER_PARTY_ROOM);
+			activeChar.sendPacket(SystemMessageId.CANT_ENTER_PARTY_ROOM);
 	}
 }

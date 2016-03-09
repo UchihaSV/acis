@@ -14,11 +14,9 @@
  */
 package net.sf.l2j.gameserver.instancemanager;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.VehiclePathPoint;
@@ -46,15 +44,10 @@ public class BoatManager
 	
 	protected BoatManager()
 	{
-		for (int i = 0; i < _docksBusy.length; i++)
-			_docksBusy[i] = false;
 	}
 	
 	public L2BoatInstance getNewBoat(int boatId, int x, int y, int z, int heading)
 	{
-		if (!Config.ALLOW_BOAT)
-			return null;
-		
 		StatsSet npcDat = new StatsSet();
 		npcDat.set("id", boatId);
 		npcDat.set("level", 0);
@@ -118,13 +111,7 @@ public class BoatManager
 	 */
 	public void dockShip(int h, boolean value)
 	{
-		try
-		{
-			_docksBusy[h] = value;
-		}
-		catch (ArrayIndexOutOfBoundsException e)
-		{
-		}
+		_docksBusy[h] = value;
 	}
 	
 	/**
@@ -134,14 +121,7 @@ public class BoatManager
 	 */
 	public boolean dockBusy(int h)
 	{
-		try
-		{
-			return _docksBusy[h];
-		}
-		catch (ArrayIndexOutOfBoundsException e)
-		{
-			return false;
-		}
+		return _docksBusy[h];
 	}
 	
 	/**
@@ -152,15 +132,10 @@ public class BoatManager
 	 */
 	public void broadcastPacket(VehiclePathPoint point1, VehiclePathPoint point2, L2GameServerPacket packet)
 	{
-		double dx, dy;
-		final Collection<L2PcInstance> players = L2World.getInstance().getAllPlayers().values();
-		for (L2PcInstance player : players)
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (player == null)
-				continue;
-			
-			dx = (double) player.getX() - point1.x;
-			dy = (double) player.getY() - point1.y;
+			double dx = (double) player.getX() - point1.x;
+			double dy = (double) player.getY() - point1.y;
 			
 			if (Math.sqrt(dx * dx + dy * dy) < BOAT_BROADCAST_RADIUS)
 				player.sendPacket(packet);
@@ -183,15 +158,10 @@ public class BoatManager
 	 */
 	public void broadcastPackets(VehiclePathPoint point1, VehiclePathPoint point2, L2GameServerPacket... packets)
 	{
-		double dx, dy;
-		final Collection<L2PcInstance> players = L2World.getInstance().getAllPlayers().values();
-		for (L2PcInstance player : players)
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (player == null)
-				continue;
-			
-			dx = (double) player.getX() - point1.x;
-			dy = (double) player.getY() - point1.y;
+			double dx = (double) player.getX() - point1.x;
+			double dy = (double) player.getY() - point1.y;
 			
 			if (Math.sqrt(dx * dx + dy * dy) < BOAT_BROADCAST_RADIUS)
 			{

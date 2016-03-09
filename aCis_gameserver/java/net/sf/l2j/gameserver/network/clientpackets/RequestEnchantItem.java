@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.datatables.ArmorSetsTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -33,7 +34,6 @@ import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
 
 public final class RequestEnchantItem extends AbstractEnchantPacket
 {
@@ -123,7 +123,7 @@ public final class RequestEnchantItem extends AbstractEnchantPacket
 			}
 			
 			// success
-			if (Rnd.get() < chance)
+			if (Rnd.nextDouble() < chance)
 			{
 				// announce the success
 				SystemMessage sm;

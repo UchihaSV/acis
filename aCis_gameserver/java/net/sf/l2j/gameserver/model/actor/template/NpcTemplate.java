@@ -29,8 +29,8 @@ import net.sf.l2j.gameserver.model.actor.instance.L2XmassTreeInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
 import net.sf.l2j.gameserver.model.item.DropCategory;
 import net.sf.l2j.gameserver.model.item.DropData;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestEventType;
+import net.sf.l2j.gameserver.scripting.EventType;
+import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.templates.StatsSet;
 
 /**
@@ -38,7 +38,7 @@ import net.sf.l2j.gameserver.templates.StatsSet;
  */
 public final class NpcTemplate extends CharTemplate
 {
-	protected static final Logger _log = Logger.getLogger(Quest.class.getName());
+	protected static final Logger _log = Logger.getLogger(NpcTemplate.class.getName());
 	
 	private final int _npcId;
 	private final int _idTemplate;
@@ -109,7 +109,7 @@ public final class NpcTemplate extends CharTemplate
 	private final List<L2MinionData> _minions = new ArrayList<>();
 	private final List<ClassId> _teachInfo = new ArrayList<>();
 	private final Map<Integer, L2Skill> _skills = new HashMap<>();
-	private final Map<QuestEventType, List<Quest>> _questEvents = new HashMap<>();
+	private final Map<EventType, List<Quest>> _questEvents = new HashMap<>();
 	
 	/**
 	 * Constructor of L2NpcTemplate.
@@ -302,7 +302,7 @@ public final class NpcTemplate extends CharTemplate
 		return _skills.values().toArray(new L2Skill[_skills.values().size()]);
 	}
 	
-	public void addQuestEvent(QuestEventType eventType, Quest quest)
+	public void addQuestEvent(EventType eventType, Quest quest)
 	{
 		List<Quest> eventList = _questEvents.get(eventType);
 		if (eventList == null)
@@ -322,12 +322,12 @@ public final class NpcTemplate extends CharTemplate
 		}
 	}
 	
-	public Map<QuestEventType, List<Quest>> getEventQuests()
+	public Map<EventType, List<Quest>> getEventQuests()
 	{
 		return _questEvents;
 	}
 	
-	public List<Quest> getEventQuests(QuestEventType EventType)
+	public List<Quest> getEventQuests(EventType EventType)
 	{
 		return _questEvents.get(EventType);
 	}

@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.model;
 
-import net.sf.l2j.util.Rnd;
+import net.sf.l2j.commons.random.Rnd;
 
 /**
  * This class defines the spawn data of a Minion type.<BR>

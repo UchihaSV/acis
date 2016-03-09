@@ -19,10 +19,18 @@ import net.sf.l2j.gameserver.model.L2Object;
 public class DeleteObject extends L2GameServerPacket
 {
 	private final int _objectId;
+	private final boolean _isSeated;
 	
 	public DeleteObject(L2Object obj)
 	{
 		_objectId = obj.getObjectId();
+		_isSeated = false;
+	}
+	
+	public DeleteObject(L2Object obj, boolean sit)
+	{
+		_objectId = obj.getObjectId();
+		_isSeated = sit;
 	}
 	
 	@Override
@@ -30,6 +38,6 @@ public class DeleteObject extends L2GameServerPacket
 	{
 		writeC(0x12);
 		writeD(_objectId);
-		writeD(0x00); // c2
+		writeD(_isSeated ? 0x00 : 0x01); // 0 - stand up and delete, 1 - delete
 	}
 }

@@ -81,7 +81,7 @@ public final class GeoDriverBlock extends GeoData
 		final String filename = String.format(Config.GEODATA_FORMAT.getFilename(), regionX, regionY);
 		
 		// standard load
-		try (FileChannel fc = new RandomAccessFile(Config.GEODATA_PATH + filename, "r").getChannel())
+		try (RandomAccessFile raf = new RandomAccessFile(Config.GEODATA_PATH + filename, "r"); FileChannel fc = raf.getChannel())
 		{
 			// initialize file buffer
 			MappedByteBuffer buffer = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size()).load();

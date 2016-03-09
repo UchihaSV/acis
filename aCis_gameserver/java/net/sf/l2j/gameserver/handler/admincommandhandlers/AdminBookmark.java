@@ -14,14 +14,16 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
+import java.util.List;
 import java.util.StringTokenizer;
 
+import net.sf.l2j.commons.lang.StringUtil;
+import net.sf.l2j.commons.math.MathUtil;
 import net.sf.l2j.gameserver.datatables.BookmarkTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2Bookmark;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * This class handles bookmarks (stored locations for GMs use).<br>
@@ -30,7 +32,7 @@ import net.sf.l2j.util.StringUtil;
  */
 public class AdminBookmark implements IAdminCommandHandler
 {
-	private final static int PAGE_LIMIT = 15;
+	private static final int PAGE_LIMIT = 15;
 	
 	private static final String[] ADMIN_COMMANDS =
 	{
@@ -114,71 +116,52 @@ public class AdminBookmark implements IAdminCommandHandler
 	private static void showBookmarks(L2PcInstance activeChar, int page)
 	{
 		final int objId = activeChar.getObjectId();
-		final L2Bookmark[] bookmarks = BookmarkTable.getInstance().getBookmarks(objId);
+		List<L2Bookmark> bookmarks = BookmarkTable.getInstance().getBookmarks(objId);
 		
 		// Load static Htm.
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/bk.htm");
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/bk.htm");
 		
-		if (bookmarks == null)
+		if (bookmarks.isEmpty())
 		{
-			adminReply.replace("%locs%", "<tr><td>No bookmarks are currently registered.</td></tr>");
-			activeChar.sendPacket(adminReply);
+			html.replace("%locs%", "<tr><td>No bookmarks are currently registered.</td></tr>");
+			activeChar.sendPacket(html);
 			return;
 		}
 		
-		if (page > bookmarks.length / PAGE_LIMIT + 1 || page < 1)
-			return;
+		final int max = MathUtil.countPagesNumber(bookmarks.size(), PAGE_LIMIT);
 		
-		int max = bookmarks.length / PAGE_LIMIT;
-		if (bookmarks.length > PAGE_LIMIT * max)
-			max++;
-		
-		int start = ((page - 1) * PAGE_LIMIT);
-		int end = Math.min(((page - 1) * PAGE_LIMIT) + PAGE_LIMIT, bookmarks.length);
+		bookmarks = bookmarks.subList((page - 1) * PAGE_LIMIT, Math.min(page * PAGE_LIMIT, bookmarks.size()));
 		
 		// Generate data.
-		final StringBuilder replyMSG = new StringBuilder(500 + bookmarks.length * 200);
+		final StringBuilder sb = new StringBuilder(2000);
 		
-		String name, x, y, z;
-		
-		for (int i = start; i < end; i++)
+		for (L2Bookmark bk : bookmarks)
 		{
-			L2Bookmark bk = bookmarks[i];
-			if (bk != null)
-			{
-				name = bk.getName();
-				x = String.valueOf(bk.getX());
-				y = String.valueOf(bk.getY());
-				z = String.valueOf(bk.getZ());
-				
-				StringUtil.append(replyMSG, "<tr><td><a action=\"bypass -h admin_move_to ", x, " ", y, " ", z, "\">", name, " (", x, " ", y, " ", z, ")", "</a></td><td><a action=\"bypass -h admin_delbk ", name, "\">Remove</a></td></tr>");
-			}
+			final String name = bk.getName();
+			final int x = bk.getX();
+			final int y = bk.getY();
+			final int z = bk.getZ();
+			
+			StringUtil.append(sb, "<tr><td><a action=\"bypass -h admin_move_to ", x, " ", y, " ", z, "\">", name, " (", x, " ", y, " ", z, ")", "</a></td><td><a action=\"bypass -h admin_delbk ", name, "\">Remove</a></td></tr>");
 		}
+		html.replace("%locs%", sb.toString());
+		
+		// Cleanup the sb.
+		sb.setLength(0);
 		
 		// End of table, open a new table for pages system.
-		replyMSG.append("</table><br><table width=270 bgcolor=444444><tr><td>Page: ");
-		for (int x1 = 0; x1 < max; x1++)
+		for (int i = 0; i < max; i++)
 		{
-			int pagenr = x1 + 1;
+			final int pagenr = i + 1;
 			if (page == pagenr)
-			{
-				replyMSG.append(pagenr);
-				replyMSG.append("|");
-			}
+				StringUtil.append(sb, pagenr, "&nbsp;");
 			else
-			{
-				replyMSG.append("<a action=\"bypass -h admin_bkpage ");
-				replyMSG.append(x1 + 1);
-				replyMSG.append("\">");
-				replyMSG.append(pagenr);
-				replyMSG.append("</a>|");
-			}
+				StringUtil.append(sb, "<a action=\"bypass -h admin_bkpage ", pagenr, "\">", pagenr, "</a>&nbsp;");
 		}
-		replyMSG.append("</td></tr>");
 		
-		adminReply.replace("%locs%", replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+		html.replace("%pages%", sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	@Override

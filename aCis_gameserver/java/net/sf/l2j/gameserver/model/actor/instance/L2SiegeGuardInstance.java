@@ -16,8 +16,8 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.ai.L2CharacterAI;
-import net.sf.l2j.gameserver.ai.L2SiegeGuardAI;
+import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
+import net.sf.l2j.gameserver.ai.model.L2SiegeGuardAI;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -52,13 +52,13 @@ public final class L2SiegeGuardInstance extends L2Attackable
 	@Override
 	public L2CharacterAI getAI()
 	{
-		L2CharacterAI ai = _ai; // copy handle
+		L2CharacterAI ai = _ai;
 		if (ai == null)
 		{
 			synchronized (this)
 			{
 				if (_ai == null)
-					_ai = new L2SiegeGuardAI(new AIAccessor());
+					_ai = new L2SiegeGuardAI(this);
 				
 				return _ai;
 			}

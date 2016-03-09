@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import java.util.Collection;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
@@ -56,15 +55,14 @@ public class AdminKick implements IAdminCommandHandler
 		if (command.startsWith("admin_kick_non_gm"))
 		{
 			int counter = 0;
-			Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
 			
-			for (L2PcInstance player : pls)
+			for (L2PcInstance player : L2World.getInstance().getPlayers())
 			{
-				if (!player.isGM())
-				{
-					counter++;
-					player.logout();
-				}
+				if (player.isGM())
+					continue;
+				
+				counter++;
+				player.logout();
 			}
 			activeChar.sendMessage("A total of " + counter + " players have been kicked.");
 		}

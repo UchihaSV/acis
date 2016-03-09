@@ -21,6 +21,8 @@ import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 import net.sf.l2j.gameserver.util.IllegalPlayerAction;
 import net.sf.l2j.gameserver.util.Util;
 
@@ -45,11 +47,11 @@ public final class RequestDropItem extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		final L2PcInstance activeChar = getClient().getActiveChar();
-		if (activeChar == null || activeChar.isDead())
+		if (!FloodProtectors.performAction(getClient(), Action.DROP_ITEM))
 			return;
 		
-		if (!getClient().getFloodProtectors().getDropItem().tryPerformAction("dropItem"))
+		final L2PcInstance activeChar = getClient().getActiveChar();
+		if (activeChar == null || activeChar.isDead())
 			return;
 		
 		final ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
@@ -82,8 +84,7 @@ public final class RequestDropItem extends L2GameClientPacket
 		
 		if (!activeChar.getAccessLevel().allowTransaction())
 		{
-			activeChar.sendMessage("Transactions are disabled for your Access Level.");
-			activeChar.sendPacket(SystemMessageId.NOTHING_HAPPENED);
+			activeChar.sendPacket(SystemMessageId.YOU_ARE_NOT_AUTHORIZED_TO_DO_THAT);
 			return;
 		}
 		

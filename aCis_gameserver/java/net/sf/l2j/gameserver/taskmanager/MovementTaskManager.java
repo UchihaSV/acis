@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlEvent;
-import net.sf.l2j.gameserver.ai.L2CharacterAI;
+import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 
 /**
@@ -57,7 +57,7 @@ public final class MovementTaskManager extends Thread
 	 */
 	public final void add(final L2Character cha)
 	{
-		_characters.put(cha.getObjectId(), cha);
+		_characters.putIfAbsent(cha.getObjectId(), cha);
 	}
 	
 	@Override

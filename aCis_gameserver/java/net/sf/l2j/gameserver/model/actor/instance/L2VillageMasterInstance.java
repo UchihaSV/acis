@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
@@ -34,7 +35,6 @@ import net.sf.l2j.gameserver.model.base.PlayerClass;
 import net.sf.l2j.gameserver.model.base.SubClass;
 import net.sf.l2j.gameserver.model.entity.Siege;
 import net.sf.l2j.gameserver.model.olympiad.OlympiadManager;
-import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.AcquireSkillList;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
@@ -43,8 +43,9 @@ import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListAll;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
-import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.StringUtil;
+import net.sf.l2j.gameserver.scripting.QuestState;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 
 /**
  * The generic villagemaster. Some childs instances depends of it for race/classe restriction.
@@ -176,7 +177,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			if (OlympiadManager.getInstance().isRegisteredInComp(player))
 				OlympiadManager.getInstance().unRegisterNoble(player);
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			
 			int cmdChoice = 0;
 			int paramOne = 0;
@@ -198,11 +199,15 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			{
 			}
 			
+			StringBuilder sb;
+			Set<PlayerClass> subsAvailable;
+			
 			switch (cmdChoice)
 			{
 				case 0: // Subclass change menu
 					html.setFile("data/html/villagemaster/SubClass.htm");
 					break;
+				
 				case 1: // Add Subclass - Initial
 					// Subclasses may not be added while a summon is active.
 					if (player.getPet() != null)
@@ -212,7 +217,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					}
 					
 					// Subclasses may not be added while you are over your weight limit.
-					if (!player.isInventoryUnder80(true) || player.getWeightPenalty() > 0)
+					if (player.getInventoryLimit() * 0.8 <= player.getInventory().getSize() || player.getWeightPenalty() > 0)
 					{
 						player.sendPacket(SystemMessageId.NOT_SUBCLASS_WHILE_OVERWEIGHT);
 						return;
@@ -225,22 +230,21 @@ public class L2VillageMasterInstance extends L2NpcInstance
 						break;
 					}
 					
-					html.setFile("data/html/villagemaster/SubClass_Add.htm");
-					final StringBuilder content1 = StringUtil.startAppend(200);
-					Set<PlayerClass> subsAvailable = getAvailableSubClasses(player);
-					
-					if (subsAvailable != null && !subsAvailable.isEmpty())
-					{
-						for (PlayerClass subClass : subsAvailable)
-							StringUtil.append(content1, "<a action=\"bypass -h npc_%objectId%_Subclass 4 ", String.valueOf(subClass.ordinal()), "\" msg=\"1268;", formatClassForDisplay(subClass), "\">", formatClassForDisplay(subClass), "</a><br>");
-					}
-					else
+					subsAvailable = getAvailableSubClasses(player);
+					if (subsAvailable == null || subsAvailable.isEmpty())
 					{
 						player.sendMessage("There are no sub classes available at this time.");
 						return;
 					}
-					html.replace("%list%", content1.toString());
+					
+					sb = new StringBuilder(300);
+					for (PlayerClass subClass : subsAvailable)
+						StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 4 ", subClass.ordinal(), "\" msg=\"1268;", formatClassForDisplay(subClass), "\">", formatClassForDisplay(subClass), "</a><br>");
+					
+					html.setFile("data/html/villagemaster/SubClass_Add.htm");
+					html.replace("%list%", sb.toString());
 					break;
+				
 				case 2: // Change Class - Initial
 					// Subclasses may not be changed while a summon is active.
 					if (player.getPet() != null)
@@ -250,7 +254,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					}
 					
 					// Subclasses may not be changed while a you are over your weight limit.
-					if (!player.isInventoryUnder80(true) || player.getWeightPenalty() > 0)
+					if (player.getInventoryLimit() * 0.8 <= player.getInventory().getSize() || player.getWeightPenalty() > 0)
 					{
 						player.sendPacket(SystemMessageId.NOT_SUBCLASS_WHILE_OVERWEIGHT);
 						return;
@@ -260,27 +264,28 @@ public class L2VillageMasterInstance extends L2NpcInstance
 						html.setFile("data/html/villagemaster/SubClass_ChangeNo.htm");
 					else
 					{
-						final StringBuilder content2 = StringUtil.startAppend(200);
+						sb = new StringBuilder(300);
 						
 						if (checkVillageMaster(player.getBaseClass()))
-							StringUtil.append(content2, "<a action=\"bypass -h npc_%objectId%_Subclass 5 0\">", CharTemplateTable.getInstance().getClassNameById(player.getBaseClass()), "</a><br>");
+							StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 5 0\">", CharTemplateTable.getInstance().getClassNameById(player.getBaseClass()), "</a><br>");
 						
 						for (Iterator<SubClass> subList = iterSubClasses(player); subList.hasNext();)
 						{
 							SubClass subClass = subList.next();
 							if (checkVillageMaster(subClass.getClassDefinition()))
-								StringUtil.append(content2, "<a action=\"bypass -h npc_%objectId%_Subclass 5 ", String.valueOf(subClass.getClassIndex()), "\">", formatClassForDisplay(subClass.getClassDefinition()), "</a><br>");
+								StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 5 ", subClass.getClassIndex(), "\">", formatClassForDisplay(subClass.getClassDefinition()), "</a><br>");
 						}
 						
-						if (content2.length() > 0)
+						if (sb.length() > 0)
 						{
 							html.setFile("data/html/villagemaster/SubClass_Change.htm");
-							html.replace("%list%", content2.toString());
+							html.replace("%list%", sb.toString());
 						}
 						else
 							html.setFile("data/html/villagemaster/SubClass_ChangeNotFound.htm");
 					}
 					break;
+				
 				case 3: // Change/Cancel Subclass - Initial
 					if (player.getSubClasses() == null || player.getSubClasses().isEmpty())
 					{
@@ -291,16 +296,17 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					// custom value
 					if (player.getTotalSubClasses() > 3)
 					{
-						html.setFile("data/html/villagemaster/SubClass_ModifyCustom.htm");
-						final StringBuilder content3 = StringUtil.startAppend(200);
+						sb = new StringBuilder(300);
 						int classIndex = 1;
 						
 						for (Iterator<SubClass> subList = iterSubClasses(player); subList.hasNext();)
 						{
 							SubClass subClass = subList.next();
-							StringUtil.append(content3, "Sub-class ", String.valueOf(classIndex++), "<br>", "<a action=\"bypass -h npc_%objectId%_Subclass 6 ", String.valueOf(subClass.getClassIndex()), "\">", CharTemplateTable.getInstance().getClassNameById(subClass.getClassId()), "</a><br>");
+							StringUtil.append(sb, "Sub-class ", classIndex++, "<br>", "<a action=\"bypass -h npc_%objectId%_Subclass 6 ", subClass.getClassIndex(), "\">", CharTemplateTable.getInstance().getClassNameById(subClass.getClassId()), "</a><br>");
 						}
-						html.replace("%list%", content3.toString());
+						
+						html.setFile("data/html/villagemaster/SubClass_ModifyCustom.htm");
+						html.replace("%list%", sb.toString());
 					}
 					else
 					{
@@ -322,8 +328,9 @@ public class L2VillageMasterInstance extends L2NpcInstance
 							html.replace("<a action=\"bypass -h npc_%objectId%_Subclass 6 3\">%sub3%</a><br>", "");
 					}
 					break;
+				
 				case 4: // Add Subclass - Action (Subclass 4 x[x])
-					if (!player.getFloodProtectors().getSubclass().tryPerformAction("addSubclass"))
+					if (!FloodProtectors.performAction(player.getClient(), Action.SUBCLASS))
 						return;
 					
 					boolean allowAddition = true;
@@ -371,8 +378,9 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					else
 						html.setFile("data/html/villagemaster/SubClass_Fail.htm");
 					break;
+				
 				case 5: // Change Class - Action
-					if (!player.getFloodProtectors().getSubclass().tryPerformAction("changeSubclass"))
+					if (!FloodProtectors.performAction(player.getClient(), Action.SUBCLASS))
 						return;
 					
 					if (player.getClassIndex() == paramOne)
@@ -403,6 +411,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					
 					player.sendPacket(SystemMessageId.SUBCLASS_TRANSFER_COMPLETED); // Transfer completed.
 					return;
+					
 				case 6: // Change/Cancel Subclass - Choice
 					// validity check
 					if (paramOne < 1 || paramOne > 3)
@@ -417,28 +426,32 @@ public class L2VillageMasterInstance extends L2NpcInstance
 						return;
 					}
 					
-					final StringBuilder content6 = StringUtil.startAppend(200);
+					sb = new StringBuilder(300);
 					for (PlayerClass subClass : subsAvailable)
-						StringUtil.append(content6, "<a action=\"bypass -h npc_%objectId%_Subclass 7 ", String.valueOf(paramOne), " ", String.valueOf(subClass.ordinal()), "\" msg=\"1445;", "\">", formatClassForDisplay(subClass), "</a><br>");
+						StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 7 ", paramOne, " ", subClass.ordinal(), "\" msg=\"1445;", "\">", formatClassForDisplay(subClass), "</a><br>");
 					
 					switch (paramOne)
 					{
 						case 1:
 							html.setFile("data/html/villagemaster/SubClass_ModifyChoice1.htm");
 							break;
+						
 						case 2:
 							html.setFile("data/html/villagemaster/SubClass_ModifyChoice2.htm");
 							break;
+						
 						case 3:
 							html.setFile("data/html/villagemaster/SubClass_ModifyChoice3.htm");
 							break;
+						
 						default:
 							html.setFile("data/html/villagemaster/SubClass_ModifyChoice.htm");
 					}
-					html.replace("%list%", content6.toString());
+					html.replace("%list%", sb.toString());
 					break;
+				
 				case 7: // Change Subclass - Action
-					if (!player.getFloodProtectors().getSubclass().tryPerformAction("changeSubclass"))
+					if (!FloodProtectors.performAction(player.getClient(), Action.SUBCLASS))
 						return;
 					
 					if (!isValidNewSubClass(player, paramTwo))
@@ -767,7 +780,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			return;
 		}
 		
-		if (!Util.isAlphaNumeric(clanName))
+		if (!StringUtil.isAlphaNumeric(clanName))
 		{
 			player.sendPacket(SystemMessageId.CLAN_NAME_INVALID);
 			return;
@@ -858,7 +871,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			return;
 		}
 		
-		if (!Util.isAlphaNumeric(pledgeName))
+		if (!StringUtil.isAlphaNumeric(pledgeName))
 		{
 			player.sendPacket(SystemMessageId.CLAN_NAME_INVALID);
 			return;
@@ -949,7 +962,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 	{
 		if (player.getClan() == null || !player.isClanLeader())
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(0);
+			final NpcHtmlMessage html = new NpcHtmlMessage(0);
 			html.setFile("data/html/villagemaster/NotClanLeader.htm");
 			player.sendPacket(html);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
@@ -979,7 +992,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			}
 			else
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(1);
+				final NpcHtmlMessage html = new NpcHtmlMessage(0);
 				html.setFile("data/html/villagemaster/NoMoreSkills.htm");
 				player.sendPacket(html);
 			}

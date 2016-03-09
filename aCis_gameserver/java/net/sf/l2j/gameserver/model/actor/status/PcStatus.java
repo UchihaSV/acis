@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.model.actor.status;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.instancemanager.DuelManager;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -23,15 +24,14 @@ import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SummonInstance;
 import net.sf.l2j.gameserver.model.actor.stat.PcStat;
-import net.sf.l2j.gameserver.model.entity.Duel;
-import net.sf.l2j.gameserver.model.quest.QuestState;
+import net.sf.l2j.gameserver.model.entity.Duel.DuelState;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.scripting.QuestState;
 import net.sf.l2j.gameserver.skills.Formulas;
 import net.sf.l2j.gameserver.skills.Stats;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
 
 public class PcStatus extends PlayableStatus
 {
@@ -105,15 +105,15 @@ public class PcStatus extends PlayableStatus
 				
 				if (getActiveChar().isInDuel())
 				{
-					if (getActiveChar().getDuelState() == Duel.DUELSTATE_DEAD)
+					if (getActiveChar().getDuelState() == DuelState.DEAD)
 						return;
 					
-					if (getActiveChar().getDuelState() == Duel.DUELSTATE_WINNER)
+					if (getActiveChar().getDuelState() == DuelState.WINNER)
 						return;
 					
 					// cancel duel if player got hit by another player, that is not part of the duel
 					if (attackerPlayer.getDuelId() != getActiveChar().getDuelId())
-						getActiveChar().setDuelState(Duel.DUELSTATE_INTERRUPTED);
+						getActiveChar().setDuelState(DuelState.INTERRUPTED);
 				}
 			}
 			

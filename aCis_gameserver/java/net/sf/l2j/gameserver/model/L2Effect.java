@@ -131,7 +131,7 @@ public abstract class L2Effect
 		// Support for retail herbs duration when _effected has a Summon
 		int temp = template.period;
 		
-		if ((_skill.getId() > 2277 && _skill.getId() < 2286) || (_skill.getId() >= 2512 && _skill.getId() <= 2514))
+		if (_skill.getId() > 2277 && _skill.getId() < 2286)
 		{
 			if (_effected instanceof L2SummonInstance || (_effected instanceof L2PcInstance && ((L2PcInstance) _effected).getPet() != null))
 				temp /= 2;

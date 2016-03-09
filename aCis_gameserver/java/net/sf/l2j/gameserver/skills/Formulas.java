@@ -17,6 +17,7 @@ package net.sf.l2j.gameserver.skills;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
@@ -44,8 +45,6 @@ import net.sf.l2j.gameserver.skills.effects.EffectTemplate;
 import net.sf.l2j.gameserver.taskmanager.GameTimeTaskManager;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * Global calculations, can be modified by server admins
@@ -1224,13 +1223,7 @@ public final class Formulas
 		final double rate = Math.max(1, Math.min((baseChance * statModifier * skillModifier * mAtkModifier * lvlModifier), 99));
 		
 		if (Config.DEVELOPER)
-		{
-			final StringBuilder stat = new StringBuilder(140);
-			StringUtil.append(stat, "calcEffectSuccess(): Name:", skill.getName(), " eff.type:", type.toString(), " power:", String.valueOf(baseChance), " statMod:", String.format("%1.2f", statModifier), " skillMod:", String.format("%1.2f", skillModifier), " mAtkMod:", String.format("%1.2f", mAtkModifier), " lvlMod:", String.format("%1.2f", lvlModifier), " total:", String.format("%1.2f", rate), "%");
-			
-			final String result = stat.toString();
-			_log.info(result);
-		}
+			_log.info("calcEffectSuccess(): Name:" + skill.getName() + " eff.type:" + type.toString() + " power:" + baseChance + " statMod:" + String.format("%1.2f", statModifier) + " skillMod:" + String.format("%1.2f", skillModifier) + " mAtkMod:" + String.format("%1.2f", mAtkModifier) + " lvlMod:" + String.format("%1.2f", lvlModifier) + " total:" + String.format("%1.2f", rate) + "%");
 		
 		return (Rnd.get(100) < rate);
 	}
@@ -1256,13 +1249,7 @@ public final class Formulas
 		final double rate = Math.max(1, Math.min((baseChance * statModifier * skillModifier * mAtkModifier * lvlModifier), 99));
 		
 		if (Config.DEVELOPER)
-		{
-			final StringBuilder stat = new StringBuilder(140);
-			StringUtil.append(stat, "calcSkillSuccess(): Name:", skill.getName(), " type:", skill.getSkillType().toString(), " power:", String.valueOf(baseChance), " statMod:", String.format("%1.2f", statModifier), " skillMod:", String.format("%1.2f", skillModifier), " mAtkMod:", String.format("%1.2f", mAtkModifier), " lvlMod:", String.format("%1.2f", lvlModifier), " total:", String.format("%1.2f", rate), "%");
-			
-			final String result = stat.toString();
-			_log.info(result);
-		}
+			_log.info("calcSkillSuccess(): Name:" + skill.getName() + " type:" + skill.getSkillType().toString() + " power:" + baseChance + " statMod:" + String.format("%1.2f", statModifier) + " skillMod:" + String.format("%1.2f", skillModifier) + " mAtkMod:" + String.format("%1.2f", mAtkModifier) + " lvlMod:" + String.format("%1.2f", lvlModifier) + " total:" + String.format("%1.2f", rate) + "%");
 		
 		return (Rnd.get(100) < rate);
 	}
@@ -1305,13 +1292,7 @@ public final class Formulas
 		final double rate = Math.max(1, Math.min((baseChance * statModifier * skillModifier * mAtkModifier * lvlModifier), 99));
 		
 		if (Config.DEVELOPER)
-		{
-			final StringBuilder stat = new StringBuilder(140);
-			StringUtil.append(stat, "calcCubicSkillSuccess(): Name:", skill.getName(), " type:", skill.getSkillType().toString(), " power:", String.valueOf(baseChance), " statMod:", String.format("%1.2f", statModifier), " skillMod:", String.format("%1.2f", skillModifier), " mAtkMod:", String.format("%1.2f", mAtkModifier), " lvlMod:", String.format("%1.2f", lvlModifier), " total:", String.format("%1.2f", rate), "%");
-			
-			final String result = stat.toString();
-			_log.info(result);
-		}
+			_log.info("calcCubicSkillSuccess(): Name:" + skill.getName() + " type:" + skill.getSkillType().toString() + " power:" + String.valueOf(baseChance) + " statMod:" + String.format("%1.2f", statModifier) + " skillMod:" + String.format("%1.2f", skillModifier) + " mAtkMod:" + String.format("%1.2f", mAtkModifier) + " lvlMod:" + String.format("%1.2f", lvlModifier) + " total:" + String.format("%1.2f", rate) + "%");
 		
 		return (Rnd.get(100) < rate);
 	}
@@ -1328,13 +1309,7 @@ public final class Formulas
 			rate += 6000;
 		
 		if (Config.DEVELOPER)
-		{
-			final StringBuilder stat = new StringBuilder(80);
-			StringUtil.append(stat, "calcMagicSuccess(): Name:", skill.getName(), " lvlDiff:", String.valueOf(lvlDifference), " fail:", String.format("%1.2f", rate / 100), "%");
-			
-			final String result = stat.toString();
-			_log.info(result);
-		}
+			_log.info("calcMagicSuccess(): Name:" + skill.getName() + " lvlDiff:" + lvlDifference + " fail:" + String.format("%1.2f", rate / 100) + "%");
 		
 		rate = Math.min(rate, 9900);
 		

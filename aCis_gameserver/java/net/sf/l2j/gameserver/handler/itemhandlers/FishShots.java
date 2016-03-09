@@ -18,7 +18,7 @@ import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.model.item.type.WeaponType;
@@ -61,9 +61,9 @@ public class FishShots implements IItemHandler
 			return;
 		}
 		
-		final SkillHolder[] skills = item.getItem().getSkills();
+		final IntIntHolder[] skills = item.getItem().getSkills();
 		
 		activeChar.setChargedShot(ShotType.FISH_SOULSHOT, true);
-		Broadcast.toSelfAndKnownPlayers(activeChar, new MagicSkillUse(activeChar, skills[0].getSkillId(), 1, 0, 0));
+		Broadcast.toSelfAndKnownPlayers(activeChar, new MagicSkillUse(activeChar, skills[0].getId(), 1, 0, 0));
 	}
 }

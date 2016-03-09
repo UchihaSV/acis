@@ -16,13 +16,12 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.concurrent.Future;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.gameserver.model.AggroInfo;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
-import net.sf.l2j.gameserver.model.actor.L2Attackable.AggroInfo;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
@@ -32,8 +31,6 @@ import net.sf.l2j.gameserver.taskmanager.DecayTaskManager;
 
 public class L2SummonInstance extends L2Summon
 {
-	protected static final Logger log = Logger.getLogger(L2SummonInstance.class.getName());
-	
 	private float _expPenalty = 0;
 	private int _itemConsumeId = 0;
 	private int _itemConsumeCount = 0;
@@ -238,7 +235,7 @@ public class L2SummonInstance extends L2Summon
 			}
 			catch (Exception e)
 			{
-				log.log(Level.SEVERE, "Error on player [" + _activeChar.getName() + "] summon item consume task.", e);
+				_log.log(Level.SEVERE, "Error on player [" + _activeChar.getName() + "] summon item consume task.", e);
 			}
 		}
 	}
@@ -264,5 +261,10 @@ public class L2SummonInstance extends L2Summon
 	public boolean destroyItemByItemId(String process, int itemId, int count, L2Object reference, boolean sendMessage)
 	{
 		return getOwner().destroyItemByItemId(process, itemId, count, reference, sendMessage);
+	}
+	
+	@Override
+	public void doPickupItem(L2Object object)
+	{
 	}
 }

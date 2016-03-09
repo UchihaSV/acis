@@ -14,6 +14,8 @@
  */
 package net.sf.l2j.gameserver.model;
 
+import java.util.logging.Logger;
+
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -28,6 +30,8 @@ import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
  */
 public abstract class L2Object
 {
+	public static final Logger _log = Logger.getLogger(L2Object.class.getName());
+	
 	private String _name;
 	private int _objectId;
 	
@@ -150,7 +154,7 @@ public abstract class L2Object
 			getPosition().setWorldRegion(L2World.getInstance().getRegion(getPosition().getWorldPosition()));
 			
 			// Add the L2Object spawn in the _allobjects of L2World
-			L2World.getInstance().storeObject(this);
+			L2World.getInstance().addObject(this);
 			
 			// Add the L2Object spawn to _visibleObjects and if necessary to _allplayers of its L2WorldRegion
 			getPosition().getWorldRegion().addVisibleObject(this);
@@ -185,7 +189,7 @@ public abstract class L2Object
 		}
 		
 		// Add the L2Object spawn in the _allobjects of L2World
-		L2World.getInstance().storeObject(this);
+		L2World.getInstance().addObject(this);
 		
 		// Add the L2Object spawn to _visibleObjects and if necessary to _allplayers of its L2WorldRegion
 		getPosition().getWorldRegion().addVisibleObject(this);

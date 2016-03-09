@@ -17,7 +17,7 @@ package net.sf.l2j.gameserver.model.item;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 
 /**
  * This class describes a Recipe used by Dwarf to craft Item.<br>
@@ -26,7 +26,7 @@ import net.sf.l2j.gameserver.model.holder.ItemHolder;
 public class RecipeList
 {
 	/** The table containing all ItemHolder (1 line of the recipe : Item-Quantity needed) of the RecipeList */
-	private final List<ItemHolder> _neededRecipeParts = new ArrayList<>();
+	private final List<IntIntHolder> _neededRecipeParts = new ArrayList<>();
 	
 	/** The Identifier of the Instance */
 	private final int _id;
@@ -72,7 +72,7 @@ public class RecipeList
 	 * Add a ItemHolder to the RecipeList (add a line Item-Quantity needed to the Recipe).
 	 * @param recipe The recipe to add.
 	 */
-	public void addNeededRecipePart(ItemHolder recipe)
+	public void addNeededRecipePart(IntIntHolder recipe)
 	{
 		_neededRecipeParts.add(recipe);
 	}
@@ -161,7 +161,7 @@ public class RecipeList
 	/**
 	 * @return the table containing all ItemHolder (1 line of the recipe : Item-Quantity needed) of the RecipeList.
 	 */
-	public List<ItemHolder> getNeededRecipeParts()
+	public List<IntIntHolder> getNeededRecipeParts()
 	{
 		return _neededRecipeParts;
 	}

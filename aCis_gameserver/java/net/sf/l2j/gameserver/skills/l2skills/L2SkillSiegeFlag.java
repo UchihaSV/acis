@@ -80,10 +80,6 @@ public class L2SkillSiegeFlag extends L2Skill
 		flag.setCurrentHp(flag.getMaxHp());
 		flag.setHeading(player.getHeading());
 		flag.spawnMe(player.getX(), player.getY(), player.getZ() + 50);
-		
-		final Castle castle = CastleManager.getInstance().getCastle(activeChar);
-		if (castle != null)
-			castle.getSiege().getFlag(player.getClan()).add(flag);
 	}
 	
 	/**

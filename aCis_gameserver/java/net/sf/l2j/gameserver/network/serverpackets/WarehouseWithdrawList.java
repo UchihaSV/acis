@@ -14,7 +14,8 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.Config;
+import java.util.List;
+
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Item;
@@ -26,28 +27,18 @@ public class WarehouseWithdrawList extends L2GameServerPacket
 	public static final int CASTLE = 3; // not sure
 	public static final int FREIGHT = 4; // not sure
 	
-	private L2PcInstance _activeChar;
-	private int _playerAdena;
-	private ItemInstance[] _items;
 	private int _whType;
+	private int _playerAdena;
+	private List<ItemInstance> _items;
 	
 	public WarehouseWithdrawList(L2PcInstance player, int type)
 	{
-		_activeChar = player;
-		_whType = type;
-		
-		_playerAdena = _activeChar.getAdena();
-		if (_activeChar.getActiveWarehouse() == null)
-		{
-			// Something went wrong!
-			_log.warning("error while sending withdraw request to: " + _activeChar.getName());
+		if (player.getActiveWarehouse() == null)
 			return;
-		}
-		_items = _activeChar.getActiveWarehouse().getItems();
 		
-		if (Config.DEBUG)
-			for (ItemInstance item : _items)
-				_log.fine("item:" + item.getItem().getName() + " type1:" + item.getItem().getType1() + " type2:" + item.getItem().getType2());
+		_whType = type;
+		_playerAdena = player.getAdena();
+		_items = player.getActiveWarehouse().getItems();
 	}
 	
 	@Override
@@ -56,11 +47,11 @@ public class WarehouseWithdrawList extends L2GameServerPacket
 		writeC(0x42);
 		writeH(_whType);
 		writeD(_playerAdena);
-		writeH(_items.length);
+		writeH(_items.size());
 		
 		for (ItemInstance temp : _items)
 		{
-			if (temp == null || temp.getItem() == null)
+			if (temp.getItem() == null)
 				continue;
 			
 			Item item = temp.getItem();

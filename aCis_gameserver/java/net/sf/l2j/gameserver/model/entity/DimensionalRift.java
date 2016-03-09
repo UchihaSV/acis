@@ -21,13 +21,13 @@ import java.util.TimerTask;
 import java.util.concurrent.Future;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.instancemanager.DimensionalRiftManager;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.Earthquake;
-import net.sf.l2j.util.Rnd;
 
 /**
  * Thanks to L2Fortress and balancer.ru - kombat

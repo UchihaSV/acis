@@ -103,7 +103,7 @@ public class L2MerchantInstance extends L2NpcInstance
 		}
 		else if (actualCommand.equalsIgnoreCase("Multisell_Shadow"))
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			
 			if (player.getLevel() < 40)
 				html.setFile("data/html/common/shadow_item-lowlevel.htm");
@@ -123,6 +123,16 @@ public class L2MerchantInstance extends L2NpcInstance
 				return;
 			
 			MultisellData.getInstance().separateAndSend(Integer.parseInt(st.nextToken()), player, true, getCastle().getTaxRate());
+		}
+		else if (actualCommand.equalsIgnoreCase("Newbie_Exc_Multisell"))
+		{
+			if (st.countTokens() < 1)
+				return;
+			
+			if (player.isNewbie())
+				MultisellData.getInstance().separateAndSend(Integer.parseInt(st.nextToken()), player, true, getCastle().getTaxRate());
+			else
+				showChatWindow(player, "data/html/exchangelvlimit.htm");
 		}
 		else
 			super.onBypassFeedback(player, command);

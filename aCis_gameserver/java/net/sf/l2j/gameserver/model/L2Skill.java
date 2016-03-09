@@ -36,7 +36,7 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SiegeFlagInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SummonInstance;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.kind.Armor;
 import net.sf.l2j.gameserver.model.item.type.ArmorType;
 import net.sf.l2j.gameserver.model.item.type.WeaponType;
@@ -111,8 +111,8 @@ public abstract class L2Skill implements IChanceSkillTrigger
 	}
 	
 	// conditional values
-	public final static int COND_BEHIND = 0x0008;
-	public final static int COND_CRIT = 0x0010;
+	public static final int COND_BEHIND = 0x0008;
+	public static final int COND_CRIT = 0x0010;
 	
 	private final int _id;
 	private final int _level;
@@ -2086,7 +2086,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 				if (player.getClanId() != 0 && player.getClanId() == targetPlayer.getClanId())
 					return false;
 				
-				if (!player.checkPvpSkill(targetPlayer, skill, (caster instanceof L2Summon)))
+				if (!player.checkPvpSkill(targetPlayer, skill))
 					return false;
 			}
 		}
@@ -2378,7 +2378,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 			
 			final int lenght = prodData.length - 1;
 			
-			List<ItemHolder> items = null;
+			List<IntIntHolder> items = null;
 			double chance = 0;
 			int prodId = 0;
 			int quantity = 0;
@@ -2394,7 +2394,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 					if (prodId <= 0 || quantity <= 0)
 						_log.warning("Extractable skills data: Error in Skill Id: " + skillId + " Level: " + skillLvl + " wrong production Id: " + prodId + " or wrond quantity: " + quantity + "!");
 					
-					items.add(new ItemHolder(prodId, quantity));
+					items.add(new IntIntHolder(prodId, quantity));
 				}
 				chance = Double.parseDouble(prodData[lenght]);
 			}
@@ -2414,6 +2414,36 @@ public abstract class L2Skill implements IChanceSkillTrigger
 	public L2ExtractableSkill getExtractableSkill()
 	{
 		return _extractableItems;
+	}
+	
+	public boolean isDamage()
+	{
+		switch (_skillType)
+		{
+			case PDAM:
+			case MDAM:
+			case DRAIN:
+			case BLOW:
+			case CPDAMPERCENT:
+			case FATAL:
+				return true;
+		}
+		return false;
+	}
+	
+	public boolean isAOE()
+	{
+		switch (_targetType)
+		{
+			case TARGET_AREA:
+			case TARGET_AURA:
+			case TARGET_BEHIND_AREA:
+			case TARGET_BEHIND_AURA:
+			case TARGET_FRONT_AREA:
+			case TARGET_FRONT_AURA:
+				return true;
+		}
+		return false;
 	}
 	
 	@Override

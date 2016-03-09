@@ -15,14 +15,11 @@
 package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.concurrent.ScheduledFuture;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.ai.L2CharacterAI;
-import net.sf.l2j.gameserver.ai.L2DoorAI;
+import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
+import net.sf.l2j.gameserver.ai.model.L2DoorAI;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Clan;
@@ -48,8 +45,6 @@ import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
 public class L2DoorInstance extends L2Character
 {
-	protected static final Logger log = Logger.getLogger(L2DoorInstance.class.getName());
-	
 	/** The castle index in the array of L2Castle this L2Npc belongs to */
 	private int _castleIndex = -2;
 	private int _mapRegion = -1;
@@ -79,55 +74,17 @@ public class L2DoorInstance extends L2Character
 	protected int _autoActionDelay = -1;
 	private ScheduledFuture<?> _autoActionTask;
 	
-	/** This class may be created only by L2Character and only for AI */
-	public class AIAccessor extends L2Character.AIAccessor
-	{
-		protected AIAccessor()
-		{
-		}
-		
-		@Override
-		public L2DoorInstance getActor()
-		{
-			return L2DoorInstance.this;
-		}
-		
-		@Override
-		public void moveTo(int x, int y, int z, int offset)
-		{
-		}
-		
-		@Override
-		public void moveTo(int x, int y, int z)
-		{
-		}
-		
-		@Override
-		public void stopMove(L2CharPosition pos)
-		{
-		}
-		
-		@Override
-		public void doAttack(L2Character target)
-		{
-		}
-		
-		@Override
-		public void doCast(L2Skill skill)
-		{
-		}
-	}
-	
 	@Override
 	public L2CharacterAI getAI()
 	{
-		L2CharacterAI ai = _ai; // copy handle
+		L2CharacterAI ai = _ai;
 		if (ai == null)
 		{
 			synchronized (this)
 			{
 				if (_ai == null)
-					_ai = new L2DoorAI(new AIAccessor());
+					_ai = new L2DoorAI(this);
+				
 				return _ai;
 			}
 		}
@@ -139,14 +96,7 @@ public class L2DoorInstance extends L2Character
 		@Override
 		public void run()
 		{
-			try
-			{
-				onClose();
-			}
-			catch (Throwable e)
-			{
-				log.log(Level.SEVERE, "", e);
-			}
+			onClose();
 		}
 	}
 	
@@ -158,28 +108,10 @@ public class L2DoorInstance extends L2Character
 		@Override
 		public void run()
 		{
-			try
-			{
-				String doorAction;
-				
-				if (!isOpened())
-				{
-					doorAction = "opened";
-					openMe();
-				}
-				else
-				{
-					doorAction = "closed";
-					closeMe();
-				}
-				
-				if (Config.DEBUG)
-					log.info("Auto " + doorAction + " door ID " + _doorId + " (" + getName() + ") for " + (_autoActionDelay / 60000) + " minute(s).");
-			}
-			catch (Exception e)
-			{
-				log.warning("Could not auto open/close door ID " + _doorId + " (" + getName() + ")");
-			}
+			if (!isOpened())
+				openMe();
+			else
+				closeMe();
 		}
 	}
 	
@@ -408,29 +340,23 @@ public class L2DoorInstance extends L2Character
 	{
 		if (player.isGM())
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/admin/infos/doorinfo.htm");
-			
 			html.replace("%class%", getClass().getSimpleName());
 			html.replace("%objid%", getObjectId());
 			html.replace("%doorid%", getDoorId());
-			
 			html.replace("%hp%", (int) getCurrentHp());
 			html.replace("%hpmax%", getMaxHp());
-			
 			html.replace("%pdef%", getPDef(null));
 			html.replace("%mdef%", getMDef(null, null));
-			
 			html.replace("%minx%", getXMin());
 			html.replace("%miny%", getYMin());
 			html.replace("%minz%", getZMin());
-			
 			html.replace("%maxx%", getXMax());
 			html.replace("%maxy%", getYMax());
 			html.replace("%maxz%", getZMax());
 			html.replace("%unlock%", isUnlockable() ? "<font color=00FF00>YES<font>" : "<font color=FF0000>NO</font>");
 			html.replace("%isWall%", isWall() ? "<font color=00FF00>YES<font>" : "<font color=FF0000>NO</font>");
-			
 			player.sendPacket(html);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 		}
@@ -617,6 +543,26 @@ public class L2DoorInstance extends L2Character
 	public void addFuncsToNewCharacter()
 	{
 		// Doors haven't any Func.
+	}
+	
+	@Override
+	public void moveToLocation(int x, int y, int z, int offset)
+	{
+	}
+	
+	@Override
+	public void stopMove(L2CharPosition pos)
+	{
+	}
+	
+	@Override
+	public synchronized void doAttack(L2Character target)
+	{
+	}
+	
+	@Override
+	public void doCast(L2Skill skill)
+	{
 	}
 	
 	@Override

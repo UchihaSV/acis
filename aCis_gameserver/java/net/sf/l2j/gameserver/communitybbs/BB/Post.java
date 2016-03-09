@@ -30,7 +30,7 @@ import net.sf.l2j.gameserver.communitybbs.Manager.PostBBSManager;
  */
 public class Post
 {
-	private final static Logger _log = Logger.getLogger(Post.class.getName());
+	private static final Logger _log = Logger.getLogger(Post.class.getName());
 	
 	public class CPost
 	{

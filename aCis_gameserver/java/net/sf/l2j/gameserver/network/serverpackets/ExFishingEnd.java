@@ -14,22 +14,15 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.actor.L2Character;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-
-/**
- * Format: (ch) dc d: character object id c: 1 if won 0 if failed
- * @author -Wooden-
- */
 public class ExFishingEnd extends L2GameServerPacket
 {
 	private final boolean _win;
-	L2Character _activeChar;
+	private final int _playerId;
 	
-	public ExFishingEnd(boolean win, L2PcInstance character)
+	public ExFishingEnd(boolean win, int playerId)
 	{
 		_win = win;
-		_activeChar = character;
+		_playerId = playerId;
 	}
 	
 	@Override
@@ -37,7 +30,7 @@ public class ExFishingEnd extends L2GameServerPacket
 	{
 		writeC(0xfe);
 		writeH(0x14);
-		writeD(_activeChar.getObjectId());
-		writeC(_win ? 1 : 0);
+		writeD(_playerId);
+		writeC((_win) ? 1 : 0);
 	}
 }

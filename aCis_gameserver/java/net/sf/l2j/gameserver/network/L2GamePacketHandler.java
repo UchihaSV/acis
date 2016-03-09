@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.HexUtil;
 import net.sf.l2j.commons.mmocore.IClientFactory;
 import net.sf.l2j.commons.mmocore.IMMOExecutor;
 import net.sf.l2j.commons.mmocore.IPacketHandler;
@@ -25,7 +26,6 @@ import net.sf.l2j.commons.mmocore.MMOConnection;
 import net.sf.l2j.commons.mmocore.ReceivablePacket;
 import net.sf.l2j.gameserver.network.L2GameClient.GameClientState;
 import net.sf.l2j.gameserver.network.clientpackets.*;
-import net.sf.l2j.util.Util;
 
 /**
  * The Stateful approach prevents the server from handling inconsistent packets.<BR>
@@ -822,7 +822,7 @@ public final class L2GamePacketHandler implements IPacketHandler<L2GameClient>, 
 		_log.warning("Unknown Packet: 0x" + Integer.toHexString(opcode) + " on State: " + state.name() + " Client: " + client.toString());
 		byte[] array = new byte[size];
 		buf.get(array);
-		_log.warning(Util.printData(array, size));
+		_log.warning(HexUtil.printData(array, size));
 	}
 	
 	private static void printDebugDoubleOpcode(int opcode, int id2, ByteBuffer buf, GameClientState state, L2GameClient client)
@@ -835,7 +835,7 @@ public final class L2GamePacketHandler implements IPacketHandler<L2GameClient>, 
 		_log.warning("Unknown Packet: 0x" + Integer.toHexString(opcode) + ":" + Integer.toHexString(id2) + " on State: " + state.name() + " Client: " + client.toString());
 		byte[] array = new byte[size];
 		buf.get(array);
-		_log.warning(Util.printData(array, size));
+		_log.warning(HexUtil.printData(array, size));
 	}
 	
 	// impl

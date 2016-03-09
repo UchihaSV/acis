@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,21 +25,21 @@ import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 
 public class SellListProcure extends L2GameServerPacket
 {
-	private final L2PcInstance _activeChar;
-	private final int _money;
 	private final Map<ItemInstance, Integer> _sellList = new HashMap<>();
-	private List<CropProcure> _procureList = new ArrayList<>();
+	private final List<CropProcure> _procureList;
+	
+	private final int _money;
 	private final int _castle;
 	
 	public SellListProcure(L2PcInstance player, int castleId)
 	{
 		_money = player.getAdena();
-		_activeChar = player;
 		_castle = castleId;
 		_procureList = CastleManager.getInstance().getCastleById(_castle).getCropProcure(0);
+		
 		for (CropProcure c : _procureList)
 		{
-			ItemInstance item = _activeChar.getInventory().getItemByItemId(c.getId());
+			ItemInstance item = player.getInventory().getItemByItemId(c.getId());
 			if (item != null && c.getAmount() > 0)
 				_sellList.put(item, c.getAmount());
 		}

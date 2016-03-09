@@ -17,6 +17,7 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
@@ -255,10 +256,10 @@ public class L2WeddingManagerInstance extends L2NpcInstance
 	
 	private void sendHtmlMessage(L2PcInstance player, String file)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(file);
 		html.replace("%objectId%", getObjectId());
-		html.replace("%adenasCost%", Config.WEDDING_PRICE);
+		html.replace("%adenasCost%", StringUtil.formatNumber(Config.WEDDING_PRICE));
 		html.replace("%needOrNot%", Config.WEDDING_FORMALWEAR ? "will" : "won't");
 		player.sendPacket(html);
 	}

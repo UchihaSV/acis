@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.cache.CrestCache;
 import net.sf.l2j.gameserver.cache.CrestCache.CrestType;
 import net.sf.l2j.gameserver.communitybbs.BB.Forum;
@@ -54,7 +55,6 @@ import net.sf.l2j.gameserver.network.serverpackets.PledgeSkillListAdd;
 import net.sf.l2j.gameserver.network.serverpackets.SkillCoolTime;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
-import net.sf.l2j.gameserver.util.Util;
 
 public class L2Clan
 {
@@ -1866,7 +1866,7 @@ public class L2Clan
 			return;
 		}
 		
-		if (!Util.isAlphaNumeric(allyName))
+		if (!StringUtil.isAlphaNumeric(allyName))
 		{
 			player.sendPacket(SystemMessageId.INCORRECT_ALLIANCE_NAME);
 			return;

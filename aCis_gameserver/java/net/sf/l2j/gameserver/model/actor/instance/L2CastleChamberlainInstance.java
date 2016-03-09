@@ -18,6 +18,7 @@ import java.util.Calendar;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
@@ -33,7 +34,6 @@ import net.sf.l2j.gameserver.network.serverpackets.ExShowManorDefaultInfo;
 import net.sf.l2j.gameserver.network.serverpackets.ExShowSeedInfo;
 import net.sf.l2j.gameserver.network.serverpackets.ExShowSeedSetting;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.gameserver.util.Util;
 
 /**
  * Castle Chamberlains implementation, used for:
@@ -73,7 +73,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 		{
 			if (cond == COND_BUSY_BECAUSE_OF_SIEGE)
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile("data/html/chamberlain/busy.htm");
 				player.sendPacket(html);
 			}
@@ -132,10 +132,11 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 				sendFileMessage(player, "data/html/chamberlain/noprivs.htm");
 			else
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final L2Clan clan = ClanTable.getInstance().getClan(castle.getOwnerId());
+				
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile("data/html/chamberlain/report.htm");
 				html.replace("%objectId%", getObjectId());
-				L2Clan clan = ClanTable.getInstance().getClan(castle.getOwnerId());
 				html.replace("%clanname%", clan.getName());
 				html.replace("%clanleadername%", clan.getLeaderName());
 				html.replace("%castlename%", castle.getName());
@@ -268,11 +269,11 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 					}
 				}
 			}
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile(filename);
 			html.replace("%objectId%", getObjectId());
-			html.replace("%tax_income%", Util.formatAdena(castle.getTreasury()));
-			html.replace("%withdraw_amount%", Util.formatAdena(amount));
+			html.replace("%tax_income%", StringUtil.formatNumber(castle.getTreasury()));
+			html.replace("%withdraw_amount%", StringUtil.formatNumber(amount));
 			player.sendPacket(html);
 		}
 		else if (actualCommand.equalsIgnoreCase("operate_door")) // door control
@@ -282,7 +283,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			
 			if (val.isEmpty())
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile("data/html/chamberlain/" + getNpcId() + "-d.htm");
 				html.replace("%objectId%", getObjectId());
 				player.sendPacket(html);
@@ -293,7 +294,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			while (st.hasMoreTokens())
 				castle.openCloseDoor(player, Integer.parseInt(st.nextToken()), open);
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile((open) ? "data/html/chamberlain/doors-open.htm" : "data/html/chamberlain/doors-close.htm");
 			html.replace("%objectId%", getObjectId());
 			player.sendPacket(html);
@@ -301,7 +302,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 		}
 		else if (actualCommand.equalsIgnoreCase("tax_set")) // tax rates control
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			
 			if (!validatePrivileges(player, L2Clan.CP_CS_TAXES))
 				html.setFile("data/html/chamberlain/tax.htm");
@@ -347,7 +348,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			
 			if (filename.length() != 0)
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile(filename);
 				html.replace("%objectId%", getObjectId());
 				player.sendPacket(html);
@@ -451,7 +452,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 		}
 		else if (actualCommand.equals("give_crown"))
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			
 			if (cond == COND_OWNER)
 			{
@@ -484,7 +485,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			if (!validatePrivileges(player, L2Clan.CP_CS_SET_FUNCTIONS))
 				return;
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			if (val.isEmpty())
 				html.setFile("data/html/chamberlain/" + getNpcId() + "-gu.htm");
 			else
@@ -505,7 +506,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			final String type = st.nextToken();
 			final String level = st.nextToken();
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/chamberlain/doors-confirm.htm");
 			html.replace("%objectId%", getObjectId());
 			html.replace("%id%", id);
@@ -533,7 +534,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			
 			final int currentHpRatio = door.getUpgradeHpRatio();
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			
 			if (currentHpRatio >= level)
 			{
@@ -556,7 +557,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			if (!validatePrivileges(player, L2Clan.CP_CS_SET_FUNCTIONS))
 				return;
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			if (val.isEmpty())
 				html.setFile("data/html/chamberlain/" + getNpcId() + "-tu.htm");
 			else
@@ -575,7 +576,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			final String trapIndex = val;
 			final String level = st.nextToken();
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/chamberlain/traps-confirm.htm");
 			html.replace("%objectId%", getObjectId());
 			html.replace("%trapIndex%", trapIndex);
@@ -597,7 +598,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			final int trapIndex = Integer.parseInt(val);
 			final int currentLevel = castle.getTrapUpgradeLevel(trapIndex);
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			
 			if (currentLevel >= level)
 			{
@@ -634,7 +635,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 				filename = "data/html/chamberlain/chamberlain.htm";
 		}
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
@@ -662,7 +663,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 	{
 		if ((player.getClanPrivileges() & privilege) != privilege)
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/chamberlain/noprivs.htm");
 			player.sendPacket(html);
 			return false;
@@ -672,7 +673,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 	
 	private void sendFileMessage(L2PcInstance player, String htmlMessage)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(htmlMessage);
 		html.replace("%objectId%", getObjectId());
 		html.replace("%npcId%", getNpcId());

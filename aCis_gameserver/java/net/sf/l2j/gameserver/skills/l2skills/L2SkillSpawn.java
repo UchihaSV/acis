@@ -16,6 +16,7 @@ package net.sf.l2j.gameserver.skills.l2skills;
 
 import java.util.logging.Level;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -24,7 +25,6 @@ import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.util.Rnd;
 
 public class L2SkillSpawn extends L2Skill
 {

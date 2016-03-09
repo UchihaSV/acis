@@ -110,7 +110,7 @@ public class CrestCache
 		byte[] data = _crests.get(id);
 		
 		// crest data is not required type, return
-		if (data.length != type._size)
+		if (data == null || data.length != type._size)
 			return null;
 		
 		return data;
@@ -122,7 +122,7 @@ public class CrestCache
 		byte[] data = _crests.get(id);
 		
 		// crest data is not required type, return
-		if (data.length != type._size)
+		if (data == null || data.length != type._size)
 			return;
 		
 		// remove from cache

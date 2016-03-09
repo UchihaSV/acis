@@ -15,13 +15,14 @@
 package net.sf.l2j.gameserver.datatables;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import net.sf.l2j.gameserver.model.L2MinionData;
 import net.sf.l2j.gameserver.model.L2NpcAIData;
@@ -265,75 +266,13 @@ public class NpcTable
 	}
 	
 	/**
-	 * @param lvls to search.
-	 * @return the template list of NPCs for a given level.
+	 * Gets all templates matching the filter.
+	 * @param filter
+	 * @return the template list for the given filter
 	 */
-	public List<NpcTemplate> getAllOfLevel(int... lvls)
+	public List<NpcTemplate> getTemplates(Predicate<NpcTemplate> filter)
 	{
-		final List<NpcTemplate> list = new ArrayList<>();
-		for (int lvl : lvls)
-		{
-			for (NpcTemplate npcTemplate : _npcs.values())
-			{
-				if (npcTemplate.getLevel() == lvl)
-					list.add(npcTemplate);
-			}
-		}
-		return list;
-	}
-	
-	/**
-	 * @param lvls to search.
-	 * @return the template list of monsters for a given level.
-	 */
-	public List<NpcTemplate> getAllMonstersOfLevel(int... lvls)
-	{
-		final List<NpcTemplate> list = new ArrayList<>();
-		for (int lvl : lvls)
-		{
-			for (NpcTemplate npcTemplate : _npcs.values())
-			{
-				if ((npcTemplate.getLevel() == lvl) && npcTemplate.isType("L2Monster"))
-					list.add(npcTemplate);
-			}
-		}
-		return list;
-	}
-	
-	/**
-	 * @param letters of all NPCs templates which its name start with.
-	 * @return the template list of NPCs for a given letter.
-	 */
-	public List<NpcTemplate> getAllNpcStartingWith(String... letters)
-	{
-		final List<NpcTemplate> list = new ArrayList<>();
-		for (String letter : letters)
-		{
-			for (NpcTemplate npcTemplate : _npcs.values())
-			{
-				if (npcTemplate.getName().startsWith(letter) && npcTemplate.isType("L2Npc"))
-					list.add(npcTemplate);
-			}
-		}
-		return list;
-	}
-	
-	/**
-	 * @param classTypes to search.
-	 * @return the template list of NPCs for a given class.
-	 */
-	public List<NpcTemplate> getAllNpcOfClassType(String... classTypes)
-	{
-		final List<NpcTemplate> list = new ArrayList<>();
-		for (String classType : classTypes)
-		{
-			for (NpcTemplate npcTemplate : _npcs.values())
-			{
-				if (npcTemplate.isType(classType))
-					list.add(npcTemplate);
-			}
-		}
-		return list;
+		return _npcs.values().stream().filter(filter).collect(Collectors.toList());
 	}
 	
 	public Collection<NpcTemplate> getAllNpcs()

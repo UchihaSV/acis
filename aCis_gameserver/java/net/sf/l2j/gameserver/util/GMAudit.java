@@ -17,6 +17,7 @@ package net.sf.l2j.gameserver.util;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +45,7 @@ public class GMAudit
 		
 		try (FileWriter save = new FileWriter(file, true))
 		{
-			save.write(Util.formatDate(new Date(), "dd/MM/yyyy H:mm:ss") + ">" + gmName + ">" + action + ">" + target + ">" + params + "\r\n");
+			save.write(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date()) + ">" + gmName + ">" + action + ">" + target + ">" + params + "\r\n");
 		}
 		catch (IOException e)
 		{

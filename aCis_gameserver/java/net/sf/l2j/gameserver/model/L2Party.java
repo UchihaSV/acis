@@ -21,6 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.instancemanager.DuelManager;
@@ -30,7 +31,7 @@ import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SummonInstance;
 import net.sf.l2j.gameserver.model.entity.DimensionalRift;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoom;
 import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoomList;
@@ -46,7 +47,6 @@ import net.sf.l2j.gameserver.network.serverpackets.PartySmallWindowDelete;
 import net.sf.l2j.gameserver.network.serverpackets.PartySmallWindowDeleteAll;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
 
 /**
  * @author nuocnam
@@ -176,7 +176,7 @@ public class L2Party
 		}
 		
 		if (!availableMembers.isEmpty())
-			return availableMembers.get(Rnd.get(availableMembers.size()));
+			return Rnd.get(availableMembers);
 		
 		return null;
 	}
@@ -548,28 +548,28 @@ public class L2Party
 	 * @param spoil
 	 * @param target
 	 */
-	public void distributeItem(L2PcInstance player, ItemHolder item, boolean spoil, L2Attackable target)
+	public void distributeItem(L2PcInstance player, IntIntHolder item, boolean spoil, L2Attackable target)
 	{
 		if (item == null)
 			return;
 		
 		if (item.getId() == 57)
 		{
-			distributeAdena(player, item.getCount(), target);
+			distributeAdena(player, item.getValue(), target);
 			return;
 		}
 		
 		L2PcInstance looter = getActualLooter(player, item.getId(), spoil, target);
-		looter.addItem(spoil ? "Sweep" : "Party", item.getId(), item.getCount(), player, true);
+		looter.addItem(spoil ? "Sweep" : "Party", item.getId(), item.getValue(), player, true);
 		
 		// Send messages to other party members about reward
 		SystemMessage msg;
-		if (item.getCount() > 1)
+		if (item.getValue() > 1)
 		{
 			msg = spoil ? SystemMessage.getSystemMessage(SystemMessageId.S1_SWEEPED_UP_S3_S2) : SystemMessage.getSystemMessage(SystemMessageId.S1_OBTAINED_S3_S2);
 			msg.addPcName(looter);
 			msg.addItemName(item.getId());
-			msg.addItemNumber(item.getCount());
+			msg.addItemNumber(item.getValue());
 		}
 		else
 		{

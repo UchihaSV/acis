@@ -35,6 +35,8 @@ import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 
 public class MultiSellChoose extends L2GameClientPacket
 {
@@ -58,11 +60,11 @@ public class MultiSellChoose extends L2GameClientPacket
 	@Override
 	public void runImpl()
 	{
-		final L2PcInstance player = getClient().getActiveChar();
-		if (player == null)
+		if (!FloodProtectors.performAction(getClient(), Action.MULTISELL))
 			return;
 		
-		if (!getClient().getFloodProtectors().getMultiSell().tryPerformAction("multisellChoose"))
+		final L2PcInstance player = getClient().getActiveChar();
+		if (player == null)
 			return;
 		
 		if (_amount < 1 || _amount > 9999)

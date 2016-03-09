@@ -25,7 +25,7 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.type.ActionType;
 import net.sf.l2j.gameserver.model.item.type.ArmorType;
@@ -34,9 +34,9 @@ import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.model.item.type.ItemType;
 import net.sf.l2j.gameserver.model.item.type.MaterialType;
 import net.sf.l2j.gameserver.model.item.type.WeaponType;
-import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.skills.basefuncs.Func;
 import net.sf.l2j.gameserver.skills.basefuncs.FuncTemplate;
@@ -122,7 +122,7 @@ public abstract class Item
 	protected List<FuncTemplate> _funcTemplates;
 	
 	protected List<Condition> _preConditions;
-	private SkillHolder[] _skillHolder;
+	private IntIntHolder[] _skillHolder;
 	
 	private final List<Quest> _questEvents = new ArrayList<>();
 	
@@ -160,7 +160,7 @@ public abstract class Item
 		if (skills != null)
 		{
 			String[] skillsSplit = skills.split(";");
-			_skillHolder = new SkillHolder[skillsSplit.length];
+			_skillHolder = new IntIntHolder[skillsSplit.length];
 			int used = 0;
 			
 			for (String element : skillsSplit)
@@ -183,7 +183,7 @@ public abstract class Item
 						continue;
 					}
 					
-					_skillHolder[used] = new SkillHolder(id, level);
+					_skillHolder[used] = new IntIntHolder(id, level);
 					++used;
 				}
 				catch (Exception e)
@@ -195,7 +195,7 @@ public abstract class Item
 			// this is only loading? just don't leave a null or use a collection?
 			if (used != _skillHolder.length)
 			{
-				SkillHolder[] skillHolder = new SkillHolder[used];
+				IntIntHolder[] skillHolder = new IntIntHolder[used];
 				System.arraycopy(_skillHolder, 0, skillHolder, 0, used);
 				_skillHolder = skillHolder;
 			}
@@ -469,7 +469,7 @@ public abstract class Item
 	 * Method to retrieve skills linked to this item
 	 * @return Skills linked to this item as SkillHolder[]
 	 */
-	public final SkillHolder[] getSkills()
+	public final IntIntHolder[] getSkills()
 	{
 		return _skillHolder;
 	}

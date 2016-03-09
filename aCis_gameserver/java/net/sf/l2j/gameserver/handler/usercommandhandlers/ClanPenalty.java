@@ -17,12 +17,12 @@ package net.sf.l2j.gameserver.handler.usercommandhandlers;
 import java.text.SimpleDateFormat;
 import java.util.Map;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.handler.IUserCommandHandler;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * Support for clan penalty user command.
@@ -40,23 +40,23 @@ public class ClanPenalty implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-		StringBuilder content = new StringBuilder();
+		final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		final StringBuilder sb = new StringBuilder();
 		
 		// Join a clan penalty.
 		if (activeChar.getClanJoinExpiryTime() > System.currentTimeMillis())
-			StringUtil.append(content, "<tr><td width=170>Unable to join a clan.</td><td width=100 align=center>", format.format(activeChar.getClanJoinExpiryTime()), "</td></tr>");
+			StringUtil.append(sb, "<tr><td width=170>Unable to join a clan.</td><td width=100 align=center>", sdf.format(activeChar.getClanJoinExpiryTime()), "</td></tr>");
 		
 		// Create a clan penalty.
 		if (activeChar.getClanCreateExpiryTime() > System.currentTimeMillis())
-			StringUtil.append(content, "<tr><td width=170>Unable to create a clan.</td><td width=100 align=center>", format.format(activeChar.getClanCreateExpiryTime()), "</td></tr>");
+			StringUtil.append(sb, "<tr><td width=170>Unable to create a clan.</td><td width=100 align=center>", sdf.format(activeChar.getClanCreateExpiryTime()), "</td></tr>");
 		
 		final L2Clan clan = activeChar.getClan();
 		if (clan != null)
 		{
 			// Invitation in a clan penalty.
 			if (clan.getCharPenaltyExpiryTime() > System.currentTimeMillis())
-				StringUtil.append(content, "<tr><td width=170>Unable to invite a clan member.</td><td width=100 align=center>", format.format(clan.getCharPenaltyExpiryTime()), "</td></tr>");
+				StringUtil.append(sb, "<tr><td width=170>Unable to invite a clan member.</td><td width=100 align=center>", sdf.format(clan.getCharPenaltyExpiryTime()), "</td></tr>");
 			
 			// War penalty.
 			if (!clan.getWarPenalty().isEmpty())
@@ -67,15 +67,15 @@ public class ClanPenalty implements IUserCommandHandler
 					{
 						final L2Clan enemyClan = ClanTable.getInstance().getClan(entry.getKey());
 						if (enemyClan != null)
-							StringUtil.append(content, "<tr><td width=170>Unable to attack ", enemyClan.getName(), " clan.</td><td width=100 align=center>", format.format(entry.getValue()), "</td></tr>");
+							StringUtil.append(sb, "<tr><td width=170>Unable to attack ", enemyClan.getName(), " clan.</td><td width=100 align=center>", sdf.format(entry.getValue()), "</td></tr>");
 					}
 				}
 			}
 		}
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(0);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
 		html.setFile("data/html/clan_penalty.htm");
-		html.replace("%content%", (content.length() == 0) ? NO_PENALTY : content.toString());
+		html.replace("%content%", (sb.length() == 0) ? NO_PENALTY : sb.toString());
 		activeChar.sendPacket(html);
 		return true;
 	}

@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.model.L2Party;
@@ -36,7 +37,6 @@ import net.sf.l2j.gameserver.model.entity.DimensionalRift;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
-import net.sf.l2j.util.Rnd;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -227,7 +227,7 @@ public class DimensionalRiftManager
 		// Party members' count is lower than config.
 		if (party.getMemberCount() < Config.RIFT_MIN_PARTY_SIZE)
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 			html.setFile("data/html/seven_signs/rift/SmallParty.htm");
 			html.replace("%npc_name%", npc.getName());
 			html.replace("%count%", Integer.toString(Config.RIFT_MIN_PARTY_SIZE));
@@ -238,7 +238,7 @@ public class DimensionalRiftManager
 		// Rift is full.
 		if (!isAllowedEnter(type))
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 			html.setFile("data/html/seven_signs/rift/Full.htm");
 			html.replace("%npc_name%", npc.getName());
 			player.sendPacket(html);
@@ -264,7 +264,7 @@ public class DimensionalRiftManager
 			
 			if (i == null || i.getCount() < getNeededItems(type))
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 				html.setFile("data/html/seven_signs/rift/NoFragments.htm");
 				html.replace("%npc_name%", npc.getName());
 				html.replace("%count%", Integer.toString(count));
@@ -278,7 +278,7 @@ public class DimensionalRiftManager
 			i = p.getInventory().getItemByItemId(DIMENSIONAL_FRAGMENT_ITEM_ID);
 			if (!p.destroyItem("RiftEntrance", i, count, null, true))
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 				html.setFile("data/html/seven_signs/rift/NoFragments.htm");
 				html.replace("%npc_name%", npc.getName());
 				html.replace("%count%", Integer.toString(count));
@@ -461,7 +461,7 @@ public class DimensionalRiftManager
 	
 	public void showHtmlFile(L2PcInstance player, String file, L2Npc npc)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 		html.setFile(file);
 		html.replace("%npc_name%", npc.getName());
 		player.sendPacket(html);

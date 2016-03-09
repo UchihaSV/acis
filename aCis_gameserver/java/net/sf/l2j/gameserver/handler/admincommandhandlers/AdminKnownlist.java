@@ -17,13 +17,13 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.knownlist.ObjectKnownList;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * Handles visibility over target's knownlist, offering details about current target's vicinity.
@@ -54,7 +54,7 @@ public class AdminKnownlist implements IAdminCommandHandler
 				try
 				{
 					final int objectId = Integer.parseInt(parameter);
-					target = L2World.getInstance().findObject(objectId);
+					target = L2World.getInstance().getObject(objectId);
 				}
 				catch (NumberFormatException nfe)
 				{
@@ -74,19 +74,17 @@ public class AdminKnownlist implements IAdminCommandHandler
 			final Collection<L2Object> list = knownlist.getKnownObjects();
 			
 			// Generate data.
-			final StringBuilder replyMSG = new StringBuilder(list.size() * 200);
+			final StringBuilder sb = new StringBuilder(list.size() * 150);
 			for (L2Object object : list)
-			{
-				StringUtil.append(replyMSG, "<tr><td>" + object.getName() + "</td><td>" + object.getClass().getSimpleName() + "</td></tr>");
-			}
+				StringUtil.append(sb, "<tr><td>", object.getName(), "</td><td>", object.getClass().getSimpleName(), "</td></tr>");
 			
-			NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-			adminReply.setFile("data/html/admin/knownlist.htm");
-			adminReply.replace("%target%", target.getName());
-			adminReply.replace("%type%", knownlist.getClass().getSimpleName());
-			adminReply.replace("%size%", list.size());
-			adminReply.replace("%knownlist%", replyMSG.toString());
-			activeChar.sendPacket(adminReply);
+			final NpcHtmlMessage html = new NpcHtmlMessage(0);
+			html.setFile("data/html/admin/knownlist.htm");
+			html.replace("%target%", target.getName());
+			html.replace("%type%", knownlist.getClass().getSimpleName());
+			html.replace("%size%", list.size());
+			html.replace("%knownlist%", sb.toString());
+			activeChar.sendPacket(html);
 		}
 		return true;
 	}

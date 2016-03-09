@@ -75,7 +75,7 @@ public final class L2GameClient extends MMOClient<MMOConnection<L2GameClient>> i
 	private CharSelectInfoPackage[] _charSlotMapping = null;
 	
 	// floodprotectors
-	private final FloodProtectors _floodProtectors = new FloodProtectors(this);
+	private final long[] _floodProtectors = new long[FloodProtectors.Action.VALUES_LENGTH];
 	
 	// Task
 	protected final ScheduledFuture<?> _autoSaveInDB;
@@ -162,7 +162,7 @@ public final class L2GameClient extends MMOClient<MMOConnection<L2GameClient>> i
 		return _activeCharLock;
 	}
 	
-	public FloodProtectors getFloodProtectors()
+	public long[] getFloodProtectors()
 	{
 		return _floodProtectors;
 	}

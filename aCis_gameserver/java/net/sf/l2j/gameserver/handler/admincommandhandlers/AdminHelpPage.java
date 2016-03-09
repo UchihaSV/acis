@@ -56,8 +56,8 @@ public class AdminHelpPage implements IAdminCommandHandler
 	// PUBLIC & STATIC so other classes from package can include it directly
 	public static void showHelpPage(L2PcInstance targetChar, String filename)
 	{
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/" + filename);
-		targetChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/" + filename);
+		targetChar.sendPacket(html);
 	}
 }

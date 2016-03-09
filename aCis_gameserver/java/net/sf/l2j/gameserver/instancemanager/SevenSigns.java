@@ -1221,11 +1221,8 @@ public class SevenSigns
 	 */
 	protected void teleLosingCabalFromDungeons(String compWinner)
 	{
-		for (L2PcInstance player : L2World.getInstance().getAllPlayers().values())
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (player == null)
-				continue;
-			
 			StatsSet currPlayer = _signsPlayerData.get(player.getObjectId());
 			
 			if (isSealValidationPeriod() || isCompResultsPeriod())
@@ -1364,20 +1361,17 @@ public class SevenSigns
 	 */
 	public void giveSosEffect(int strifeOwner)
 	{
-		for (L2PcInstance character : L2World.getInstance().getAllPlayers().values())
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (character == null)
-				continue;
-			
-			int cabal = getPlayerCabal(character.getObjectId());
+			int cabal = getPlayerCabal(player.getObjectId());
 			if (cabal != SevenSigns.CABAL_NULL)
 			{
 				// Gives "Victor of War" passive skill to all online characters with Cabal which controls Seal of Strife
 				if (cabal == strifeOwner)
-					character.addSkill(SkillTable.FrequentSkill.THE_VICTOR_OF_WAR.getSkill());
+					player.addSkill(SkillTable.FrequentSkill.THE_VICTOR_OF_WAR.getSkill());
 				// Gives "The Vanquished of War" passive skill to all online characters with Cabal which does not control Seal of Strife
 				else
-					character.addSkill(SkillTable.FrequentSkill.THE_VANQUISHED_OF_WAR.getSkill());
+					player.addSkill(SkillTable.FrequentSkill.THE_VANQUISHED_OF_WAR.getSkill());
 			}
 		}
 	}
@@ -1387,14 +1381,11 @@ public class SevenSigns
 	 */
 	public void removeSosEffect()
 	{
-		for (L2PcInstance character : L2World.getInstance().getAllPlayers().values())
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (character == null)
-				continue;
-			
 			// Remove Seal of Strife buffs/debuffs.
-			character.removeSkill(SkillTable.FrequentSkill.THE_VICTOR_OF_WAR.getSkill());
-			character.removeSkill(SkillTable.FrequentSkill.THE_VANQUISHED_OF_WAR.getSkill());
+			player.removeSkill(SkillTable.FrequentSkill.THE_VICTOR_OF_WAR.getSkill());
+			player.removeSkill(SkillTable.FrequentSkill.THE_VANQUISHED_OF_WAR.getSkill());
 		}
 	}
 	

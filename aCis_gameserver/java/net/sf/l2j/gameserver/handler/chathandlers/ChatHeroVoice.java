@@ -14,17 +14,13 @@
  */
 package net.sf.l2j.gameserver.handler.chathandlers;
 
-import java.util.Collection;
-
 import net.sf.l2j.gameserver.handler.IChatHandler;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 
-/**
- * A chat handler
- * @author durgus
- */
 public class ChatHeroVoice implements IChatHandler
 {
 	private static final int[] COMMAND_IDS =
@@ -32,30 +28,20 @@ public class ChatHeroVoice implements IChatHandler
 		17
 	};
 	
-	/**
-	 * Handle chat type 'hero voice'
-	 * @see net.sf.l2j.gameserver.handler.IChatHandler#handleChat(int, net.sf.l2j.gameserver.model.actor.instance.L2PcInstance, java.lang.String, java.lang.String)
-	 */
 	@Override
 	public void handleChat(int type, L2PcInstance activeChar, String target, String text)
 	{
-		if (activeChar.isHero())
-		{
-			if (!activeChar.getFloodProtectors().getHeroVoice().tryPerformAction("heroVoice"))
-				return;
-			
-			CreatureSay cs = new CreatureSay(activeChar.getObjectId(), type, activeChar.getName(), text);
-			
-			Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-			for (L2PcInstance player : pls)
-				player.sendPacket(cs);
-		}
+		if (!activeChar.isHero())
+			return;
+		
+		if (!FloodProtectors.performAction(activeChar.getClient(), Action.HERO_VOICE))
+			return;
+		
+		final CreatureSay cs = new CreatureSay(activeChar.getObjectId(), type, activeChar.getName(), text);
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
+			player.sendPacket(cs);
 	}
 	
-	/**
-	 * Returns the chat types registered to this handler
-	 * @see net.sf.l2j.gameserver.handler.IChatHandler#getChatTypeList()
-	 */
 	@Override
 	public int[] getChatTypeList()
 	{

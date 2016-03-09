@@ -36,7 +36,7 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
  */
 public class RaidBossPointsManager
 {
-	private final static Logger _log = Logger.getLogger(RaidBossPointsManager.class.getName());
+	private static final Logger _log = Logger.getLogger(RaidBossPointsManager.class.getName());
 	
 	private final Map<Integer, Map<Integer, Integer>> _list = new ConcurrentHashMap<>();
 	
@@ -82,7 +82,7 @@ public class RaidBossPointsManager
 		}
 	}
 	
-	public final static void updatePointsInDB(L2PcInstance player, int raidId, int points)
+	public static final void updatePointsInDB(L2PcInstance player, int raidId, int points)
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{

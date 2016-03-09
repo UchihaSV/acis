@@ -26,7 +26,6 @@ import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.util.GMAudit;
 
 /**
  * This class handles following admin commands:
@@ -118,13 +117,11 @@ public class AdminBan implements IAdminCommandHandler
 			{
 				LoginServerThread.getInstance().sendAccessLevel(player, -100);
 				activeChar.sendMessage("Ban request sent for account " + player + ".");
-				auditAction(command, activeChar, player);
 			}
 			else
 			{
 				targetPlayer.setPunishLevel(L2PcInstance.PunishLevel.ACC, 0);
 				activeChar.sendMessage(targetPlayer.getAccountName() + " account is now banned.");
-				auditAction(command, activeChar, targetPlayer.getAccountName());
 			}
 		}
 		else if (command.startsWith("admin_ban_char"))
@@ -135,7 +132,6 @@ public class AdminBan implements IAdminCommandHandler
 				return false;
 			}
 			
-			auditAction(command, activeChar, (targetPlayer == null ? player : targetPlayer.getName()));
 			return changeCharAccessLevel(targetPlayer, player, activeChar, -100);
 		}
 		else if (command.startsWith("admin_ban_chat"))
@@ -161,13 +157,9 @@ public class AdminBan implements IAdminCommandHandler
 					banLengthStr = " for " + duration + " minutes";
 				
 				activeChar.sendMessage(targetPlayer.getName() + " is now chat banned" + banLengthStr + ".");
-				auditAction(command, activeChar, targetPlayer.getName());
 			}
 			else
-			{
 				banChatOfflinePlayer(activeChar, player, duration, true);
-				auditAction(command, activeChar, player);
-			}
 		}
 		else if (command.startsWith("admin_unban ") || command.equalsIgnoreCase("admin_unban"))
 		{
@@ -185,7 +177,6 @@ public class AdminBan implements IAdminCommandHandler
 			{
 				LoginServerThread.getInstance().sendAccessLevel(player, 0);
 				activeChar.sendMessage("Unban request sent for account " + player + ".");
-				auditAction(command, activeChar, player);
 			}
 			else
 			{
@@ -200,16 +191,14 @@ public class AdminBan implements IAdminCommandHandler
 				activeChar.sendMessage("Usage: //unban_char <char_name>");
 				return false;
 			}
-			else if (targetPlayer != null)
+			
+			if (targetPlayer != null)
 			{
 				activeChar.sendMessage(targetPlayer.getName() + " is currently online so mustn't be banned.");
 				return false;
 			}
-			else
-			{
-				auditAction(command, activeChar, player);
-				return changeCharAccessLevel(null, player, activeChar, 0);
-			}
+			
+			return changeCharAccessLevel(null, player, activeChar, 0);
 		}
 		else if (command.startsWith("admin_unban_chat"))
 		{
@@ -225,16 +214,12 @@ public class AdminBan implements IAdminCommandHandler
 				{
 					targetPlayer.setPunishLevel(L2PcInstance.PunishLevel.NONE, 0);
 					activeChar.sendMessage(targetPlayer.getName() + "'s chat ban has been lifted.");
-					auditAction(command, activeChar, targetPlayer.getName());
 				}
 				else
 					activeChar.sendMessage(targetPlayer.getName() + " isn't currently chat banned.");
 			}
 			else
-			{
 				banChatOfflinePlayer(activeChar, player, 0, false);
-				auditAction(command, activeChar, player);
-			}
 		}
 		else if (command.startsWith("admin_jail"))
 		{
@@ -248,13 +233,9 @@ public class AdminBan implements IAdminCommandHandler
 			{
 				targetPlayer.setPunishLevel(L2PcInstance.PunishLevel.JAIL, duration);
 				activeChar.sendMessage(targetPlayer.getName() + " have been jailed for " + (duration > 0 ? duration + " minutes." : "ever !"));
-				auditAction(command, activeChar, targetPlayer.getName());
 			}
 			else
-			{
 				jailOfflinePlayer(activeChar, player, duration);
-				auditAction(command, activeChar, player);
-			}
 		}
 		else if (command.startsWith("admin_unjail"))
 		{
@@ -267,25 +248,11 @@ public class AdminBan implements IAdminCommandHandler
 			{
 				targetPlayer.setPunishLevel(L2PcInstance.PunishLevel.NONE, 0);
 				activeChar.sendMessage(targetPlayer.getName() + " have been unjailed.");
-				auditAction(command, activeChar, targetPlayer.getName());
 			}
 			else
-			{
 				unjailOfflinePlayer(activeChar, player);
-				auditAction(command, activeChar, player);
-			}
 		}
 		return true;
-	}
-	
-	private static void auditAction(String fullCommand, L2PcInstance activeChar, String target)
-	{
-		if (!Config.GMAUDIT)
-			return;
-		
-		String[] command = fullCommand.split(" ");
-		
-		GMAudit.auditGMAction(activeChar.getName() + " [" + activeChar.getObjectId() + "]", command[0], (target.equals("") ? "no-target" : target), (command.length > 2 ? command[2] : ""));
 	}
 	
 	private static void banChatOfflinePlayer(L2PcInstance activeChar, String name, int delay, boolean ban)

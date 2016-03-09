@@ -48,15 +48,6 @@ public final class RequestDestroyItem extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		int count = _count;
-		if (count <= 0)
-		{
-			if (count < 0)
-				Util.handleIllegalPlayerAction(activeChar, "[RequestDestroyItem] " + activeChar.getName() + " of account " + activeChar.getAccountName() + " tried to destroy item with oid " + _objectId + " but has count < 0.", Config.DEFAULT_PUNISH);
-			
-			return;
-		}
-		
 		if (activeChar.isProcessingTransaction() || activeChar.isInStoreMode())
 		{
 			activeChar.sendPacket(SystemMessageId.CANNOT_TRADE_DISCARD_DROP_ITEM_WHILE_IN_SHOPMODE);
@@ -66,6 +57,18 @@ public final class RequestDestroyItem extends L2GameClientPacket
 		final ItemInstance itemToRemove = activeChar.getInventory().getItemByObjectId(_objectId);
 		if (itemToRemove == null)
 			return;
+		
+		if (_count < 1 || _count > itemToRemove.getCount())
+		{
+			activeChar.sendPacket(SystemMessageId.CANNOT_DESTROY_NUMBER_INCORRECT);
+			return;
+		}
+		
+		if (!itemToRemove.isStackable() && _count > 1)
+		{
+			Util.handleIllegalPlayerAction(activeChar, "[RequestDestroyItem] " + activeChar.getName() + " of account " + activeChar.getAccountName() + " tried to destroy a non-stackable item with oid " + _objectId + " but has count > 1.", Config.DEFAULT_PUNISH);
+			return;
+		}
 		
 		final int itemId = itemToRemove.getItemId();
 		
@@ -98,22 +101,7 @@ public final class RequestDestroyItem extends L2GameClientPacket
 			return;
 		}
 		
-		if (!itemToRemove.isStackable() && count > 1)
-		{
-			Util.handleIllegalPlayerAction(activeChar, "[RequestDestroyItem] " + activeChar.getName() + " of account " + activeChar.getAccountName() + " tried to destroy a non-stackable item with oid " + _objectId + " but has count > 1.", Config.DEFAULT_PUNISH);
-			return;
-		}
-		
-		if (!activeChar.getInventory().canManipulateWithItemId(itemId))
-		{
-			activeChar.sendPacket(SystemMessageId.CANNOT_USE_ON_YOURSELF);
-			return;
-		}
-		
-		if (count > itemToRemove.getCount())
-			count = itemToRemove.getCount();
-		
-		if (itemToRemove.isEquipped() && (!itemToRemove.isStackable() || (itemToRemove.isStackable() && count >= itemToRemove.getCount())))
+		if (itemToRemove.isEquipped() && (!itemToRemove.isStackable() || (itemToRemove.isStackable() && _count >= itemToRemove.getCount())))
 		{
 			ItemInstance[] unequipped = activeChar.getInventory().unEquipItemInSlotAndRecord(itemToRemove.getLocationSlot());
 			InventoryUpdate iu = new InventoryUpdate();
@@ -150,7 +138,7 @@ public final class RequestDestroyItem extends L2GameClientPacket
 			}
 		}
 		
-		ItemInstance removedItem = activeChar.getInventory().destroyItem("Destroy", _objectId, count, activeChar, null);
+		ItemInstance removedItem = activeChar.getInventory().destroyItem("Destroy", _objectId, _count, activeChar, null);
 		if (removedItem == null)
 			return;
 		

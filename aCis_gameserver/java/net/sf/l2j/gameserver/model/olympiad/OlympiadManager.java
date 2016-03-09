@@ -95,7 +95,7 @@ public class OlympiadManager
 		if (_nonClassBasedRegisters.contains(objId))
 		{
 			if (showMessage)
-				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_HAVE_ALREADY_BEEN_REGISTERED_IN_A_WAITING_LIST_OF_AN_EVENT));
+				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_HAVE_BEEN_REGISTERED_IN_A_WAITING_LIST_OF_NO_CLASS_GAMES));
 			
 			return true;
 		}
@@ -104,7 +104,7 @@ public class OlympiadManager
 		if (classed != null && classed.contains(objId))
 		{
 			if (showMessage)
-				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_HAVE_ALREADY_BEEN_REGISTERED_IN_A_WAITING_LIST_OF_AN_EVENT));
+				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.YOU_HAVE_BEEN_REGISTERED_IN_A_WAITING_LIST_OF_CLASSIFIED_GAMES));
 			
 			return true;
 		}
@@ -117,7 +117,7 @@ public class OlympiadManager
 		return isRegistered(noble, false) || isInCompetition(noble, false);
 	}
 	
-	private final static boolean isInCompetition(L2PcInstance player, boolean showMessage)
+	private static final boolean isInCompetition(L2PcInstance player, boolean showMessage)
 	{
 		if (!Olympiad._inCompPeriod)
 			return false;
@@ -269,7 +269,7 @@ public class OlympiadManager
 			return false;
 		}
 		
-		if (!player.isInventoryUnder80(true))
+		if (player.getInventoryLimit() * 0.8 <= player.getInventory().getSize())
 		{
 			player.sendPacket(SystemMessageId.SINCE_80_PERCENT_OR_MORE_OF_YOUR_INVENTORY_SLOTS_ARE_FULL_YOU_CANNOT_PARTICIPATE_IN_THE_OLYMPIAD);
 			return false;
@@ -300,7 +300,7 @@ public class OlympiadManager
 		final int points = Olympiad.getInstance().getNoblePoints(player.getObjectId());
 		if (points <= 0)
 		{
-			NpcHtmlMessage message = new NpcHtmlMessage(0);
+			final NpcHtmlMessage message = new NpcHtmlMessage(0);
 			message.setFile("data/html/olympiad/noble_nopoints1.htm");
 			message.replace("%objectId%", player.getTargetId());
 			player.sendPacket(message);

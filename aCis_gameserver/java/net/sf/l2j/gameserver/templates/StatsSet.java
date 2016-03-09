@@ -21,10 +21,9 @@ import java.util.HashMap;
  * Methods deployed are accessors to the set (add/get value from its key) and addition of a whole set in the current one.
  * @author mkizub, G1ta0
  */
+@SuppressWarnings("serial")
 public class StatsSet extends HashMap<String, Object>
 {
-	private static final long serialVersionUID = 8071544899414292397L;
-	
 	public StatsSet()
 	{
 		super();
@@ -346,19 +345,15 @@ public class StatsSet extends HashMap<String, Object>
 		return defaultValue;
 	}
 	
-	public Object getObject(final String key)
-	{
-		return get(key);
-	}
-	
-	public Object getObject(final String key, final Object defaultValue)
+	@SuppressWarnings("unchecked")
+	public <A> A getObject(final String key, final Class<A> type)
 	{
 		final Object val = get(key);
 		
-		if (val != null)
-			return val;
+		if (val == null || !type.isAssignableFrom(val.getClass()))
+			return null;
 		
-		return defaultValue;
+		return (A) val;
 	}
 	
 	@SuppressWarnings("unchecked")

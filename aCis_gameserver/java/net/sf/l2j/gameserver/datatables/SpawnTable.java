@@ -18,7 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
@@ -34,7 +34,7 @@ public class SpawnTable
 {
 	private static Logger _log = Logger.getLogger(SpawnTable.class.getName());
 	
-	private final Set<L2Spawn> _spawntable = new CopyOnWriteArraySet<>();
+	private final Set<L2Spawn> _spawntable = ConcurrentHashMap.newKeySet();
 	
 	public static SpawnTable getInstance()
 	{

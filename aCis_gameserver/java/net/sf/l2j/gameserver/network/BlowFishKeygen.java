@@ -14,7 +14,7 @@
  */
 package net.sf.l2j.gameserver.network;
 
-import net.sf.l2j.util.Rnd;
+import net.sf.l2j.commons.random.Rnd;
 
 /**
  * Blowfish keygen for GameServer client connections

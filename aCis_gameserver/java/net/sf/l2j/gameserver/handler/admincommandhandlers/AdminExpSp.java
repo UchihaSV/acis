@@ -15,9 +15,7 @@
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import java.util.StringTokenizer;
-import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -30,7 +28,6 @@ import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
  */
 public class AdminExpSp implements IAdminCommandHandler
 {
-	private static Logger _log = Logger.getLogger(AdminExpSp.class.getName());
 	private static final String[] ADMIN_COMMANDS =
 	{
 		"admin_add_exp_sp_to_character",
@@ -88,14 +85,14 @@ public class AdminExpSp implements IAdminCommandHandler
 			activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
 			return;
 		}
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/expsp.htm");
-		adminReply.replace("%name%", player.getName());
-		adminReply.replace("%level%", player.getLevel());
-		adminReply.replace("%xp%", player.getExp());
-		adminReply.replace("%sp%", player.getSp());
-		adminReply.replace("%class%", player.getTemplate().getClassName());
-		activeChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/expsp.htm");
+		html.replace("%name%", player.getName());
+		html.replace("%level%", player.getLevel());
+		html.replace("%xp%", player.getExp());
+		html.replace("%sp%", player.getSp());
+		html.replace("%class%", player.getTemplate().getClassName());
+		activeChar.sendPacket(html);
 	}
 	
 	private static boolean adminAddExpSp(L2PcInstance activeChar, String ExpSp)
@@ -131,13 +128,10 @@ public class AdminExpSp implements IAdminCommandHandler
 		
 		if (expval != 0 || spval != 0)
 		{
-			// Common character information
 			player.sendMessage("Admin is adding you " + expval + " xp and " + spval + " sp.");
 			player.addExpAndSp(expval, spval);
-			// Admin information
+			
 			activeChar.sendMessage("Added " + expval + " xp and " + spval + " sp to " + player.getName() + ".");
-			if (Config.DEBUG)
-				_log.fine("GM: " + activeChar.getName() + "(" + activeChar.getObjectId() + ") added " + expval + " xp and " + spval + " sp to " + player.getObjectId() + ".");
 		}
 		return true;
 	}
@@ -175,13 +169,10 @@ public class AdminExpSp implements IAdminCommandHandler
 		
 		if (expval != 0 || spval != 0)
 		{
-			// Common character information
 			player.sendMessage("Admin is removing you " + expval + " xp and " + spval + " sp.");
 			player.removeExpAndSp(expval, spval);
-			// Admin information
+			
 			activeChar.sendMessage("Removed " + expval + " xp and " + spval + " sp from " + player.getName() + ".");
-			if (Config.DEBUG)
-				_log.fine("GM: " + activeChar.getName() + "(" + activeChar.getObjectId() + ") removed " + expval + " xp and " + spval + " sp from " + player.getObjectId() + ".");
 		}
 		return true;
 	}

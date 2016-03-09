@@ -35,7 +35,7 @@ import org.w3c.dom.Node;
  */
 public class NpcWalkerRoutesTable
 {
-	private final static Logger _log = Logger.getLogger(NpcWalkerRoutesTable.class.getName());
+	private static final Logger _log = Logger.getLogger(NpcWalkerRoutesTable.class.getName());
 	
 	private final Map<Integer, List<L2NpcWalkerNode>> _routes = new HashMap<>();
 	
