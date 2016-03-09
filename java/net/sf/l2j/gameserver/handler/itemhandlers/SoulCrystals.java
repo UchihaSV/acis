@@ -19,7 +19,7 @@ import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.EtcItem;
 
@@ -37,7 +37,7 @@ public class SoulCrystals implements IItemHandler
 		
 		final EtcItem etcItem = item.getEtcItem();
 		
-		final SkillHolder[] skills = etcItem.getSkills();
+		final IntIntHolder[] skills = etcItem.getSkills();
 		if (skills == null)
 			return;
 		

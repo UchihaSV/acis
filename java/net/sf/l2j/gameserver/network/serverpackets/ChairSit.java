@@ -14,24 +14,22 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-
 public class ChairSit extends L2GameServerPacket
 {
-	private final L2PcInstance _activeChar;
-	private final int _staticObjectId;
+	private final int _playerId;
+	private final int _staticId;
 	
-	public ChairSit(L2PcInstance player, int staticObjectId)
+	public ChairSit(int playerId, int staticId)
 	{
-		_activeChar = player;
-		_staticObjectId = staticObjectId;
+		_playerId = playerId;
+		_staticId = staticId;
 	}
 	
 	@Override
 	protected final void writeImpl()
 	{
 		writeC(0xe1);
-		writeD(_activeChar.getObjectId());
-		writeD(_staticObjectId);
+		writeD(_playerId);
+		writeD(_staticId);
 	}
 }

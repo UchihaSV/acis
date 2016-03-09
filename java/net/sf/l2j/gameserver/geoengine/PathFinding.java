@@ -176,7 +176,7 @@ public abstract class PathFinding
 	 * @param count : Item count
 	 * @param loc : Item location
 	 */
-	public final static void dropDebugItem(int id, int count, Location loc)
+	public static final void dropDebugItem(int id, int count, Location loc)
 	{
 		final ItemInstance item = new ItemInstance(IdFactory.getInstance().getNextId(), id);
 		item.setCount(count);
@@ -187,7 +187,7 @@ public abstract class PathFinding
 	/**
 	 * Clear item drop list for debugging paths.
 	 */
-	public final static void clearDebugItems()
+	public static final void clearDebugItems()
 	{
 		for (ItemInstance item : _debugItems)
 		{

@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlEvent;
 import net.sf.l2j.gameserver.datatables.SkillTable;
@@ -41,7 +42,6 @@ import net.sf.l2j.gameserver.skills.Formulas;
 import net.sf.l2j.gameserver.skills.l2skills.L2SkillDrain;
 import net.sf.l2j.gameserver.taskmanager.AttackStanceTaskManager;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
-import net.sf.l2j.util.Rnd;
 
 public class L2CubicInstance
 {
@@ -391,7 +391,7 @@ public class L2CubicInstance
 				
 				if (Rnd.get(1, 100) < _chance)
 				{
-					final L2Skill skill = _skills.get(Rnd.get(_skills.size()));
+					final L2Skill skill = Rnd.get(_skills);
 					if (skill != null)
 					{
 						// friendly skill, so we look a target in owner's party

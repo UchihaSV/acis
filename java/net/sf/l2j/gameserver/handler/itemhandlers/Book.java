@@ -28,10 +28,11 @@ public class Book implements IItemHandler
 	{
 		if (!(playable instanceof L2PcInstance))
 			return;
-		L2PcInstance activeChar = (L2PcInstance) playable;
+		
+		final L2PcInstance activeChar = (L2PcInstance) playable;
 		final int itemId = item.getItemId();
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(0);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
 		html.setFile("data/html/help/" + itemId + ".htm");
 		html.setItemId(itemId);
 		activeChar.sendPacket(html);

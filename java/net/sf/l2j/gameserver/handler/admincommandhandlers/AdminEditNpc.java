@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.BuyListTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.NpcTable;
@@ -31,18 +32,17 @@ import net.sf.l2j.gameserver.model.buylist.NpcBuyList;
 import net.sf.l2j.gameserver.model.buylist.Product;
 import net.sf.l2j.gameserver.model.item.DropCategory;
 import net.sf.l2j.gameserver.model.item.DropData;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestEventType;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.scripting.EventType;
+import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * @author terry
  */
 public class AdminEditNpc implements IAdminCommandHandler
 {
-	private final static int PAGE_LIMIT = 20;
+	private static final int PAGE_LIMIT = 20;
 	
 	private static final String[] ADMIN_COMMANDS =
 	{
@@ -130,28 +130,17 @@ public class AdminEditNpc implements IAdminCommandHandler
 			return;
 		}
 		
-		final StringBuilder replyMSG = new StringBuilder();
-		replyMSG.append("<html><body><center><font color=\"LEVEL\">");
-		replyMSG.append(NpcTable.getInstance().getTemplate(buyList.getNpcId()).getName());
-		replyMSG.append(" (");
-		replyMSG.append(buyList.getNpcId());
-		replyMSG.append(") buylist id: ");
-		replyMSG.append(buyList.getListId());
-		replyMSG.append("</font></center><br><table width=\"100%\"><tr><td width=200>Item</td><td width=80>Price</td></tr>");
+		final StringBuilder sb = new StringBuilder(500);
+		StringUtil.append(sb, "<html><body><center><font color=\"LEVEL\">", NpcTable.getInstance().getTemplate(buyList.getNpcId()).getName(), " (", buyList.getNpcId(), ") buylist id: ", buyList.getListId(), "</font></center><br><table width=\"100%\"><tr><td width=200>Item</td><td width=80>Price</td></tr>");
 		
 		for (Product product : buyList.getProducts())
-		{
-			replyMSG.append("<tr><td>");
-			replyMSG.append(product.getItem().getName());
-			replyMSG.append("</td><td>");
-			replyMSG.append(product.getPrice());
-			replyMSG.append("</td></tr>");
-		}
-		replyMSG.append("</table></body></html>");
+			StringUtil.append(sb, "<tr><td>", product.getItem().getName(), "</td><td>", product.getPrice(), "</td></tr>");
 		
-		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setHtml(replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+		sb.append("</table></body></html>");
+		
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void showShop(L2PcInstance activeChar, int npcId)
@@ -163,27 +152,27 @@ public class AdminEditNpc implements IAdminCommandHandler
 			return;
 		}
 		
-		final StringBuilder replyMSG = new StringBuilder();
-		StringUtil.append(replyMSG, "<html><title>Merchant Shop Lists</title><body>");
+		final StringBuilder sb = new StringBuilder(500);
+		StringUtil.append(sb, "<html><title>Merchant Shop Lists</title><body>");
 		
 		if (activeChar.getTarget() instanceof L2MerchantInstance)
 		{
 			L2Npc merchant = (L2Npc) activeChar.getTarget();
 			int taxRate = merchant.getCastle().getTaxPercent();
 			
-			StringUtil.append(replyMSG, "<center><font color=\"LEVEL\">", merchant.getName(), " (", Integer.toString(npcId), ")</font></center><br>Tax rate: ", Integer.toString(taxRate), "%");
+			StringUtil.append(sb, "<center><font color=\"LEVEL\">", merchant.getName(), " (", npcId, ")</font></center><br>Tax rate: ", taxRate, "%");
 		}
 		
-		StringUtil.append(replyMSG, "<table width=\"100%\">");
+		StringUtil.append(sb, "<table width=\"100%\">");
 		
 		for (NpcBuyList buyList : buyLists)
-			StringUtil.append(replyMSG, "<tr><td><a action=\"bypass -h admin_show_shoplist ", String.valueOf(buyList.getListId()), " 1\">Buylist id: ", String.valueOf(buyList.getListId()), "</a></td></tr>");
+			StringUtil.append(sb, "<tr><td><a action=\"bypass -h admin_show_shoplist ", buyList.getListId(), " 1\">Buylist id: ", buyList.getListId(), "</a></td></tr>");
 		
-		StringUtil.append(replyMSG, "</table></body></html>");
+		StringUtil.append(sb, "</table></body></html>");
 		
-		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setHtml(replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void showNpcDropList(L2PcInstance activeChar, int npcId, int page)
@@ -195,18 +184,12 @@ public class AdminEditNpc implements IAdminCommandHandler
 			return;
 		}
 		
-		final StringBuilder replyMSG = new StringBuilder(2000);
-		replyMSG.append("<html><title>Show droplist page ");
-		replyMSG.append(page);
-		replyMSG.append("</title><body><center><font color=\"LEVEL\">");
-		replyMSG.append(npcData.getName());
-		replyMSG.append(" (");
-		replyMSG.append(npcId);
-		replyMSG.append(")</font></center><br>");
+		final StringBuilder sb = new StringBuilder(2000);
+		StringUtil.append(sb, "<html><title>Show droplist page ", page, "</title><body><center><font color=\"LEVEL\">", npcData.getName(), " (", npcId, ")</font></center><br>");
 		
 		if (!npcData.getDropData().isEmpty())
 		{
-			replyMSG.append("Drop type legend: <font color=\"3BB9FF\">Drop</font> | <font color=\"00ff00\">Sweep</font><br><table><tr><td width=25>cat.</td><td width=255>item</td></tr>");
+			sb.append("Drop type legend: <font color=\"3BB9FF\">Drop</font> | <font color=\"00ff00\">Sweep</font><br><table><tr><td width=25>cat.</td><td width=255>item</td></tr>");
 			
 			int myPage = 1;
 			int i = 0;
@@ -223,8 +206,6 @@ public class AdminEditNpc implements IAdminCommandHandler
 				
 				for (DropData drop : cat.getAllDrops())
 				{
-					final String color = ((cat.isSweep()) ? "00FF00" : "3BB9FF");
-					
 					if (myPage != page)
 					{
 						i++;
@@ -242,58 +223,37 @@ public class AdminEditNpc implements IAdminCommandHandler
 						break;
 					}
 					
-					replyMSG.append("<tr><td><font color=\"");
-					replyMSG.append(color);
-					replyMSG.append("\">");
-					replyMSG.append(cat.getCategoryType());
-					replyMSG.append("</td><td>");
-					replyMSG.append(ItemTable.getInstance().getTemplate(drop.getItemId()).getName());
-					replyMSG.append(" (");
-					replyMSG.append(drop.getItemId());
-					replyMSG.append(")</td></tr>");
+					StringUtil.append(sb, "<tr><td><font color=\"", ((cat.isSweep()) ? "00FF00" : "3BB9FF"), "\">", cat.getCategoryType(), "</td><td>", ItemTable.getInstance().getTemplate(drop.getItemId()).getName(), " (", drop.getItemId(), ")</td></tr>");
 					shown++;
 				}
 			}
 			
-			replyMSG.append("</table><table width=\"100%\" bgcolor=666666><tr>");
+			sb.append("</table><table width=\"100%\" bgcolor=666666><tr>");
 			
 			if (page > 1)
 			{
-				replyMSG.append("<td width=120><a action=\"bypass -h admin_show_droplist ");
-				replyMSG.append(npcId);
-				replyMSG.append(" ");
-				replyMSG.append(page - 1);
-				replyMSG.append("\">Prev Page</a></td>");
+				StringUtil.append(sb, "<td width=120><a action=\"bypass -h admin_show_droplist ", npcId, " ", page - 1, "\">Prev Page</a></td>");
 				if (!hasMore)
-				{
-					replyMSG.append("<td width=100>Page ");
-					replyMSG.append(page);
-					replyMSG.append("</td><td width=70></td></tr>");
-				}
+					StringUtil.append(sb, "<td width=100>Page ", page, "</td><td width=70></td></tr>");
 			}
 			
 			if (hasMore)
 			{
 				if (page <= 1)
-					replyMSG.append("<td width=120></td>");
-				replyMSG.append("<td width=100>Page ");
-				replyMSG.append(page);
-				replyMSG.append("</td><td width=70><a action=\"bypass -h admin_show_droplist ");
-				replyMSG.append(npcId);
-				replyMSG.append(" ");
-				replyMSG.append(page + 1);
-				replyMSG.append("\">Next Page</a></td></tr>");
+					sb.append("<td width=120></td>");
+				
+				StringUtil.append(sb, "<td width=100>Page ", page, "</td><td width=70><a action=\"bypass -h admin_show_droplist ", npcId, " ", page + 1, "\">Next Page</a></td></tr>");
 			}
-			replyMSG.append("</table>");
+			sb.append("</table>");
 		}
 		else
-			replyMSG.append("This NPC has no drops.");
+			sb.append("This NPC has no drops.");
 		
-		replyMSG.append("</body></html>");
+		sb.append("</body></html>");
 		
-		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setHtml(replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void showNpcSkillList(L2PcInstance activeChar, int npcId)
@@ -307,30 +267,17 @@ public class AdminEditNpc implements IAdminCommandHandler
 		
 		final L2Skill[] skills = npcData.getSkillsArray();
 		
-		final StringBuilder replyMSG = new StringBuilder();
-		replyMSG.append("<html><body><center><font color=\"LEVEL\">");
-		replyMSG.append(npcData.getName());
-		replyMSG.append(" (");
-		replyMSG.append(npcId);
-		replyMSG.append("): ");
-		replyMSG.append(skills.length);
-		replyMSG.append(" skills</font></center><table width=\"100%\">");
+		final StringBuilder sb = new StringBuilder(500);
+		StringUtil.append(sb, "<html><body><center><font color=\"LEVEL\">", npcData.getName(), " (", npcId, "): ", skills.length, " skills</font></center><table width=\"100%\">");
 		
 		for (L2Skill skill : skills)
-		{
-			replyMSG.append("<tr><td>");
-			replyMSG.append((skill.getSkillType() == L2SkillType.NOTDONE) ? ("<font color=\"777777\">" + skill.getName() + "</font>") : skill.getName());
-			replyMSG.append(" [");
-			replyMSG.append(skill.getId());
-			replyMSG.append("-");
-			replyMSG.append(skill.getLevel());
-			replyMSG.append("]</td></tr>");
-		}
-		replyMSG.append("</table></body></html>");
+			StringUtil.append(sb, "<tr><td>", ((skill.getSkillType() == L2SkillType.NOTDONE) ? ("<font color=\"777777\">" + skill.getName() + "</font>") : skill.getName()), " [", skill.getId(), "-", skill.getLevel(), "]</td></tr>");
 		
-		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setHtml(replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+		sb.append("</table></body></html>");
+		
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void showScriptsList(L2PcInstance activeChar, int npcId)
@@ -342,38 +289,34 @@ public class AdminEditNpc implements IAdminCommandHandler
 			return;
 		}
 		
-		final StringBuilder replyMSG = new StringBuilder(2000);
-		replyMSG.append("<html><body><center><font color=\"LEVEL\">");
-		replyMSG.append(npcData.getName());
-		replyMSG.append(" (");
-		replyMSG.append(npcId);
-		replyMSG.append(")</font></center><br>");
+		final StringBuilder sb = new StringBuilder(500);
+		StringUtil.append(sb, "<html><body><center><font color=\"LEVEL\">", npcData.getName(), " (", npcId, ")</font></center><br>");
 		
 		if (!npcData.getEventQuests().isEmpty())
 		{
-			QuestEventType type = null; // Used to see if we moved of type.
+			EventType type = null; // Used to see if we moved of type.
 			
 			// For any type of QuestEventType
-			for (Map.Entry<QuestEventType, List<Quest>> entry : npcData.getEventQuests().entrySet())
+			for (Map.Entry<EventType, List<Quest>> entry : npcData.getEventQuests().entrySet())
 			{
 				if (type != entry.getKey())
 				{
 					type = entry.getKey();
-					replyMSG.append("<br><font color=\"LEVEL\">" + type.name() + "</font><br1>");
+					StringUtil.append(sb, "<br><font color=\"LEVEL\">", type.name(), "</font><br1>");
 				}
 				
 				for (Quest quest : entry.getValue())
-					replyMSG.append(quest.getName() + "<br1>");
+					StringUtil.append(sb, quest.getName(), "<br1>");
 			}
 		}
 		else
-			replyMSG.append("This NPC isn't affected by scripts.");
+			sb.append("This NPC isn't affected by scripts.");
 		
-		replyMSG.append("</body></html>");
+		sb.append("</body></html>");
 		
-		final NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setHtml(replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	@Override

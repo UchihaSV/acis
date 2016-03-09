@@ -87,8 +87,6 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 		
 		if (condition == COND_OWNER)
 		{
-			SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-			
 			StringTokenizer st = new StringTokenizer(command, " ");
 			String actualCommand = st.nextToken();
 			
@@ -96,7 +94,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 			
 			if (actualCommand.equalsIgnoreCase("banish_foreigner"))
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				
 				if ((player.getClanPrivileges() & L2Clan.CP_CH_DISMISS) == L2Clan.CP_CH_DISMISS)
 				{
@@ -116,13 +114,13 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 			}
 			else if (actualCommand.equalsIgnoreCase("manage_vault"))
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				
 				if ((player.getClanPrivileges() & L2Clan.CP_CL_VIEW_WAREHOUSE) == L2Clan.CP_CL_VIEW_WAREHOUSE)
 				{
 					html.setFile("data/html/clanHallManager/vault.htm");
 					html.replace("%rent%", getClanHall().getLease());
-					html.replace("%date%", format.format(getClanHall().getPaidUntil()));
+					html.replace("%date%", new SimpleDateFormat("dd-MM-yyyy HH:mm").format(getClanHall().getPaidUntil()));
 				}
 				else
 					html.setFile("data/html/clanHallManager/not_authorized.htm");
@@ -132,7 +130,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 			}
 			else if (actualCommand.equalsIgnoreCase("door"))
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				
 				if ((player.getClanPrivileges() & L2Clan.CP_CH_OPEN_DOOR) == L2Clan.CP_CH_OPEN_DOOR)
 				{
@@ -159,7 +157,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 			{
 				if (val.equalsIgnoreCase("tele"))
 				{
-					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+					final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 					
 					final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_TELEPORT);
 					if (chf == null)
@@ -178,7 +176,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 					final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_ITEM_CREATE);
 					if (chf == null)
 					{
-						NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+						final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 						html.setFile("data/html/clanHallManager/chamberlain-nac.htm");
 						html.replace("%objectId%", getObjectId());
 						player.sendPacket(html);
@@ -189,7 +187,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 				}
 				else if (val.equalsIgnoreCase("support"))
 				{
-					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+					final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 					
 					final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_SUPPORT);
 					if (chf == null)
@@ -206,7 +204,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 					showChatWindow(player);
 				else
 				{
-					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+					final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 					html.setFile("data/html/clanHallManager/functions.htm");
 					
 					final ClanHallFunction chfExp = getClanHall().getFunction(ClanHall.FUNC_RESTORE_EXP);
@@ -247,7 +245,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							
 							if (val.equalsIgnoreCase("hp_cancel"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-cancel.htm");
 								html.replace("%apply%", "recovery hp 0");
 								html.replace("%objectId%", getObjectId());
@@ -255,7 +253,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("mp_cancel"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-cancel.htm");
 								html.replace("%apply%", "recovery mp 0");
 								html.replace("%objectId%", getObjectId());
@@ -263,7 +261,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("exp_cancel"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-cancel.htm");
 								html.replace("%apply%", "recovery exp 0");
 								html.replace("%objectId%", getObjectId());
@@ -271,7 +269,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("edit_hp"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-apply.htm");
 								html.replace("%name%", "Fireplace (HP Recovery Device)");
 								
@@ -341,7 +339,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("edit_mp"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-apply.htm");
 								html.replace("%name%", "Carpet (MP Recovery)");
 								
@@ -379,7 +377,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("edit_exp"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-apply.htm");
 								html.replace("%name%", "Chandelier (EXP Recovery Device)");
 								
@@ -428,7 +426,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 								val = st.nextToken();
 								final int percent = Integer.parseInt(val);
 								
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								
 								final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_RESTORE_HP);
 								if (chf != null && chf.getLvl() == percent)
@@ -516,7 +514,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 								val = st.nextToken();
 								final int percent = Integer.parseInt(val);
 								
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								
 								final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_RESTORE_MP);
 								if (chf != null && chf.getLvl() == percent)
@@ -572,7 +570,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 								val = st.nextToken();
 								final int percent = Integer.parseInt(val);
 								
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								
 								final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_RESTORE_EXP);
 								if (chf != null && chf.getLvl() == percent)
@@ -634,7 +632,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 						}
 						else
 						{
-							NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+							final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 							html.setFile("data/html/clanHallManager/edit_recovery.htm");
 							
 							final int grade = getClanHall().getGrade();
@@ -644,7 +642,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							if (chfHp != null)
 							{
 								html.replace("%hp_recovery%", chfHp.getLvl() + "%</font> (<font color=\"FFAABB\">" + chfHp.getLease() + "</font> adenas / " + (Config.CH_HPREG_FEE_RATIO / 86400000) + " day)");
-								html.replace("%hp_period%", "Next fee at " + format.format(chfHp.getEndTime()));
+								html.replace("%hp_period%", "Next fee at " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(chfHp.getEndTime()));
 								
 								switch (grade)
 								{
@@ -695,7 +693,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							if (chfExp != null)
 							{
 								html.replace("%exp_recovery%", chfExp.getLvl() + "%</font> (<font color=\"FFAABB\">" + chfExp.getLease() + "</font> adenas / " + (Config.CH_EXPREG_FEE_RATIO / 86400000) + " day)");
-								html.replace("%exp_period%", "Next fee at " + format.format(chfExp.getEndTime()));
+								html.replace("%exp_period%", "Next fee at " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(chfExp.getEndTime()));
 								
 								switch (grade)
 								{
@@ -746,7 +744,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							if (chfMp != null)
 							{
 								html.replace("%mp_recovery%", chfMp.getLvl() + "%</font> (<font color=\"FFAABB\">" + chfMp.getLease() + "</font> adenas / " + (Config.CH_MPREG_FEE_RATIO / 86400000) + " day)");
-								html.replace("%mp_period%", "Next fee at " + format.format(chfMp.getEndTime()));
+								html.replace("%mp_period%", "Next fee at " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(chfMp.getEndTime()));
 								
 								switch (grade)
 								{
@@ -806,7 +804,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							
 							if (val.equalsIgnoreCase("item_cancel"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-cancel.htm");
 								html.replace("%apply%", "other item 0");
 								html.replace("%objectId%", getObjectId());
@@ -814,7 +812,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("tele_cancel"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-cancel.htm");
 								html.replace("%apply%", "other tele 0");
 								html.replace("%objectId%", getObjectId());
@@ -822,7 +820,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("support_cancel"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-cancel.htm");
 								html.replace("%apply%", "other support 0");
 								html.replace("%objectId%", getObjectId());
@@ -830,7 +828,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("edit_item"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-apply.htm");
 								html.replace("%name%", "Magic Equipment (Item Production Facilities)");
 								
@@ -860,7 +858,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("edit_support"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-apply.htm");
 								html.replace("%name%", "Insignia (Supplementary Magic)");
 								
@@ -910,7 +908,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("edit_tele"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-apply.htm");
 								html.replace("%name%", "Mirror (Teleportation Device)");
 								
@@ -942,7 +940,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 								val = st.nextToken();
 								final int lvl = Integer.parseInt(val);
 								
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								
 								final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_ITEM_CREATE);
 								if (chf != null && chf.getLvl() == lvl)
@@ -990,7 +988,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 								val = st.nextToken();
 								final int lvl = Integer.parseInt(val);
 								
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								
 								final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_TELEPORT);
 								if (chf != null && chf.getLvl() == lvl)
@@ -1034,7 +1032,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 								val = st.nextToken();
 								final int lvl = Integer.parseInt(val);
 								
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								
 								final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_SUPPORT);
 								if (chf != null && chf.getLvl() == lvl)
@@ -1100,14 +1098,14 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 						}
 						else
 						{
-							NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+							final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 							html.setFile("data/html/clanHallManager/edit_other.htm");
 							
 							final ClanHallFunction chfTel = getClanHall().getFunction(ClanHall.FUNC_TELEPORT);
 							if (chfTel != null)
 							{
 								html.replace("%tele%", "- Stage " + chfTel.getLvl() + "</font> (<font color=\"FFAABB\">" + chfTel.getLease() + "</font> adenas / " + (Config.CH_TELE_FEE_RATIO / 86400000) + " day)");
-								html.replace("%tele_period%", "Next fee at " + format.format(chfTel.getEndTime()));
+								html.replace("%tele_period%", "Next fee at " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(chfTel.getEndTime()));
 								html.replace("%change_tele%", "[<a action=\"bypass -h npc_%objectId%_manage other tele_cancel\">Remove</a>]" + tele);
 							}
 							else
@@ -1123,7 +1121,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							if (chfSup != null)
 							{
 								html.replace("%support%", "- Stage " + chfSup.getLvl() + "</font> (<font color=\"FFAABB\">" + chfSup.getLease() + "</font> adenas / " + (Config.CH_SUPPORT_FEE_RATIO / 86400000) + " day)");
-								html.replace("%support_period%", "Next fee at " + format.format(chfSup.getEndTime()));
+								html.replace("%support_period%", "Next fee at " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(chfSup.getEndTime()));
 								
 								switch (grade)
 								{
@@ -1173,7 +1171,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							if (chfCreate != null)
 							{
 								html.replace("%item%", "- Stage " + chfCreate.getLvl() + "</font> (<font color=\"FFAABB\">" + chfCreate.getLease() + "</font> adenas / " + (Config.CH_ITEM_FEE_RATIO / 86400000) + " day)");
-								html.replace("%item_period%", "Next fee at " + format.format(chfCreate.getEndTime()));
+								html.replace("%item_period%", "Next fee at " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(chfCreate.getEndTime()));
 								html.replace("%change_item%", "[<a action=\"bypass -h npc_%objectId%_manage other item_cancel\">Remove</a>]" + item);
 							}
 							else
@@ -1196,7 +1194,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							val = st.nextToken();
 							if (val.equalsIgnoreCase("curtains_cancel"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-cancel.htm");
 								html.replace("%apply%", "deco curtains 0");
 								html.replace("%objectId%", getObjectId());
@@ -1204,7 +1202,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("fixtures_cancel"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-cancel.htm");
 								html.replace("%apply%", "deco fixtures 0");
 								html.replace("%objectId%", getObjectId());
@@ -1212,7 +1210,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("edit_curtains"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-apply.htm");
 								html.replace("%name%", "Curtains (Decoration)");
 								
@@ -1238,7 +1236,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							}
 							else if (val.equalsIgnoreCase("edit_fixtures"))
 							{
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								html.setFile("data/html/clanHallManager/functions-apply.htm");
 								html.replace("%name%", "Front Platform (Decoration)");
 								
@@ -1267,7 +1265,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 								val = st.nextToken();
 								final int lvl = Integer.parseInt(val);
 								
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								
 								final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_DECO_CURTAINS);
 								if (chf != null && chf.getLvl() == lvl)
@@ -1311,7 +1309,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 								val = st.nextToken();
 								final int lvl = Integer.parseInt(val);
 								
-								NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+								final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 								
 								final ClanHallFunction chf = getClanHall().getFunction(ClanHall.FUNC_DECO_FRONTPLATEFORM);
 								if (chf != null && chf.getLvl() == lvl)
@@ -1353,14 +1351,14 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 						}
 						else
 						{
-							NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+							final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 							html.setFile("data/html/clanHallManager/deco.htm");
 							
 							final ClanHallFunction chfCurtains = getClanHall().getFunction(ClanHall.FUNC_DECO_CURTAINS);
 							if (chfCurtains != null)
 							{
 								html.replace("%curtain%", "- Stage " + chfCurtains.getLvl() + "</font> (<font color=\"FFAABB\">" + chfCurtains.getLease() + "</font> adenas / " + (Config.CH_CURTAIN_FEE_RATIO / 86400000) + " day)");
-								html.replace("%curtain_period%", "Next fee at " + format.format(chfCurtains.getEndTime()));
+								html.replace("%curtain_period%", "Next fee at " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(chfCurtains.getEndTime()));
 								html.replace("%change_curtain%", "[<a action=\"bypass -h npc_%objectId%_manage deco curtains_cancel\">Remove</a>]" + curtains);
 							}
 							else
@@ -1374,7 +1372,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							if (chfPlateform != null)
 							{
 								html.replace("%fixture%", "- Stage " + chfPlateform.getLvl() + "</font> (<font color=\"FFAABB\">" + chfPlateform.getLease() + "</font> adenas / " + (Config.CH_FRONT_FEE_RATIO / 86400000) + " day)");
-								html.replace("%fixture_period%", "Next fee at " + format.format(chfPlateform.getEndTime()));
+								html.replace("%fixture_period%", "Next fee at " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(chfPlateform.getEndTime()));
 								html.replace("%change_fixture%", "[<a action=\"bypass -h npc_%objectId%_manage deco fixtures_cancel\">Remove</a>]" + fixtures);
 							}
 							else
@@ -1391,7 +1389,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 						showChatWindow(player);
 					else
 					{
-						NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+						final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 						html.setFile("data/html/clanHallManager/manage.htm");
 						html.replace("%objectId%", getObjectId());
 						player.sendPacket(html);
@@ -1399,7 +1397,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 				}
 				else
 				{
-					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+					final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 					html.setFile("data/html/clanHallManager/not_authorized.htm");
 					html.replace("%objectId%", getObjectId());
 					player.sendPacket(html);
@@ -1434,7 +1432,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 							doCast(skill);
 						else
 						{
-							NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+							final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 							html.setFile("data/html/clanHallManager/support-no_mana.htm");
 							html.replace("%mp%", (int) getCurrentMp());
 							html.replace("%objectId%", getObjectId());
@@ -1443,7 +1441,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 						}
 					}
 					
-					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+					final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 					html.setFile("data/html/clanHallManager/support-done.htm");
 					html.replace("%mp%", (int) getCurrentMp());
 					html.replace("%objectId%", getObjectId());
@@ -1456,7 +1454,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 			}
 			else if (actualCommand.equalsIgnoreCase("list_back"))
 			{
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile("data/html/clanHallManager/chamberlain.htm");
 				html.replace("%npcname%", getName());
 				html.replace("%objectId%", getObjectId());
@@ -1468,7 +1466,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 				if (chf == null || chf.getLvl() == 0)
 					return;
 				
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile("data/html/clanHallManager/support" + getClanHall().getFunction(ClanHall.FUNC_SUPPORT).getLvl() + ".htm");
 				html.replace("%mp%", (int) getStatus().getCurrentMp());
 				html.replace("%objectId%", getObjectId());
@@ -1534,7 +1532,7 @@ public class L2ClanHallManagerInstance extends L2MerchantInstance
 		if (condition == COND_OWNER)
 			filename = "data/html/clanHallManager/chamberlain.htm";
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);

@@ -15,8 +15,9 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.model.L2World;
-import net.sf.l2j.gameserver.model.TradeList;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.tradelist.TradeItem;
+import net.sf.l2j.gameserver.model.tradelist.TradeList;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.TradeItemUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.TradeOtherAdd;
@@ -74,7 +75,7 @@ public final class AddTradeItem extends L2GameClientPacket
 		
 		if (!player.getAccessLevel().allowTransaction())
 		{
-			player.sendMessage("Transactions are disabled for your Access Level.");
+			player.sendPacket(SystemMessageId.YOU_ARE_NOT_AUTHORIZED_TO_DO_THAT);
 			player.cancelActiveTrade();
 			return;
 		}
@@ -85,7 +86,7 @@ public final class AddTradeItem extends L2GameClientPacket
 			return;
 		}
 		
-		final TradeList.TradeItem item = trade.addItem(_objectId, _count);
+		final TradeItem item = trade.addItem(_objectId, _count);
 		if (item != null)
 		{
 			player.sendPacket(new TradeOwnAdd(item));

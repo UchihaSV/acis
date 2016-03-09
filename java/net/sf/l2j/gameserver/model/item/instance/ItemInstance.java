@@ -47,14 +47,14 @@ import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.model.item.type.ItemType;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.DropItem;
 import net.sf.l2j.gameserver.network.serverpackets.GetItem;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SpawnItem;
+import net.sf.l2j.gameserver.scripting.Quest;
+import net.sf.l2j.gameserver.scripting.QuestState;
 import net.sf.l2j.gameserver.skills.basefuncs.Func;
 import net.sf.l2j.gameserver.taskmanager.ItemsOnGroundTaskManager;
 
@@ -63,7 +63,6 @@ import net.sf.l2j.gameserver.taskmanager.ItemsOnGroundTaskManager;
  */
 public final class ItemInstance extends L2Object
 {
-	protected static final Logger _log = Logger.getLogger(ItemInstance.class.getName());
 	private static final Logger _logItems = Logger.getLogger("item");
 	
 	/** Enumeration of locations for item */
@@ -616,7 +615,7 @@ public final class ItemInstance extends L2Object
 	{
 		if (player.isGM())
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/admin/iteminfo.htm");
 			html.replace("%objid%", getObjectId());
 			html.replace("%itemid%", getItemId());

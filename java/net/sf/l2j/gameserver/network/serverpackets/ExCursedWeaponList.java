@@ -14,17 +14,13 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import java.util.List;
+import java.util.Set;
 
-/**
- * Format: (ch) d[d]
- * @author -Wooden-
- */
 public class ExCursedWeaponList extends L2GameServerPacket
 {
-	private final List<Integer> _cursedWeaponIds;
+	private final Set<Integer> _cursedWeaponIds;
 	
-	public ExCursedWeaponList(List<Integer> cursedWeaponIds)
+	public ExCursedWeaponList(Set<Integer> cursedWeaponIds)
 	{
 		_cursedWeaponIds = cursedWeaponIds;
 	}
@@ -36,7 +32,7 @@ public class ExCursedWeaponList extends L2GameServerPacket
 		writeH(0x45);
 		
 		writeD(_cursedWeaponIds.size());
-		for (Integer i : _cursedWeaponIds)
-			writeD(i.intValue());
+		for (int id : _cursedWeaponIds)
+			writeD(id);
 	}
 }

@@ -16,14 +16,14 @@ package net.sf.l2j.gameserver.network.clientpackets;
 
 import java.util.logging.Level;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.network.serverpackets.CharDeleteFail;
 import net.sf.l2j.gameserver.network.serverpackets.CharDeleteOk;
 import net.sf.l2j.gameserver.network.serverpackets.CharSelectInfo;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 
 public final class CharacterDelete extends L2GameClientPacket
 {
-	// cd
 	private int _charSlot;
 	
 	@Override
@@ -35,14 +35,11 @@ public final class CharacterDelete extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		if (!getClient().getFloodProtectors().getCharacterSelect().tryPerformAction("characterDelete"))
+		if (!FloodProtectors.performAction(getClient(), Action.CHARACTER_SELECT))
 		{
 			sendPacket(new CharDeleteFail(CharDeleteFail.REASON_DELETION_FAILED));
 			return;
 		}
-		
-		if (Config.DEBUG)
-			_log.fine("deleting slot:" + _charSlot);
 		
 		try
 		{

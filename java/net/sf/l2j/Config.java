@@ -31,9 +31,7 @@ import java.util.logging.Logger;
 import net.sf.l2j.commons.config.ExProperties;
 import net.sf.l2j.gameserver.geoengine.geodata.GeoFormat;
 import net.sf.l2j.gameserver.model.holder.BuffSkillHolder;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
-import net.sf.l2j.gameserver.util.FloodProtectorConfig;
-import net.sf.l2j.util.StringUtil;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 
 /**
  * This class contains global server configuration.<br>
@@ -46,7 +44,6 @@ public final class Config
 	
 	public static final String CLANS_FILE = "./config/clans.properties";
 	public static final String EVENTS_FILE = "./config/events.properties";
-	public static final String FLOOD_PROTECTOR_FILE = "./config/floodprotector.properties";
 	public static final String GEOENGINE_FILE = "./config/geoengine.properties";
 	public static final String HEXID_FILE = "./config/hexid.txt";
 	public static final String LOGIN_CONFIGURATION_FILE = "./config/loginserver.properties";
@@ -254,21 +251,6 @@ public final class Config
 	
 	public static int SERVER_ID;
 	public static byte[] HEX_ID;
-	
-	// --------------------------------------------------
-	// FloodProtectors
-	// --------------------------------------------------
-	
-	public static FloodProtectorConfig FLOOD_PROTECTOR_ROLL_DICE;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_HERO_VOICE;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_SUBCLASS;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_DROP_ITEM;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_SERVER_BYPASS;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_MULTISELL;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_MANUFACTURE;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_MANOR;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_SENDMAIL;
-	public static FloodProtectorConfig FLOOD_PROTECTOR_CHARACTER_SELECT;
 	
 	// --------------------------------------------------
 	// Loginserver
@@ -619,7 +601,6 @@ public final class Config
 	public static boolean ENABLE_FALLING_DAMAGE;
 	
 	/** Debug & Dev */
-	public static boolean ALT_DEV_NO_SCRIPTS;
 	public static boolean ALT_DEV_NO_SPAWNS;
 	public static boolean DEBUG;
 	public static boolean DEVELOPER;
@@ -638,6 +619,21 @@ public final class Config
 	/** Community Board */
 	public static boolean ENABLE_COMMUNITY_BOARD;
 	public static String BBS_DEFAULT;
+	
+	/** Flood Protectors */
+	public static int ROLL_DICE_TIME;
+	public static int HERO_VOICE_TIME;
+	public static int SUBCLASS_TIME;
+	public static int DROP_ITEM_TIME;
+	public static int SERVER_BYPASS_TIME;
+	public static int MULTISELL_TIME;
+	public static int MANUFACTURE_TIME;
+	public static int MANOR_TIME;
+	public static int SENDMAIL_TIME;
+	public static int CHARACTER_SELECT_TIME;
+	public static int GLOBAL_CHAT_TIME;
+	public static int TRADE_CHAT_TIME;
+	public static int SOCIAL_TIME;
 	
 	/** Misc */
 	public static boolean L2WALKER_PROTECTION;
@@ -689,18 +685,6 @@ public final class Config
 	{
 		if (Server.serverMode == Server.MODE_GAMESERVER)
 		{
-			_log.info("Loading flood protectors.");
-			FLOOD_PROTECTOR_ROLL_DICE = new FloodProtectorConfig("RollDiceFloodProtector");
-			FLOOD_PROTECTOR_HERO_VOICE = new FloodProtectorConfig("HeroVoiceFloodProtector");
-			FLOOD_PROTECTOR_SUBCLASS = new FloodProtectorConfig("SubclassFloodProtector");
-			FLOOD_PROTECTOR_DROP_ITEM = new FloodProtectorConfig("DropItemFloodProtector");
-			FLOOD_PROTECTOR_SERVER_BYPASS = new FloodProtectorConfig("ServerBypassFloodProtector");
-			FLOOD_PROTECTOR_MULTISELL = new FloodProtectorConfig("MultiSellFloodProtector");
-			FLOOD_PROTECTOR_MANUFACTURE = new FloodProtectorConfig("ManufactureFloodProtector");
-			FLOOD_PROTECTOR_MANOR = new FloodProtectorConfig("ManorFloodProtector");
-			FLOOD_PROTECTOR_SENDMAIL = new FloodProtectorConfig("SendMailFloodProtector");
-			FLOOD_PROTECTOR_CHARACTER_SELECT = new FloodProtectorConfig("CharacterSelectFloodProtector");
-			
 			_log.info("Loading gameserver configuration files.");
 			
 			// Clans settings
@@ -858,19 +842,6 @@ public final class Config
 			ALT_FISH_CHAMPIONSHIP_REWARD_3 = events.getProperty("AltFishChampionshipReward3", 300000);
 			ALT_FISH_CHAMPIONSHIP_REWARD_4 = events.getProperty("AltFishChampionshipReward4", 200000);
 			ALT_FISH_CHAMPIONSHIP_REWARD_5 = events.getProperty("AltFishChampionshipReward5", 100000);
-			
-			// FloodProtector
-			ExProperties security = load(FLOOD_PROTECTOR_FILE);
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_ROLL_DICE, "RollDice", "42");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_HERO_VOICE, "HeroVoice", "100");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_SUBCLASS, "Subclass", "20");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_DROP_ITEM, "DropItem", "10");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_SERVER_BYPASS, "ServerBypass", "5");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_MULTISELL, "MultiSell", "1");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_MANUFACTURE, "Manufacture", "3");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_MANOR, "Manor", "30");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_SENDMAIL, "SendMail", "100");
-			loadFloodProtectorConfig(security, FLOOD_PROTECTOR_CHARACTER_SELECT, "CharacterSelect", "30");
 			
 			// Geoengine
 			ExProperties geoengine = load(GEOENGINE_FILE);
@@ -1080,8 +1051,8 @@ public final class Config
 			
 			EVERYBODY_HAS_ADMIN_RIGHTS = players.getProperty("EverybodyHasAdminRights", false);
 			MASTERACCESS_LEVEL = players.getProperty("MasterAccessLevel", 127);
-			MASTERACCESS_NAME_COLOR = Integer.decode(StringUtil.concat("0x", players.getProperty("MasterNameColor", "00FF00")));
-			MASTERACCESS_TITLE_COLOR = Integer.decode(StringUtil.concat("0x", players.getProperty("MasterTitleColor", "00FF00")));
+			MASTERACCESS_NAME_COLOR = Integer.decode("0x" + players.getProperty("MasterNameColor", "00FF00"));
+			MASTERACCESS_TITLE_COLOR = Integer.decode("0x" + players.getProperty("MasterTitleColor", "00FF00"));
 			GM_HERO_AURA = players.getProperty("GMHeroAura", false);
 			GM_STARTUP_INVULNERABLE = players.getProperty("GMStartupInvulnerable", true);
 			GM_STARTUP_INVISIBLE = players.getProperty("GMStartupInvisible", true);
@@ -1218,7 +1189,6 @@ public final class Config
 			String str = server.getProperty("EnableFallingDamage", "auto");
 			ENABLE_FALLING_DAMAGE = "auto".equalsIgnoreCase(str) ? GEODATA > 0 : Boolean.parseBoolean(str);
 			
-			ALT_DEV_NO_SCRIPTS = server.getProperty("NoScripts", false);
 			ALT_DEV_NO_SPAWNS = server.getProperty("NoSpawns", false);
 			DEBUG = server.getProperty("Debug", false);
 			DEVELOPER = server.getProperty("Developer", false);
@@ -1234,6 +1204,20 @@ public final class Config
 			
 			ENABLE_COMMUNITY_BOARD = server.getProperty("EnableCommunityBoard", false);
 			BBS_DEFAULT = server.getProperty("BBSDefault", "_bbshome");
+			
+			ROLL_DICE_TIME = server.getProperty("RollDiceTime", 4200);
+			HERO_VOICE_TIME = server.getProperty("HeroVoiceTime", 10000);
+			SUBCLASS_TIME = server.getProperty("SubclassTime", 2000);
+			DROP_ITEM_TIME = server.getProperty("DropItemTime", 1000);
+			SERVER_BYPASS_TIME = server.getProperty("ServerBypassTime", 500);
+			MULTISELL_TIME = server.getProperty("MultisellTime", 100);
+			MANUFACTURE_TIME = server.getProperty("ManufactureTime", 300);
+			MANOR_TIME = server.getProperty("ManorTime", 3000);
+			SENDMAIL_TIME = server.getProperty("SendMailTime", 10000);
+			CHARACTER_SELECT_TIME = server.getProperty("CharacterSelectTime", 3000);
+			GLOBAL_CHAT_TIME = server.getProperty("GlobalChatTime", 0);
+			TRADE_CHAT_TIME = server.getProperty("TradeChatTime", 0);
+			SOCIAL_TIME = server.getProperty("SocialTime", 2000);
 			
 			L2WALKER_PROTECTION = server.getProperty("L2WalkerProtection", false);
 			AUTODELETE_INVALID_QUEST_DATA = server.getProperty("AutoDeleteInvalidQuestData", false);
@@ -1318,27 +1302,11 @@ public final class Config
 		}
 	}
 	
-	/**
-	 * Loads single flood protector configuration.
-	 * @param properties L2Properties file reader
-	 * @param config flood protector configuration instance
-	 * @param configString flood protector configuration string that determines for which flood protector configuration should be read
-	 * @param defaultInterval default flood protector interval
-	 */
-	private static void loadFloodProtectorConfig(final Properties properties, final FloodProtectorConfig config, final String configString, final String defaultInterval)
-	{
-		config.FLOOD_PROTECTION_INTERVAL = Integer.parseInt(properties.getProperty(StringUtil.concat("FloodProtector", configString, "Interval"), defaultInterval));
-		config.LOG_FLOODING = Boolean.parseBoolean(properties.getProperty(StringUtil.concat("FloodProtector", configString, "LogFlooding"), "False"));
-		config.PUNISHMENT_LIMIT = Integer.parseInt(properties.getProperty(StringUtil.concat("FloodProtector", configString, "PunishmentLimit"), "0"));
-		config.PUNISHMENT_TYPE = properties.getProperty(StringUtil.concat("FloodProtector", configString, "PunishmentType"), "none");
-		config.PUNISHMENT_TIME = Integer.parseInt(properties.getProperty(StringUtil.concat("FloodProtector", configString, "PunishmentTime"), "0"));
-	}
-	
 	public static class ClassMasterSettings
 	{
 		private final Map<Integer, Boolean> _allowedClassChange;
-		private final Map<Integer, List<ItemHolder>> _claimItems;
-		private final Map<Integer, List<ItemHolder>> _rewardItems;
+		private final Map<Integer, List<IntIntHolder>> _claimItems;
+		private final Map<Integer, List<IntIntHolder>> _rewardItems;
 		
 		public ClassMasterSettings(String configLine)
 		{
@@ -1360,7 +1328,7 @@ public final class Config
 				
 				_allowedClassChange.put(job, true);
 				
-				List<ItemHolder> items = new ArrayList<>();
+				List<IntIntHolder> items = new ArrayList<>();
 				
 				// Parse items needed for class change.
 				if (st.hasMoreTokens())
@@ -1369,7 +1337,7 @@ public final class Config
 					while (st2.hasMoreTokens())
 					{
 						StringTokenizer st3 = new StringTokenizer(st2.nextToken(), "()");
-						items.add(new ItemHolder(Integer.parseInt(st3.nextToken()), Integer.parseInt(st3.nextToken())));
+						items.add(new IntIntHolder(Integer.parseInt(st3.nextToken()), Integer.parseInt(st3.nextToken())));
 					}
 				}
 				
@@ -1384,7 +1352,7 @@ public final class Config
 					while (st2.hasMoreTokens())
 					{
 						StringTokenizer st3 = new StringTokenizer(st2.nextToken(), "()");
-						items.add(new ItemHolder(Integer.parseInt(st3.nextToken()), Integer.parseInt(st3.nextToken())));
+						items.add(new IntIntHolder(Integer.parseInt(st3.nextToken()), Integer.parseInt(st3.nextToken())));
 					}
 				}
 				
@@ -1403,12 +1371,12 @@ public final class Config
 			return false;
 		}
 		
-		public List<ItemHolder> getRewardItems(int job)
+		public List<IntIntHolder> getRewardItems(int job)
 		{
 			return _rewardItems.get(job);
 		}
 		
-		public List<ItemHolder> getRequiredItems(int job)
+		public List<IntIntHolder> getRequiredItems(int job)
 		{
 			return _claimItems.get(job);
 		}
@@ -1433,7 +1401,7 @@ public final class Config
 			valueSplit = value.split(",");
 			if (valueSplit.length != 2)
 			{
-				_log.warning(StringUtil.concat("parseItemsList[Config.load()]: invalid entry -> \"", valueSplit[0], "\", should be itemId,itemNumber"));
+				_log.warning("parseItemsList[Config.load()]: invalid entry -> \"" + valueSplit[0] + "\", should be itemId,itemNumber");
 				return null;
 			}
 			
@@ -1444,7 +1412,7 @@ public final class Config
 			}
 			catch (NumberFormatException e)
 			{
-				_log.warning(StringUtil.concat("parseItemsList[Config.load()]: invalid itemId -> \"", valueSplit[0], "\""));
+				_log.warning("parseItemsList[Config.load()]: invalid itemId -> \"" + valueSplit[0] + "\"");
 				return null;
 			}
 			
@@ -1454,7 +1422,7 @@ public final class Config
 			}
 			catch (NumberFormatException e)
 			{
-				_log.warning(StringUtil.concat("parseItemsList[Config.load()]: invalid item number -> \"", valueSplit[1], "\""));
+				_log.warning("parseItemsList[Config.load()]: invalid item number -> \"" + valueSplit[1] + "\"");
 				return null;
 			}
 			i++;

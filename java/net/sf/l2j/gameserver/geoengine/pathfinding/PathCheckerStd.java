@@ -154,7 +154,7 @@ public class PathCheckerStd extends PathFinding
 	 * @param theight : target height (if instance of {@link L2Character})
 	 * @return boolean : can see the target
 	 */
-	private final static boolean checkSee(int gox, int goy, int goz, int oheight, int gtx, int gty, int gtz, int theight)
+	private static final boolean checkSee(int gox, int goy, int goz, int oheight, int gtx, int gty, int gtz, int theight)
 	{
 		// PathFinding.clearDebugItems();
 		
@@ -241,7 +241,7 @@ public class PathCheckerStd extends PathFinding
 	 * @param gtz : target Z geodata coord
 	 * @return GeoLocation : The last allowed point of movement.
 	 */
-	protected final static GeoLocation checkMove(int gox, int goy, int goz, int gtx, int gty, int gtz)
+	protected static final GeoLocation checkMove(int gox, int goy, int goz, int gtx, int gty, int gtz)
 	{
 		// PathFinding.clearDebugItems();
 		

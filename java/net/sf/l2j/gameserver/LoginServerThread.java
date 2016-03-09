@@ -35,6 +35,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.HexUtil;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.L2GameClient;
@@ -55,8 +57,6 @@ import net.sf.l2j.gameserver.network.loginserverpackets.PlayerAuthResponse;
 import net.sf.l2j.gameserver.network.serverpackets.AuthLoginFail;
 import net.sf.l2j.gameserver.network.serverpackets.CharSelectInfo;
 import net.sf.l2j.loginserver.crypt.NewCrypt;
-import net.sf.l2j.util.Rnd;
-import net.sf.l2j.util.Util;
 
 public class LoginServerThread extends Thread
 {
@@ -187,7 +187,7 @@ public class LoginServerThread extends Thread
 					}
 					
 					if (Config.DEBUG)
-						_log.warning("[C]\n" + Util.printData(decrypt));
+						_log.warning("[C]\n" + HexUtil.printData(decrypt));
 					
 					int packetType = decrypt[0] & 0xff;
 					switch (packetType)
@@ -269,12 +269,12 @@ public class LoginServerThread extends Thread
 								st.addAttribute(ServerStatus.SERVER_LIST_STATUS, ServerStatus.STATUS_AUTO);
 							
 							sendPacket(st);
-							if (L2World.getInstance().getAllPlayersCount() > 0)
+							
+							final Collection<L2PcInstance> players = L2World.getInstance().getPlayers();
+							if (!players.isEmpty())
 							{
-								List<String> playerList = new ArrayList<>();
-								
-								Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-								for (L2PcInstance player : pls)
+								final List<String> playerList = new ArrayList<>();
+								for (L2PcInstance player : players)
 									playerList.add(player.getAccountName());
 								
 								sendPacket(new PlayerInGame(playerList));
@@ -468,7 +468,7 @@ public class LoginServerThread extends Thread
 		byte[] data = sl.getContent();
 		NewCrypt.appendChecksum(data);
 		if (Config.DEBUG)
-			_log.finest("[S]\n" + Util.printData(data));
+			_log.finest("[S]\n" + HexUtil.printData(data));
 		
 		data = _blowfish.crypt(data);
 		

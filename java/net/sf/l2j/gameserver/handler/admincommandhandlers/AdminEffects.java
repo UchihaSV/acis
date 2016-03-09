@@ -261,7 +261,7 @@ public class AdminEffects implements IAdminCommandHandler
 				}
 				
 				if (player instanceof L2PcInstance)
-					L2World.getInstance().removeFromAllPlayers((L2PcInstance) player);
+					L2World.getInstance().removePlayer((L2PcInstance) player);
 				
 				player.setName(name);
 				

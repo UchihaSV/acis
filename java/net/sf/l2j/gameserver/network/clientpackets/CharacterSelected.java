@@ -22,10 +22,11 @@ import net.sf.l2j.gameserver.network.L2GameClient;
 import net.sf.l2j.gameserver.network.L2GameClient.GameClientState;
 import net.sf.l2j.gameserver.network.serverpackets.CharSelected;
 import net.sf.l2j.gameserver.network.serverpackets.SignsSky;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 
 public class CharacterSelected extends L2GameClientPacket
 {
-	// cd
 	private int _charSlot;
 	
 	@SuppressWarnings("unused")
@@ -51,7 +52,7 @@ public class CharacterSelected extends L2GameClientPacket
 	protected void runImpl()
 	{
 		final L2GameClient client = getClient();
-		if (!client.getFloodProtectors().getCharacterSelect().tryPerformAction("characterSelect"))
+		if (!FloodProtectors.performAction(client, Action.CHARACTER_SELECT))
 			return;
 		
 		// we should always be able to acquire the lock

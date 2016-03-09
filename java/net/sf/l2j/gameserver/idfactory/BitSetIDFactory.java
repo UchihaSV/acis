@@ -19,8 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.math.PrimeFinder;
 import net.sf.l2j.gameserver.ThreadPoolManager;
-import net.sf.l2j.util.PrimeFinder;
 
 public class BitSetIDFactory extends IdFactory
 {

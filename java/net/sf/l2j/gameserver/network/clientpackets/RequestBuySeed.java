@@ -29,12 +29,10 @@ import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.util.FloodProtectors;
+import net.sf.l2j.gameserver.util.FloodProtectors.Action;
 import net.sf.l2j.gameserver.util.Util;
 
-/**
- * Format: cdd[dd]
- * @author l3x
- */
 public class RequestBuySeed extends L2GameClientPacket
 {
 	private static final int BATCH_LENGTH = 8; // length of the one item
@@ -68,11 +66,11 @@ public class RequestBuySeed extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		L2PcInstance player = getClient().getActiveChar();
-		if (player == null)
+		if (!FloodProtectors.performAction(getClient(), Action.MANOR))
 			return;
 		
-		if (!getClient().getFloodProtectors().getManor().tryPerformAction("buySeed"))
+		final L2PcInstance player = getClient().getActiveChar();
+		if (player == null)
 			return;
 		
 		if (_seeds == null)

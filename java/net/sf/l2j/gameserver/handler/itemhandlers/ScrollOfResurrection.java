@@ -22,7 +22,7 @@ import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.entity.Castle;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 
@@ -85,14 +85,14 @@ public class ScrollOfResurrection implements IItemHandler
 			return;
 		}
 		
-		final SkillHolder[] skills = item.getEtcItem().getSkills();
+		final IntIntHolder[] skills = item.getEtcItem().getSkills();
 		if (skills == null)
 		{
 			_log.info(item.getName() + " does not have registered any skill for handler.");
 			return;
 		}
 		
-		for (SkillHolder skillInfo : skills)
+		for (IntIntHolder skillInfo : skills)
 		{
 			if (skillInfo == null)
 				continue;

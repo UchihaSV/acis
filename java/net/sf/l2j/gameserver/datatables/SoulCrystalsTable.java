@@ -31,10 +31,10 @@ import org.w3c.dom.Node;
 
 public class SoulCrystalsTable
 {
-	private final static Logger _log = Logger.getLogger(SoulCrystalsTable.class.getName());
+	private static final Logger _log = Logger.getLogger(SoulCrystalsTable.class.getName());
 	
-	private final static Map<Integer, SoulCrystalData> _soulCrystals = new HashMap<>();
-	private final static Map<Integer, LevelingInfo> _npcLevelingInfos = new HashMap<>();
+	private static final Map<Integer, SoulCrystalData> _soulCrystals = new HashMap<>();
+	private static final Map<Integer, LevelingInfo> _npcLevelingInfos = new HashMap<>();
 	
 	public static void load()
 	{

@@ -39,41 +39,41 @@ public final class RequestPartyMatchConfig extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		L2PcInstance _activeChar = getClient().getActiveChar();
-		if (_activeChar == null)
+		final L2PcInstance activeChar = getClient().getActiveChar();
+		if (activeChar == null)
 			return;
 		
-		if (!_activeChar.isInPartyMatchRoom() && _activeChar.getParty() != null && _activeChar.getParty().getLeader() != _activeChar)
+		if (!activeChar.isInPartyMatchRoom() && activeChar.getParty() != null && activeChar.getParty().getLeader() != activeChar)
 		{
-			_activeChar.sendPacket(SystemMessageId.CANT_VIEW_PARTY_ROOMS);
-			_activeChar.sendPacket(ActionFailed.STATIC_PACKET);
+			activeChar.sendPacket(SystemMessageId.CANT_VIEW_PARTY_ROOMS);
+			activeChar.sendPacket(ActionFailed.STATIC_PACKET);
 			return;
 		}
 		
-		if (_activeChar.isInPartyMatchRoom())
+		if (activeChar.isInPartyMatchRoom())
 		{
 			// If Player is in Room show him room, not list
-			PartyMatchRoomList _list = PartyMatchRoomList.getInstance();
-			if (_list == null)
+			PartyMatchRoomList list = PartyMatchRoomList.getInstance();
+			if (list == null)
 				return;
 			
-			PartyMatchRoom _room = _list.getPlayerRoom(_activeChar);
-			if (_room == null)
+			PartyMatchRoom room = list.getPlayerRoom(activeChar);
+			if (room == null)
 				return;
 			
-			_activeChar.sendPacket(new PartyMatchDetail(_room));
-			_activeChar.sendPacket(new ExPartyRoomMember(_room, 2));
+			activeChar.sendPacket(new PartyMatchDetail(room));
+			activeChar.sendPacket(new ExPartyRoomMember(room, 2));
 			
-			_activeChar.setPartyRoom(_room.getId());
-			_activeChar.broadcastUserInfo();
+			activeChar.setPartyRoom(room.getId());
+			activeChar.broadcastUserInfo();
 		}
 		else
 		{
 			// Add to waiting list
-			PartyMatchWaitingList.getInstance().addPlayer(_activeChar);
+			PartyMatchWaitingList.getInstance().addPlayer(activeChar);
 			
 			// Send Room list
-			_activeChar.sendPacket(new PartyMatchList(_activeChar, _auto, _loc, _lvl));
+			activeChar.sendPacket(new PartyMatchList(activeChar, _auto, _loc, _lvl));
 		}
 	}
 }

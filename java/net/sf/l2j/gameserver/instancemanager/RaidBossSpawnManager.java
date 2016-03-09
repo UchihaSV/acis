@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
@@ -33,20 +35,18 @@ import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.instance.L2RaidBossInstance;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
 
 /**
  * @author godson
  **/
 public class RaidBossSpawnManager
 {
-	protected final static Logger _log = Logger.getLogger(RaidBossSpawnManager.class.getName());
+	protected static final Logger _log = Logger.getLogger(RaidBossSpawnManager.class.getName());
 	
-	protected final static Map<Integer, L2RaidBossInstance> _bosses = new HashMap<>();
-	protected final static Map<Integer, L2Spawn> _spawns = new HashMap<>();
-	protected final static Map<Integer, StatsSet> _storedInfo = new HashMap<>();
-	protected final static Map<Integer, ScheduledFuture<?>> _schedules = new HashMap<>();
+	protected static final Map<Integer, L2RaidBossInstance> _bosses = new HashMap<>();
+	protected static final Map<Integer, L2Spawn> _spawns = new HashMap<>();
+	protected static final Map<Integer, StatsSet> _storedInfo = new HashMap<>();
+	protected static final Map<Integer, ScheduledFuture<?>> _schedules = new HashMap<>();
 	
 	public static enum StatusEnum
 	{
@@ -169,9 +169,7 @@ public class RaidBossSpawnManager
 			
 			if (!_schedules.containsKey(boss.getNpcId()))
 			{
-				final Calendar time = Calendar.getInstance();
-				time.setTimeInMillis(respawnTime);
-				_log.info("RaidBoss: " + boss.getName() + " - " + Util.formatDate(time.getTime(), "d MMM yyyy HH:mm") + " (" + respawnDelay + "h).");
+				_log.info("RaidBoss: " + boss.getName() + " - " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(respawnTime) + " (" + respawnDelay + "h).");
 				
 				_schedules.put(boss.getNpcId(), ThreadPoolManager.getInstance().scheduleGeneral(new spawnSchedule(boss.getNpcId()), respawnDelay * 3600000));
 				updateDb();

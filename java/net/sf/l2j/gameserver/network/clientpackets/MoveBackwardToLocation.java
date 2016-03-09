@@ -28,13 +28,14 @@ import net.sf.l2j.gameserver.util.Util;
 
 public class MoveBackwardToLocation extends L2GameClientPacket
 {
-	// cdddddd
 	private int _targetX;
 	private int _targetY;
 	private int _targetZ;
 	private int _originX;
 	private int _originY;
 	private int _originZ;
+	
+	@SuppressWarnings("unused")
 	private int _moveMovement;
 	
 	@Override
@@ -68,7 +69,7 @@ public class MoveBackwardToLocation extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		if (activeChar.isOutOfControl() || (_moveMovement == 0 && Config.GEODATA < 1)) // cursor movement without geodata is disabled
+		if (activeChar.isOutOfControl())
 		{
 			activeChar.sendPacket(ActionFailed.STATIC_PACKET);
 			return;

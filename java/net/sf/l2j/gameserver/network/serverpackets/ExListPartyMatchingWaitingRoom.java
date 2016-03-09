@@ -82,17 +82,13 @@ public class ExListPartyMatchingWaitingRoom extends L2GameServerPacket
 			_members.add(cha);
 		}
 		
-		int _count = 0;
-		int _size = _members.size();
-		
 		writeD(1);
-		writeD(_size);
-		while (_size > _count)
+		writeD(_members.size());
+		for (L2PcInstance member : _members)
 		{
-			writeS(_members.get(_count).getName());
-			writeD(_members.get(_count).getActiveClass());
-			writeD(_members.get(_count).getLevel());
-			_count++;
+			writeS(member.getName());
+			writeD(member.getActiveClass());
+			writeD(member.getLevel());
 		}
 	}
 }

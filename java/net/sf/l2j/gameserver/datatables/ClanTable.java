@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
@@ -38,7 +39,6 @@ import net.sf.l2j.gameserver.network.serverpackets.PledgeShowInfoUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListAll;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
-import net.sf.l2j.gameserver.util.Util;
 
 public class ClanTable
 {
@@ -173,7 +173,7 @@ public class ClanTable
 			return null;
 		}
 		
-		if (!Util.isAlphaNumeric(clanName))
+		if (!StringUtil.isAlphaNumeric(clanName))
 		{
 			player.sendPacket(SystemMessageId.CLAN_NAME_INVALID);
 			return null;

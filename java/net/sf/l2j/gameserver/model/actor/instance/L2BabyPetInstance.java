@@ -16,18 +16,18 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.concurrent.Future;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Skill.SkillTargetType;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
-import net.sf.l2j.util.Rnd;
 
 /**
  * A BabyPet can heal his owner. It got 2 heal power, weak or strong.
@@ -39,8 +39,8 @@ import net.sf.l2j.util.Rnd;
  */
 public final class L2BabyPetInstance extends L2PetInstance
 {
-	protected SkillHolder _majorHeal = null;
-	protected SkillHolder _minorHeal = null;
+	protected IntIntHolder _majorHeal = null;
+	protected IntIntHolder _minorHeal = null;
 	
 	private Future<?> _castTask;
 	
@@ -69,7 +69,7 @@ public final class L2BabyPetInstance extends L2PetInstance
 			if (healPower == 0)
 			{
 				// set both heal types to the same skill
-				_majorHeal = new SkillHolder(skill.getId(), skillLevel);
+				_majorHeal = new IntIntHolder(skill.getId(), skillLevel);
 				_minorHeal = _majorHeal;
 				healPower = skill.getPower();
 			}
@@ -77,9 +77,9 @@ public final class L2BabyPetInstance extends L2PetInstance
 			{
 				// another heal skill found - search for most powerful
 				if (skill.getPower() > healPower)
-					_majorHeal = new SkillHolder(skill.getId(), skillLevel);
+					_majorHeal = new IntIntHolder(skill.getId(), skillLevel);
 				else
-					_minorHeal = new SkillHolder(skill.getId(), skillLevel);
+					_minorHeal = new IntIntHolder(skill.getId(), skillLevel);
 			}
 		}
 		startCastTask();

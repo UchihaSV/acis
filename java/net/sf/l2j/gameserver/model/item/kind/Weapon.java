@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.handler.SkillHandler;
 import net.sf.l2j.gameserver.model.L2Effect;
@@ -25,18 +26,16 @@ import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.type.WeaponType;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestEventType;
+import net.sf.l2j.gameserver.scripting.EventType;
+import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.skills.Formulas;
 import net.sf.l2j.gameserver.skills.conditions.Condition;
 import net.sf.l2j.gameserver.skills.conditions.ConditionGameChance;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
-import net.sf.l2j.util.Rnd;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * This class is dedicated to the management of weapons.
@@ -52,12 +51,12 @@ public final class Weapon extends Item
 	private final int _mpConsumeReduceValue;
 	private final boolean _isMagical;
 	
-	private SkillHolder _enchant4Skill = null; // skill that activates when item is enchanted +4 (for duals)
+	private IntIntHolder _enchant4Skill = null; // skill that activates when item is enchanted +4 (for duals)
 	
 	// Attached skills for Special Abilities
-	private SkillHolder _skillsOnCast;
+	private IntIntHolder _skillsOnCast;
 	private Condition _skillsOnCastCondition = null;
-	private SkillHolder _skillsOnCrit;
+	private IntIntHolder _skillsOnCrit;
 	private Condition _skillsOnCritCondition = null;
 	
 	private final int _reuseDelay;
@@ -120,10 +119,10 @@ public final class Weapon extends Item
 				catch (Exception nfe)
 				{
 					// Incorrect syntax, dont add new skill
-					_log.info(StringUtil.concat("> Couldnt parse ", skill, " in weapon enchant skills! item ", toString()));
+					_log.info("> Couldnt parse " + skill + " in weapon enchant skills! item " + toString());
 				}
 				if (id > 0 && level > 0)
-					_enchant4Skill = new SkillHolder(id, level);
+					_enchant4Skill = new IntIntHolder(id, level);
 			}
 		}
 		
@@ -147,11 +146,11 @@ public final class Weapon extends Item
 				catch (Exception nfe)
 				{
 					// Incorrect syntax, dont add new skill
-					_log.info(StringUtil.concat("> Couldnt parse ", skill, " in weapon oncast skills! item ", toString()));
+					_log.info("> Couldnt parse " + skill + " in weapon oncast skills! item " + toString());
 				}
 				if (id > 0 && level > 0 && chance > 0)
 				{
-					_skillsOnCast = new SkillHolder(id, level);
+					_skillsOnCast = new IntIntHolder(id, level);
 					if (infochance != null)
 						_skillsOnCastCondition = new ConditionGameChance(chance);
 				}
@@ -178,11 +177,11 @@ public final class Weapon extends Item
 				catch (Exception nfe)
 				{
 					// Incorrect syntax, dont add new skill
-					_log.info(StringUtil.concat("> Couldnt parse ", skill, " in weapon oncrit skills! item ", toString()));
+					_log.info("> Couldnt parse " + skill + " in weapon oncrit skills! item " + toString());
 				}
 				if (id > 0 && level > 0 && chance > 0)
 				{
-					_skillsOnCrit = new SkillHolder(id, level);
+					_skillsOnCrit = new IntIntHolder(id, level);
 					if (infochance != null)
 						_skillsOnCritCondition = new ConditionGameChance(chance);
 				}
@@ -375,7 +374,7 @@ public final class Weapon extends Item
 			// Mobs in range 1000 see spell
 			for (L2Npc npcMob : caster.getKnownList().getKnownTypeInRadius(L2Npc.class, 1000))
 			{
-				List<Quest> quests = npcMob.getTemplate().getEventQuests(QuestEventType.ON_SKILL_SEE);
+				List<Quest> quests = npcMob.getTemplate().getEventQuests(EventType.ON_SKILL_SEE);
 				if (quests != null)
 					for (Quest quest : quests)
 						quest.notifySkillSee(npcMob, (L2PcInstance) caster, _skillsOnCast.getSkill(), targets, false);

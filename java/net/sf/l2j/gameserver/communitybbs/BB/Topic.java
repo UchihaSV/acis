@@ -24,7 +24,7 @@ import net.sf.l2j.gameserver.communitybbs.Manager.TopicBBSManager;
 
 public class Topic
 {
-	private final static Logger _log = Logger.getLogger(Topic.class.getName());
+	private static final Logger _log = Logger.getLogger(Topic.class.getName());
 	
 	public static final int MORMAL = 0;
 	public static final int MEMO = 1;

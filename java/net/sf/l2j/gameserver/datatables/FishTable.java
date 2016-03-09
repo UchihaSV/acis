@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.model.FishData;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
-import net.sf.l2j.util.Rnd;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -32,9 +32,9 @@ import org.w3c.dom.Node;
  */
 public class FishTable
 {
-	private final static Logger _log = Logger.getLogger(FishTable.class.getName());
+	private static final Logger _log = Logger.getLogger(FishTable.class.getName());
 	
-	private final static List<FishData> _fishes = new ArrayList<>();
+	private static final List<FishData> _fishes = new ArrayList<>();
 	
 	public static FishTable getInstance()
 	{
@@ -97,7 +97,7 @@ public class FishTable
 			return null;
 		}
 		
-		return result.get(Rnd.get(result.size()));
+		return Rnd.get(result);
 	}
 	
 	private static class SingletonHolder

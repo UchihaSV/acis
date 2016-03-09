@@ -14,8 +14,10 @@
  */
 package net.sf.l2j.gameserver.model.actor;
 
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlEvent;
 import net.sf.l2j.gameserver.model.L2Effect;
+import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2WorldRegion;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -23,10 +25,11 @@ import net.sf.l2j.gameserver.model.actor.knownlist.PlayableKnownList;
 import net.sf.l2j.gameserver.model.actor.stat.PlayableStat;
 import net.sf.l2j.gameserver.model.actor.status.PlayableStatus;
 import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
-import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
+import net.sf.l2j.gameserver.network.serverpackets.Revive;
+import net.sf.l2j.gameserver.scripting.QuestState;
 import net.sf.l2j.gameserver.templates.skills.L2EffectFlag;
 import net.sf.l2j.gameserver.templates.skills.L2EffectType;
 
@@ -170,6 +173,31 @@ public abstract class L2Playable extends L2Character
 		return true;
 	}
 	
+	@Override
+	public void doRevive()
+	{
+		if (!isDead() || isTeleporting())
+			return;
+		
+		setIsDead(false);
+		
+		if (isPhoenixBlessed())
+		{
+			stopPhoenixBlessing(null);
+			
+			getStatus().setCurrentHp(getMaxHp());
+			getStatus().setCurrentMp(getMaxMp());
+		}
+		else
+			getStatus().setCurrentHp(getMaxHp() * Config.RESPAWN_RESTORE_HP);
+		
+		// Start broadcast status
+		broadcastPacket(new Revive(this));
+		
+		if (getWorldRegion() != null)
+			getWorldRegion().onRevive(this);
+	}
+	
 	public boolean checkIfPvP(L2Playable target)
 	{
 		if (target == null || target == this)
@@ -300,6 +328,8 @@ public abstract class L2Playable extends L2Character
 	{
 		return isInsideZone(ZoneId.PVP) && !isInsideZone(ZoneId.SIEGE);
 	}
+	
+	public abstract void doPickupItem(L2Object object);
 	
 	public abstract int getKarma();
 	

@@ -17,8 +17,8 @@ package net.sf.l2j.gameserver.model.zone;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.model.Location;
-import net.sf.l2j.util.Rnd;
 
 /**
  * Abstract zone with spawn locations
@@ -57,13 +57,13 @@ public abstract class L2SpawnZone extends L2ZoneType
 	
 	public final Location getSpawnLoc()
 	{
-		return _spawnLocs.get(Rnd.get(_spawnLocs.size()));
+		return Rnd.get(_spawnLocs);
 	}
 	
 	public final Location getChaoticSpawnLoc()
 	{
 		if (_chaoticSpawnLocs != null)
-			return _chaoticSpawnLocs.get(Rnd.get(_chaoticSpawnLocs.size()));
+			return Rnd.get(_chaoticSpawnLocs);
 		
 		return getSpawnLoc();
 	}

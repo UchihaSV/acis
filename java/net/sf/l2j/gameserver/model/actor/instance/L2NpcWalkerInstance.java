@@ -14,8 +14,8 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
-import net.sf.l2j.gameserver.ai.L2CharacterAI;
-import net.sf.l2j.gameserver.ai.L2NpcWalkerAI;
+import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
+import net.sf.l2j.gameserver.ai.model.L2NpcWalkerAI;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
@@ -29,31 +29,23 @@ public class L2NpcWalkerInstance extends L2NpcInstance
 	public L2NpcWalkerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
-		setAI(new L2NpcWalkerAI(new L2NpcWalkerAIAccessor()));
+		
+		setAI(new L2NpcWalkerAI(this));
 	}
 	
-	/**
-	 * AI can't be detached, npc must move always with the same AI instance.
-	 * @param newAI AI to set for this L2NpcWalkerInstance
-	 */
 	@Override
 	public void setAI(L2CharacterAI newAI)
 	{
+		// AI can't be detached, npc must move with the same AI instance.
 		if (!(_ai instanceof L2NpcWalkerAI))
 			_ai = newAI;
 	}
 	
-	/**
-	 * NpcWalkers are immortals
-	 */
 	@Override
 	public void reduceCurrentHp(double i, L2Character attacker, boolean awake, boolean isDOT, L2Skill skill)
 	{
 	}
 	
-	/**
-	 * NpcWalkers are immortals
-	 */
 	@Override
 	public boolean doDie(L2Character killer)
 	{
@@ -66,14 +58,9 @@ public class L2NpcWalkerInstance extends L2NpcInstance
 		return (L2NpcWalkerAI) _ai;
 	}
 	
-	protected class L2NpcWalkerAIAccessor extends L2Character.AIAccessor
+	@Override
+	public void detachAI()
 	{
-		/**
-		 * AI can't be deattached.
-		 */
-		@Override
-		public void detachAI()
-		{
-		}
+		// AI can't be detached.
 	}
 }

@@ -36,7 +36,6 @@ import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.skills.effects.EffectBuff;
 import net.sf.l2j.gameserver.skills.effects.EffectDebuff;
-import net.sf.l2j.util.StringUtil;
 
 public class L2NpcInstance extends L2Npc
 {
@@ -81,16 +80,15 @@ public class L2NpcInstance extends L2Npc
 	{
 		if (((L2NpcInstance) npc).getClassesToTeach() == null)
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
-			final String sb = StringUtil.concat("<html><body>I cannot teach you. My class list is empty.<br>Your admin needs to add me teachTo informations.<br>NpcId:", String.valueOf(npc.getTemplate().getNpcId()), ", your classId:", String.valueOf(player.getClassId().getId()), "</body></html>");
-			html.setHtml(sb);
+			final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+			html.setHtml("<html><body>I cannot teach you. My class list is empty.<br>Your admin needs to add me teachTo informations.<br>NpcId:" + npc.getTemplate().getNpcId() + ", your classId:" + player.getClassId().getId() + "</body></html>");
 			player.sendPacket(html);
 			return;
 		}
 		
 		if (!npc.getTemplate().canTeach(classId))
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 			html.setFile("data/html/trainer/" + npc.getTemplate().getNpcId() + "-noskills.htm");
 			player.sendPacket(html);
 			return;
@@ -134,16 +132,15 @@ public class L2NpcInstance extends L2Npc
 	{
 		if (((L2NpcInstance) npc).getClassesToTeach() == null)
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
-			final String sb = StringUtil.concat("<html><body>I cannot teach you. My class list is empty.<br>Your admin needs to add me teachTo informations.<br>NpcId:", String.valueOf(npc.getTemplate().getNpcId()), ", your classId:", String.valueOf(player.getClassId().getId()), "</body></html>");
-			html.setHtml(sb);
+			final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+			html.setHtml("<html><body>I cannot teach you. My class list is empty.<br>Your admin needs to add me teachTo informations.<br>NpcId:" + npc.getTemplate().getNpcId() + ", your classId:" + player.getClassId().getId() + "</body></html>");
 			player.sendPacket(html);
 			return;
 		}
 		
 		if (!npc.getTemplate().canTeach(classId))
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 			html.setFile("data/html/trainer/" + npc.getTemplate().getNpcId() + "-noskills.htm");
 			player.sendPacket(html);
 			return;
@@ -151,7 +148,7 @@ public class L2NpcInstance extends L2Npc
 		
 		if (player.getClassId().level() < 3)
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 			html.setHtml("<html><body> You must have 3rd class change quest completed.</body></html>");
 			player.sendPacket(html);
 			return;
@@ -201,10 +198,10 @@ public class L2NpcInstance extends L2Npc
 		// If the player is too high level, display a message and return
 		if (player.getLevel() > 39 || player.getClassId().level() >= 2)
 		{
-			NpcHtmlMessage npcReply = new NpcHtmlMessage(getObjectId());
-			npcReply.setHtml("<html><body>Newbie Guide:<br>I'm sorry, but you are not eligible to receive the protection blessing.<br1>It can only be bestowed on <font color=\"LEVEL\">characters below level 39 who have not made a seccond transfer.</font></body></html>");
-			npcReply.replace("%objectId%", getObjectId());
-			player.sendPacket(npcReply);
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			html.setHtml("<html><body>Newbie Guide:<br>I'm sorry, but you are not eligible to receive the protection blessing.<br1>It can only be bestowed on <font color=\"LEVEL\">characters below level 39 who have not made a seccond transfer.</font></body></html>");
+			html.replace("%objectId%", getObjectId());
+			player.sendPacket(html);
 			return;
 		}
 		doCast(FrequentSkill.BLESSING_OF_PROTECTION.getSkill());

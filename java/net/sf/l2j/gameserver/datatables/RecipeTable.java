@@ -24,10 +24,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.model.L2ManufactureItem;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.RecipeList;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
@@ -42,7 +43,6 @@ import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.taskmanager.AttackStanceTaskManager;
 import net.sf.l2j.gameserver.util.Util;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
-import net.sf.l2j.util.Rnd;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -66,7 +66,7 @@ public class RecipeTable
 			File file = new File("./data/xml/recipes.xml");
 			final Document doc = XMLDocumentFactory.getInstance().loadDocument(file);
 			
-			List<ItemHolder> recipePartList = new ArrayList<>();
+			List<IntIntHolder> recipePartList = new ArrayList<>();
 			
 			Node n = doc.getFirstChild();
 			for (Node d = n.getFirstChild(); d != null; d = d.getNextSibling())
@@ -120,7 +120,7 @@ public class RecipeTable
 						{
 							int ingId = Integer.parseInt(c.getAttributes().getNamedItem("id").getNodeValue());
 							int ingCount = Integer.parseInt(c.getAttributes().getNamedItem("count").getNodeValue());
-							recipePartList.add(new ItemHolder(ingId, ingCount));
+							recipePartList.add(new IntIntHolder(ingId, ingCount));
 						}
 						else if ("production".equalsIgnoreCase(c.getNodeName()))
 						{
@@ -130,7 +130,7 @@ public class RecipeTable
 					}
 					
 					RecipeList recipeList = new RecipeList(id, level, recipeId, recipeName, successRate, mpCost, prodId, count, isDwarvenRecipe);
-					for (ItemHolder recipePart : recipePartList)
+					for (IntIntHolder recipePart : recipePartList)
 						recipeList.addNeededRecipePart(recipePart);
 					
 					_lists.put(id, recipeList);
@@ -399,12 +399,12 @@ public class RecipeTable
 		private boolean listItems(boolean remove)
 		{
 			final Inventory inv = _target.getInventory();
-			final List<ItemHolder> materials = new ArrayList<>();
+			final List<IntIntHolder> materials = new ArrayList<>();
 			
 			boolean gotAllMats = true;
-			for (ItemHolder neededPart : _recipeList.getNeededRecipeParts())
+			for (IntIntHolder neededPart : _recipeList.getNeededRecipeParts())
 			{
-				final int quantity = _recipeList.isConsumable() ? (int) (neededPart.getCount() * Config.RATE_CONSUMABLE_COST) : (int) neededPart.getCount();
+				final int quantity = _recipeList.isConsumable() ? (int) (neededPart.getValue() * Config.RATE_CONSUMABLE_COST) : (int) neededPart.getValue();
 				if (quantity > 0)
 				{
 					final ItemInstance item = inv.getItemByItemId(neededPart.getId());
@@ -414,7 +414,7 @@ public class RecipeTable
 						gotAllMats = false;
 					}
 					else if (remove)
-						materials.add(new ItemHolder(item.getItemId(), quantity));
+						materials.add(new IntIntHolder(item.getItemId(), quantity));
 				}
 			}
 			
@@ -423,12 +423,12 @@ public class RecipeTable
 			
 			if (remove)
 			{
-				for (ItemHolder material : materials)
+				for (IntIntHolder material : materials)
 				{
-					inv.destroyItemByItemId("Manufacture", material.getId(), material.getCount(), _target, _player);
+					inv.destroyItemByItemId("Manufacture", material.getId(), material.getValue(), _target, _player);
 					
-					if (material.getCount() > 1)
-						_target.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S2_S1_DISAPPEARED).addItemName(material.getId()).addItemNumber(material.getCount()));
+					if (material.getValue() > 1)
+						_target.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S2_S1_DISAPPEARED).addItemName(material.getId()).addItemNumber(material.getValue()));
 					else
 						_target.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_DISAPPEARED).addItemName(material.getId()));
 				}

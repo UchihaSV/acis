@@ -93,9 +93,6 @@ public final class RequestCrystallizeItem extends L2GameClientPacket
 			return;
 		}
 		
-		if (!activeChar.getInventory().canManipulateWithItemId(itemToRemove.getItemId()))
-			return;
-		
 		// Check if the char can crystallize items and return if false;
 		boolean canCrystallize = true;
 		

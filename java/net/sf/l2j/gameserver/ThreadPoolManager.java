@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.util.StringUtil;
+import net.sf.l2j.commons.lang.StringUtil;
 
 /**
  * <p>
@@ -317,7 +317,7 @@ public class ThreadPoolManager
 			int count = ptf.getGroup().activeCount();
 			Thread[] threads = new Thread[count + 2];
 			ptf.getGroup().enumerate(threads);
-			StringUtil.append(sb, "General Packet Thread Pool:\r\n" + "Tasks in the queue: ", String.valueOf(_generalPacketsThreadPool.getQueue().size()), "\r\n" + "Showing threads stack trace:\r\n" + "There should be ", String.valueOf(count), " Threads\r\n");
+			StringUtil.append(sb, "General Packet Thread Pool:\r\nTasks in the queue: ", _generalPacketsThreadPool.getQueue().size(), "\r\nShowing threads stack trace:\r\nThere should be ", count, " Threads\r\n");
 			for (Thread t : threads)
 			{
 				if (t == null)
@@ -347,7 +347,7 @@ public class ThreadPoolManager
 			int count = ptf.getGroup().activeCount();
 			Thread[] threads = new Thread[count + 2];
 			ptf.getGroup().enumerate(threads);
-			StringUtil.append(sb, "I/O Packet Thread Pool:\r\n" + "Tasks in the queue: ", String.valueOf(_ioPacketsThreadPool.getQueue().size()), "\r\n" + "Showing threads stack trace:\r\n" + "There should be ", String.valueOf(count), " Threads\r\n");
+			StringUtil.append(sb, "I/O Packet Thread Pool:\r\nTasks in the queue: ", _ioPacketsThreadPool.getQueue().size(), "\r\nShowing threads stack trace:\r\nThere should be ", count, " Threads\r\n");
 			
 			for (Thread t : threads)
 			{
@@ -379,7 +379,7 @@ public class ThreadPoolManager
 			int count = ptf.getGroup().activeCount();
 			Thread[] threads = new Thread[count + 2];
 			ptf.getGroup().enumerate(threads);
-			StringUtil.append(sb, "General Thread Pool:\r\n" + "Tasks in the queue: ", String.valueOf(_generalThreadPool.getQueue().size()), "\r\n" + "Showing threads stack trace:\r\n" + "There should be ", String.valueOf(count), " Threads\r\n");
+			StringUtil.append(sb, "General Thread Pool:\r\nTasks in the queue: ", _generalThreadPool.getQueue().size(), "\r\nShowing threads stack trace:\r\nThere should be ", count, " Threads\r\n");
 			
 			for (Thread t : threads)
 			{

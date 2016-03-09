@@ -30,9 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 import net.sf.l2j.loginserver.network.gameserverpackets.ServerStatus;
-import net.sf.l2j.util.Rnd;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;

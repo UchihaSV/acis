@@ -43,7 +43,7 @@ public abstract class L2ZoneForm
 	
 	public abstract void visualizeZone(int z);
 	
-	protected final static void dropDebugItem(int itemId, int num, int x, int y, int z)
+	protected static final void dropDebugItem(int itemId, int num, int x, int y, int z)
 	{
 		ItemInstance item = new ItemInstance(IdFactory.getInstance().getNextId(), itemId);
 		item.setCount(num);

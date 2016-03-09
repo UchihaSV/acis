@@ -671,7 +671,7 @@ public class MercTicketManager
 		load();
 	}
 	
-	private final static void load()
+	private static final void load()
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -712,7 +712,7 @@ public class MercTicketManager
 							dropticket.setLocation(ItemInstance.ItemLocation.INVENTORY);
 							dropticket.setDestroyProtected(true);
 							dropticket.dropMe(null, x, y, z);
-							L2World.getInstance().storeObject(dropticket);
+							L2World.getInstance().addObject(dropticket);
 							_droppedTickets.add(dropticket);
 						}
 						break;
@@ -842,7 +842,7 @@ public class MercTicketManager
 				dropticket.setLocation(ItemInstance.ItemLocation.INVENTORY);
 				dropticket.setDestroyProtected(true);
 				dropticket.dropMe(activeChar, x, y, z);
-				L2World.getInstance().storeObject(dropticket); // add to the world
+				L2World.getInstance().addObject(dropticket); // add to the world
 				// and keep track of this ticket in the list
 				_droppedTickets.add(dropticket);
 				

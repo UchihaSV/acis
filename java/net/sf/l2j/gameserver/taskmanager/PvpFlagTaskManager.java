@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -70,26 +69,24 @@ public final class PvpFlagTaskManager implements Runnable
 		final long currentTime = System.currentTimeMillis();
 		
 		// Loop all players.
-		for (Iterator<Map.Entry<L2PcInstance, Long>> iterator = _players.entrySet().iterator(); iterator.hasNext();)
+		for (Map.Entry<L2PcInstance, Long> entry : _players.entrySet())
 		{
-			// Get entry of current iteration.
-			Map.Entry<L2PcInstance, Long> entry = iterator.next();
-			
 			// Get time left and check.
+			final L2PcInstance player = entry.getKey();
 			final long timeLeft = entry.getValue();
 			
 			// Time is running out, clear PvP flag and remove from list.
 			if (currentTime > timeLeft)
 			{
-				entry.getKey().updatePvPFlag(0);
-				iterator.remove();
+				player.updatePvPFlag(0);
+				_players.remove(player);
 			}
 			// Time almost runned out, update to blinking PvP flag.
 			else if (currentTime > (timeLeft - 5000))
-				entry.getKey().updatePvPFlag(2);
+				player.updatePvPFlag(2);
 			// Time didn't run out, keep PvP flag.
 			else
-				entry.getKey().updatePvPFlag(1);
+				player.updatePvPFlag(1);
 		}
 	}
 	

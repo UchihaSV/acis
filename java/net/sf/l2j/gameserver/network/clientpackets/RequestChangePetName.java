@@ -14,11 +14,11 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.PetDataTable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.util.Util;
 
 public final class RequestChangePetName extends L2GameClientPacket
 {
@@ -60,7 +60,7 @@ public final class RequestChangePetName extends L2GameClientPacket
 			return;
 		}
 		
-		if (!Util.isValidName(_name, "^[A-Za-z]{2,8}$"))
+		if (!StringUtil.isValidName(_name, "^[A-Za-z]{2,8}$"))
 		{
 			activeChar.sendPacket(SystemMessageId.NAMING_PETNAME_CONTAINS_INVALID_CHARS);
 			return;

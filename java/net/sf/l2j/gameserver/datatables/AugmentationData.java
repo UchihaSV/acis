@@ -24,12 +24,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.model.L2Augmentation;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.network.clientpackets.AbstractRefinePacket;
 import net.sf.l2j.gameserver.skills.Stats;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
-import net.sf.l2j.util.Rnd;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;

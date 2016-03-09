@@ -22,10 +22,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.ItemTable;
@@ -65,12 +65,9 @@ import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.taskmanager.DecayTaskManager;
 import net.sf.l2j.gameserver.taskmanager.ItemsOnGroundTaskManager;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
 
 public class L2PetInstance extends L2Summon
 {
-	protected static final Logger _logPet = Logger.getLogger(L2PetInstance.class.getName());
-	
 	private int _curFed;
 	private final PetInventory _inventory;
 	private final int _controlItemId;
@@ -206,7 +203,7 @@ public class L2PetInstance extends L2Summon
 			}
 			catch (Exception e)
 			{
-				_logPet.log(Level.SEVERE, "Pet [ObjectId: " + getObjectId() + "] a feed task error has occurred", e);
+				_log.log(Level.SEVERE, "Pet [ObjectId: " + getObjectId() + "] a feed task error has occurred", e);
 			}
 		}
 		
@@ -406,7 +403,7 @@ public class L2PetInstance extends L2Summon
 	}
 	
 	@Override
-	protected void doPickupItem(L2Object object)
+	public void doPickupItem(L2Object object)
 	{
 		if (isDead())
 			return;
@@ -416,7 +413,7 @@ public class L2PetInstance extends L2Summon
 		if (!(object instanceof ItemInstance))
 		{
 			// dont try to pickup anything that is not an item :)
-			_logPet.warning(getName() + " tried to pickup a wrong target: " + object);
+			_log.warning(getName() + " tried to pickup a wrong target: " + object);
 			return;
 		}
 		
@@ -705,7 +702,7 @@ public class L2PetInstance extends L2Summon
 		}
 		catch (Exception e)
 		{
-			_logPet.log(Level.WARNING, "Error while destroying control item: " + e.getMessage(), e);
+			_log.log(Level.WARNING, "Error while destroying control item: " + e.getMessage(), e);
 		}
 		
 		// pet control item no longer exists, delete the pet from the db
@@ -718,7 +715,7 @@ public class L2PetInstance extends L2Summon
 		}
 		catch (Exception e)
 		{
-			_logPet.log(Level.SEVERE, "Failed to delete Pet [ObjectId: " + getObjectId() + "]", e);
+			_log.log(Level.SEVERE, "Failed to delete Pet [ObjectId: " + getObjectId() + "]", e);
 		}
 	}
 	
@@ -773,7 +770,7 @@ public class L2PetInstance extends L2Summon
 		}
 		catch (Exception e)
 		{
-			_logPet.log(Level.WARNING, "Could not restore pet data for owner: " + owner + " - " + e.getMessage(), e);
+			_log.log(Level.WARNING, "Could not restore pet data for owner: " + owner + " - " + e.getMessage(), e);
 			return null;
 		}
 	}
@@ -807,7 +804,7 @@ public class L2PetInstance extends L2Summon
 		}
 		catch (Exception e)
 		{
-			_logPet.log(Level.SEVERE, "Failed to store Pet [ObjectId: " + getObjectId() + "] data", e);
+			_log.log(Level.SEVERE, "Failed to store Pet [ObjectId: " + getObjectId() + "] data", e);
 		}
 		
 		ItemInstance itemInst = getControlItem();

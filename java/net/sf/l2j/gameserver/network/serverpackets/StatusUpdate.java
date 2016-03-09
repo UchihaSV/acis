@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.l2j.gameserver.model.L2Object;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 
 /**
  * format d d(dd)
@@ -58,22 +59,7 @@ public class StatusUpdate extends L2GameServerPacket
 	public static final int MAX_CP = 0x22;
 	
 	private final int _objectId;
-	private final List<Attribute> _attributes;
-	
-	static class Attribute
-	{
-		/**
-		 * id values 09 - current health 0a - max health 0b - current mana 0c - max mana
-		 */
-		public int id;
-		public int value;
-		
-		Attribute(int pId, int pValue)
-		{
-			id = pId;
-			value = pValue;
-		}
-	}
+	private final List<IntIntHolder> _attributes;
 	
 	public StatusUpdate(L2Object object)
 	{
@@ -83,7 +69,7 @@ public class StatusUpdate extends L2GameServerPacket
 	
 	public void addAttribute(int id, int level)
 	{
-		_attributes.add(new Attribute(id, level));
+		_attributes.add(new IntIntHolder(id, level));
 	}
 	
 	@Override
@@ -93,10 +79,10 @@ public class StatusUpdate extends L2GameServerPacket
 		writeD(_objectId);
 		writeD(_attributes.size());
 		
-		for (Attribute temp : _attributes)
+		for (IntIntHolder temp : _attributes)
 		{
-			writeD(temp.id);
-			writeD(temp.value);
+			writeD(temp.getId());
+			writeD(temp.getValue());
 		}
 	}
 }

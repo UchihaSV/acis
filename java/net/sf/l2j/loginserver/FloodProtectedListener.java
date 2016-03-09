@@ -28,6 +28,7 @@ import net.sf.l2j.Config;
 /**
  * @author -Wooden-
  */
+@SuppressWarnings("resource")
 public abstract class FloodProtectedListener extends Thread
 {
 	private final Logger _log = Logger.getLogger(FloodProtectedListener.class.getName());

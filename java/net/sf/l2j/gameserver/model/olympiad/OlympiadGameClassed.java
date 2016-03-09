@@ -17,7 +17,7 @@ package net.sf.l2j.gameserver.model.olympiad;
 import java.util.List;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.util.Rnd;
+import net.sf.l2j.commons.random.Rnd;
 
 /**
  * @author DS
@@ -56,7 +56,7 @@ public class OlympiadGameClassed extends OlympiadGameNormal
 		Participant[] opponents;
 		while (!classList.isEmpty())
 		{
-			list = classList.get(Rnd.get(classList.size()));
+			list = Rnd.get(classList);
 			if (list == null || list.size() < 2)
 			{
 				classList.remove(list);

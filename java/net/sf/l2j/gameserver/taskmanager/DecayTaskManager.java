@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -104,18 +103,17 @@ public final class DecayTaskManager implements Runnable
 		final long time = System.currentTimeMillis();
 		
 		// Loop all characters.
-		for (Iterator<Map.Entry<L2Character, Long>> iterator = _characters.entrySet().iterator(); iterator.hasNext();)
+		for (Map.Entry<L2Character, Long> entry : _characters.entrySet())
 		{
-			// Get entry of current iteration.
-			Map.Entry<L2Character, Long> entry = iterator.next();
-			
 			// Time hasn't passed yet, skip.
 			if (time < entry.getValue())
 				continue;
 			
+			final L2Character character = entry.getKey();
+			
 			// Decay character and remove task.
-			entry.getKey().onDecay();
-			iterator.remove();
+			character.onDecay();
+			_characters.remove(character);
 		}
 	}
 	

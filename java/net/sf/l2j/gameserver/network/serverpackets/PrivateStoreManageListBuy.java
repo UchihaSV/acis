@@ -14,16 +14,18 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.TradeList.TradeItem;
+import java.util.List;
+
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.tradelist.TradeItem;
 
 public class PrivateStoreManageListBuy extends L2GameServerPacket
 {
 	private final int _objId;
 	private final int _playerAdena;
 	private final ItemInstance[] _itemList;
-	private final TradeItem[] _buyList;
+	private final List<TradeItem> _buyList;
 	
 	public PrivateStoreManageListBuy(L2PcInstance player)
 	{
@@ -52,7 +54,7 @@ public class PrivateStoreManageListBuy extends L2GameServerPacket
 			writeH(item.getItem().getType2());
 		}
 		
-		writeD(_buyList.length); // count for all items already added for buy
+		writeD(_buyList.size()); // count for all items already added for buy
 		for (TradeItem item : _buyList)
 		{
 			writeD(item.getItem().getItemId());

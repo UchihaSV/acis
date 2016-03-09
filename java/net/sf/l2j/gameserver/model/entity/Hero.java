@@ -26,7 +26,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.CharNameTable;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.datatables.ClanTable;
@@ -53,7 +53,6 @@ import net.sf.l2j.gameserver.network.serverpackets.PledgeShowInfoUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.util.StringUtil;
 
 public class Hero
 {
@@ -291,8 +290,7 @@ public class Hero
 				int action = rset.getInt("action");
 				int param = rset.getInt("param");
 				
-				String date = (new SimpleDateFormat("yyyy-MM-dd HH")).format(new Date(time));
-				_diaryentry.set("date", date);
+				_diaryentry.set("date", new SimpleDateFormat("yyyy-MM-dd HH").format(time));
 				
 				if (action == ACTION_RAID_KILLED)
 				{
@@ -372,8 +370,7 @@ public class Hero
 						fight.set("oponentclass", cls);
 						
 						fight.set("time", calcFightTime(time));
-						String date = (new SimpleDateFormat("yyyy-MM-dd HH:mm")).format(new Date(start));
-						fight.set("start", date);
+						fight.set("start", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(start));
 						
 						fight.set("classed", classed);
 						if (winner == 1)
@@ -408,8 +405,7 @@ public class Hero
 						fight.set("oponentclass", cls);
 						
 						fight.set("time", calcFightTime(time));
-						String date = (new SimpleDateFormat("yyyy-MM-dd HH:mm")).format(new Date(start));
-						fight.set("start", date);
+						fight.set("start", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(start));
 						
 						fight.set("classed", classed);
 						if (winner == 1)
@@ -480,144 +476,131 @@ public class Hero
 	
 	public void showHeroDiary(L2PcInstance activeChar, int heroclass, int charid, int page)
 	{
+		if (!_herodiary.containsKey(charid))
+			return;
+		
 		final int perpage = 10;
 		
-		if (_herodiary.containsKey(charid))
+		List<StatsSet> _mainlist = _herodiary.get(charid);
+		
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/olympiad/herodiary.htm");
+		html.replace("%heroname%", CharNameTable.getInstance().getNameById(charid));
+		html.replace("%message%", _heroMessage.get(charid));
+		html.disableValidation();
+		
+		if (!_mainlist.isEmpty())
 		{
-			List<StatsSet> _mainlist = _herodiary.get(charid);
-			NpcHtmlMessage html = new NpcHtmlMessage(0);
-			html.setFile("data/html/olympiad/herodiary.htm");
-			html.replace("%heroname%", CharNameTable.getInstance().getNameById(charid));
-			html.replace("%message%", _heroMessage.get(charid));
-			html.disableValidation();
+			List<StatsSet> _list = new ArrayList<>();
+			_list.addAll(_mainlist);
+			Collections.reverse(_list);
 			
-			if (!_mainlist.isEmpty())
+			boolean color = true;
+			int counter = 0;
+			int breakat = 0;
+			
+			final StringBuilder sb = new StringBuilder(500);
+			for (int i = ((page - 1) * perpage); i < _list.size(); i++)
 			{
-				List<StatsSet> _list = new ArrayList<>();
-				_list.addAll(_mainlist);
-				Collections.reverse(_list);
+				breakat = i;
+				StatsSet _diaryentry = _list.get(i);
+				StringUtil.append(sb, "<tr><td>", ((color) ? "<table width=270 bgcolor=\"131210\">" : "<table width=270>"), "<tr><td width=270><font color=\"LEVEL\">", _diaryentry.getString("date"), ":xx</font></td></tr><tr><td width=270>", _diaryentry.getString("action"), "</td></tr><tr><td>&nbsp;</td></tr></table></td></tr>");
+				color = !color;
 				
-				boolean color = true;
-				final StringBuilder fList = new StringBuilder(500);
-				int counter = 0;
-				int breakat = 0;
-				for (int i = ((page - 1) * perpage); i < _list.size(); i++)
-				{
-					breakat = i;
-					StatsSet _diaryentry = _list.get(i);
-					StringUtil.append(fList, "<tr><td>");
-					if (color)
-						StringUtil.append(fList, "<table width=270 bgcolor=\"131210\">");
-					else
-						StringUtil.append(fList, "<table width=270>");
-					StringUtil.append(fList, "<tr><td width=270><font color=\"LEVEL\">" + _diaryentry.getString("date") + ":xx</font></td></tr>");
-					StringUtil.append(fList, "<tr><td width=270>" + _diaryentry.getString("action") + "</td></tr>");
-					StringUtil.append(fList, "<tr><td>&nbsp;</td></tr></table>");
-					StringUtil.append(fList, "</td></tr>");
-					color = !color;
-					
-					counter++;
-					if (counter >= perpage)
-						break;
-				}
-				
-				if (breakat < (_list.size() - 1))
-					html.replace("%buttprev%", "<button value=\"Prev\" action=\"bypass _diary?class=" + heroclass + "&page=" + (page + 1) + "\" width=60 height=25 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
-				else
-					html.replace("%buttprev%", "");
-				
-				if (page > 1)
-					html.replace("%buttnext%", "<button value=\"Next\" action=\"bypass _diary?class=" + heroclass + "&page=" + (page - 1) + "\" width=60 height=25 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
-				else
-					html.replace("%buttnext%", "");
-				
-				html.replace("%list%", fList.toString());
+				counter++;
+				if (counter >= perpage)
+					break;
 			}
+			
+			if (breakat < (_list.size() - 1))
+				html.replace("%buttprev%", "<button value=\"Prev\" action=\"bypass _diary?class=" + heroclass + "&page=" + (page + 1) + "\" width=60 height=25 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
 			else
-			{
-				html.replace("%list%", "");
 				html.replace("%buttprev%", "");
+			
+			if (page > 1)
+				html.replace("%buttnext%", "<button value=\"Next\" action=\"bypass _diary?class=" + heroclass + "&page=" + (page - 1) + "\" width=60 height=25 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
+			else
 				html.replace("%buttnext%", "");
-			}
-			activeChar.sendPacket(html);
+			
+			html.replace("%list%", sb.toString());
 		}
+		else
+		{
+			html.replace("%list%", "");
+			html.replace("%buttprev%", "");
+			html.replace("%buttnext%", "");
+		}
+		activeChar.sendPacket(html);
 	}
 	
 	public void showHeroFights(L2PcInstance activeChar, int heroclass, int charid, int page)
 	{
+		if (!_herofights.containsKey(charid))
+			return;
+		
 		final int perpage = 20;
 		int _win = 0;
 		int _loss = 0;
 		int _draw = 0;
 		
-		if (_herofights.containsKey(charid))
+		List<StatsSet> _list = _herofights.get(charid);
+		
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/olympiad/herohistory.htm");
+		html.replace("%heroname%", CharNameTable.getInstance().getNameById(charid));
+		html.disableValidation();
+		
+		if (!_list.isEmpty())
 		{
-			List<StatsSet> _list = _herofights.get(charid);
-			
-			NpcHtmlMessage FightReply = new NpcHtmlMessage(0);
-			FightReply.setFile("data/html/olympiad/herohistory.htm");
-			FightReply.replace("%heroname%", CharNameTable.getInstance().getNameById(charid));
-			FightReply.disableValidation();
-			
-			if (!_list.isEmpty())
+			if (_herocounts.containsKey(charid))
 			{
-				if (_herocounts.containsKey(charid))
-				{
-					StatsSet _herocount = _herocounts.get(charid);
-					_win = _herocount.getInteger("victory");
-					_loss = _herocount.getInteger("loss");
-					_draw = _herocount.getInteger("draw");
-				}
-				
-				boolean color = true;
-				final StringBuilder fList = new StringBuilder(500);
-				int counter = 0;
-				int breakat = 0;
-				for (int i = ((page - 1) * perpage); i < _list.size(); i++)
-				{
-					breakat = i;
-					StatsSet fight = _list.get(i);
-					StringUtil.append(fList, "<tr><td>");
-					if (color)
-						StringUtil.append(fList, "<table width=270 bgcolor=\"131210\">");
-					else
-						StringUtil.append(fList, "<table width=270>");
-					StringUtil.append(fList, "<tr><td width=220><font color=\"LEVEL\">" + fight.getString("start") + "</font>&nbsp;&nbsp;" + fight.getString("result") + "</td><td width=50 align=right>" + (fight.getInteger("classed") > 0 ? "<font color=\"FFFF99\">cls</font>" : "<font color=\"999999\">non-cls<font>") + "</td></tr>");
-					StringUtil.append(fList, "<tr><td width=220>vs " + fight.getString("oponent") + " (" + fight.getString("oponentclass") + ")</td><td width=50 align=right>(" + fight.getString("time") + ")</td></tr>");
-					StringUtil.append(fList, "<tr><td colspan=2>&nbsp;</td></tr></table>");
-					StringUtil.append(fList, "</td></tr>");
-					color = !color;
-					
-					counter++;
-					if (counter >= perpage)
-						break;
-				}
-				
-				if (breakat < (_list.size() - 1))
-					FightReply.replace("%buttprev%", "<button value=\"Prev\" action=\"bypass _match?class=" + heroclass + "&page=" + (page + 1) + "\" width=60 height=25 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
-				else
-					FightReply.replace("%buttprev%", "");
-				
-				if (page > 1)
-					FightReply.replace("%buttnext%", "<button value=\"Next\" action=\"bypass _match?class=" + heroclass + "&page=" + (page - 1) + "\" width=60 height=25 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
-				else
-					FightReply.replace("%buttnext%", "");
-				
-				FightReply.replace("%list%", fList.toString());
+				StatsSet _herocount = _herocounts.get(charid);
+				_win = _herocount.getInteger("victory");
+				_loss = _herocount.getInteger("loss");
+				_draw = _herocount.getInteger("draw");
 			}
+			
+			boolean color = true;
+			int counter = 0;
+			int breakat = 0;
+			
+			final StringBuilder sb = new StringBuilder(500);
+			for (int i = ((page - 1) * perpage); i < _list.size(); i++)
+			{
+				breakat = i;
+				StatsSet fight = _list.get(i);
+				StringUtil.append(sb, "<tr><td>", ((color) ? "<table width=270 bgcolor=\"131210\">" : "<table width=270><tr><td width=220><font color=\"LEVEL\">"), fight.getString("start"), "</font>&nbsp;&nbsp;", fight.getString("result"), "</td><td width=50 align=right>", ((fight.getInteger("classed") > 0) ? "<font color=\"FFFF99\">cls</font>" : "<font color=\"999999\">non-cls<font>"), "</td></tr><tr><td width=220>vs ", fight.getString("oponent"), " (", fight.getString("oponentclass"), ")</td><td width=50 align=right>(", fight.getString("time"), ")</td></tr><tr><td colspan=2>&nbsp;</td></tr></table></td></tr>");
+				color = !color;
+				
+				counter++;
+				if (counter >= perpage)
+					break;
+			}
+			
+			if (breakat < (_list.size() - 1))
+				html.replace("%buttprev%", "<button value=\"Prev\" action=\"bypass _match?class=" + heroclass + "&page=" + (page + 1) + "\" width=60 height=25 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
 			else
-			{
-				FightReply.replace("%list%", "");
-				FightReply.replace("%buttprev%", "");
-				FightReply.replace("%buttnext%", "");
-			}
+				html.replace("%buttprev%", "");
 			
-			FightReply.replace("%win%", _win);
-			FightReply.replace("%draw%", _draw);
-			FightReply.replace("%loos%", _loss);
+			if (page > 1)
+				html.replace("%buttnext%", "<button value=\"Next\" action=\"bypass _match?class=" + heroclass + "&page=" + (page - 1) + "\" width=60 height=25 back=\"L2UI_ct1.button_df\" fore=\"L2UI_ct1.button_df\">");
+			else
+				html.replace("%buttnext%", "");
 			
-			activeChar.sendPacket(FightReply);
+			html.replace("%list%", sb.toString());
 		}
+		else
+		{
+			html.replace("%list%", "");
+			html.replace("%buttprev%", "");
+			html.replace("%buttnext%", "");
+		}
+		
+		html.replace("%win%", _win);
+		html.replace("%draw%", _draw);
+		html.replace("%loos%", _loss);
+		
+		activeChar.sendPacket(html);
 	}
 	
 	public synchronized void computeNewHeroes(List<StatsSet> newHeroes)
@@ -713,16 +696,16 @@ public class Hero
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			PreparedStatement statement;
-			
 			if (setDefault)
 			{
-				statement = con.prepareStatement(UPDATE_ALL);
+				PreparedStatement statement = con.prepareStatement(UPDATE_ALL);
 				statement.execute();
 				statement.close();
 			}
 			else
 			{
+				PreparedStatement statement;
+				
 				for (Map.Entry<Integer, StatsSet> heroEntry : _heroes.entrySet())
 				{
 					final int heroId = heroEntry.getKey();
@@ -817,8 +800,7 @@ public class Hero
 			
 			// Prepare new data
 			StatsSet _diaryentry = new StatsSet();
-			String date = (new SimpleDateFormat("yyyy-MM-dd HH")).format(new Date(System.currentTimeMillis()));
-			_diaryentry.set("date", date);
+			_diaryentry.set("date", new SimpleDateFormat("yyyy-MM-dd HH").format(System.currentTimeMillis()));
 			_diaryentry.set("action", template.getName() + " was defeated");
 			
 			// Add to old list
@@ -845,8 +827,7 @@ public class Hero
 			
 			// Prepare new data
 			StatsSet _diaryentry = new StatsSet();
-			String date = (new SimpleDateFormat("yyyy-MM-dd HH")).format(new Date(System.currentTimeMillis()));
-			_diaryentry.set("date", date);
+			_diaryentry.set("date", new SimpleDateFormat("yyyy-MM-dd HH").format(System.currentTimeMillis()));
 			_diaryentry.set("action", castle.getName() + " Castle was successfuly taken");
 			
 			// Add to old list

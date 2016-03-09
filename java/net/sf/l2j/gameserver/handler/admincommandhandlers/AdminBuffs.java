@@ -2,21 +2,20 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import java.util.StringTokenizer;
 
-import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2Effect;
+import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SkillCoolTime;
-import net.sf.l2j.gameserver.util.GMAudit;
-import net.sf.l2j.util.StringUtil;
 
 public class AdminBuffs implements IAdminCommandHandler
 {
-	private final static int PAGE_LIMIT = 20;
+	private static final int PAGE_LIMIT = 20;
 	
 	private static final String[] ADMIN_COMMANDS =
 	{
@@ -132,42 +131,29 @@ public class AdminBuffs implements IAdminCommandHandler
 			L2PcInstance player = null;
 			if (st.hasMoreTokens())
 			{
-				String playername = st.nextToken();
+				final String name = st.nextToken();
 				
-				try
-				{
-					player = L2World.getInstance().getPlayer(playername);
-				}
-				catch (Exception e)
-				{
-				}
-				
+				player = L2World.getInstance().getPlayer(name);
 				if (player == null)
 				{
-					activeChar.sendMessage("The player " + playername + " is not online.");
+					activeChar.sendMessage("The player " + name + " is not online.");
 					return false;
 				}
 			}
 			else if (activeChar.getTarget() instanceof L2PcInstance)
 				player = (L2PcInstance) activeChar.getTarget();
-			else
+			
+			if (player == null)
 			{
 				activeChar.sendPacket(SystemMessageId.TARGET_IS_INCORRECT);
 				return false;
 			}
 			
-			try
-			{
-				player.getReuseTimeStamp().clear();
-				player.getDisabledSkills().clear();
-				player.sendPacket(new SkillCoolTime(player));
-				activeChar.sendMessage(player.getName() + "'s skills reuse time is now cleaned.");
-				return true;
-			}
-			catch (NullPointerException e)
-			{
-				return false;
-			}
+			player.getReuseTimeStamp().clear();
+			player.getDisabledSkills().clear();
+			player.sendPacket(new SkillCoolTime(player));
+			activeChar.sendMessage(player.getName() + "'s skills reuse time is now cleaned.");
+			return true;
 		}
 		else
 			return true;
@@ -190,7 +176,7 @@ public class AdminBuffs implements IAdminCommandHandler
 		if (effects.length > PAGE_LIMIT * max)
 			max++;
 		
-		final StringBuilder html = StringUtil.startAppend(500 + effects.length * 200, "<html><table width=\"100%\"><tr><td width=45><button value=\"Main\" action=\"bypass -h admin_admin\" width=45 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td><td width=180><center><font color=\"LEVEL\">Effects of ", target.getName(), "</font></td><td width=45><button value=\"Back\" action=\"bypass -h admin_current_player\" width=45 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td></tr></table><br><table width=\"100%\"><tr><td width=160>Skill</td><td width=60>Time Left</td><td width=60>Action</td></tr>");
+		final StringBuilder sb = new StringBuilder("<html><table width=\"100%\"><tr><td width=45><button value=\"Main\" action=\"bypass -h admin_admin\" width=45 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td><td width=180><center><font color=\"LEVEL\">Effects of " + target.getName() + "</font></td><td width=45><button value=\"Back\" action=\"bypass -h admin_current_player\" width=45 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td></tr></table><br><table width=\"100%\"><tr><td width=160>Skill</td><td width=60>Time Left</td><td width=60>Action</td></tr>");
 		
 		int start = ((page - 1) * PAGE_LIMIT);
 		int end = Math.min(((page - 1) * PAGE_LIMIT) + PAGE_LIMIT, effects.length);
@@ -199,92 +185,56 @@ public class AdminBuffs implements IAdminCommandHandler
 		{
 			L2Effect e = effects[i];
 			if (e != null)
-			{
-				StringUtil.append(html, "<tr><td>", e.getSkill().getName(), "</td><td>", e.getSkill().isToggle() ? "toggle" : e.getPeriod() - e.getTime() + "s", "</td><td><a action=\"bypass -h admin_stopbuff ", Integer.toString(target.getObjectId()), " ", String.valueOf(e.getSkill().getId()), "\">Remove</a></td></tr>");
-			}
+				StringUtil.append(sb, "<tr><td>", e.getSkill().getName(), "</td><td>", (e.getSkill().isToggle()) ? "toggle" : e.getPeriod() - e.getTime() + "s", "</td><td><a action=\"bypass -h admin_stopbuff ", target.getObjectId(), " ", e.getSkill().getId(), "\">Remove</a></td></tr>");
 		}
 		
-		html.append("</table><br><table width=\"100%\" bgcolor=444444><tr>");
+		sb.append("</table><br><table width=\"100%\" bgcolor=444444><tr>");
 		for (int x = 0; x < max; x++)
 		{
 			int pagenr = x + 1;
 			if (page == pagenr)
-			{
-				html.append("<td>Page ");
-				html.append(pagenr);
-				html.append("</td>");
-			}
+				StringUtil.append(sb, "<td>Page ", pagenr, "</td>");
 			else
-			{
-				html.append("<td><a action=\"bypass -h admin_getbuffs ");
-				html.append(target.getName());
-				html.append(" ");
-				html.append(x + 1);
-				html.append("\"> Page ");
-				html.append(pagenr);
-				html.append(" </a></td>");
-			}
+				StringUtil.append(sb, "<td><a action=\"bypass -h admin_getbuffs ", target.getName(), " ", x + 1, "\"> Page ", pagenr, "</a></td>");
 		}
 		
-		html.append("</tr></table>");
+		StringUtil.append(sb, "</tr></table><br><center><button value=\"Remove All\" action=\"bypass -h admin_stopallbuffs ", target.getObjectId(), "\" width=75 height=21 back=\"L2UI_ch3.Btn1_normalOn\" fore=\"L2UI_ch3.Btn1_normal\"></html>");
 		
-		StringUtil.append(html, "<br><center><button value=\"Remove All\" action=\"bypass -h admin_stopallbuffs ", Integer.toString(target.getObjectId()), "\" width=75 height=21 back=\"L2UI_ch3.Btn1_normalOn\" fore=\"L2UI_ch3.Btn1_normal\"></html>");
-		
-		NpcHtmlMessage ms = new NpcHtmlMessage(0);
-		ms.setHtml(html.toString());
-		activeChar.sendPacket(ms);
-		
-		if (Config.GMAUDIT)
-			GMAudit.auditGMAction(activeChar.getName() + " [" + activeChar.getObjectId() + "]", "getbuffs", target.getName() + " (" + Integer.toString(target.getObjectId()) + ")", "");
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void removeBuff(L2PcInstance activeChar, int objId, int skillId)
 	{
-		L2Character target = null;
-		try
-		{
-			target = (L2Character) L2World.getInstance().findObject(objId);
-		}
-		catch (Exception e)
-		{
-		}
+		if (skillId < 1)
+			return;
 		
-		if ((target != null) && (skillId > 0))
+		final L2Object obj = L2World.getInstance().getObject(objId);
+		if (obj instanceof L2Character)
 		{
-			L2Effect[] effects = target.getAllEffects();
+			final L2Character target = (L2Character) obj;
 			
-			for (L2Effect e : effects)
+			for (L2Effect e : target.getAllEffects())
 			{
-				if ((e != null) && (e.getSkill().getId() == skillId))
+				if (e != null && e.getSkill().getId() == skillId)
 				{
 					e.exit();
 					activeChar.sendMessage("Removed " + e.getSkill().getName() + " level " + e.getSkill().getLevel() + " from " + target.getName() + " (" + objId + ")");
 				}
 			}
 			showBuffs(activeChar, target, 1);
-			if (Config.GMAUDIT)
-				GMAudit.auditGMAction(activeChar.getName() + " [" + activeChar.getObjectId() + "]", "stopbuff", target.getName() + " (" + objId + ")", Integer.toString(skillId));
 		}
 	}
 	
 	private static void removeAllBuffs(L2PcInstance activeChar, int objId)
 	{
-		L2Character target = null;
-		try
+		final L2Object target = L2World.getInstance().getObject(objId);
+		if (target instanceof L2Character)
 		{
-			target = (L2Character) L2World.getInstance().findObject(objId);
-		}
-		catch (Exception e)
-		{
-		}
-		
-		if (target != null)
-		{
-			target.stopAllEffects();
+			((L2Character) target).stopAllEffects();
 			activeChar.sendMessage("Removed all effects from " + target.getName() + " (" + objId + ")");
-			showBuffs(activeChar, target, 1);
-			if (Config.GMAUDIT)
-				GMAudit.auditGMAction(activeChar.getName() + " [" + activeChar.getObjectId() + "]", "stopallbuffs", target.getName() + " (" + objId + ")", "");
+			showBuffs(activeChar, ((L2Character) target), 1);
 		}
 	}
 }

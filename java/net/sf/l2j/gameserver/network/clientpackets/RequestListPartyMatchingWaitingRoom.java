@@ -17,9 +17,6 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.ExListPartyMatchingWaitingRoom;
 
-/**
- * @author Gnacik
- */
 public class RequestListPartyMatchingWaitingRoom extends L2GameClientPacket
 {
 	private static int _page;
@@ -39,10 +36,10 @@ public class RequestListPartyMatchingWaitingRoom extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		L2PcInstance _activeChar = getClient().getActiveChar();
-		if (_activeChar == null)
+		final L2PcInstance activeChar = getClient().getActiveChar();
+		if (activeChar == null)
 			return;
 		
-		_activeChar.sendPacket(new ExListPartyMatchingWaitingRoom(_activeChar, _page, _minlvl, _maxlvl, _mode));
+		activeChar.sendPacket(new ExListPartyMatchingWaitingRoom(activeChar, _page, _minlvl, _maxlvl, _mode));
 	}
 }

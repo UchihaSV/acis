@@ -16,13 +16,13 @@ package net.sf.l2j.gameserver.instancemanager;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.GmListTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -462,34 +462,34 @@ public final class PetitionManager
 	
 	public void sendPendingPetitionList(L2PcInstance activeChar)
 	{
-		StringBuilder htmlContent = new StringBuilder("<html><body>" + "<center><font color=\"LEVEL\">Current Petitions</font><br><table width=\"300\">");
-		SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM HH:mm z");
+		final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+		final StringBuilder sb = new StringBuilder("<html><body><center><font color=\"LEVEL\">Current Petitions</font><br><table width=\"300\">");
 		
 		if (getPendingPetitionCount() == 0)
-			htmlContent.append("<tr><td colspan=\"4\">There are no currently pending petitions.</td></tr>");
+			sb.append("<tr><td colspan=\"4\">There are no currently pending petitions.</td></tr>");
 		else
-			htmlContent.append("<tr><td></td><td><font color=\"999999\">Petitioner</font></td>" + "<td><font color=\"999999\">Petition Type</font></td><td><font color=\"999999\">Submitted</font></td></tr>");
+			sb.append("<tr><td></td><td><font color=\"999999\">Petitioner</font></td><td><font color=\"999999\">Petition Type</font></td><td><font color=\"999999\">Submitted</font></td></tr>");
 		
 		for (Petition currPetition : getPendingPetitions().values())
 		{
 			if (currPetition == null)
 				continue;
 			
-			htmlContent.append("<tr><td>");
+			sb.append("<tr><td>");
 			
 			if (currPetition.getState() != PetitionState.In_Process)
-				htmlContent.append("<button value=\"View\" action=\"bypass -h admin_view_petition " + currPetition.getId() + "\" " + "width=\"40\" height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\">");
+				StringUtil.append(sb, "<button value=\"View\" action=\"bypass -h admin_view_petition ", currPetition.getId(), "\" width=\"40\" height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\">");
 			else
-				htmlContent.append("<font color=\"999999\">In Process</font>");
+				sb.append("<font color=\"999999\">In Process</font>");
 			
-			htmlContent.append("</td><td>" + currPetition.getPetitioner().getName() + "</td><td>" + currPetition.getTypeAsString() + "</td><td>" + dateFormat.format(new Date(currPetition.getSubmitTime())) + "</td></tr>");
+			StringUtil.append(sb, "</td><td>", currPetition.getPetitioner().getName(), "</td><td>", currPetition.getTypeAsString(), "</td><td>", sdf.format(currPetition.getSubmitTime()), "</td></tr>");
 		}
 		
-		htmlContent.append("</table><br><button value=\"Refresh\" action=\"bypass -h admin_view_petitions\" width=\"50\" " + "height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\"><br><button value=\"Back\" action=\"bypass -h admin_admin\" " + "width=\"40\" height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\"></center></body></html>");
+		sb.append("</table><br><button value=\"Refresh\" action=\"bypass -h admin_view_petitions\" width=\"50\" " + "height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\"><br><button value=\"Back\" action=\"bypass -h admin_admin\" " + "width=\"40\" height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\"></center></body></html>");
 		
-		NpcHtmlMessage htmlMsg = new NpcHtmlMessage(0);
-		htmlMsg.setHtml(htmlContent.toString());
-		activeChar.sendPacket(htmlMsg);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	public int submitPetition(L2PcInstance petitioner, String petitionText, int petitionType)
@@ -515,22 +515,21 @@ public final class PetitionManager
 			return;
 		
 		Petition currPetition = getPendingPetitions().get(petitionId);
-		StringBuilder htmlContent = new StringBuilder("<html><body>");
-		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE dd MMM HH:mm z");
+		final StringBuilder sb = new StringBuilder("<html><body>");
 		
-		htmlContent.append("<center><br><font color=\"LEVEL\">Petition #" + currPetition.getId() + "</font><br1>");
-		htmlContent.append("<img src=\"L2UI.SquareGray\" width=\"200\" height=\"1\"></center><br>");
-		htmlContent.append("Submit Time: " + dateFormat.format(new Date(currPetition.getSubmitTime())) + "<br1>");
-		htmlContent.append("Petitioner: " + currPetition.getPetitioner().getName() + "<br1>");
-		htmlContent.append("Petition Type: " + currPetition.getTypeAsString() + "<br>" + currPetition.getContent() + "<br>");
-		htmlContent.append("<center><button value=\"Accept\" action=\"bypass -h admin_accept_petition " + currPetition.getId() + "\"" + "width=\"50\" height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\"><br1>");
-		htmlContent.append("<button value=\"Reject\" action=\"bypass -h admin_reject_petition " + currPetition.getId() + "\" " + "width=\"50\" height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\"><br>");
-		htmlContent.append("<button value=\"Back\" action=\"bypass -h admin_view_petitions\" width=\"40\" height=\"15\" back=\"sek.cbui94\" " + "fore=\"sek.cbui92\"></center>");
-		htmlContent.append("</body></html>");
+		sb.append("<center><br><font color=\"LEVEL\">Petition #" + currPetition.getId() + "</font><br1>");
+		sb.append("<img src=\"L2UI.SquareGray\" width=\"200\" height=\"1\"></center><br>");
+		sb.append("Submit Time: " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(currPetition.getSubmitTime()) + "<br1>");
+		sb.append("Petitioner: " + currPetition.getPetitioner().getName() + "<br1>");
+		sb.append("Petition Type: " + currPetition.getTypeAsString() + "<br>" + currPetition.getContent() + "<br>");
+		sb.append("<center><button value=\"Accept\" action=\"bypass -h admin_accept_petition " + currPetition.getId() + "\"" + "width=\"50\" height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\"><br1>");
+		sb.append("<button value=\"Reject\" action=\"bypass -h admin_reject_petition " + currPetition.getId() + "\" " + "width=\"50\" height=\"15\" back=\"sek.cbui94\" fore=\"sek.cbui92\"><br>");
+		sb.append("<button value=\"Back\" action=\"bypass -h admin_view_petitions\" width=\"40\" height=\"15\" back=\"sek.cbui94\" " + "fore=\"sek.cbui92\"></center>");
+		sb.append("</body></html>");
 		
-		NpcHtmlMessage htmlMsg = new NpcHtmlMessage(0);
-		htmlMsg.setHtml(htmlContent.toString());
-		activeChar.sendPacket(htmlMsg);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static class SingletonHolder

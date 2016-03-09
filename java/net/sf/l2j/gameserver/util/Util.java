@@ -14,17 +14,6 @@
  */
 package net.sf.l2j.gameserver.util;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -57,7 +46,7 @@ public final class Util
 	 * @param obj2Y
 	 * @return degree value of object 2 to the horizontal line with object 1 being the origin
 	 */
-	public final static double calculateAngleFrom(int obj1X, int obj1Y, int obj2X, int obj2Y)
+	public static final double calculateAngleFrom(int obj1X, int obj1Y, int obj2X, int obj2Y)
 	{
 		double angleTarget = Math.toDegrees(Math.atan2(obj2Y - obj1Y, obj2X - obj1X));
 		if (angleTarget < 0)
@@ -66,12 +55,12 @@ public final class Util
 		return angleTarget;
 	}
 	
-	public final static double convertHeadingToDegree(int clientHeading)
+	public static final double convertHeadingToDegree(int clientHeading)
 	{
 		return clientHeading / 182.044444444;
 	}
 	
-	public final static int convertDegreeToClientHeading(double degree)
+	public static final int convertDegreeToClientHeading(double degree)
 	{
 		if (degree < 0)
 			degree = 360 + degree;
@@ -79,12 +68,12 @@ public final class Util
 		return (int) (degree * 182.044444444);
 	}
 	
-	public final static int calculateHeadingFrom(L2Object obj1, L2Object obj2)
+	public static final int calculateHeadingFrom(L2Object obj1, L2Object obj2)
 	{
 		return calculateHeadingFrom(obj1.getX(), obj1.getY(), obj2.getX(), obj2.getY());
 	}
 	
-	public final static int calculateHeadingFrom(int obj1X, int obj1Y, int obj2X, int obj2Y)
+	public static final int calculateHeadingFrom(int obj1X, int obj1Y, int obj2X, int obj2Y)
 	{
 		double angleTarget = Math.toDegrees(Math.atan2(obj2Y - obj1Y, obj2X - obj1X));
 		if (angleTarget < 0)
@@ -93,7 +82,7 @@ public final class Util
 		return (int) (angleTarget * 182.044444444);
 	}
 	
-	public final static int calculateHeadingFrom(double dx, double dy)
+	public static final int calculateHeadingFrom(double dx, double dy)
 	{
 		double angleTarget = Math.toDegrees(Math.atan2(dy, dx));
 		if (angleTarget < 0)
@@ -127,71 +116,6 @@ public final class Util
 			return 1000000;
 		
 		return calculateDistance(obj1.getPosition().getX(), obj1.getPosition().getY(), obj1.getPosition().getZ(), obj2.getPosition().getX(), obj2.getPosition().getY(), obj2.getPosition().getZ(), includeZAxis);
-	}
-	
-	/**
-	 * Capitalizes the first letter of a string, and returns the result.<BR>
-	 * (Based on ucfirst() function of PHP)
-	 * @param str
-	 * @return String containing the modified string.
-	 */
-	public static String capitalizeFirst(String str)
-	{
-		str = str.trim();
-		
-		if (str.length() > 0 && Character.isLetter(str.charAt(0)))
-			return str.substring(0, 1).toUpperCase() + str.substring(1);
-		
-		return str;
-	}
-	
-	/**
-	 * Capitalizes the first letter of every "word" in a string.<BR>
-	 * (Based on ucwords() function of PHP)
-	 * @param str
-	 * @return String containing the modified string.
-	 */
-	public static String capitalizeWords(String str)
-	{
-		char[] charArray = str.toCharArray();
-		String result = "";
-		
-		// Capitalize the first letter in the given string!
-		charArray[0] = Character.toUpperCase(charArray[0]);
-		
-		for (int i = 0; i < charArray.length; i++)
-		{
-			if (Character.isWhitespace(charArray[i]))
-				charArray[i + 1] = Character.toUpperCase(charArray[i + 1]);
-			
-			result += Character.toString(charArray[i]);
-		}
-		
-		return result;
-	}
-	
-	/**
-	 * Format the given date on the given format
-	 * @param date : the date to format.
-	 * @param format : the format to correct by.
-	 * @return a string representation of the formatted date.
-	 */
-	public static String formatDate(Date date, String format)
-	{
-		final DateFormat dateFormat = new SimpleDateFormat(format);
-		if (date != null)
-			return dateFormat.format(date);
-		
-		return null;
-	}
-	
-	public static String formatDate(long date, String format)
-	{
-		final DateFormat dateFormat = new SimpleDateFormat(format);
-		if (date > 0)
-			return dateFormat.format(date);
-		
-		return null;
 	}
 	
 	/**
@@ -262,78 +186,6 @@ public final class Util
 	}
 	
 	/**
-	 * Verify if the given text matches with the regex pattern.
-	 * @param text : the text to test.
-	 * @param regex : the regex pattern to make test with.
-	 * @return true if matching.
-	 */
-	public static boolean isValidName(String text, String regex)
-	{
-		Pattern pattern;
-		try
-		{
-			pattern = Pattern.compile(regex);
-		}
-		catch (PatternSyntaxException e) // case of illegal pattern
-		{
-			pattern = Pattern.compile(".*");
-		}
-		
-		Matcher regexp = pattern.matcher(text);
-		
-		return regexp.matches();
-	}
-	
-	/**
-	 * Child of isValidName, with regular pattern for players' name.
-	 * @param text : the text to test.
-	 * @return true if matching.
-	 */
-	public static boolean isValidPlayerName(String text)
-	{
-		return isValidName(text, "^[A-Za-z0-9]{1,16}$");
-	}
-	
-	/**
-	 * Returns the number of "words" in a given string.
-	 * @param str
-	 * @return int numWords
-	 */
-	public static int countWords(String str)
-	{
-		return str.trim().split(" ").length;
-	}
-	
-	/**
-	 * Returns a delimited string for an given array of string elements.<BR>
-	 * (Based on implode() in PHP)
-	 * @param strArray
-	 * @param strDelim
-	 * @return String implodedString
-	 */
-	public static String implodeString(String[] strArray, String strDelim)
-	{
-		String result = "";
-		
-		for (String strValue : strArray)
-			result += strValue + strDelim;
-		
-		return result;
-	}
-	
-	/**
-	 * Returns a delimited string for an given collection of string elements.<BR>
-	 * (Based on implode() in PHP)
-	 * @param strCollection
-	 * @param strDelim
-	 * @return String implodedString
-	 */
-	public static String implodeString(Collection<String> strCollection, String strDelim)
-	{
-		return implodeString(strCollection.toArray(new String[strCollection.size()]), strDelim);
-	}
-	
-	/**
 	 * Returns the rounded value of val to specified number of digits after the decimal point.<BR>
 	 * (Based on round() in PHP)
 	 * @param val
@@ -348,76 +200,6 @@ public final class Util
 		float exponent = (float) Math.pow(10, numPlaces);
 		
 		return (Math.round(val * exponent) / exponent);
-	}
-	
-	/**
-	 * @param text - the text to check
-	 * @return {@code true} if {@code text} contains only numbers, {@code false} otherwise
-	 */
-	public static boolean isDigit(String text)
-	{
-		if (text == null)
-			return false;
-		
-		return text.matches("[0-9]+");
-	}
-	
-	public static boolean isAlphaNumeric(String text)
-	{
-		if (text == null)
-			return false;
-		
-		boolean result = true;
-		char[] chars = text.toCharArray();
-		for (int i = 0; i < chars.length; i++)
-		{
-			if (!Character.isLetterOrDigit(chars[i]))
-			{
-				result = false;
-				break;
-			}
-		}
-		return result;
-	}
-	
-	/**
-	 * Return amount of adena formatted with "," delimiter
-	 * @param amount
-	 * @return String formatted adena amount
-	 */
-	public static String formatAdena(long amount)
-	{
-		String s = "";
-		long rem = amount % 1000;
-		s = Long.toString(rem);
-		amount = (amount - rem) / 1000;
-		while (amount > 0)
-		{
-			if (rem < 99)
-				s = '0' + s;
-			if (rem < 9)
-				s = '0' + s;
-			rem = amount % 1000;
-			s = Long.toString(rem) + "," + s;
-			amount = (amount - rem) / 1000;
-		}
-		return s;
-	}
-	
-	/**
-	 * @param string the initial word to scramble.
-	 * @return an anagram of the given string.
-	 */
-	public static String scrambleString(String string)
-	{
-		List<String> letters = Arrays.asList(string.split(""));
-		Collections.shuffle(letters);
-		
-		StringBuilder sb = new StringBuilder(string.length());
-		for (String c : letters)
-			sb.append(c);
-		
-		return sb.toString();
 	}
 	
 	/**

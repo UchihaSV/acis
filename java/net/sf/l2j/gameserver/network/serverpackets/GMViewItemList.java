@@ -14,6 +14,8 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
+import java.util.List;
+
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
@@ -21,7 +23,7 @@ import net.sf.l2j.gameserver.model.item.kind.Item;
 
 public class GMViewItemList extends L2GameServerPacket
 {
-	private final ItemInstance[] _items;
+	private final List<ItemInstance> _items;
 	private final int _limit;
 	private final String _playerName;
 	
@@ -46,11 +48,11 @@ public class GMViewItemList extends L2GameServerPacket
 		writeS(_playerName);
 		writeD(_limit);
 		writeH(0x01); // show window ??
-		writeH(_items.length);
+		writeH(_items.size());
 		
 		for (ItemInstance temp : _items)
 		{
-			if (temp == null || temp.getItem() == null)
+			if (temp.getItem() == null)
 				continue;
 			
 			Item item = temp.getItem();

@@ -16,7 +16,7 @@ package net.sf.l2j.gameserver.model.base;
 
 public class Experience
 {
-	public final static long LEVEL[] =
+	public static final long LEVEL[] =
 	{
 		-1L, // level 0 (unreachable)
 		0L,
@@ -107,5 +107,5 @@ public class Experience
 	 * ex: If you want a max at 80 & 99.99%, you have to put 81.<BR>
 	 * <BR>
 	 */
-	public final static byte MAX_LEVEL = 81;
+	public static final byte MAX_LEVEL = 81;
 }

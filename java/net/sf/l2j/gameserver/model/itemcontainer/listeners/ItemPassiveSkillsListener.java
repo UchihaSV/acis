@@ -17,7 +17,7 @@ package net.sf.l2j.gameserver.model.itemcontainer.listeners;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.item.kind.Weapon;
@@ -63,10 +63,10 @@ public class ItemPassiveSkillsListener implements OnEquipListener
 			}
 		}
 		
-		final SkillHolder[] skills = it.getSkills();
+		final IntIntHolder[] skills = it.getSkills();
 		if (skills != null)
 		{
-			for (SkillHolder skillInfo : skills)
+			for (IntIntHolder skillInfo : skills)
 			{
 				if (skillInfo == null)
 					continue;
@@ -129,10 +129,10 @@ public class ItemPassiveSkillsListener implements OnEquipListener
 			}
 		}
 		
-		final SkillHolder[] skills = it.getSkills();
+		final IntIntHolder[] skills = it.getSkills();
 		if (skills != null)
 		{
-			for (SkillHolder skillInfo : skills)
+			for (IntIntHolder skillInfo : skills)
 			{
 				if (skillInfo == null)
 					continue;

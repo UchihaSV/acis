@@ -16,19 +16,19 @@ package net.sf.l2j.gameserver.handler.skillhandlers;
 
 import java.util.List;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2MonsterInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
-import net.sf.l2j.util.Rnd;
 
 /**
  * @author l3x
@@ -67,11 +67,11 @@ public class Harvest implements ISkillHandler
 		{
 			if (calcSuccess(player, target))
 			{
-				final List<ItemHolder> items = target.getHarvestItems();
+				final List<IntIntHolder> items = target.getHarvestItems();
 				if (!items.isEmpty())
 				{
 					InventoryUpdate iu = new InventoryUpdate();
-					for (ItemHolder ritem : items)
+					for (IntIntHolder ritem : items)
 					{
 						cropId = ritem.getId(); // always got 1 type of crop as reward
 						
@@ -79,11 +79,11 @@ public class Harvest implements ISkillHandler
 							player.getParty().distributeItem(player, ritem, true, target);
 						else
 						{
-							ItemInstance item = player.getInventory().addItem("Manor", ritem.getId(), ritem.getCount(), player, target);
+							ItemInstance item = player.getInventory().addItem("Manor", ritem.getId(), ritem.getValue(), player, target);
 							iu.addItem(item);
 							
 							send = true;
-							total += ritem.getCount();
+							total += ritem.getValue();
 						}
 					}
 					

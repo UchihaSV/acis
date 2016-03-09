@@ -59,27 +59,19 @@ public class PartyMatchList extends L2GameServerPacket
 			_rooms.add(room);
 		}
 		
-		int count = 0;
-		int size = _rooms.size();
-		
 		writeC(0x96);
-		if (size > 0)
-			writeD(1);
-		else
-			writeD(0);
-		
+		writeD((!_rooms.isEmpty()) ? 1 : 0);
 		writeD(_rooms.size());
-		while (size > count)
+		for (PartyMatchRoom room : _rooms)
 		{
-			writeD(_rooms.get(count).getId());
-			writeS(_rooms.get(count).getTitle());
-			writeD(_rooms.get(count).getLocation());
-			writeD(_rooms.get(count).getMinLvl());
-			writeD(_rooms.get(count).getMaxLvl());
-			writeD(_rooms.get(count).getMembers());
-			writeD(_rooms.get(count).getMaxMembers());
-			writeS(_rooms.get(count).getOwner().getName());
-			count++;
+			writeD(room.getId());
+			writeS(room.getTitle());
+			writeD(room.getLocation());
+			writeD(room.getMinLvl());
+			writeD(room.getMaxLvl());
+			writeD(room.getMembers());
+			writeD(room.getMaxMembers());
+			writeS(room.getOwner().getName());
 		}
 	}
 }

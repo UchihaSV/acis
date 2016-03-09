@@ -16,6 +16,7 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.List;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.MultisellData;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Hero;
@@ -27,7 +28,6 @@ import net.sf.l2j.gameserver.model.olympiad.OlympiadManager;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.ExHeroList;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * Olympiad Npcs
@@ -79,8 +79,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 				break;
 		}
 		
-		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile("data/html/olympiad/" + filename);
 		
 		// Hidden option for players who are in inactive mode.
@@ -185,7 +184,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 		{
 			int val = Integer.parseInt(command.substring(9, 10));
 			
-			NpcHtmlMessage reply = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			switch (val)
 			{
 				case 2: // Show rank for a specific class, example >> Olympiad 1_88
@@ -193,13 +192,13 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 					if (classId >= 88 && classId <= 118)
 					{
 						List<String> names = Olympiad.getInstance().getClassLeaderBoard(classId);
-						reply.setFile(Olympiad.OLYMPIAD_HTML_PATH + "noble_ranking.htm");
+						html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "noble_ranking.htm");
 						
 						int index = 1;
 						for (String name : names)
 						{
-							reply.replace("%place" + index + "%", index);
-							reply.replace("%rank" + index + "%", name);
+							html.replace("%place" + index + "%", index);
+							html.replace("%rank" + index + "%", name);
 							
 							index++;
 							if (index > 10)
@@ -208,47 +207,44 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 						
 						for (; index <= 10; index++)
 						{
-							reply.replace("%place" + index + "%", "");
-							reply.replace("%rank" + index + "%", "");
+							html.replace("%place" + index + "%", "");
+							html.replace("%rank" + index + "%", "");
 						}
 						
-						reply.replace("%objectId%", getObjectId());
-						player.sendPacket(reply);
+						html.replace("%objectId%", getObjectId());
+						player.sendPacket(html);
 					}
 					break;
 				
 				case 3: // Spectator overview
-					StringBuilder list = new StringBuilder(2000);
-					OlympiadGameTask task;
+					html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "olympiad_observe_list.htm");
 					
-					reply.setFile(Olympiad.OLYMPIAD_HTML_PATH + "olympiad_observe_list.htm");
-					for (int i = 0; i <= 21; i++)
+					int i = 0;
+					
+					final StringBuilder sb = new StringBuilder(2000);
+					for (OlympiadGameTask task : OlympiadGameManager.getInstance().getOlympiadTasks())
 					{
-						task = OlympiadGameManager.getInstance().getOlympiadTask(i);
-						if (task != null)
+						StringUtil.append(sb, "<a action=\"bypass arenachange ", i, "\">Arena ", ++i, "&nbsp;");
+						
+						if (task.isGameStarted())
 						{
-							StringUtil.append(list, "<a action=\"bypass arenachange ", String.valueOf(i), "\">Arena ", String.valueOf(i + 1), "&nbsp;");
-							
-							if (task.isGameStarted())
-							{
-								if (task.isInTimerTime())
-									StringUtil.append(list, "(&$907;)"); // Counting In Progress
-								else if (task.isBattleStarted())
-									StringUtil.append(list, "(&$829;)"); // In Progress
-								else
-									StringUtil.append(list, "(&$908;)"); // Terminate
-									
-								StringUtil.append(list, "&nbsp;", task.getGame().getPlayerNames()[0], "&nbsp; : &nbsp;", task.getGame().getPlayerNames()[1]);
-							}
+							if (task.isInTimerTime())
+								StringUtil.append(sb, "(&$907;)"); // Counting In Progress
+							else if (task.isBattleStarted())
+								StringUtil.append(sb, "(&$829;)"); // In Progress
 							else
-								StringUtil.append(list, "(&$906;)", "</td><td>&nbsp;"); // Initial State
+								StringUtil.append(sb, "(&$908;)"); // Terminate
 								
-							StringUtil.append(list, "</a><br>");
+							StringUtil.append(sb, "&nbsp;", task.getGame().getPlayerNames()[0], "&nbsp; : &nbsp;", task.getGame().getPlayerNames()[1]);
 						}
+						else
+							StringUtil.append(sb, "(&$906;)</td><td>&nbsp;"); // Initial State
+							
+						StringUtil.append(sb, "</a><br>");
 					}
-					reply.replace("%list%", list.toString());
-					reply.replace("%objectId%", getObjectId());
-					player.sendPacket(reply);
+					html.replace("%list%", sb.toString());
+					html.replace("%objectId%", getObjectId());
+					player.sendPacket(html);
 					break;
 				
 				case 4: // Send heroes list.
@@ -258,9 +254,9 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 				case 5: // Hero pending state.
 					if (Hero.getInstance().isInactiveHero(player.getObjectId()))
 					{
-						reply.setFile(Olympiad.OLYMPIAD_HTML_PATH + "hero_confirm.htm");
-						reply.replace("%objectId%", getObjectId());
-						player.sendPacket(reply);
+						html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "hero_confirm.htm");
+						html.replace("%objectId%", getObjectId());
+						player.sendPacket(html);
 					}
 					break;
 				
@@ -278,15 +274,15 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 					break;
 				
 				case 7: // Main panel
-					reply.setFile(Olympiad.OLYMPIAD_HTML_PATH + "hero_main.htm");
+					html.setFile(Olympiad.OLYMPIAD_HTML_PATH + "hero_main.htm");
 					
 					String hiddenText = "";
 					if (Hero.getInstance().isInactiveHero(player.getObjectId()))
 						hiddenText = "<a action=\"bypass -h npc_%objectId%_Olympiad 5\">\"I want to be a Hero.\"</a><br>";
 					
-					reply.replace("%hero%", hiddenText);
-					reply.replace("%objectId%", getObjectId());
-					player.sendPacket(reply);
+					html.replace("%hero%", hiddenText);
+					html.replace("%objectId%", getObjectId());
+					player.sendPacket(html);
 					break;
 				
 				default:

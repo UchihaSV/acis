@@ -18,7 +18,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,7 +74,7 @@ public final class ItemsOnGroundTaskManager implements Runnable
 				
 				// Create new item.
 				final ItemInstance item = new ItemInstance(result.getInt(1), result.getInt(2));
-				L2World.getInstance().storeObject(item);
+				L2World.getInstance().addObject(item);
 				
 				// Check and set count.
 				final int count = result.getInt(3);
@@ -181,11 +180,8 @@ public final class ItemsOnGroundTaskManager implements Runnable
 		final long time = System.currentTimeMillis();
 		
 		// Loop all items.
-		for (Iterator<Map.Entry<ItemInstance, Long>> iterator = _items.entrySet().iterator(); iterator.hasNext();)
+		for (Map.Entry<ItemInstance, Long> entry : _items.entrySet())
 		{
-			// Get next entry.
-			Map.Entry<ItemInstance, Long> entry = iterator.next();
-			
 			// Get and validate destroy time.
 			final long destroyTime = entry.getValue();
 			
@@ -201,7 +197,7 @@ public final class ItemsOnGroundTaskManager implements Runnable
 			final ItemInstance item = entry.getKey();
 			L2World.getInstance().removeVisibleObject(item, item.getWorldRegion());
 			L2World.getInstance().removeObject(item);
-			iterator.remove();
+			_items.remove(item);
 		}
 	}
 	

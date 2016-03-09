@@ -18,18 +18,19 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Scanner;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.Server;
 import net.sf.l2j.commons.config.ExProperties;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.geoengine.converter.blocks.Block;
 import net.sf.l2j.gameserver.geoengine.converter.blocks.ComplexBlock;
 import net.sf.l2j.gameserver.geoengine.converter.blocks.FlatBlock;
@@ -38,7 +39,6 @@ import net.sf.l2j.gameserver.geoengine.converter.blocks.MultilayerCell;
 import net.sf.l2j.gameserver.geoengine.geodata.GeoFormat;
 import net.sf.l2j.gameserver.geoengine.geodata.GeoStructure;
 import net.sf.l2j.gameserver.model.L2World;
-import net.sf.l2j.util.Util;
 
 /**
  * @author Hasha
@@ -68,35 +68,37 @@ public final class GeoDataConverter extends Server
 		is.close();
 		
 		// Initialize config
-		Util.printSection("aCis");
+		StringUtil.printSection("aCis");
 		Config.load();
 		
 		// load geodata and pathfinding
-		Util.printSection("Geodata Converter");
+		StringUtil.printSection("Geodata Converter");
 		loadConvertAndSave();
 		
-		Util.printSection("Completed");
+		StringUtil.printSection("Completed");
 	}
 	
 	/**
 	 * Load region geodata file, perform conversion to diagonal geodata type and store as diagonal geodata file.
-	 * @throws IOException
 	 */
-	public final void loadConvertAndSave() throws IOException
+	public final void loadConvertAndSave()
 	{
 		// initialize geodata container
 		_blocks = new Block[GeoStructure.REGION_BLOCKS_X][GeoStructure.REGION_BLOCKS_Y];
 		
 		// get geodata type
-		int c;
-		do
+		String type = "";
+		
+		try (Scanner scn = new Scanner(System.in))
 		{
-			System.out.print("Select geodata type to convert [J..L2J (*.l2j), O..L2OFF (*.dat)]: ");
-			c = System.in.read();
-			while (System.in.read() != '\n');
+			while (!(type.equalsIgnoreCase("J") || type.equalsIgnoreCase("O")))
+			{
+				System.out.print("Select geodata type to convert [J..L2J (*.l2j), O..L2OFF (*.dat)]: ");
+				type = scn.next();
+			}
 		}
-		while (c != 'J' && c != 'O');
-		Config.GEODATA_FORMAT = c == 'J' ? GeoFormat.L2J : GeoFormat.L2OFF;
+		
+		Config.GEODATA_FORMAT = type.equalsIgnoreCase("J") ? GeoFormat.L2J : GeoFormat.L2OFF;
 		
 		_log.info("GeoDataConverter: Converting all " + Config.GEODATA_FORMAT.toString() + " according to listing in \"geoengine.properties\" config file.");
 		
@@ -151,7 +153,7 @@ public final class GeoDataConverter extends Server
 		final String filename = String.format(Config.GEODATA_FORMAT.getFilename(), rx, ry);
 		
 		// region file is load-able, try to load it
-		try (FileChannel fc = new RandomAccessFile(Config.GEODATA_PATH + filename, "r").getChannel())
+		try (RandomAccessFile raf = new RandomAccessFile(Config.GEODATA_PATH + filename, "r"); FileChannel fc = raf.getChannel())
 		{
 			MappedByteBuffer buffer = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size()).load();
 			buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -374,10 +376,8 @@ public final class GeoDataConverter extends Server
 	{
 		final String filename = String.format(GeoFormat.L2D.getFilename(), rx, ry);
 		
-		try
+		try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(Config.GEODATA_PATH + filename)))
 		{
-			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(Config.GEODATA_PATH + filename));
-			
 			// loop over region blocks
 			for (int ix = 0; ix < GeoStructure.REGION_BLOCKS_X; ix++)
 			{

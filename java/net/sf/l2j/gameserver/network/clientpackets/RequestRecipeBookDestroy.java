@@ -16,6 +16,7 @@ package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.PrivateStoreType;
 import net.sf.l2j.gameserver.model.item.RecipeList;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.RecipeBookItemList;
@@ -38,7 +39,7 @@ public final class RequestRecipeBookDestroy extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		if (activeChar.getPrivateStoreType() == L2PcInstance.STORE_PRIVATE_MANUFACTURE)
+		if (activeChar.getPrivateStoreType() == PrivateStoreType.MANUFACTURE)
 		{
 			activeChar.sendPacket(SystemMessageId.CANT_ALTER_RECIPEBOOK_WHILE_CRAFTING);
 			return;

@@ -36,12 +36,12 @@ import javax.crypto.Cipher;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.log.Log;
 import net.sf.l2j.loginserver.GameServerTable.GameServerInfo;
 import net.sf.l2j.loginserver.crypt.ScrambledKeyPair;
 import net.sf.l2j.loginserver.network.gameserverpackets.ServerStatus;
 import net.sf.l2j.loginserver.network.serverpackets.LoginFail.LoginFailReason;
-import net.sf.l2j.util.Rnd;
 
 public class LoginController
 {
@@ -50,7 +50,7 @@ public class LoginController
 	private static LoginController _instance;
 	
 	/** Time before kicking the client if he didnt logged yet */
-	public final static int LOGIN_TIMEOUT = 60 * 1000;
+	public static final int LOGIN_TIMEOUT = 60 * 1000;
 	
 	protected Map<String, L2LoginClient> _loginServerClients = new ConcurrentHashMap<>();
 	private final Map<InetAddress, BanInfo> _bannedIps = new ConcurrentHashMap<>();
@@ -480,11 +480,12 @@ public class LoginController
 			{
 				client.setAccessLevel(access);
 				client.setLastServer(lastServer);
-				statement = con.prepareStatement("UPDATE accounts SET lastactive=? WHERE login=?");
-				statement.setLong(1, System.currentTimeMillis());
-				statement.setString(2, user);
-				statement.execute();
-				statement.close();
+				
+				PreparedStatement statement2 = con.prepareStatement("UPDATE accounts SET lastactive=? WHERE login=?");
+				statement2.setLong(1, System.currentTimeMillis());
+				statement2.setString(2, user);
+				statement2.execute();
+				statement2.close();
 			}
 		}
 		catch (Exception e)

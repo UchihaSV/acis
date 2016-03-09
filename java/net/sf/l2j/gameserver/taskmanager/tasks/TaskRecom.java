@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.taskmanager.tasks;
 
-import java.util.Collection;
 import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.model.L2World;
@@ -47,9 +46,7 @@ public final class TaskRecom extends ATask
 	@Override
 	public void onTimeElapsed(ExecutedTask task)
 	{
-		Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-		
-		for (L2PcInstance player : pls)
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
 			player.restartRecom();
 			player.sendPacket(new UserInfo(player));

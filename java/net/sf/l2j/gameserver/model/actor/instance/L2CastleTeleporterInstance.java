@@ -60,7 +60,7 @@ public class L2CastleTeleporterInstance extends L2NpcInstance
 				ThreadPoolManager.getInstance().scheduleGeneral(new oustAllPlayers(), _delay);
 			}
 			
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/castleteleporter/MassGK-1.htm");
 			html.replace("%delay%", getDelayInSeconds());
 			player.sendPacket(html);
@@ -83,7 +83,7 @@ public class L2CastleTeleporterInstance extends L2NpcInstance
 		else
 			filename = "data/html/castleteleporter/MassGK-1.htm";
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		html.replace("%delay%", getDelayInSeconds());
@@ -101,7 +101,7 @@ public class L2CastleTeleporterInstance extends L2NpcInstance
 				final NpcSay cs = new NpcSay(getObjectId(), 1, getNpcId(), "The defenders of " + getCastle().getName() + " castle have been teleported to the inner castle.");
 				final int region = MapRegionTable.getMapRegion(getX(), getY());
 				
-				for (L2PcInstance player : L2World.getInstance().getAllPlayers().values())
+				for (L2PcInstance player : L2World.getInstance().getPlayers())
 				{
 					if (region == MapRegionTable.getMapRegion(player.getX(), player.getY()))
 						player.sendPacket(cs);

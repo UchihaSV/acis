@@ -14,10 +14,10 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ai.CtrlEvent;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
-import net.sf.l2j.util.Rnd;
 
 public class L2PenaltyMonsterInstance extends L2MonsterInstance
 {

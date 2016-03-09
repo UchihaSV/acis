@@ -17,6 +17,7 @@ package net.sf.l2j.gameserver.skills.effects;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -28,7 +29,6 @@ import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.templates.skills.L2EffectFlag;
 import net.sf.l2j.gameserver.templates.skills.L2EffectType;
-import net.sf.l2j.util.Rnd;
 
 /**
  * This effect changes the target of the victim. It adds some random aggro aswell to force the monster to keep attacking. As the added aggro is random, the victim can often change of target.<br>

@@ -16,6 +16,7 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.concurrent.Future;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -24,7 +25,6 @@ import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.AbstractNpcInfo.NpcInfo;
 import net.sf.l2j.gameserver.network.serverpackets.NpcSay;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
-import net.sf.l2j.util.Rnd;
 
 /**
  * A tamed beast behaves a lot like a pet and has an owner. Some points :

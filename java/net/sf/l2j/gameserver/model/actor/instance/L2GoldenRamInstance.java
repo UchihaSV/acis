@@ -19,9 +19,9 @@ import java.util.StringTokenizer;
 import net.sf.l2j.gameserver.datatables.MultisellData;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
-import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.scripting.QuestState;
 
 /**
  * This instance leads behaviors of Golden Ram mofos, where shown htm is different according to your quest condition. Abercrombie shows you multisells, Selina shows you Buffs list, when Pierce shows you "Quest" link.<br>
@@ -115,7 +115,7 @@ public class L2GoldenRamInstance extends L2NpcInstance
 			}
 		}
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
@@ -147,7 +147,7 @@ public class L2GoldenRamInstance extends L2NpcInstance
 					val = 4;
 				}
 				
-				NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+				final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 				html.setFile("data/html/default/31556-" + val + ".htm");
 				player.sendPacket(html);
 				return;

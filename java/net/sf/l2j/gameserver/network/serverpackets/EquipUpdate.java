@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Item;
 
@@ -32,10 +31,11 @@ public class EquipUpdate extends L2GameServerPacket
 	@Override
 	protected final void writeImpl()
 	{
-		int bodypart = 0;
 		writeC(0x4b);
 		writeD(_change);
 		writeD(_item.getObjectId());
+		
+		int bodypart = 0;
 		switch (_item.getItem().getBodyPart())
 		{
 			case Item.SLOT_L_EAR:
@@ -85,8 +85,6 @@ public class EquipUpdate extends L2GameServerPacket
 				break;
 		}
 		
-		if (Config.DEBUG)
-			_log.fine("body:" + bodypart);
 		writeD(bodypart);
 	}
 }

@@ -433,7 +433,7 @@ public class L2SignsPriestInstance extends L2NpcInstance
 						else
 							path = SevenSigns.SEVEN_SIGNS_HTML_PATH + "signs_6_dusk_contribute.htm";
 						
-						NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+						final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 						html.setFile(path);
 						html.replace("%contribStoneColor%", contribStoneColor);
 						html.replace("%stoneColor%", stoneColorContr);
@@ -701,27 +701,27 @@ public class L2SignsPriestInstance extends L2NpcInstance
 					break;
 				
 				case 20: // Seal Status (for when joining a cabal)
-					StringBuilder contentBuffer = new StringBuilder();
+					final StringBuilder sb = new StringBuilder();
 					
 					if (this instanceof L2DawnPriestInstance)
-						contentBuffer.append("<html><body>Priest of Dawn:<br><font color=\"LEVEL\">[ Seal Status ]</font><br>");
+						sb.append("<html><body>Priest of Dawn:<br><font color=\"LEVEL\">[ Seal Status ]</font><br>");
 					else
-						contentBuffer.append("<html><body>Dusk Priestess:<br><font color=\"LEVEL\">[ Status of the Seals ]</font><br>");
+						sb.append("<html><body>Dusk Priestess:<br><font color=\"LEVEL\">[ Status of the Seals ]</font><br>");
 					
 					for (int i = 1; i < 4; i++)
 					{
 						int sealOwner = SevenSigns.getInstance().getSealOwner(i);
 						
 						if (sealOwner != SevenSigns.CABAL_NULL)
-							contentBuffer.append("[" + SevenSigns.getSealName(i, false) + ": " + SevenSigns.getCabalName(sealOwner) + "]<br>");
+							sb.append("[" + SevenSigns.getSealName(i, false) + ": " + SevenSigns.getCabalName(sealOwner) + "]<br>");
 						else
-							contentBuffer.append("[" + SevenSigns.getSealName(i, false) + ": Nothingness]<br>");
+							sb.append("[" + SevenSigns.getSealName(i, false) + ": Nothingness]<br>");
 					}
 					
-					contentBuffer.append("<a action=\"bypass -h npc_" + getObjectId() + "_Chat 0\">Go back.</a></body></html>");
+					sb.append("<a action=\"bypass -h npc_" + getObjectId() + "_Chat 0\">Go back.</a></body></html>");
 					
 					html = new NpcHtmlMessage(getObjectId());
-					html.setHtml(contentBuffer.toString());
+					html.setHtml(sb.toString());
 					player.sendPacket(html);
 					break;
 				
@@ -809,8 +809,7 @@ public class L2SignsPriestInstance extends L2NpcInstance
 				break;
 		}
 		
-		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);

@@ -38,9 +38,9 @@ public class Blow implements ISkillHandler
 		L2SkillType.BLOW
 	};
 	
-	public final static int FRONT = 50;
-	public final static int SIDE = 60;
-	public final static int BEHIND = 70;
+	public static final int FRONT = 50;
+	public static final int SIDE = 60;
+	public static final int BEHIND = 70;
 	
 	@Override
 	public void useSkill(L2Character activeChar, L2Skill skill, L2Object[] targets)

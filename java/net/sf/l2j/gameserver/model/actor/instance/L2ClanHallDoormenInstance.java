@@ -39,7 +39,7 @@ public class L2ClanHallDoormenInstance extends L2DoormenInstance
 		if (getClanHall() == null)
 			return;
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		
 		final L2Clan owner = ClanTable.getInstance().getClan(getClanHall().getOwnerId());
 		if (isOwnerClan(player))
@@ -70,7 +70,7 @@ public class L2ClanHallDoormenInstance extends L2DoormenInstance
 	{
 		getClanHall().openCloseDoors(true);
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile("data/html/clanHallDoormen/doormen-opened.htm");
 		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
@@ -81,7 +81,7 @@ public class L2ClanHallDoormenInstance extends L2DoormenInstance
 	{
 		getClanHall().openCloseDoors(false);
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile("data/html/clanHallDoormen/doormen-closed.htm");
 		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);

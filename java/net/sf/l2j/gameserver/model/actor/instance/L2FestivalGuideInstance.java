@@ -288,7 +288,7 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 						showChatWindow(player, 3, "d", false);
 					break;
 				case 4: // Current High Scores
-					StringBuilder strBuffer = new StringBuilder("<html><body>Festival Guide:<br>These are the top scores of the week, for the ");
+					final StringBuilder sb = new StringBuilder("<html><body>Festival Guide:<br>These are the top scores of the week, for the ");
 					
 					final StatsSet dawnData = SevenSignsFestival.getInstance().getHighestScoreData(SevenSigns.CABAL_DAWN, _festivalType);
 					final StatsSet duskData = SevenSignsFestival.getInstance().getHighestScoreData(SevenSigns.CABAL_DUSK, _festivalType);
@@ -297,17 +297,17 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 					final int dawnScore = dawnData.getInteger("score");
 					final int duskScore = duskData.getInteger("score");
 					
-					strBuffer.append(SevenSignsFestival.getFestivalName(_festivalType) + " festival.<br>");
+					sb.append(SevenSignsFestival.getFestivalName(_festivalType) + " festival.<br>");
 					
 					if (dawnScore > 0)
-						strBuffer.append("Dawn: " + calculateDate(dawnData.getString("date")) + ". Score " + dawnScore + "<br>" + dawnData.getString("members") + "<br>");
+						sb.append("Dawn: " + calculateDate(dawnData.getString("date")) + ". Score " + dawnScore + "<br>" + dawnData.getString("members") + "<br>");
 					else
-						strBuffer.append("Dawn: No record exists. Score 0<br>");
+						sb.append("Dawn: No record exists. Score 0<br>");
 					
 					if (duskScore > 0)
-						strBuffer.append("Dusk: " + calculateDate(duskData.getString("date")) + ". Score " + duskScore + "<br>" + duskData.getString("members") + "<br>");
+						sb.append("Dusk: " + calculateDate(duskData.getString("date")) + ". Score " + duskScore + "<br>" + duskData.getString("members") + "<br>");
 					else
-						strBuffer.append("Dusk: No record exists. Score 0<br>");
+						sb.append("Dusk: No record exists. Score 0<br>");
 					
 					// If no data is returned, assume there is no record, or all scores are 0.
 					if (overallData != null)
@@ -317,15 +317,15 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 						if (overallData.getString("cabal").equals("dawn"))
 							cabalStr = "Children of Dawn";
 						
-						strBuffer.append("Consecutive top scores: " + calculateDate(overallData.getString("date")) + ". Score " + overallData.getInteger("score") + "<br>Affilated side: " + cabalStr + "<br>" + overallData.getString("members") + "<br>");
+						sb.append("Consecutive top scores: " + calculateDate(overallData.getString("date")) + ". Score " + overallData.getInteger("score") + "<br>Affilated side: " + cabalStr + "<br>" + overallData.getString("members") + "<br>");
 					}
 					else
-						strBuffer.append("Consecutive top scores: No record exists. Score 0<br>");
+						sb.append("Consecutive top scores: No record exists. Score 0<br>");
 					
-					strBuffer.append("<a action=\"bypass -h npc_" + getObjectId() + "_Chat 0\">Go back.</a></body></html>");
+					sb.append("<a action=\"bypass -h npc_" + getObjectId() + "_Chat 0\">Go back.</a></body></html>");
 					
-					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-					html.setHtml(strBuffer.toString());
+					final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+					html.setHtml(sb.toString());
 					player.sendPacket(html);
 					break;
 				case 8: // Increase the Festival Challenge
@@ -426,8 +426,7 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 				break;
 		}
 		
-		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		html.replace("%festivalMins%", SevenSignsFestival.getInstance().getTimeToNextFestivalStr());
@@ -439,13 +438,8 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 	
 	private void showChatWindow(L2PcInstance player, int val, String suffix, boolean isDescription)
 	{
-		String filename = SevenSigns.SEVEN_SIGNS_HTML_PATH + "festival/";
-		filename += (isDescription) ? "desc_" : "festival_";
-		filename += (suffix != null) ? val + suffix + ".htm" : val + ".htm";
-		
-		// Send a Server->Client NpcHtmlMessage containing the text of the L2Npc to the L2PcInstance
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
-		html.setFile(filename);
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		html.setFile(SevenSigns.SEVEN_SIGNS_HTML_PATH + "festival/" + ((isDescription) ? "desc_" : "festival_") + ((suffix != null) ? val + suffix : val) + ".htm");
 		html.replace("%objectId%", getObjectId());
 		html.replace("%festivalType%", SevenSignsFestival.getFestivalName(_festivalType));
 		html.replace("%cycleMins%", SevenSignsFestival.getInstance().getMinsToNextCycle());
@@ -471,7 +465,7 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 		player.sendPacket(ActionFailed.STATIC_PACKET);
 	}
 	
-	private final static String getStatsTable()
+	private static final String getStatsTable()
 	{
 		StringBuilder tableHtml = new StringBuilder();
 		
@@ -494,7 +488,7 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 		return tableHtml.toString();
 	}
 	
-	private final static String getBonusTable()
+	private static final String getBonusTable()
 	{
 		StringBuilder tableHtml = new StringBuilder();
 		
@@ -510,7 +504,7 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 		return tableHtml.toString();
 	}
 	
-	private final static String calculateDate(String milliFromEpoch)
+	private static final String calculateDate(String milliFromEpoch)
 	{
 		long numMillis = Long.valueOf(milliFromEpoch);
 		Calendar calCalc = Calendar.getInstance();

@@ -41,9 +41,8 @@ public final class RequestLinkHtml extends L2GameClientPacket
 		if (_link.contains("..") || !_link.contains(".htm"))
 			return;
 		
-		NpcHtmlMessage msg = new NpcHtmlMessage(0);
-		msg.setFile(_link);
-		
-		sendPacket(msg);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile(_link);
+		sendPacket(html);
 	}
 }

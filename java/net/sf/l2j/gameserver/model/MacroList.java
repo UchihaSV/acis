@@ -26,10 +26,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.model.L2Macro.L2MacroCmd;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.SendMacroList;
-import net.sf.l2j.util.StringUtil;
 
 public class MacroList
 {
@@ -132,7 +132,7 @@ public class MacroList
 			final StringBuilder sb = new StringBuilder(300);
 			for (L2MacroCmd cmd : macro.commands)
 			{
-				StringUtil.append(sb, String.valueOf(cmd.type), ",", String.valueOf(cmd.d1), ",", String.valueOf(cmd.d2));
+				StringUtil.append(sb, cmd.type, ",", cmd.d1, ",", cmd.d2);
 				if (cmd.cmd != null && cmd.cmd.length() > 0)
 					StringUtil.append(sb, ",", cmd.cmd);
 				

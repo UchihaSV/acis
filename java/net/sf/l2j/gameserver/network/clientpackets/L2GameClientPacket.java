@@ -35,7 +35,7 @@ public abstract class L2GameClientPacket extends ReceivablePacket<L2GameClient>
 	@Override
 	protected boolean read()
 	{
-		if (Config.DEBUG)
+		if (Config.PACKET_HANDLER_DEBUG)
 			_log.info(getType());
 		
 		try

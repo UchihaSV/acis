@@ -89,14 +89,13 @@ public class HtmCache
 	{
 		try (FileInputStream fis = new FileInputStream(file); UnicodeReader ur = new UnicodeReader(fis, "UTF-8"); BufferedReader br = new BufferedReader(ur))
 		{
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder();
 			String line;
 			
 			while ((line = br.readLine()) != null)
 				sb.append(line).append('\n');
 			
-			String content = sb.toString().replaceAll("\r\n", "\n");
-			sb = null;
+			final String content = sb.toString().replaceAll("\r\n", "\n");
 			
 			_htmCache.put(file.getPath().replace("\\", "/").hashCode(), content);
 			return content;

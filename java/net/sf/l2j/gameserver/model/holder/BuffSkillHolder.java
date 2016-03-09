@@ -15,34 +15,21 @@
 package net.sf.l2j.gameserver.model.holder;
 
 /**
- * @author Tryskell
+ * A container used for schemes buffer.
  */
-public final class BuffSkillHolder
+public final class BuffSkillHolder extends IntIntHolder
 {
-	private final int _skillId;
-	private final int _price;
+	private final String _type;
 	
-	private final String _groupType;
-	
-	public BuffSkillHolder(int skillId, int price, String groupType)
+	public BuffSkillHolder(int id, int price, String type)
 	{
-		_skillId = skillId;
-		_price = price;
-		_groupType = groupType;
+		super(id, price);
+		
+		_type = type;
 	}
 	
-	public final int getSkillId()
+	public final String getType()
 	{
-		return _skillId;
-	}
-	
-	public final int getPrice()
-	{
-		return _price;
-	}
-	
-	public final String getGroupType()
-	{
-		return _groupType;
+		return _type;
 	}
 }

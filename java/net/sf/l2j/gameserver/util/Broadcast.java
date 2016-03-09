@@ -153,7 +153,7 @@ public final class Broadcast
 	 */
 	public static void toAllOnlinePlayers(L2GameServerPacket mov)
 	{
-		for (L2PcInstance player : L2World.getInstance().getAllPlayers().values())
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
 			if (player.isOnline())
 				player.sendPacket(mov);

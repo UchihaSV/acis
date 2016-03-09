@@ -14,17 +14,17 @@
  */
 package net.sf.l2j.gameserver.handler.itemhandlers;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.util.Broadcast;
-import net.sf.l2j.util.Rnd;
 
 public class SoulShots implements IItemHandler
 {
@@ -72,10 +72,10 @@ public class SoulShots implements IItemHandler
 			return;
 		}
 		
-		final SkillHolder[] skills = item.getItem().getSkills();
+		final IntIntHolder[] skills = item.getItem().getSkills();
 		
 		weaponInst.setChargedShot(ShotType.SOULSHOT, true);
 		activeChar.sendPacket(SystemMessageId.ENABLED_SOULSHOT);
-		Broadcast.toSelfAndKnownPlayersInRadiusSq(activeChar, new MagicSkillUse(activeChar, activeChar, skills[0].getSkillId(), 1, 0, 0), 360000);
+		Broadcast.toSelfAndKnownPlayersInRadiusSq(activeChar, new MagicSkillUse(activeChar, activeChar, skills[0].getId(), 1, 0, 0), 360000);
 	}
 }

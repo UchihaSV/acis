@@ -4,14 +4,9 @@
 package net.sf.l2j.gameserver.xmlfactory;
 
 import java.io.File;
-import java.io.FileOutputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 
@@ -26,7 +21,6 @@ public final class XMLDocumentFactory
 	}
 	
 	private final DocumentBuilder _builder;
-	private final Transformer _transformer;
 	
 	protected XMLDocumentFactory() throws Exception
 	{
@@ -37,7 +31,6 @@ public final class XMLDocumentFactory
 			factory.setIgnoringComments(true);
 			
 			_builder = factory.newDocumentBuilder();
-			_transformer = TransformerFactory.newInstance().newTransformer();
 		}
 		catch (Exception e)
 		{
@@ -52,33 +45,15 @@ public final class XMLDocumentFactory
 	
 	public final Document loadDocument(final File file) throws Exception
 	{
-		if (!checkFile(file))
+		if (!file.exists() || !file.isFile())
 			throw new Exception("File: " + file.getAbsolutePath() + " doesn't exist and/or is not a file.");
 		
 		return _builder.parse(file);
 	}
 	
-	public final void writeDocument(final String filePath, final Document doc) throws Exception
-	{
-		final File file = new File(filePath);
-		
-		_transformer.transform(new DOMSource(doc), new StreamResult(new FileOutputStream(file)));
-	}
-	
 	public final Document newDocument()
 	{
 		return _builder.newDocument();
-	}
-	
-	private final static boolean checkFile(final File file)
-	{
-		if (!file.exists())
-			return false;
-		
-		if (!file.isFile())
-			return false;
-		
-		return true;
 	}
 	
 	private static class SingletonHolder

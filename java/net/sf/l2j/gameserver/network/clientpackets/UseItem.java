@@ -21,18 +21,18 @@ import net.sf.l2j.gameserver.handler.ItemHandler;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.item.type.ActionType;
 import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestState;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.PetItemList;
+import net.sf.l2j.gameserver.scripting.Quest;
+import net.sf.l2j.gameserver.scripting.QuestState;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 public final class UseItem extends L2GameClientPacket
@@ -105,10 +105,10 @@ public final class UseItem extends L2GameClientPacket
 		
 		if (!Config.KARMA_PLAYER_CAN_TELEPORT && activeChar.getKarma() > 0)
 		{
-			final SkillHolder[] sHolders = item.getItem().getSkills();
+			final IntIntHolder[] sHolders = item.getItem().getSkills();
 			if (sHolders != null)
 			{
-				for (SkillHolder sHolder : sHolders)
+				for (IntIntHolder sHolder : sHolders)
 				{
 					final L2Skill skill = sHolder.getSkill();
 					if (skill != null && (skill.getSkillType() == L2SkillType.TELEPORT || skill.getSkillType() == L2SkillType.RECALL))
@@ -173,12 +173,6 @@ public final class UseItem extends L2GameClientPacket
 			pet.updateAndBroadcastStatus(1);
 			return;
 		}
-		
-		if (!activeChar.getInventory().canManipulateWithItemId(item.getItemId()))
-			return;
-		
-		if (Config.DEBUG)
-			_log.finest(activeChar.getName() + ": use item " + _objectId);
 		
 		if (!item.isEquipped())
 		{

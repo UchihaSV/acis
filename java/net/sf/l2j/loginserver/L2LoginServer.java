@@ -28,9 +28,9 @@ import java.util.logging.Logger;
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.Server;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.commons.mmocore.SelectorConfig;
 import net.sf.l2j.commons.mmocore.SelectorThread;
-import net.sf.l2j.util.Util;
 
 /**
  * @author KenM
@@ -72,7 +72,7 @@ public class L2LoginServer
 		LogManager.getLogManager().readConfiguration(is);
 		is.close();
 		
-		Util.printSection("aCis");
+		StringUtil.printSection("aCis");
 		
 		// Initialize config
 		Config.load();
@@ -80,14 +80,14 @@ public class L2LoginServer
 		// Factories
 		L2DatabaseFactory.getInstance();
 		
-		Util.printSection("LoginController");
+		StringUtil.printSection("LoginController");
 		LoginController.load();
 		GameServerTable.getInstance();
 		
-		Util.printSection("Ban List");
+		StringUtil.printSection("Ban List");
 		loadBanFile();
 		
-		Util.printSection("IP, Ports & Socket infos");
+		StringUtil.printSection("IP, Ports & Socket infos");
 		InetAddress bindAddress = null;
 		if (!Config.LOGIN_BIND_ADDRESS.equals("*"))
 		{
@@ -154,7 +154,7 @@ public class L2LoginServer
 		_selectorThread.start();
 		_log.info("Loginserver ready on " + (bindAddress == null ? "*" : bindAddress.getHostAddress()) + ":" + Config.PORT_LOGIN);
 		
-		Util.printSection("Waiting for gameserver answer");
+		StringUtil.printSection("Waiting for gameserver answer");
 	}
 	
 	public GameServerListener getGameServerListener()
@@ -167,12 +167,10 @@ public class L2LoginServer
 		File banFile = new File("config/banned_ip.cfg");
 		if (banFile.exists() && banFile.isFile())
 		{
-			LineNumberReader reader = null;
-			try
+			try (LineNumberReader reader = new LineNumberReader(new FileReader(banFile)))
 			{
 				String line;
 				String[] parts;
-				reader = new LineNumberReader(new FileReader(banFile));
 				
 				while ((line = reader.readLine()) != null)
 				{

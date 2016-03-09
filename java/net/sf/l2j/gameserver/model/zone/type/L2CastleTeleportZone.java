@@ -14,11 +14,11 @@
  */
 package net.sf.l2j.gameserver.model.zone.type;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.zone.L2ZoneType;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
-import net.sf.l2j.util.Rnd;
 
 /**
  * A castle teleporter zone used for Mass Gatekeepers

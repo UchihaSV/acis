@@ -106,15 +106,15 @@ public class AdminMaintenance implements IAdminCommandHandler
 	
 	private static void sendHtmlForm(L2PcInstance activeChar)
 	{
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/maintenance.htm");
-		adminReply.replace("%count%", L2World.getInstance().getAllPlayersCount());
-		adminReply.replace("%used%", Math.round((int) ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576)));
-		adminReply.replace("%server_name%", LoginServerThread.getInstance().getServerName());
-		adminReply.replace("%status%", LoginServerThread.getInstance().getStatusString());
-		adminReply.replace("%max_players%", LoginServerThread.getInstance().getMaxPlayer());
-		adminReply.replace("%time%", GameTimeTaskManager.getInstance().getGameTimeFormated());
-		activeChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/maintenance.htm");
+		html.replace("%count%", L2World.getInstance().getPlayers().size());
+		html.replace("%used%", Math.round((int) ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576)));
+		html.replace("%server_name%", LoginServerThread.getInstance().getServerName());
+		html.replace("%status%", LoginServerThread.getInstance().getStatusString());
+		html.replace("%max_players%", LoginServerThread.getInstance().getMaxPlayer());
+		html.replace("%time%", GameTimeTaskManager.getInstance().getGameTimeFormated());
+		activeChar.sendPacket(html);
 	}
 	
 	@Override

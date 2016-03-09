@@ -16,14 +16,16 @@ package net.sf.l2j.gameserver.datatables;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.model.item.ArmorSet;
-import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.xmlfactory.XMLParser;
+import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  * @author godson, Luno, nBd
@@ -44,29 +46,30 @@ public class ArmorSetsTable
 		try
 		{
 			File f = new File("./data/xml/armorsets.xml");
-			if (!f.exists())
-			{
-				_log.warning("ArmorSetsTable: armorsets.xml is missing in data folder.");
-				return;
-			}
+			Document doc = XMLDocumentFactory.getInstance().loadDocument(f);
 			
-			XMLParser parser = new XMLParser(f, "armorset");
-			List<StatsSet> sets = parser.parseDocument();
-			
-			if (!sets.isEmpty())
+			Node n = doc.getFirstChild();
+			for (Node d = n.getFirstChild(); d != null; d = d.getNextSibling())
 			{
-				for (StatsSet set : sets)
+				if (d.getNodeName().equalsIgnoreCase("armorset"))
 				{
-					int chest = set.getInteger("chest", 0);
-					int legs = set.getInteger("legs", 0);
-					int head = set.getInteger("head", 0);
-					int gloves = set.getInteger("gloves", 0);
-					int feet = set.getInteger("feet", 0);
-					int skill_id = set.getInteger("skill_id", 0);
-					int shield = set.getInteger("shield", 0);
-					int shield_skill_id = set.getInteger("shield_skill_id", 0);
-					int enchant6skill = set.getInteger("enchant6skill", 0);
-					_armorSets.put(chest, new ArmorSet(chest, legs, head, gloves, feet, skill_id, shield, shield_skill_id, enchant6skill));
+					NamedNodeMap attrs = d.getAttributes();
+					
+					final int chest = Integer.parseInt(attrs.getNamedItem("chest").getNodeValue());
+					final int[] set =
+					{
+						chest,
+						Integer.parseInt(attrs.getNamedItem("legs").getNodeValue()),
+						Integer.parseInt(attrs.getNamedItem("head").getNodeValue()),
+						Integer.parseInt(attrs.getNamedItem("gloves").getNodeValue()),
+						Integer.parseInt(attrs.getNamedItem("feet").getNodeValue())
+					};
+					final int skillId = Integer.parseInt(attrs.getNamedItem("skillId").getNodeValue());
+					final int shield = Integer.parseInt(attrs.getNamedItem("shield").getNodeValue());
+					final int shieldSkillId = Integer.parseInt(attrs.getNamedItem("shieldSkillId").getNodeValue());
+					final int enchant6Skill = Integer.parseInt(attrs.getNamedItem("enchant6Skill").getNodeValue());
+					
+					_armorSets.put(chest, new ArmorSet(set, skillId, shield, shieldSkillId, enchant6Skill));
 				}
 			}
 		}

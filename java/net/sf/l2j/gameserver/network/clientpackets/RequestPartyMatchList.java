@@ -22,9 +22,6 @@ import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ExPartyRoomMember;
 import net.sf.l2j.gameserver.network.serverpackets.PartyMatchDetail;
 
-/**
- * author: Gnacik
- */
 public class RequestPartyMatchList extends L2GameClientPacket
 {
 	private int _roomid;
@@ -48,66 +45,64 @@ public class RequestPartyMatchList extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		final L2PcInstance _activeChar = getClient().getActiveChar();
-		if (_activeChar == null)
+		final L2PcInstance activeChar = getClient().getActiveChar();
+		if (activeChar == null)
 			return;
 		
 		if (_roomid > 0)
 		{
-			PartyMatchRoom _room = PartyMatchRoomList.getInstance().getRoom(_roomid);
-			if (_room != null)
+			PartyMatchRoom room = PartyMatchRoomList.getInstance().getRoom(_roomid);
+			if (room != null)
 			{
-				_log.info("PartyMatchRoom #" + _room.getId() + " changed by " + _activeChar.getName());
-				_room.setMaxMembers(_membersmax);
-				_room.setMinLvl(_lvlmin);
-				_room.setMaxLvl(_lvlmax);
-				_room.setLootType(_loot);
-				_room.setTitle(_roomtitle);
+				_log.info("PartyMatchRoom #" + room.getId() + " changed by " + activeChar.getName());
+				room.setMaxMembers(_membersmax);
+				room.setMinLvl(_lvlmin);
+				room.setMaxLvl(_lvlmax);
+				room.setLootType(_loot);
+				room.setTitle(_roomtitle);
 				
-				for (L2PcInstance _member : _room.getPartyMembers())
+				for (L2PcInstance member : room.getPartyMembers())
 				{
-					if (_member == null)
+					if (member == null)
 						continue;
 					
-					_member.sendPacket(new PartyMatchDetail(_room));
-					_member.sendPacket(SystemMessageId.PARTY_ROOM_REVISED);
+					member.sendPacket(new PartyMatchDetail(room));
+					member.sendPacket(SystemMessageId.PARTY_ROOM_REVISED);
 				}
 			}
 		}
 		else
 		{
-			int _maxid = PartyMatchRoomList.getInstance().getMaxId();
+			int maxid = PartyMatchRoomList.getInstance().getMaxId();
 			
-			PartyMatchRoom _room = new PartyMatchRoom(_maxid, _roomtitle, _loot, _lvlmin, _lvlmax, _membersmax, _activeChar);
+			PartyMatchRoom room = new PartyMatchRoom(maxid, _roomtitle, _loot, _lvlmin, _lvlmax, _membersmax, activeChar);
 			
-			_log.info("PartyMatchRoom #" + _maxid + " created by " + _activeChar.getName());
+			_log.info("PartyMatchRoom #" + maxid + " created by " + activeChar.getName());
 			
 			// Remove from waiting list, and add to current room
-			PartyMatchWaitingList.getInstance().removePlayer(_activeChar);
-			PartyMatchRoomList.getInstance().addPartyMatchRoom(_maxid, _room);
+			PartyMatchWaitingList.getInstance().removePlayer(activeChar);
+			PartyMatchRoomList.getInstance().addPartyMatchRoom(maxid, room);
 			
-			if (_activeChar.isInParty())
+			if (activeChar.isInParty())
 			{
-				for (L2PcInstance ptmember : _activeChar.getParty().getPartyMembers())
+				for (L2PcInstance ptmember : activeChar.getParty().getPartyMembers())
 				{
-					if (ptmember == null)
-						continue;
-					if (ptmember == _activeChar)
+					if (ptmember == null || ptmember == activeChar)
 						continue;
 					
-					ptmember.setPartyRoom(_maxid);
+					ptmember.setPartyRoom(maxid);
 					
-					_room.addMember(ptmember);
+					room.addMember(ptmember);
 				}
 			}
 			
-			_activeChar.sendPacket(new PartyMatchDetail(_room));
-			_activeChar.sendPacket(new ExPartyRoomMember(_room, 1));
+			activeChar.sendPacket(new PartyMatchDetail(room));
+			activeChar.sendPacket(new ExPartyRoomMember(room, 1));
 			
-			_activeChar.sendPacket(SystemMessageId.PARTY_ROOM_CREATED);
+			activeChar.sendPacket(SystemMessageId.PARTY_ROOM_CREATED);
 			
-			_activeChar.setPartyRoom(_maxid);
-			_activeChar.broadcastUserInfo();
+			activeChar.setPartyRoom(maxid);
+			activeChar.broadcastUserInfo();
 		}
 	}
 }

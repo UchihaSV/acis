@@ -14,6 +14,7 @@
  */
 package net.sf.l2j.gameserver.handler.usercommandhandlers;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.handler.IUserCommandHandler;
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
 import net.sf.l2j.gameserver.model.L2Clan;
@@ -22,7 +23,6 @@ import net.sf.l2j.gameserver.model.entity.Siege;
 import net.sf.l2j.gameserver.model.zone.type.L2SiegeZone;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
-import net.sf.l2j.util.StringUtil;
 
 public class SiegeStatus implements IUserCommandHandler
 {
@@ -51,8 +51,7 @@ public class SiegeStatus implements IUserCommandHandler
 		
 		final L2Clan clan = activeChar.getClan();
 		
-		// Used to build dynamic content (in that case, online clan members).
-		StringBuilder content = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		
 		for (Siege siege : SiegeManager.getSieges())
 		{
@@ -64,13 +63,13 @@ public class SiegeStatus implements IUserCommandHandler
 			{
 				final L2SiegeZone zone = siege.getCastle().getZone();
 				for (L2PcInstance member : clan.getOnlineMembers())
-					StringUtil.append(content, "<tr><td width=170>", member.getName(), "</td><td width=100>", (zone.isInsideZone(member.getX(), member.getY(), member.getZ())) ? IN_PROGRESS : OUTSIDE_ZONE, "</td></tr>");
+					StringUtil.append(sb, "<tr><td width=170>", member.getName(), "</td><td width=100>", (zone.isInsideZone(member.getX(), member.getY(), member.getZ())) ? IN_PROGRESS : OUTSIDE_ZONE, "</td></tr>");
 				
-				NpcHtmlMessage html = new NpcHtmlMessage(0);
+				final NpcHtmlMessage html = new NpcHtmlMessage(0);
 				html.setFile("data/html/siege_status.htm");
 				html.replace("%kills%", clan.getSiegeKills());
 				html.replace("%deaths%", clan.getSiegeDeaths());
-				html.replace("%content%", content.toString());
+				html.replace("%content%", sb.toString());
 				activeChar.sendPacket(html);
 				return true;
 			}

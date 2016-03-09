@@ -30,6 +30,7 @@ public class L2StaticObjectInstance extends L2Object
 {
 	private int _staticObjectId;
 	private int _type = -1; // 0 - map signs, 1 - throne , 2 - arena signs
+	private boolean _isBusy; // True - if someone sitting on the throne
 	private ShowTownMap _map;
 	
 	public L2StaticObjectInstance(int objectId)
@@ -63,6 +64,16 @@ public class L2StaticObjectInstance extends L2Object
 		_type = type;
 	}
 	
+	public boolean isBusy()
+	{
+		return _isBusy;
+	}
+	
+	public void setBusy(boolean busy)
+	{
+		_isBusy = busy;
+	}
+	
 	public void setMap(String texture, int x, int y)
 	{
 		_map = new ShowTownMap("town_map." + texture, x, y);
@@ -91,7 +102,7 @@ public class L2StaticObjectInstance extends L2Object
 			{
 				if (getType() == 2)
 				{
-					NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+					final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 					html.setFile("data/html/signboard.htm");
 					player.sendPacket(html);
 				}
@@ -109,7 +120,7 @@ public class L2StaticObjectInstance extends L2Object
 	{
 		if (player.isGM())
 		{
-			NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			html.setFile("data/html/admin/staticinfo.htm");
 			html.replace("%x%", getX());
 			html.replace("%y%", getY());

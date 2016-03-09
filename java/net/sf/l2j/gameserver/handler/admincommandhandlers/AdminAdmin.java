@@ -14,12 +14,10 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import java.io.File;
 import java.util.StringTokenizer;
 
-import javax.script.ScriptException;
-
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.cache.CrestCache;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.datatables.AdminCommandAccessRights;
@@ -34,15 +32,12 @@ import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.TeleportLocationTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.instancemanager.CursedWeaponsManager;
-import net.sf.l2j.gameserver.instancemanager.QuestManager;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.scripting.L2ScriptEngineManager;
-import net.sf.l2j.gameserver.util.Util;
 
 /**
  * This class handles following admin commands:
@@ -69,8 +64,7 @@ public class AdminAdmin implements IAdminCommandHandler
 		"admin_kill",
 		"admin_silence",
 		"admin_tradeoff",
-		"admin_reload",
-		"admin_script_load"
+		"admin_reload"
 	};
 	
 	@Override
@@ -108,7 +102,7 @@ public class AdminAdmin implements IAdminCommandHandler
 				if (st.hasMoreTokens())
 				{
 					String secondParam = st.nextToken();
-					if (Util.isDigit(secondParam))
+					if (StringUtil.isDigit(secondParam))
 					{
 						int radius = Integer.parseInt(secondParam);
 						for (L2Character knownChar : player.getKnownList().getKnownTypeInRadius(L2Character.class, radius))
@@ -126,7 +120,7 @@ public class AdminAdmin implements IAdminCommandHandler
 				else
 					kill(activeChar, player);
 			}
-			else if (Util.isDigit(firstParam))
+			else if (StringUtil.isDigit(firstParam))
 			{
 				int radius = Integer.parseInt(firstParam);
 				for (L2Character knownChar : activeChar.getKnownList().getKnownTypeInRadius(L2Character.class, radius))
@@ -168,7 +162,7 @@ public class AdminAdmin implements IAdminCommandHandler
 					activeChar.sendMessage("Trade refusal disabled");
 				}
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
 				if (activeChar.getTradeRefusal())
 				{
@@ -244,24 +238,6 @@ public class AdminAdmin implements IAdminCommandHandler
 					NpcWalkerRoutesTable.getInstance().reload();
 					activeChar.sendMessage("NPCwalkers' routes have been reloaded.");
 				}
-				else if (type.startsWith("quest"))
-				{
-					if (st.hasMoreTokens())
-					{
-						int qId = Integer.parseInt(st.nextToken());
-						if (QuestManager.getInstance().reload(qId))
-							activeChar.sendMessage("Quest " + qId + " has been reloaded.");
-						else
-							activeChar.sendMessage("Quest " + qId + " failed reloading.");
-					}
-					else
-						activeChar.sendMessage("Usage : //reload quest questNumber.");
-				}
-				else if (type.startsWith("scripts"))
-				{
-					QuestManager.getInstance().reloadAllQuests();
-					activeChar.sendMessage("All scripts have been reloaded.");
-				}
 				else if (type.startsWith("skill"))
 				{
 					SkillTable.getInstance().reload();
@@ -281,40 +257,9 @@ public class AdminAdmin implements IAdminCommandHandler
 			catch (Exception e)
 			{
 				activeChar.sendMessage("Usage : //reload <acar|announcement|config|crest|door>");
-				activeChar.sendMessage("Usage : //reload <htm|item|multisell|npc|npcwalker|quest>");
-				activeChar.sendMessage("Usage : //reload <scripts|skill|teleport|zone>");
+				activeChar.sendMessage("Usage : //reload <htm|item|multisell|npc|npcwalker>");
+				activeChar.sendMessage("Usage : //reload <skill|teleport|zone>");
 			}
-		}
-		// This provides a way to load new scripts without having to reboot the server.
-		// If a script is already loaded, quest_reload should be used.
-		else if (command.startsWith("admin_script_load"))
-		{
-			String[] parts = command.split(" ");
-			if (parts.length < 2)
-				activeChar.sendMessage("Example: //script_load quests/questFolder/filename.ext");
-			else
-			{
-				File file = new File(L2ScriptEngineManager.SCRIPT_FOLDER, parts[1]);
-				if (file.isFile())
-				{
-					try
-					{
-						L2ScriptEngineManager.getInstance().executeScript(file);
-					}
-					catch (ScriptException e)
-					{
-						activeChar.sendMessage("Failed loading: " + parts[1]);
-						L2ScriptEngineManager.reportScriptFileError(file, e);
-					}
-					catch (Exception e)
-					{
-						activeChar.sendMessage("Failed loading: " + parts[1]);
-					}
-				}
-				else
-					activeChar.sendMessage("Current file hasn't been found: " + parts[1]);
-			}
-			
 		}
 		return true;
 	}

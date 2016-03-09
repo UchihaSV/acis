@@ -111,7 +111,7 @@ public class L2FishermanInstance extends L2MerchantInstance
 	
 	private static void sendHtml(L2PcInstance player, L2Npc npc, String htmlName)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(npc.getObjectId());
 		html.setFile("data/html/fisherman/championship/" + htmlName);
 		player.sendPacket(html);
 	}

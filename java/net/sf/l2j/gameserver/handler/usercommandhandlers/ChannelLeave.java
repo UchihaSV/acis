@@ -21,9 +21,6 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
-/**
- * @author Chris
- */
 public class ChannelLeave implements IUserCommandHandler
 {
 	private static final int[] COMMAND_IDS =
@@ -34,12 +31,12 @@ public class ChannelLeave implements IUserCommandHandler
 	@Override
 	public boolean useUserCommand(int id, L2PcInstance activeChar)
 	{
-		if (activeChar.isInParty())
+		final L2Party party = activeChar.getParty();
+		if (party != null)
 		{
-			if (activeChar.getParty().isLeader(activeChar) && activeChar.getParty().isInCommandChannel())
+			if (party.isLeader(activeChar) && party.isInCommandChannel())
 			{
-				L2CommandChannel channel = activeChar.getParty().getCommandChannel();
-				L2Party party = activeChar.getParty();
+				final L2CommandChannel channel = party.getCommandChannel();
 				channel.removeParty(party);
 				
 				party.getLeader().sendPacket(SystemMessageId.LEFT_COMMAND_CHANNEL);

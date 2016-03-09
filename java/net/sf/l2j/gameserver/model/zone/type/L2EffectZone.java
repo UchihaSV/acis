@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -27,8 +28,6 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.zone.L2ZoneType;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.serverpackets.EtcStatusUpdate;
-import net.sf.l2j.util.Rnd;
-import net.sf.l2j.util.StringUtil;
 
 /**
  * another type of damage zone with skills
@@ -76,7 +75,7 @@ public class L2EffectZone extends L2ZoneType
 			{
 				String[] skillSplit = skill.split("-");
 				if (skillSplit.length != 2)
-					_log.warning(StringUtil.concat(getClass().getSimpleName() + ": invalid config property -> skillsIdLvl \"", skill, "\""));
+					_log.warning(getClass().getSimpleName() + ": invalid config property -> skillsIdLvl \"" + skill + "\"");
 				else
 				{
 					try
@@ -86,7 +85,7 @@ public class L2EffectZone extends L2ZoneType
 					catch (NumberFormatException nfe)
 					{
 						if (!skill.isEmpty())
-							_log.warning(StringUtil.concat(getClass().getSimpleName() + ": invalid config property -> skillsIdLvl \"", skillSplit[0], "\"", skillSplit[1]));
+							_log.warning(getClass().getSimpleName() + ": invalid config property -> skillsIdLvl \"" + skillSplit[0] + "\"" + skillSplit[1]);
 					}
 				}
 			}

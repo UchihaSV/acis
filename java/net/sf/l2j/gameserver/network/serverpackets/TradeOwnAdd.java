@@ -14,16 +14,16 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.TradeList;
+import net.sf.l2j.gameserver.model.tradelist.TradeItem;
 
 /**
  * @author Yme
  */
 public class TradeOwnAdd extends L2GameServerPacket
 {
-	private final TradeList.TradeItem _item;
+	private final TradeItem _item;
 	
-	public TradeOwnAdd(TradeList.TradeItem item)
+	public TradeOwnAdd(TradeItem item)
 	{
 		_item = item;
 	}

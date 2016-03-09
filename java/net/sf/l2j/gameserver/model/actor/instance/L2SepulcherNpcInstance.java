@@ -14,10 +14,10 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.DoorTable;
@@ -26,15 +26,14 @@ import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestEventType;
 import net.sf.l2j.gameserver.network.clientpackets.Say2;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.scripting.EventType;
+import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
 
 /**
  * @author sandman
@@ -45,8 +44,8 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 	protected Future<?> _spawnNextMysteriousBoxTask = null;
 	protected Future<?> _spawnMonsterTask = null;
 	
-	private final static String HTML_FILE_PATH = "data/html/sepulchers/";
-	private final static int HALLS_KEY = 7260;
+	private static final String HTML_FILE_PATH = "data/html/sepulchers/";
+	private static final int HALLS_KEY = 7260;
 	
 	public L2SepulcherNpcInstance(int objectID, NpcTemplate template)
 	{
@@ -205,11 +204,11 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 			
 			default:
 			{
-				List<Quest> qlsa = getTemplate().getEventQuests(QuestEventType.QUEST_START);
+				List<Quest> qlsa = getTemplate().getEventQuests(EventType.QUEST_START);
 				if (qlsa != null && !qlsa.isEmpty())
 					player.setLastQuestNpcObject(getObjectId());
 				
-				List<Quest> qlst = getTemplate().getEventQuests(QuestEventType.ON_FIRST_TALK);
+				List<Quest> qlst = getTemplate().getEventQuests(EventType.ON_FIRST_TALK);
 				if (qlst != null && qlst.size() == 1)
 					qlst.get(0).notifyFirstTalk(this, player);
 				else
@@ -234,7 +233,7 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 	@Override
 	public void showChatWindow(L2PcInstance player, int val)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(getHtmlPath(getNpcId(), val));
 		html.replace("%objectId%", getObjectId());
 		player.sendPacket(html);
@@ -373,16 +372,9 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 		if (msg == null || msg.isEmpty())
 			return;// wrong usage
 			
-		Collection<L2PcInstance> knownPlayers = L2World.getInstance().getAllPlayers().values();
-		if (knownPlayers == null || knownPlayers.isEmpty())
-			return;
-		
-		CreatureSay sm = new CreatureSay(0, Say2.SHOUT, getName(), msg);
-		for (L2PcInstance player : knownPlayers)
+		final CreatureSay sm = new CreatureSay(0, Say2.SHOUT, getName(), msg);
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (player == null)
-				continue;
-			
 			if (Util.checkIfInRange(15000, player, this, true))
 				player.sendPacket(sm);
 		}
@@ -390,7 +382,7 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 	
 	public void showHtmlFile(L2PcInstance player, String file)
 	{
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile("data/html/sepulchers/" + file);
 		html.replace("%npcname%", getName());
 		player.sendPacket(html);

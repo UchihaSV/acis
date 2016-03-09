@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.util.Rnd;
+import net.sf.l2j.commons.random.Rnd;
 
 /**
  * @author Fulminus

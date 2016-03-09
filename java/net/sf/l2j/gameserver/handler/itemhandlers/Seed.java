@@ -22,7 +22,7 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.SkillHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 
@@ -59,7 +59,7 @@ public class Seed implements IItemHandler
 		if (areaValid(seedId, MapRegionTable.getAreaCastle(playable.getX(), playable.getY())))
 		{
 			target.setSeeded(seedId, playable.getObjectId());
-			final SkillHolder[] skills = item.getEtcItem().getSkills();
+			final IntIntHolder[] skills = item.getEtcItem().getSkills();
 			if (skills != null)
 			{
 				if (skills[0] == null)

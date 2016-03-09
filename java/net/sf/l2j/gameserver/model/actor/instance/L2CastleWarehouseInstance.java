@@ -44,7 +44,7 @@ public class L2CastleWarehouseInstance extends L2WarehouseInstance
 			}
 		}
 		
-		NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
+		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);
 		html.replace("%objectId%", getObjectId());
 		html.replace("%npcname%", getName());

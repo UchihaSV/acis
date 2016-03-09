@@ -17,7 +17,7 @@ package net.sf.l2j.gameserver.model.actor.status;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.entity.Duel;
+import net.sf.l2j.gameserver.model.entity.Duel.DuelState;
 
 public class SummonStatus extends PlayableStatus
 {
@@ -42,7 +42,7 @@ public class SummonStatus extends PlayableStatus
 		{
 			final L2PcInstance attackerPlayer = attacker.getActingPlayer();
 			if (attackerPlayer != null && (getActiveChar().getOwner() == null || getActiveChar().getOwner().getDuelId() != attackerPlayer.getDuelId()))
-				attackerPlayer.setDuelState(Duel.DUELSTATE_INTERRUPTED);
+				attackerPlayer.setDuelState(DuelState.INTERRUPTED);
 		}
 		super.reduceHp(value, attacker, awake, isDOT, isHPConsumption);
 	}

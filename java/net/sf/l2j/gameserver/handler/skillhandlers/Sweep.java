@@ -22,7 +22,7 @@ import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
 /**
@@ -52,16 +52,16 @@ public class Sweep implements ISkillHandler
 			if (!monster.isSpoiled())
 				continue;
 			
-			final List<ItemHolder> items = monster.getSweepItems();
+			final List<IntIntHolder> items = monster.getSweepItems();
 			if (items.isEmpty())
 				continue;
 			
-			for (ItemHolder item : items)
+			for (IntIntHolder item : items)
 			{
 				if (player.isInParty())
 					player.getParty().distributeItem(player, item, true, monster);
 				else
-					player.addItem("Sweep", item.getId(), item.getCount(), player, true);
+					player.addItem("Sweep", item.getId(), item.getValue(), player, true);
 			}
 			items.clear();
 		}

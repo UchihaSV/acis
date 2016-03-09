@@ -14,13 +14,15 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
+import java.util.List;
+
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Item;
 
 public class ItemList extends L2GameServerPacket
 {
-	private final ItemInstance[] _items;
+	private final List<ItemInstance> _items;
 	private final boolean _showWindow;
 	
 	public ItemList(L2PcInstance cha, boolean showWindow)
@@ -29,22 +31,16 @@ public class ItemList extends L2GameServerPacket
 		_showWindow = showWindow;
 	}
 	
-	public ItemList(ItemInstance[] items, boolean showWindow)
-	{
-		_items = items;
-		_showWindow = showWindow;
-	}
-	
 	@Override
 	protected final void writeImpl()
 	{
 		writeC(0x1b);
 		writeH(_showWindow ? 0x01 : 0x00);
-		writeH(_items.length);
+		writeH(_items.size());
 		
 		for (ItemInstance temp : _items)
 		{
-			if (temp == null || temp.getItem() == null)
+			if (temp.getItem() == null)
 				continue;
 			
 			Item item = temp.getItem();

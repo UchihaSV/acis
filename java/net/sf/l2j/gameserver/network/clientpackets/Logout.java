@@ -14,9 +14,7 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
-import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -38,17 +36,8 @@ public final class Logout extends L2GameClientPacket
 		if (player == null)
 			return;
 		
-		if (player.getActiveEnchantItem() != null)
+		if (player.getActiveEnchantItem() != null || player.isLocked())
 		{
-			player.sendPacket(ActionFailed.STATIC_PACKET);
-			return;
-		}
-		
-		if (player.isLocked())
-		{
-			if (Config.DEBUG)
-				_log.warning(player.getName() + " tried to logout during class change.");
-			
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 			return;
 		}
@@ -60,35 +49,27 @@ public final class Logout extends L2GameClientPacket
 			return;
 		}
 		
-		if (AttackStanceTaskManager.getInstance().isInAttackStance(player) && !player.isGM())
+		if (AttackStanceTaskManager.getInstance().isInAttackStance(player))
 		{
-			if (Config.DEBUG)
-				_log.fine(player.getName() + " tried to logout while fighting.");
-			
 			player.sendPacket(SystemMessageId.CANT_LOGOUT_WHILE_FIGHTING);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
 			return;
 		}
 		
-		// Prevent player from logging out if they are a festival participant and it is in progress,
-		// otherwise notify party members that the player is not longer a participant.
 		if (player.isFestivalParticipant())
 		{
 			if (SevenSignsFestival.getInstance().isFestivalInitialized())
 			{
-				player.sendMessage("You cannot log out while you are a participant in a festival.");
+				player.sendPacket(SystemMessageId.NO_LOGOUT_HERE);
 				player.sendPacket(ActionFailed.STATIC_PACKET);
 				return;
 			}
-			L2Party playerParty = player.getParty();
 			
-			if (playerParty != null)
+			if (player.isInParty())
 				player.getParty().broadcastToPartyMembers(SystemMessage.sendString(player.getName() + " has been removed from the upcoming festival."));
 		}
 		
-		// Remove player from Boss Zone
 		player.removeFromBossZone();
-		
 		player.logout();
 	}
 }

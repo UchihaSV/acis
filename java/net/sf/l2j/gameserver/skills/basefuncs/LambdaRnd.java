@@ -14,8 +14,8 @@
  */
 package net.sf.l2j.gameserver.skills.basefuncs;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.skills.Env;
-import net.sf.l2j.util.Rnd;
 
 /**
  * @author mkizub

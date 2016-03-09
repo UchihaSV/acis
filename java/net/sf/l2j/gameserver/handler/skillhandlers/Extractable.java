@@ -14,6 +14,7 @@
  */
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.model.L2ExtractableProductItem;
 import net.sf.l2j.gameserver.model.L2ExtractableSkill;
@@ -21,10 +22,9 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.holder.ItemHolder;
+import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
-import net.sf.l2j.util.Rnd;
 
 public class Extractable implements ISkillHandler
 {
@@ -58,8 +58,8 @@ public class Extractable implements ISkillHandler
 			chanceIndex += (int) (expi.getChance() * 1000);
 			if (chance <= chanceIndex)
 			{
-				for (ItemHolder item : expi.getItems())
-					player.addItem("Extract", item.getId(), item.getCount(), targets[0], true);
+				for (IntIntHolder item : expi.getItems())
+					player.addItem("Extract", item.getId(), item.getValue(), targets[0], true);
 				
 				created = true;
 				break;

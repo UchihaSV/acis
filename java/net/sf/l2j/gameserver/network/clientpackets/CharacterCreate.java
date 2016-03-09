@@ -15,12 +15,12 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.CharNameTable;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTreeTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
-import net.sf.l2j.gameserver.instancemanager.QuestManager;
 import net.sf.l2j.gameserver.model.L2ShortCut;
 import net.sf.l2j.gameserver.model.L2SkillLearn;
 import net.sf.l2j.gameserver.model.L2World;
@@ -28,11 +28,11 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.template.PcTemplate;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Item;
-import net.sf.l2j.gameserver.model.quest.Quest;
 import net.sf.l2j.gameserver.network.serverpackets.CharCreateFail;
 import net.sf.l2j.gameserver.network.serverpackets.CharCreateOk;
 import net.sf.l2j.gameserver.network.serverpackets.CharSelectInfo;
-import net.sf.l2j.gameserver.util.Util;
+import net.sf.l2j.gameserver.scripting.Quest;
+import net.sf.l2j.gameserver.scripting.ScriptManager;
 
 @SuppressWarnings("unused")
 public final class CharacterCreate extends L2GameClientPacket
@@ -79,7 +79,7 @@ public final class CharacterCreate extends L2GameClientPacket
 			return;
 		}
 		
-		if (!Util.isValidPlayerName(_name))
+		if (!StringUtil.isValidPlayerName(_name))
 		{
 			sendPacket(new CharCreateFail(CharCreateFail.REASON_INCORRECT_NAME));
 			return;
@@ -141,7 +141,7 @@ public final class CharacterCreate extends L2GameClientPacket
 		// send acknowledgement
 		sendPacket(CharCreateOk.STATIC_PACKET);
 		
-		L2World.getInstance().storeObject(newChar);
+		L2World.getInstance().addObject(newChar);
 		
 		newChar.addAdena("Init", Config.STARTING_ADENA, null, false);
 		newChar.setXYZInvisible(template.getSpawnX(), template.getSpawnY(), template.getSpawnZ());
@@ -178,7 +178,7 @@ public final class CharacterCreate extends L2GameClientPacket
 		{
 			if (newChar.getQuestState("Tutorial") == null)
 			{
-				Quest q = QuestManager.getInstance().getQuest("Tutorial");
+				Quest q = ScriptManager.getInstance().getQuest("Tutorial");
 				if (q != null)
 					q.newQuestState(newChar).setState(Quest.STATE_STARTED);
 			}

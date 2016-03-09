@@ -14,6 +14,7 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
+import java.util.Collection;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.gameserver.datatables.ArmorSetsTable;
@@ -62,10 +63,11 @@ public class AdminCreateItem implements IAdminCommandHandler
 				final int id = Integer.parseInt(st.nextToken());
 				final int count = (st.hasMoreTokens()) ? Integer.parseInt(st.nextToken()) : 1;
 				
-				for (L2PcInstance player : L2World.getInstance().getAllPlayers().values())
+				final Collection<L2PcInstance> players = L2World.getInstance().getPlayers();
+				for (L2PcInstance player : players)
 					createItem(activeChar, player, id, count, 0, false);
 				
-				activeChar.sendMessage(L2World.getInstance().getAllPlayersCount() + " players rewarded with " + ItemTable.getInstance().getTemplate(id).getName());
+				activeChar.sendMessage(players.size() + " players rewarded with " + ItemTable.getInstance().getTemplate(id).getName());
 			}
 			catch (Exception e)
 			{

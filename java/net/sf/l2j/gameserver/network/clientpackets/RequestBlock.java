@@ -21,11 +21,11 @@ import net.sf.l2j.gameserver.network.SystemMessageId;
 
 public final class RequestBlock extends L2GameClientPacket
 {
-	private final static int BLOCK = 0;
-	private final static int UNBLOCK = 1;
-	private final static int BLOCKLIST = 2;
-	private final static int ALLBLOCK = 3;
-	private final static int ALLUNBLOCK = 4;
+	private static final int BLOCK = 0;
+	private static final int UNBLOCK = 1;
+	private static final int BLOCKLIST = 2;
+	private static final int ALLBLOCK = 3;
+	private static final int ALLUNBLOCK = 4;
 	
 	private String _name;
 	private int _type;

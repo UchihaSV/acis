@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.model.holder.BuffSkillHolder;
 
 /**
@@ -98,6 +99,7 @@ public class BufferTable
 			// Delete all entries from database.
 			PreparedStatement st = con.prepareStatement(DELETE_SCHEMES);
 			st.execute();
+			st.close();
 			
 			st = con.prepareStatement(INSERT_SCHEME);
 			
@@ -107,20 +109,17 @@ public class BufferTable
 				for (Map.Entry<String, ArrayList<Integer>> scheme : player.getValue().entrySet())
 				{
 					// Build a String composed of skill ids seperated by a ",".
-					StringBuilder skills = new StringBuilder();
+					final StringBuilder sb = new StringBuilder();
 					for (int skillId : scheme.getValue())
-					{
-						skills.append(skillId);
-						skills.append(",");
-					}
+						StringUtil.append(sb, skillId, ",");
 					
 					// Delete the last "," : must be called only if there is something to delete !
-					if (skills.length() > 0)
-						skills.setLength(skills.length() - 1);
+					if (sb.length() > 0)
+						sb.setLength(sb.length() - 1);
 					
 					st.setInt(1, player.getKey());
 					st.setString(2, scheme.getKey());
-					st.setString(3, skills.toString());
+					st.setString(3, sb.toString());
 					st.executeUpdate();
 					st.clearParameters();
 				}
@@ -194,8 +193,8 @@ public class BufferTable
 		List<Integer> skills = new ArrayList<>();
 		for (BuffSkillHolder skill : Config.BUFFER_BUFFLIST.values())
 		{
-			if (skill.getGroupType().equalsIgnoreCase(groupType))
-				skills.add(skill.getSkillId());
+			if (skill.getType().equalsIgnoreCase(groupType))
+				skills.add(skill.getId());
 		}
 		return skills;
 	}
@@ -208,8 +207,8 @@ public class BufferTable
 		List<String> skillTypes = new ArrayList<>();
 		for (BuffSkillHolder skill : Config.BUFFER_BUFFLIST.values())
 		{
-			if (!skillTypes.contains(skill.getGroupType()))
-				skillTypes.add(skill.getGroupType());
+			if (!skillTypes.contains(skill.getType()))
+				skillTypes.add(skill.getType());
 		}
 		return skillTypes;
 	}

@@ -18,10 +18,6 @@ import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoom;
 import net.sf.l2j.gameserver.model.partymatching.PartyMatchRoomList;
 
-/**
- * Format: (ch) dd
- * @author -Wooden-
- */
 public class RequestDismissPartyRoom extends L2GameClientPacket
 {
 	private int _roomid;
@@ -38,12 +34,12 @@ public class RequestDismissPartyRoom extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
-		final L2PcInstance _activeChar = getClient().getActiveChar();
-		if (_activeChar == null)
+		final L2PcInstance activeChar = getClient().getActiveChar();
+		if (activeChar == null)
 			return;
 		
-		PartyMatchRoom _room = PartyMatchRoomList.getInstance().getRoom(_roomid);
-		if (_room == null)
+		PartyMatchRoom room = PartyMatchRoomList.getInstance().getRoom(_roomid);
+		if (room == null)
 			return;
 		
 		PartyMatchRoomList.getInstance().deleteRoom(_roomid);

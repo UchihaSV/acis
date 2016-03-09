@@ -35,12 +35,8 @@ import net.sf.l2j.gameserver.network.serverpackets.ShopPreviewInfo;
 import net.sf.l2j.gameserver.network.serverpackets.UserInfo;
 import net.sf.l2j.gameserver.util.Util;
 
-/**
- ** @author Gnacik
- */
 public final class RequestPreviewItem extends L2GameClientPacket
 {
-	protected L2PcInstance _activeChar;
 	private Map<Integer, Integer> _itemList;
 	@SuppressWarnings("unused")
 	private int _unk;
@@ -105,17 +101,17 @@ public final class RequestPreviewItem extends L2GameClientPacket
 		}
 		
 		// Get the current player and return if null
-		_activeChar = getClient().getActiveChar();
-		if (_activeChar == null)
+		final L2PcInstance activeChar = getClient().getActiveChar();
+		if (activeChar == null)
 			return;
 		
 		// If Alternate rule Karma punishment is set to true, forbid Wear to player with Karma
-		if (!Config.KARMA_PLAYER_CAN_SHOP && _activeChar.getKarma() > 0)
+		if (!Config.KARMA_PLAYER_CAN_SHOP && activeChar.getKarma() > 0)
 			return;
 		
 		// Check current target of the player and the INTERACTION_DISTANCE
-		L2Object target = _activeChar.getTarget();
-		if (!_activeChar.isGM() && (target == null || !(target instanceof L2MerchantInstance) || !_activeChar.isInsideRadius(target, L2Npc.INTERACTION_DISTANCE, false, false)))
+		L2Object target = activeChar.getTarget();
+		if (!activeChar.isGM() && (target == null || !(target instanceof L2MerchantInstance) || !activeChar.isInsideRadius(target, L2Npc.INTERACTION_DISTANCE, false, false)))
 			return;
 		
 		// Get the current merchant targeted by the player
@@ -129,7 +125,7 @@ public final class RequestPreviewItem extends L2GameClientPacket
 		final NpcBuyList buyList = BuyListTable.getInstance().getBuyList(_listId);
 		if (buyList == null)
 		{
-			Util.handleIllegalPlayerAction(_activeChar, _activeChar.getName() + " of account " + _activeChar.getAccountName() + " sent a false BuyList list_id " + _listId, Config.DEFAULT_PUNISH);
+			Util.handleIllegalPlayerAction(activeChar, activeChar.getName() + " of account " + activeChar.getAccountName() + " sent a false BuyList list_id " + _listId, Config.DEFAULT_PUNISH);
 			return;
 		}
 		
@@ -144,7 +140,7 @@ public final class RequestPreviewItem extends L2GameClientPacket
 			final Product product = buyList.getProductByItemId(itemId);
 			if (product == null)
 			{
-				Util.handleIllegalPlayerAction(_activeChar, _activeChar.getName() + " of account " + _activeChar.getAccountName() + " sent a false BuyList list_id " + _listId + " and item_id " + itemId, Config.DEFAULT_PUNISH);
+				Util.handleIllegalPlayerAction(activeChar, activeChar.getName() + " of account " + activeChar.getAccountName() + " sent a false BuyList list_id " + _listId + " and item_id " + itemId, Config.DEFAULT_PUNISH);
 				return;
 			}
 			
@@ -158,7 +154,7 @@ public final class RequestPreviewItem extends L2GameClientPacket
 			
 			if (_itemList.containsKey(slot))
 			{
-				_activeChar.sendPacket(SystemMessageId.YOU_CAN_NOT_TRY_THOSE_ITEMS_ON_AT_THE_SAME_TIME);
+				activeChar.sendPacket(SystemMessageId.YOU_CAN_NOT_TRY_THOSE_ITEMS_ON_AT_THE_SAME_TIME);
 				return;
 			}
 			_itemList.put(slot, itemId);
@@ -166,24 +162,24 @@ public final class RequestPreviewItem extends L2GameClientPacket
 			totalPrice += Config.WEAR_PRICE;
 			if (totalPrice > Integer.MAX_VALUE)
 			{
-				Util.handleIllegalPlayerAction(_activeChar, _activeChar.getName() + " of account " + _activeChar.getAccountName() + " tried to purchase over " + Integer.MAX_VALUE + " adena worth of goods.", Config.DEFAULT_PUNISH);
+				Util.handleIllegalPlayerAction(activeChar, activeChar.getName() + " of account " + activeChar.getAccountName() + " tried to purchase over " + Integer.MAX_VALUE + " adena worth of goods.", Config.DEFAULT_PUNISH);
 				return;
 			}
 		}
 		
 		// Charge buyer and add tax to castle treasury if not owned by npc clan because a Try On is not Free
-		if (totalPrice < 0 || !_activeChar.reduceAdena("Wear", totalPrice, _activeChar.getCurrentFolkNPC(), true))
+		if (totalPrice < 0 || !activeChar.reduceAdena("Wear", totalPrice, activeChar.getCurrentFolkNPC(), true))
 		{
-			_activeChar.sendPacket(SystemMessageId.YOU_NOT_ENOUGH_ADENA);
+			activeChar.sendPacket(SystemMessageId.YOU_NOT_ENOUGH_ADENA);
 			return;
 		}
 		
 		if (!_itemList.isEmpty())
 		{
-			_activeChar.sendPacket(new ShopPreviewInfo(_itemList));
+			activeChar.sendPacket(new ShopPreviewInfo(_itemList));
 			
 			// Schedule task
-			ThreadPoolManager.getInstance().scheduleGeneral(new RemoveWearItemsTask(_activeChar), Config.WEAR_DELAY * 1000);
+			ThreadPoolManager.getInstance().scheduleGeneral(new RemoveWearItemsTask(activeChar), Config.WEAR_DELAY * 1000);
 		}
 	}
 }

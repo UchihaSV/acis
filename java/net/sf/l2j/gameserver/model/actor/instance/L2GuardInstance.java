@@ -16,9 +16,10 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.List;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.ai.L2AttackableAI;
+import net.sf.l2j.gameserver.ai.model.L2AttackableAI;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.L2WorldRegion;
@@ -27,11 +28,10 @@ import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.knownlist.GuardKnownList;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
-import net.sf.l2j.gameserver.model.quest.Quest;
-import net.sf.l2j.gameserver.model.quest.QuestEventType;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
-import net.sf.l2j.util.Rnd;
+import net.sf.l2j.gameserver.scripting.EventType;
+import net.sf.l2j.gameserver.scripting.Quest;
 
 /**
  * This class manages all Guards in the world.<br>
@@ -151,11 +151,11 @@ public final class L2GuardInstance extends L2Attackable
 				if (hasRandomAnimation())
 					onRandomAnimation(Rnd.get(8));
 				
-				List<Quest> qlsa = getTemplate().getEventQuests(QuestEventType.QUEST_START);
+				List<Quest> qlsa = getTemplate().getEventQuests(EventType.QUEST_START);
 				if (qlsa != null && !qlsa.isEmpty())
 					player.setLastQuestNpcObject(getObjectId());
 				
-				List<Quest> qlst = getTemplate().getEventQuests(QuestEventType.ON_FIRST_TALK);
+				List<Quest> qlst = getTemplate().getEventQuests(EventType.ON_FIRST_TALK);
 				if (qlst != null && qlst.size() == 1)
 					qlst.get(0).notifyFirstTalk(this, player);
 				else

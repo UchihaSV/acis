@@ -17,8 +17,9 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.ItemRequest;
 import net.sf.l2j.gameserver.model.L2World;
-import net.sf.l2j.gameserver.model.TradeList;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.PrivateStoreType;
+import net.sf.l2j.gameserver.model.tradelist.TradeList;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 
 public final class RequestPrivateStoreSell extends L2GameClientPacket
@@ -73,7 +74,7 @@ public final class RequestPrivateStoreSell extends L2GameClientPacket
 		if (!player.isInsideRadius(storePlayer, 150, true, false))
 			return;
 		
-		if (storePlayer.getPrivateStoreType() != L2PcInstance.STORE_PRIVATE_BUY)
+		if (storePlayer.getPrivateStoreType() != PrivateStoreType.BUY)
 			return;
 		
 		if (player.isCursedWeaponEquipped())
@@ -95,9 +96,9 @@ public final class RequestPrivateStoreSell extends L2GameClientPacket
 			return;
 		}
 		
-		if (storeList.getItemCount() == 0)
+		if (storeList.getItems().isEmpty())
 		{
-			storePlayer.setPrivateStoreType(L2PcInstance.STORE_PRIVATE_NONE);
+			storePlayer.setPrivateStoreType(PrivateStoreType.NONE);
 			storePlayer.broadcastUserInfo();
 		}
 	}

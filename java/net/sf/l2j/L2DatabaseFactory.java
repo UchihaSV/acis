@@ -116,22 +116,19 @@ public class L2DatabaseFactory
 	 * @param whatToCheck the list of arguments.
 	 * @return the list of arguments between brackets.
 	 */
-	public final static String safetyString(String... whatToCheck)
+	public static final String safetyString(String... whatToCheck)
 	{
-		final char brace = '`';
-		
-		final StringBuilder sbResult = new StringBuilder();
-		
+		final StringBuilder sb = new StringBuilder();
 		for (String word : whatToCheck)
 		{
-			if (sbResult.length() > 0)
-				sbResult.append(", ");
+			if (sb.length() > 0)
+				sb.append(", ");
 			
-			sbResult.append(brace);
-			sbResult.append(word);
-			sbResult.append(brace);
+			sb.append('`');
+			sb.append(word);
+			sb.append('`');
 		}
-		return sbResult.toString();
+		return sb.toString();
 	}
 	
 	public Connection getConnection()

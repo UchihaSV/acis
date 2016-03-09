@@ -47,12 +47,6 @@ public final class RequestAutoSoulShot extends L2GameClientPacket
 			
 			if (_type == 1)
 			{
-				if (!activeChar.getInventory().canManipulateWithItemId(item.getItemId()))
-				{
-					activeChar.sendPacket(SystemMessageId.CANNOT_USE_SOULSHOTS);
-					return;
-				}
-				
 				// Fishingshots are not automatic on retail
 				if (_itemId < 6535 || _itemId > 6540)
 				{

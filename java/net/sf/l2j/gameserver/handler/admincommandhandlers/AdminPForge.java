@@ -16,6 +16,7 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import java.util.StringTokenizer;
 
+import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.AdminForgePacket;
@@ -161,29 +162,35 @@ public class AdminPForge implements IAdminCommandHandler
 	
 	private static void showPage2(L2PcInstance activeChar, String format)
 	{
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/pforge2.htm");
-		adminReply.replace("%format%", format);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/pforge2.htm");
+		html.replace("%format%", format);
 		
-		StringBuilder replyMSG = new StringBuilder();
-		for (int i = 0; i < format.length(); i++)
-			replyMSG.append(format.charAt(i) + " : <edit var=\"v" + i + "\" width=100><br1>");
-		adminReply.replace("%valueditors%", replyMSG.toString());
-		replyMSG.setLength(0);
+		final StringBuilder sb = new StringBuilder();
 		
+		// First use of sb.
 		for (int i = 0; i < format.length(); i++)
-			replyMSG.append(" \\$v" + i);
-		adminReply.replace("%send%", replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+			StringUtil.append(sb, format.charAt(i), " : <edit var=\"v", i, "\" width=100><br1>");
+		html.replace("%valueditors%", sb.toString());
+		
+		// Cleanup sb.
+		sb.setLength(0);
+		
+		// Second use of sb.
+		for (int i = 0; i < format.length(); i++)
+			StringUtil.append(sb, " \\$v", i);
+		
+		html.basicReplace("%send%", sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void showPage3(L2PcInstance activeChar, String format, String command)
 	{
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/pforge3.htm");
-		adminReply.replace("%format%", format);
-		adminReply.replace("%command%", command);
-		activeChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/pforge3.htm");
+		html.replace("%format%", format);
+		html.replace("%command%", command);
+		activeChar.sendPacket(html);
 	}
 	
 	@Override

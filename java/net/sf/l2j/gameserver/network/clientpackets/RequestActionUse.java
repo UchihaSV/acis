@@ -14,8 +14,9 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.ai.L2SummonAI;
+import net.sf.l2j.gameserver.ai.model.L2SummonAI;
 import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -31,7 +32,6 @@ import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcSay;
 import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
 
 public final class RequestActionUse extends L2GameClientPacket
 {

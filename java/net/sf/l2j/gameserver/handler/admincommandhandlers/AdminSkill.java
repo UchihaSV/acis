@@ -14,10 +14,12 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.StringTokenizer;
-import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
+import net.sf.l2j.commons.lang.StringUtil;
+import net.sf.l2j.commons.math.MathUtil;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -28,14 +30,11 @@ import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.util.StringUtil;
 
-/**
- * This class handles following admin commands: - show_skills - remove_skills - skill_list - skill_index - add_skill - remove_skill - get_skills - reset_skills - give_all_skills - remove_all_skills - add_clan_skills
- */
 public class AdminSkill implements IAdminCommandHandler
 {
-	private static Logger _log = Logger.getLogger(AdminSkill.class.getName());
+	private static final int PAGE_LIMIT = 10;
+	
 	private static final String[] ADMIN_COMMANDS =
 	{
 		"admin_show_skills",
@@ -52,7 +51,7 @@ public class AdminSkill implements IAdminCommandHandler
 		"admin_st"
 	};
 	
-	private static L2Skill[] adminSkills;
+	private static L2Skill[] ADMIN_SKILLS;
 	
 	@Override
 	public boolean useAdminCommand(String command, L2PcInstance activeChar)
@@ -63,11 +62,11 @@ public class AdminSkill implements IAdminCommandHandler
 		{
 			try
 			{
-				String val = command.substring(20);
-				removeSkillsPage(activeChar, Integer.parseInt(val));
+				removeSkillsPage(activeChar, Integer.parseInt(command.substring(20)));
 			}
-			catch (StringIndexOutOfBoundsException e)
+			catch (Exception e)
 			{
+				removeSkillsPage(activeChar, 1);
 			}
 		}
 		else if (command.startsWith("admin_skill_list"))
@@ -81,7 +80,7 @@ public class AdminSkill implements IAdminCommandHandler
 				String val = command.substring(18);
 				AdminHelpPage.showHelpPage(activeChar, "skills/" + val + ".htm");
 			}
-			catch (StringIndexOutOfBoundsException e)
+			catch (Exception e)
 			{
 			}
 		}
@@ -212,40 +211,34 @@ public class AdminSkill implements IAdminCommandHandler
 			return;
 		}
 		
-		L2Skill[] skills = player.getAllSkills();
+		List<L2Skill> skills = Arrays.asList(player.getAllSkills());
 		
-		int maxSkillsPerPage = 10;
-		int maxPages = skills.length / maxSkillsPerPage;
-		if (skills.length > maxSkillsPerPage * maxPages)
-			maxPages++;
+		final int max = MathUtil.countPagesNumber(skills.size(), PAGE_LIMIT);
 		
-		if (page > maxPages)
-			page = maxPages;
+		skills = skills.subList((page - 1) * PAGE_LIMIT, Math.min(page * PAGE_LIMIT, skills.size()));
 		
-		int skillsStart = maxSkillsPerPage * page;
-		int skillsEnd = skills.length;
-		if (skillsEnd - skillsStart > maxSkillsPerPage)
-			skillsEnd = skillsStart + maxSkillsPerPage;
+		final StringBuilder sb = new StringBuilder(3000);
+		StringUtil.append(sb, "<html><body><table width=270><tr><td width=45><button value=\"Main\" action=\"bypass -h admin_admin\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td><td width=180><center>Delete Skills Menu</center></td><td width=45><button value=\"Back\" action=\"bypass -h admin_show_skills\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td></tr></table><br><br><center>Editing <font color=\"LEVEL\">", player.getName(), "</font>, ", player.getTemplate().getClassName(), " lvl ", player.getLevel(), ".<br><center><table width=270><tr>");
 		
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		final StringBuilder replyMSG = StringUtil.startAppend(500 + maxPages * 50 + (skillsEnd - skillsStart + 1) * 50, "<html><body>" + "<table width=270><tr>" + "<td width=45><button value=\"Main\" action=\"bypass -h admin_admin\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td>" + "<td width=180><center>Delete Skills Menu</center></td>" + "<td width=45><button value=\"Back\" action=\"bypass -h admin_show_skills\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></td>" + "</tr></table>" + "<br><br>" + "<center>Editing <font color=\"LEVEL\">", player.getName(), "</font>" + ", ", player.getTemplate().getClassName(), " lvl ", String.valueOf(player.getLevel()), ".<br><center><table width=270><tr>");
-		
-		for (int x = 0; x < maxPages; x++)
+		for (int i = 0; i < max; i++)
 		{
-			int pagenr = x + 1;
-			StringUtil.append(replyMSG, "<td><a action=\"bypass -h admin_remove_skills ", String.valueOf(x), "\">Page ", String.valueOf(pagenr), "</a></td>");
+			final int pagenr = i + 1;
+			if (page == pagenr)
+				StringUtil.append(sb, "<td>", pagenr, "</td>");
+			else
+				StringUtil.append(sb, "<td><a action=\"bypass -h admin_remove_skills ", pagenr, "\">", pagenr, "</a></td>");
 		}
 		
-		replyMSG.append("</tr></table></center>" + "<br><table width=270>" + "<tr><td width=80>Name:</td><td width=60>Level:</td><td width=40>Id:</td></tr>");
+		sb.append("</tr></table></center><br><table width=270><tr><td width=80>Name:</td><td width=60>Level:</td><td width=40>Id:</td></tr>");
 		
-		for (int i = skillsStart; i < skillsEnd; i++)
-		{
-			StringUtil.append(replyMSG, "<tr><td width=80><a action=\"bypass -h admin_remove_skill ", String.valueOf(skills[i].getId()), "\">", skills[i].getName(), "</a></td><td width=60>", String.valueOf(skills[i].getLevel()), "</td><td width=40>", String.valueOf(skills[i].getId()), "</td></tr>");
-		}
+		for (L2Skill skill : skills)
+			StringUtil.append(sb, "<tr><td width=80><a action=\"bypass -h admin_remove_skill ", skill.getId(), "\">", skill.getName(), "</a></td><td width=60>", skill.getLevel(), "</td><td width=40>", skill.getId(), "</td></tr>");
 		
-		replyMSG.append("</table>" + "<br><center><table width=200>" + "<tr><td width=50 align=right>Id: </td>" + "<td><edit var=\"id_to_remove\" width=55></td>" + "<td width=100><button value=\"Remove skill\" action=\"bypass -h admin_remove_skill $id_to_remove\" width=95 height=21 back=\"bigbutton_over\" fore=\"bigbutton\"></td></tr>" + "<tr><td></td><td></td>" + "<td><button value=\"Back to stats\" action=\"bypass -h admin_current_player\" width=95 height=21 back=\"bigbutton_over\" fore=\"bigbutton\"></td>" + "</tr></table></center>" + "</body></html>");
-		adminReply.setHtml(replyMSG.toString());
-		activeChar.sendPacket(adminReply);
+		sb.append("</table><br><center><table width=200><tr><td width=50 align=right>Id: </td><td><edit var=\"id_to_remove\" width=55></td><td width=100><button value=\"Remove skill\" action=\"bypass -h admin_remove_skill $id_to_remove\" width=95 height=21 back=\"bigbutton_over\" fore=\"bigbutton\"></td></tr><tr><td></td><td></td><td><button value=\"Back to stats\" action=\"bypass -h admin_current_player\" width=95 height=21 back=\"bigbutton_over\" fore=\"bigbutton\"></td></tr></table></center></body></html>");
+		
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void showMainPage(L2PcInstance activeChar)
@@ -260,12 +253,12 @@ public class AdminSkill implements IAdminCommandHandler
 			return;
 		}
 		
-		NpcHtmlMessage adminReply = new NpcHtmlMessage(0);
-		adminReply.setFile("data/html/admin/charskills.htm");
-		adminReply.replace("%name%", player.getName());
-		adminReply.replace("%level%", player.getLevel());
-		adminReply.replace("%class%", player.getTemplate().getClassName());
-		activeChar.sendPacket(adminReply);
+		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setFile("data/html/admin/charskills.htm");
+		html.replace("%name%", player.getName());
+		html.replace("%level%", player.getLevel());
+		html.replace("%class%", player.getTemplate().getClassName());
+		activeChar.sendPacket(html);
 	}
 	
 	private static void adminGetSkills(L2PcInstance activeChar)
@@ -286,9 +279,9 @@ public class AdminSkill implements IAdminCommandHandler
 		else
 		{
 			L2Skill[] skills = player.getAllSkills();
-			adminSkills = activeChar.getAllSkills();
+			ADMIN_SKILLS = activeChar.getAllSkills();
 			
-			for (L2Skill skill : adminSkills)
+			for (L2Skill skill : ADMIN_SKILLS)
 				activeChar.removeSkill(skill);
 			
 			for (L2Skill skill : skills)
@@ -296,13 +289,14 @@ public class AdminSkill implements IAdminCommandHandler
 			
 			activeChar.sendMessage("You ninjaed " + player.getName() + "'s skills list.");
 			activeChar.sendSkillList();
+			
 			skills = null;
 		}
 	}
 	
 	private static void adminResetSkills(L2PcInstance activeChar)
 	{
-		if (adminSkills == null)
+		if (ADMIN_SKILLS == null)
 			activeChar.sendMessage("Ninja first skills of someone to use that command.");
 		else
 		{
@@ -311,12 +305,13 @@ public class AdminSkill implements IAdminCommandHandler
 			for (L2Skill skill : skills)
 				activeChar.removeSkill(skill);
 			
-			for (L2Skill skill : adminSkills)
+			for (L2Skill skill : ADMIN_SKILLS)
 				activeChar.addSkill(skill, true);
 			
 			activeChar.sendMessage("All your skills have been returned back.");
 			activeChar.sendSkillList();
-			adminSkills = null;
+			
+			ADMIN_SKILLS = null;
 			skills = null;
 		}
 	}
@@ -362,9 +357,6 @@ public class AdminSkill implements IAdminCommandHandler
 				if (player != activeChar)
 					activeChar.sendMessage("You gave the skill " + name + " to " + player.getName() + ".");
 				
-				if (Config.DEBUG)
-					_log.fine("[GM]" + activeChar.getName() + " gave skill " + name + " to " + player.getName() + ".");
-				
 				player.sendSkillList();
 			}
 			else
@@ -397,15 +389,12 @@ public class AdminSkill implements IAdminCommandHandler
 			if (player != activeChar)
 				player.sendMessage("Admin removed the skill " + skillname + " from your skills list.");
 			
-			if (Config.DEBUG)
-				_log.fine("[GM]" + activeChar.getName() + " removed skill " + skillname + " from " + player.getName() + ".");
-			
 			player.sendSkillList();
 		}
 		else
 			activeChar.sendMessage("Error: there is no such skill.");
 		
-		removeSkillsPage(activeChar, 0); // Back to previous page
+		removeSkillsPage(activeChar, 1);
 	}
 	
 	private static void adminAddClanSkill(L2PcInstance activeChar, int id, int level)

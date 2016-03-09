@@ -69,8 +69,7 @@ public class ZoneManager
 	{
 		// Get the world regions
 		int count = 0;
-		L2WorldRegion[][] worldRegions = L2World.getInstance().getAllWorldRegions();
-		for (L2WorldRegion[] worldRegion : worldRegions)
+		for (L2WorldRegion[] worldRegion : L2World.getInstance().getWorldRegions())
 		{
 			for (L2WorldRegion element : worldRegion)
 			{
@@ -84,7 +83,7 @@ public class ZoneManager
 		// Load the zones
 		load();
 		
-		for (L2Object o : L2World.getInstance().getAllVisibleObjects().values())
+		for (L2Object o : L2World.getInstance().getObjects())
 		{
 			if (o instanceof L2Character)
 				((L2Character) o).revalidateZone(true);
@@ -97,7 +96,7 @@ public class ZoneManager
 		_classZones.clear();
 		
 		// Get the world regions
-		L2WorldRegion[][] worldRegions = L2World.getInstance().getAllWorldRegions();
+		L2WorldRegion[][] worldRegions = L2World.getInstance().getWorldRegions();
 		
 		// Load the zone xml
 		try
@@ -477,7 +476,7 @@ public class ZoneManager
 		return null;
 	}
 	
-	public final static L2ArenaZone getArena(L2Character character)
+	public static final L2ArenaZone getArena(L2Character character)
 	{
 		if (character == null)
 			return null;
@@ -491,7 +490,7 @@ public class ZoneManager
 		return null;
 	}
 	
-	public final static L2OlympiadStadiumZone getOlympiadStadium(L2Character character)
+	public static final L2OlympiadStadiumZone getOlympiadStadium(L2Character character)
 	{
 		if (character == null)
 			return null;

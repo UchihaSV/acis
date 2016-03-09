@@ -19,7 +19,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,8 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.lang.StringUtil;
+import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.CharNameTable;
@@ -54,8 +55,6 @@ import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.StatsSet;
-import net.sf.l2j.gameserver.util.Util;
-import net.sf.l2j.util.Rnd;
 
 /**
  * Seven Signs Festival of Darkness Engine
@@ -3360,22 +3359,14 @@ public class SevenSignsFestival implements SpawnListener
 			rset.close();
 			statement.close();
 			
-			StringBuilder query = new StringBuilder();
-			query.append("SELECT festival_cycle, ");
+			final StringBuilder sb = new StringBuilder("SELECT festival_cycle, ");
 			
 			for (int i = 0; i < FESTIVAL_COUNT - 1; i++)
-			{
-				query.append("accumulated_bonus");
-				query.append(String.valueOf(i));
-				query.append(", ");
-			}
+				StringUtil.append(sb, "accumulated_bonus", i, ", ");
 			
-			query.append("accumulated_bonus");
-			query.append(String.valueOf(FESTIVAL_COUNT - 1));
-			query.append(" ");
-			query.append("FROM seven_signs_status WHERE id=0");
+			StringUtil.append(sb, "accumulated_bonus", FESTIVAL_COUNT - 1, " ", "FROM seven_signs_status WHERE id=0");
 			
-			statement = con.prepareStatement(query.toString());
+			statement = con.prepareStatement(sb.toString());
 			rset = statement.executeQuery();
 			
 			while (rset.next())
@@ -3388,9 +3379,6 @@ public class SevenSignsFestival implements SpawnListener
 			
 			rset.close();
 			statement.close();
-			
-			if (Config.DEBUG)
-				_log.info("SevenSignsFestival: Loaded data from database.");
 		}
 		catch (SQLException e)
 		{
@@ -3615,15 +3603,11 @@ public class SevenSignsFestival implements SpawnListener
 		saveFestivalData(updateSettings);
 		
 		// Remove any unused blood offerings from online players.
-		final Collection<L2PcInstance> pls = L2World.getInstance().getAllPlayers().values();
-		for (L2PcInstance onlinePlayer : pls)
+		for (L2PcInstance player : L2World.getInstance().getPlayers())
 		{
-			if (onlinePlayer == null)
-				continue;
-			
-			ItemInstance bloodOfferings = onlinePlayer.getInventory().getItemByItemId(FESTIVAL_OFFERING_ID);
+			ItemInstance bloodOfferings = player.getInventory().getItemByItemId(FESTIVAL_OFFERING_ID);
 			if (bloodOfferings != null)
-				onlinePlayer.destroyItem("SevenSigns", bloodOfferings, null, false);
+				player.destroyItem("SevenSigns", bloodOfferings, null, false);
 		}
 		
 		_log.info("SevenSignsFestival: Reinitialized engine for next competition period.");
@@ -3909,8 +3893,6 @@ public class SevenSignsFestival implements SpawnListener
 	 */
 	public boolean setFinalScore(L2PcInstance player, int oracle, int festivalId, int offeringScore)
 	{
-		List<String> partyMembers;
-		
 		int currDawnHighScore = getHighestScore(SevenSigns.CABAL_DAWN, festivalId);
 		int currDuskHighScore = getHighestScore(SevenSigns.CABAL_DUSK, festivalId);
 		
@@ -3942,17 +3924,14 @@ public class SevenSignsFestival implements SpawnListener
 			if (thisCabalHighScore < otherCabalHighScore)
 				return false;
 			
-			List<Integer> prevParticipants = getPreviousParticipants(oracle, festivalId);
-			partyMembers = new ArrayList<>(prevParticipants.size());
-			
-			// Record a string list of the party members involved.
-			for (Integer partyMember : prevParticipants)
+			final List<String> partyMembers = new ArrayList<>();
+			for (int partyMember : getPreviousParticipants(oracle, festivalId))
 				partyMembers.add(CharNameTable.getInstance().getNameById(partyMember));
 			
 			// Update the highest scores and party list.
 			currFestData.set("date", String.valueOf(System.currentTimeMillis()));
 			currFestData.set("score", offeringScore);
-			currFestData.set("members", Util.implodeString(partyMembers, ","));
+			currFestData.set("members", String.join(",", partyMembers));
 			
 			if (Config.DEBUG)
 				_log.info("SevenSignsFestival: " + player.getName() + "'s party has the highest score (" + offeringScore + ") so far for " + SevenSigns.getCabalName(oracle) + " in " + getFestivalName(festivalId));
