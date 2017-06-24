@@ -17,8 +17,9 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.DoorTable;
 import net.sf.l2j.gameserver.instancemanager.FourSepulchersManager;
@@ -179,7 +180,7 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 				reduceCurrentHp(getMaxHp() + 1, player, null);
 				if (_spawnMonsterTask != null)
 					_spawnMonsterTask.cancel(true);
-				_spawnMonsterTask = ThreadPoolManager.getInstance().scheduleEffect(new SpawnMonster(getNpcId()), 3500);
+				_spawnMonsterTask = ThreadPool.schedule(new SpawnMonster(getNpcId()), 3500);
 				break;
 			
 			case 31455:
@@ -302,12 +303,12 @@ public class L2SepulcherNpcInstance extends L2NpcInstance
 		if (_closeTask != null)
 			_closeTask.cancel(true);
 		
-		_closeTask = ThreadPoolManager.getInstance().scheduleEffect(new CloseNextDoor(doorId), 10000);
+		_closeTask = ThreadPool.schedule(new CloseNextDoor(doorId), 10000);
 		
 		if (_spawnNextMysteriousBoxTask != null)
 			_spawnNextMysteriousBoxTask.cancel(true);
 		
-		_spawnNextMysteriousBoxTask = ThreadPoolManager.getInstance().scheduleEffect(new SpawnNextMysteriousBox(npcId), 0);
+		_spawnNextMysteriousBoxTask = ThreadPool.schedule(new SpawnNextMysteriousBox(npcId), 0);
 	}
 	
 	private static class CloseNextDoor implements Runnable

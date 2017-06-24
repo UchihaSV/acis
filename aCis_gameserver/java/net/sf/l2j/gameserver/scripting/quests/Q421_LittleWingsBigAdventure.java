@@ -13,6 +13,7 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -218,7 +219,7 @@ public class Q421_LittleWingsBigAdventure extends Quest
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		// Minions scream no matter current quest state.
 		if (((L2MonsterInstance) npc).hasMinions())
@@ -293,6 +294,6 @@ public class Q421_LittleWingsBigAdventure extends Quest
 			newNpc.getAI().setIntention(CtrlIntention.ATTACK, originalKiller);
 		}
 		
-		return super.onKill(npc, killer, isPet);
+		return null;
 	}
 }

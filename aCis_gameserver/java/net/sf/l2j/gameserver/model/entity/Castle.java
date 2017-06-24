@@ -23,10 +23,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.CastleUpdater;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
@@ -419,6 +420,7 @@ public class Castle
 			if (door.isDead())
 				door.doRevive();
 			
+			door.closeMe();
 			door.setCurrentHp((isDoorWeak) ? door.getMaxHp() / 2 : door.getMaxHp());
 			door.broadcastStatusUpdate();
 		}
@@ -430,10 +432,7 @@ public class Castle
 	public void closeDoors()
 	{
 		for (L2DoorInstance door : _doors)
-		{
-			if (door.isOpened())
-				door.closeMe();
-		}
+			door.closeMe();
 	}
 	
 	/**
@@ -448,7 +447,7 @@ public class Castle
 		if (door == null)
 			return;
 		
-		door.setUpgradeHpRatio(hp);
+		door.getStat().setUpgradeHpRatio(hp);
 		door.setCurrentHp(door.getMaxHp());
 		
 		if (db)
@@ -499,7 +498,7 @@ public class Castle
 	public void removeDoorUpgrade()
 	{
 		for (L2DoorInstance door : _doors)
-			door.setUpgradeHpRatio(1);
+			door.getStat().setUpgradeHpRatio(1);
 		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -542,7 +541,7 @@ public class Castle
 			{
 				clan.setCastle(_castleId); // Set castle flag for new owner
 				clan.broadcastToOnlineMembers(new PledgeShowInfoUpdate(clan), new PlaySound(1, "Siege_Victory", 0, 0, 0, 0, 0));
-				ThreadPoolManager.getInstance().scheduleGeneral(new CastleUpdater(clan, 1), 3600000); // Schedule owner tasks to start running
+				ThreadPool.schedule(new CastleUpdater(clan, 1), 3600000); // Schedule owner tasks to start running
 			}
 		}
 		catch (Exception e)

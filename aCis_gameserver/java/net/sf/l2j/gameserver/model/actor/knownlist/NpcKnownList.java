@@ -51,7 +51,6 @@ public class NpcKnownList extends CharKnownList
 	@Override
 	public int getDistanceToForgetObject(L2Object object)
 	{
-		// distance to watch + 50%
-		return (int) Math.round(1.5 * getDistanceToWatchObject(object));
+		return 2 * getDistanceToWatchObject(object);
 	}
 }

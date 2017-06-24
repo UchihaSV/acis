@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.FishData;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 

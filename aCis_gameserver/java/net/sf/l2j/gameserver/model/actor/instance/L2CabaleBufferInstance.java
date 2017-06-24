@@ -18,8 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
@@ -70,7 +71,7 @@ public class L2CabaleBufferInstance extends L2NpcInstance
 	{
 		super(objectId, template);
 		
-		_aiTask = ThreadPoolManager.getInstance().scheduleAiAtFixedRate(new CabaleAI(this), 5000, 5000);
+		_aiTask = ThreadPool.scheduleAtFixedRate(new CabaleAI(this), 5000, 5000);
 	}
 	
 	@Override

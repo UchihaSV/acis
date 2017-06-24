@@ -42,7 +42,7 @@ public class Seed implements IItemHandler
 		
 		final L2Object tgt = playable.getTarget();
 		
-		if (!(tgt instanceof L2Attackable) || !((L2Attackable) tgt).isSeedable())
+		if (!(tgt instanceof L2Attackable) || !((L2Attackable) tgt).getTemplate().isSeedable())
 		{
 			playable.sendPacket(SystemMessageId.THE_TARGET_IS_UNAVAILABLE_FOR_SEEDING);
 			return;

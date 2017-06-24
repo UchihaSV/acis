@@ -77,7 +77,9 @@ public class ManaHeal implements ISkillHandler
 			
 			skill.getEffectsSelf(activeChar);
 		}
-		activeChar.setChargedShot(activeChar.isChargedShot(ShotType.BLESSED_SPIRITSHOT) ? ShotType.BLESSED_SPIRITSHOT : ShotType.SPIRITSHOT, skill.isStaticReuse());
+		
+		if (!skill.isPotion())
+			activeChar.setChargedShot(activeChar.isChargedShot(ShotType.BLESSED_SPIRITSHOT) ? ShotType.BLESSED_SPIRITSHOT : ShotType.SPIRITSHOT, skill.isStaticReuse());
 	}
 	
 	@Override

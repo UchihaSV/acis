@@ -62,8 +62,8 @@ public class Q401_PathToAWarrior extends Quest
 		
 		if (event.equalsIgnoreCase("30010-05.htm"))
 		{
-			if (player.getClassId() != ClassId.fighter)
-				htmltext = (player.getClassId() == ClassId.warrior) ? "30010-03.htm" : "30010-02b.htm";
+			if (player.getClassId() != ClassId.HUMAN_FIGHTER)
+				htmltext = (player.getClassId() == ClassId.WARRIOR) ? "30010-03.htm" : "30010-02b.htm";
 			else if (player.getLevel() < 19)
 				htmltext = "30010-02.htm";
 			else if (st.hasQuestItems(MEDALLION_OF_WARRIOR))

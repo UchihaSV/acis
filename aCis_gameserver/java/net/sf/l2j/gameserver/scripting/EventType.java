@@ -26,6 +26,7 @@ public enum EventType
 	ON_ATTACK_ACT(true), // onAttackAct event is triggered when a mob attacks someone
 	ON_KILL(true), // onKill action triggered when a mob gets killed.
 	ON_SPAWN(true), // onSpawn action triggered when an NPC is spawned or respawned.
+	ON_DECAY(true), // onDecay action triggered when a NPC decays.
 	ON_SKILL_SEE(true), // NPC or Mob saw a person casting a skill (regardless what the target is).
 	ON_FACTION_CALL(true), // NPC or Mob saw a person casting a skill (regardless what the target is).
 	ON_AGGRO(true), // a person came within the Npc/Mob's range

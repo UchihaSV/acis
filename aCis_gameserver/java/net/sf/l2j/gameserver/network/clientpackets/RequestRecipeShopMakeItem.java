@@ -17,7 +17,7 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.PrivateStoreType;
+import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.StoreType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.util.FloodProtectors;
 import net.sf.l2j.gameserver.util.FloodProtectors.Action;
@@ -55,10 +55,10 @@ public final class RequestRecipeShopMakeItem extends L2GameClientPacket
 		if (activeChar.isInStoreMode())
 			return;
 		
-		if (manufacturer.getPrivateStoreType() != PrivateStoreType.MANUFACTURE)
+		if (manufacturer.getStoreType() != StoreType.MANUFACTURE)
 			return;
 		
-		if (activeChar.isInCraftMode() || manufacturer.isInCraftMode())
+		if (activeChar.isCrafting() || manufacturer.isCrafting())
 			return;
 		
 		if (manufacturer.isInDuel() || activeChar.isInDuel())

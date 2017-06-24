@@ -17,15 +17,17 @@ package net.sf.l2j.gameserver.scripting.scripts.ai.individual;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2GrandBossInstance;
@@ -35,18 +37,17 @@ import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.network.serverpackets.SpecialCamera;
 import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.util.Util;
 
 /**
  * That AI is heavily based on Valakas/Baium scripts.<br>
  * It uses the 29019 dummy id in order to register it (addBoss and statsSet), but 3 different templates according the situation.
- * @author Tryskell
  */
-public class Antharas extends AbstractNpcAI
+public class Antharas extends L2AttackableAIScript
 {
-	private static final L2BossZone ANTHARAS_LAIR = GrandBossManager.getInstance().getZoneById(110001);
+	private static final L2BossZone ANTHARAS_LAIR = ZoneManager.getInstance().getZoneById(110001, L2BossZone.class);
 	
 	private static final int[] ANTHARAS_IDS =
 	{
@@ -73,24 +74,6 @@ public class Antharas extends AbstractNpcAI
 	public Antharas()
 	{
 		super("ai/individual");
-		
-		int[] allIds =
-		{
-			29066,
-			29067,
-			29068,
-			29069,
-			29070,
-			29071,
-			29072,
-			29073,
-			29074,
-			29075,
-			29076
-		};
-		
-		registerMobs(ANTHARAS_IDS, EventType.ON_ATTACK, EventType.ON_SPAWN);
-		registerMobs(allIds, EventType.ON_KILL);
 		
 		final StatsSet info = GrandBossManager.getInstance().getStatsSet(ANTHARAS);
 		
@@ -133,6 +116,13 @@ public class Antharas extends AbstractNpcAI
 				startQuestTimer("minions_spawn", _minionTimer, antharas, null, true);
 				break;
 		}
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addEventIds(ANTHARAS_IDS, EventType.ON_ATTACK, EventType.ON_SPAWN);
+		addKillId(29066, 29067, 29068, 29069, 29070, 29071, 29072, 29073, 29074, 29075, 29076);
 	}
 	
 	@Override
@@ -273,7 +263,7 @@ public class Antharas extends AbstractNpcAI
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (npc.isInvul())
 			return null;
@@ -287,16 +277,16 @@ public class Antharas extends AbstractNpcAI
 		// Debuff strider-mounted players.
 		if (attacker.getMountType() == 1)
 		{
-			final L2Skill skill = SkillTable.getInstance().getInfo(4258, 1);
-			if (attacker.getFirstEffect(skill) == null)
+			final L2Skill debuff = SkillTable.getInstance().getInfo(4258, 1);
+			if (attacker.getFirstEffect(debuff) == null)
 			{
 				npc.setTarget(attacker);
-				npc.doCast(skill);
+				npc.doCast(debuff);
 			}
 		}
 		_timeTracker = System.currentTimeMillis();
 		
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 	
 	@Override
@@ -353,8 +343,8 @@ public class Antharas extends AbstractNpcAI
 				int posX = x + Rnd.get(-1400, 1400);
 				int posY = y + Rnd.get(-1400, 1400);
 				
-				if (PathFinding.getInstance().canMoveToTarget(x, y, z, posX, posY, z))
-					npc.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(posX, posY, z, 0));
+				if (GeoEngine.getInstance().canMoveToTarget(x, y, z, posX, posY, z))
+					npc.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(posX, posY, z));
 			}
 			return;
 		}

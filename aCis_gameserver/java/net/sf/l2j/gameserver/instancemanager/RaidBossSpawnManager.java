@@ -26,9 +26,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
+import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.model.L2Spawn;
@@ -78,10 +79,7 @@ public class RaidBossSpawnManager
 				if (template != null)
 				{
 					final L2Spawn spawnDat = new L2Spawn(template);
-					spawnDat.setLocx(rset.getInt("loc_x"));
-					spawnDat.setLocy(rset.getInt("loc_y"));
-					spawnDat.setLocz(rset.getInt("loc_z"));
-					spawnDat.setHeading(rset.getInt("heading"));
+					spawnDat.setLoc(rset.getInt("loc_x"), rset.getInt("loc_y"), rset.getInt("loc_z"), rset.getInt("heading"));
 					spawnDat.setRespawnMinDelay(rset.getInt("spawn_time"));
 					spawnDat.setRespawnMaxDelay(rset.getInt("random_time"));
 					
@@ -126,7 +124,7 @@ public class RaidBossSpawnManager
 			if (bossId == 25328)
 				raidboss = DayNightSpawnManager.getInstance().handleBoss(_spawns.get(bossId));
 			else
-				raidboss = (L2RaidBossInstance) _spawns.get(bossId).doSpawn();
+				raidboss = (L2RaidBossInstance) _spawns.get(bossId).doSpawn(false);
 			
 			if (raidboss != null)
 			{
@@ -171,7 +169,7 @@ public class RaidBossSpawnManager
 			{
 				_log.info("RaidBoss: " + boss.getName() + " - " + new SimpleDateFormat("dd-MM-yyyy HH:mm").format(respawnTime) + " (" + respawnDelay + "h).");
 				
-				_schedules.put(boss.getNpcId(), ThreadPoolManager.getInstance().scheduleGeneral(new spawnSchedule(boss.getNpcId()), respawnDelay * 3600000));
+				_schedules.put(boss.getNpcId(), ThreadPool.schedule(new spawnSchedule(boss.getNpcId()), respawnDelay * 3600000));
 				updateDb();
 			}
 		}
@@ -207,7 +205,7 @@ public class RaidBossSpawnManager
 			if (bossId == 25328)
 				raidboss = DayNightSpawnManager.getInstance().handleBoss(spawnDat);
 			else
-				raidboss = (L2RaidBossInstance) spawnDat.doSpawn();
+				raidboss = (L2RaidBossInstance) spawnDat.doSpawn(false);
 			
 			if (raidboss != null)
 			{
@@ -231,7 +229,7 @@ public class RaidBossSpawnManager
 		else
 		{
 			long spawnTime = respawnTime - Calendar.getInstance().getTimeInMillis();
-			_schedules.put(bossId, ThreadPoolManager.getInstance().scheduleGeneral(new spawnSchedule(bossId), spawnTime));
+			_schedules.put(bossId, ThreadPool.schedule(new spawnSchedule(bossId), spawnTime));
 		}
 		
 		_spawns.put(bossId, spawnDat);
@@ -242,9 +240,9 @@ public class RaidBossSpawnManager
 			{
 				PreparedStatement statement = con.prepareStatement("INSERT INTO raidboss_spawnlist (boss_id,loc_x,loc_y,loc_z,heading,respawn_time,currentHp,currentMp) values(?,?,?,?,?,?,?,?)");
 				statement.setInt(1, spawnDat.getNpcId());
-				statement.setInt(2, spawnDat.getLocx());
-				statement.setInt(3, spawnDat.getLocy());
-				statement.setInt(4, spawnDat.getLocz());
+				statement.setInt(2, spawnDat.getLocX());
+				statement.setInt(3, spawnDat.getLocY());
+				statement.setInt(4, spawnDat.getLocZ());
 				statement.setInt(5, spawnDat.getHeading());
 				statement.setLong(6, respawnTime);
 				statement.setDouble(7, currentHP);

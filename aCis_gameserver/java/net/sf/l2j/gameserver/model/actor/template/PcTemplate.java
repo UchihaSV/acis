@@ -19,7 +19,8 @@ import java.util.List;
 
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.model.base.ClassId;
-import net.sf.l2j.gameserver.model.base.Race;
+import net.sf.l2j.gameserver.model.base.ClassRace;
+import net.sf.l2j.gameserver.model.base.Sex;
 import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.templates.StatsSet;
 
@@ -29,10 +30,10 @@ import net.sf.l2j.gameserver.templates.StatsSet;
 public class PcTemplate extends CharTemplate
 {
 	private final ClassId _classId;
-	private final Race _race;
-	private final String _className;
 	
 	private final int _fallingHeight;
+	
+	private final int _baseSwimSpd;
 	
 	private final double _collisionRadiusFemale;
 	private final double _collisionHeightFemale;
@@ -49,13 +50,13 @@ public class PcTemplate extends CharTemplate
 	
 	private final List<Item> _items = new ArrayList<>();
 	
-	public PcTemplate(StatsSet set)
+	public PcTemplate(ClassId classId, StatsSet set)
 	{
 		super(set);
 		
-		_classId = ClassId.values()[set.getInteger("classId")];
-		_race = Race.values()[set.getInteger("raceId")];
-		_className = set.getString("className");
+		_classId = classId;
+		
+		_baseSwimSpd = set.getInteger("swimSpd", 1);
 		
 		_fallingHeight = set.getInteger("falling_height", 333);
 		
@@ -94,7 +95,7 @@ public class PcTemplate extends CharTemplate
 	 * Add starter equipement.
 	 * @param itemId the item to add if template is found
 	 */
-	public void addItem(int itemId)
+	public final void addItem(int itemId)
 	{
 		final Item item = ItemTable.getInstance().getTemplate(itemId);
 		if (item != null)
@@ -104,84 +105,87 @@ public class PcTemplate extends CharTemplate
 	/**
 	 * @return itemIds of all the starter equipment
 	 */
-	public List<Item> getItems()
+	public final List<Item> getItems()
 	{
 		return _items;
 	}
 	
-	public ClassId getClassId()
+	public final ClassId getClassId()
 	{
 		return _classId;
 	}
 	
-	public Race getRace()
+	public final ClassRace getRace()
 	{
-		return _race;
+		return _classId.getRace();
 	}
 	
-	public String getClassName()
+	public final String getClassName()
 	{
-		return _className;
+		return _classId.toString();
 	}
 	
-	public int getFallHeight()
+	public final int getFallHeight()
 	{
 		return _fallingHeight;
 	}
 	
-	/**
-	 * @param sex : True - female, False - male.
-	 * @return : height depends on sex.
-	 */
-	@Override
-	public int getCollisionRadius(boolean sex)
+	public final int getBaseSwimSpeed()
 	{
-		return (int) ((sex) ? _collisionRadiusFemale : _collisionRadius);
+		return _baseSwimSpd;
 	}
 	
 	/**
-	 * @param sex : True - female, False - male.
+	 * @param sex
 	 * @return : height depends on sex.
 	 */
-	@Override
-	public int getCollisionHeight(boolean sex)
+	public double getCollisionRadiusBySex(Sex sex)
 	{
-		return (int) ((sex) ? _collisionHeightFemale : _collisionHeight);
+		return (sex == Sex.MALE) ? _collisionRadius : _collisionRadiusFemale;
 	}
 	
-	public int getSpawnX()
+	/**
+	 * @param sex
+	 * @return : height depends on sex.
+	 */
+	public double getCollisionHeightBySex(Sex sex)
+	{
+		return (sex == Sex.MALE) ? _collisionHeight : _collisionHeightFemale;
+	}
+	
+	public final int getSpawnX()
 	{
 		return _spawnX;
 	}
 	
-	public int getSpawnY()
+	public final int getSpawnY()
 	{
 		return _spawnY;
 	}
 	
-	public int getSpawnZ()
+	public final int getSpawnZ()
 	{
 		return _spawnZ;
 	}
 	
-	public int getClassBaseLevel()
+	public final int getClassBaseLevel()
 	{
 		return _classBaseLevel;
 	}
 	
 	@Override
-	public double getBaseHpMax(int level)
+	public final double getBaseHpMax(int level)
 	{
 		return _hpTable[level - 1];
 	}
 	
 	@Override
-	public double getBaseMpMax(int level)
+	public final double getBaseMpMax(int level)
 	{
 		return _mpTable[level - 1];
 	}
 	
-	public double getBaseCpMax(int level)
+	public final double getBaseCpMax(int level)
 	{
 		return _cpTable[level - 1];
 	}

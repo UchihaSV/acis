@@ -18,7 +18,7 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.datatables.MapRegionTable;
+import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -206,7 +206,7 @@ public class AdminTeleport implements IAdminCommandHandler
 	
 	private static void sendHome(L2PcInstance player)
 	{
-		player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+		player.teleToLocation(TeleportWhereType.TOWN);
 		player.setIsIn7sDungeon(false);
 		player.sendMessage("A GM sent you at nearest town.");
 	}

@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.scripting.scripts.custom;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -346,7 +347,7 @@ public class KetraOrcSupport extends Quest
 						if (!(player.isAlliedWithKetra()))
 						{
 							// If the NPC got that player registered in aggro list, go further.
-							if (((L2Attackable) npc).containsTarget(player))
+							if (((L2Attackable) npc).getAggroList().containsKey(player))
 							{
 								// Save current target for future use.
 								final L2Object oldTarget = npc.getTarget();

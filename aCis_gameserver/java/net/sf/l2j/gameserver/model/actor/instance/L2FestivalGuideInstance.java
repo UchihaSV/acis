@@ -20,10 +20,12 @@ import java.util.List;
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2Party.MessageType;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.zone.type.L2PeaceZone;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
@@ -512,5 +514,17 @@ public final class L2FestivalGuideInstance extends L2NpcInstance
 		calCalc.setTimeInMillis(numMillis);
 		
 		return calCalc.get(Calendar.YEAR) + "/" + calCalc.get(Calendar.MONTH) + "/" + calCalc.get(Calendar.DAY_OF_MONTH);
+	}
+	
+	@Override
+	public void onSpawn()
+	{
+		super.onSpawn();
+		
+		L2PeaceZone zone = ZoneManager.getInstance().getZone(this, L2PeaceZone.class);
+		
+		// Festival Witches are spawned inside festival, out of peace zone -> skip them
+		if (zone != null)
+			SevenSignsFestival.getInstance().addPeaceZone(zone, _festivalOracle == SevenSigns.CABAL_DAWN);
 	}
 }

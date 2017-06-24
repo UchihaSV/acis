@@ -63,7 +63,7 @@ public class GMViewPledgeInfo extends L2GameServerPacket
 				writeS(member.getName());
 				writeD(member.getLevel());
 				writeD(member.getClassId());
-				writeD(member.getSex() ? 1 : 0);
+				writeD(member.getSex().ordinal());
 				writeD(member.getRaceOrdinal());
 				writeD(member.isOnline() ? member.getObjectId() : 0);
 				writeD(member.getSponsor() != 0 ? 1 : 0);

@@ -21,9 +21,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.DropData;
@@ -81,7 +82,7 @@ public final class QuestState
 	 * @param player : L2PcInstance pointing out the player
 	 * @param state : state of the quest
 	 */
-	QuestState(L2PcInstance player, Quest quest, byte state)
+	public QuestState(L2PcInstance player, Quest quest, byte state)
 	{
 		_player = player;
 		_quest = quest;

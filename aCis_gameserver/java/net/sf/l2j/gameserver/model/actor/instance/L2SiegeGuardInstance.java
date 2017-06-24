@@ -14,11 +14,9 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
 import net.sf.l2j.gameserver.ai.model.L2SiegeGuardAI;
-import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -84,28 +82,6 @@ public final class L2SiegeGuardInstance extends L2Attackable
 	}
 	
 	/**
-	 * This method forces guard to return to home location previously set
-	 */
-	@Override
-	public void returnHome()
-	{
-		if (getWalkSpeed() <= 0)
-			return;
-		
-		if (!isInsideRadius(getSpawn().getLocx(), getSpawn().getLocy(), 40, false))
-		{
-			if (Config.DEBUG)
-				_log.fine(getObjectId() + ": moving home");
-			
-			setIsReturningToSpawnPoint(true);
-			clearAggroList();
-			
-			if (hasAI())
-				getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(getSpawn().getLocx(), getSpawn().getLocy(), getSpawn().getLocz(), 0));
-		}
-	}
-	
-	/**
 	 * Note that super() is not called because guards need extra check to see if a player should interact or ATTACK them when clicked.
 	 */
 	@Override
@@ -152,5 +128,20 @@ public final class L2SiegeGuardInstance extends L2Attackable
 	public boolean isGuard()
 	{
 		return true;
+	}
+	
+	@Override
+	public boolean returnHome()
+	{
+		getAggroList().clear();
+		
+		if (getMoveSpeed() > 0 && hasAI() && getSpawn() != null && !isInsideRadius(getSpawn().getLocX(), getSpawn().getLocY(), 20, false))
+		{
+			setIsReturningToSpawnPoint(true);
+			setWalking();
+			getAI().setIntention(CtrlIntention.MOVE_TO, getSpawn().getLoc());
+			return true;
+		}
+		return false;
 	}
 }

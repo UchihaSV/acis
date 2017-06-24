@@ -27,10 +27,10 @@ public class Q001_LettersOfLove extends Quest
 	private static final int BAULRO = 30033;
 	
 	// Items
-	private static final int DARINGS_LETTER = 687;
-	private static final int RAPUNZELS_KERCHIEF = 688;
-	private static final int DARINGS_RECEIPT = 1079;
-	private static final int BAULROS_POTION = 1080;
+	private static final int DARIN_LETTER = 687;
+	private static final int ROXXY_KERCHIEF = 688;
+	private static final int DARIN_RECEIPT = 1079;
+	private static final int BAULRO_POTION = 1080;
 	
 	// Reward
 	private static final int NECKLACE = 906;
@@ -39,7 +39,7 @@ public class Q001_LettersOfLove extends Quest
 	{
 		super(1, "Letters of Love");
 		
-		setItemsIds(DARINGS_LETTER, RAPUNZELS_KERCHIEF, DARINGS_RECEIPT, BAULROS_POTION);
+		setItemsIds(DARIN_LETTER, ROXXY_KERCHIEF, DARIN_RECEIPT, BAULRO_POTION);
 		
 		addStartNpc(DARIN);
 		addTalkId(DARIN, ROXXY, BAULRO);
@@ -58,7 +58,7 @@ public class Q001_LettersOfLove extends Quest
 			st.setState(STATE_STARTED);
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
-			st.giveItems(DARINGS_LETTER, 1);
+			st.giveItems(DARIN_LETTER, 1);
 		}
 		
 		return htmltext;
@@ -90,15 +90,15 @@ public class Q001_LettersOfLove extends Quest
 							htmltext = "30048-08.htm";
 							st.set("cond", "3");
 							st.playSound(QuestState.SOUND_MIDDLE);
-							st.takeItems(RAPUNZELS_KERCHIEF, 1);
-							st.giveItems(DARINGS_RECEIPT, 1);
+							st.takeItems(ROXXY_KERCHIEF, 1);
+							st.giveItems(DARIN_RECEIPT, 1);
 						}
 						else if (cond == 3)
 							htmltext = "30048-09.htm";
 						else if (cond == 4)
 						{
 							htmltext = "30048-10.htm";
-							st.takeItems(BAULROS_POTION, 1);
+							st.takeItems(BAULRO_POTION, 1);
 							st.giveItems(NECKLACE, 1);
 							st.playSound(QuestState.SOUND_FINISH);
 							st.exitQuest(false);
@@ -111,8 +111,8 @@ public class Q001_LettersOfLove extends Quest
 							htmltext = "30006-01.htm";
 							st.set("cond", "2");
 							st.playSound(QuestState.SOUND_MIDDLE);
-							st.takeItems(DARINGS_LETTER, 1);
-							st.giveItems(RAPUNZELS_KERCHIEF, 1);
+							st.takeItems(DARIN_LETTER, 1);
+							st.giveItems(ROXXY_KERCHIEF, 1);
 						}
 						else if (cond == 2)
 							htmltext = "30006-02.htm";
@@ -126,8 +126,8 @@ public class Q001_LettersOfLove extends Quest
 							htmltext = "30033-01.htm";
 							st.set("cond", "4");
 							st.playSound(QuestState.SOUND_MIDDLE);
-							st.takeItems(DARINGS_RECEIPT, 1);
-							st.giveItems(BAULROS_POTION, 1);
+							st.takeItems(DARIN_RECEIPT, 1);
+							st.giveItems(BAULRO_POTION, 1);
 						}
 						else if (cond == 4)
 							htmltext = "30033-02.htm";

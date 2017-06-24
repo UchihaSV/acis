@@ -36,6 +36,6 @@ public class FuncMAtkSpeed extends Func
 	@Override
 	public void calc(Env env)
 	{
-		env.mulValue(Formulas.WITbonus[env.getCharacter().getWIT()]);
+		env.mulValue(Formulas.WIT_BONUS[env.getCharacter().getWIT()]);
 	}
 }

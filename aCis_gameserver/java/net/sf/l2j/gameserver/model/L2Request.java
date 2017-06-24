@@ -14,7 +14,8 @@
  */
 package net.sf.l2j.gameserver.model;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.clientpackets.L2GameClientPacket;
@@ -115,7 +116,7 @@ public class L2Request
 	
 	private void setOnRequestTimer(boolean isRequestor)
 	{
-		ThreadPoolManager.getInstance().scheduleGeneral(new Runnable()
+		ThreadPool.schedule(new Runnable()
 		{
 			@Override
 			public void run()

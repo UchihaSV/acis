@@ -14,6 +14,8 @@
  */
 package net.sf.l2j.gameserver.scripting.scripts.teleports;
 
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -21,7 +23,6 @@ import net.sf.l2j.gameserver.model.itemcontainer.PcInventory;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
-import net.sf.l2j.gameserver.util.Util;
 
 public class OracleTeleport extends Quest
 {
@@ -259,14 +260,14 @@ public class OracleTeleport extends Quest
 		int npcId = npc.getNpcId();
 		if (event.equalsIgnoreCase("Return"))
 		{
-			if (Util.contains(TEMPLE_PRIEST, npcId) && st.getState() == STATE_STARTED)
+			if (ArraysUtil.contains(TEMPLE_PRIEST, npcId) && st.getState() == STATE_STARTED)
 			{
 				Location loc = RETURN_LOCS[st.getInt("id")];
 				player.teleToLocation(loc.getX(), loc.getY(), loc.getZ(), 0);
 				player.setIsIn7sDungeon(false);
 				st.exitQuest(true);
 			}
-			else if (Util.contains(RIFT_POSTERS, npcId) && st.getState() == STATE_STARTED)
+			else if (ArraysUtil.contains(RIFT_POSTERS, npcId) && st.getState() == STATE_STARTED)
 			{
 				Location loc = RETURN_LOCS[st.getInt("id")];
 				player.teleToLocation(loc.getX(), loc.getY(), loc.getZ(), 0);
@@ -277,12 +278,12 @@ public class OracleTeleport extends Quest
 		else if (event.equalsIgnoreCase("Festival"))
 		{
 			int id = st.getInt("id");
-			if (Util.contains(TOWN_DAWN, id))
+			if (ArraysUtil.contains(TOWN_DAWN, id))
 			{
 				player.teleToLocation(-80157, 111344, -4901, 0);
 				player.setIsIn7sDungeon(true);
 			}
-			else if (Util.contains(TOWN_DUSK, id))
+			else if (ArraysUtil.contains(TOWN_DUSK, id))
 			{
 				player.teleToLocation(-81261, 86531, -5157, 0);
 				player.setIsIn7sDungeon(true);
@@ -360,7 +361,7 @@ public class OracleTeleport extends Quest
 		
 		int npcId = npc.getNpcId();
 		
-		if (Util.contains(TOWN_DAWN, npcId))
+		if (ArraysUtil.contains(TOWN_DAWN, npcId))
 		{
 			st.setState(STATE_STARTED);
 			
@@ -378,7 +379,7 @@ public class OracleTeleport extends Quest
 			player.setIsIn7sDungeon(true);
 		}
 		
-		if (Util.contains(TOWN_DUSK, npcId))
+		if (ArraysUtil.contains(TOWN_DUSK, npcId))
 		{
 			st.setState(STATE_STARTED);
 			

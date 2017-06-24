@@ -165,7 +165,7 @@ public class GameServerThread extends Thread
 		}
 		catch (IOException e)
 		{
-			String serverName = (getServerId() != -1 ? "[" + getServerId() + "] " + GameServerTable.getInstance().getServerNameById(getServerId()) : "(" + _connectionIPAddress + ")");
+			String serverName = (getServerId() != -1 ? "[" + getServerId() + "] " + GameServerTable.getInstance().getServerNames().get(getServerId()) : "(" + _connectionIPAddress + ")");
 			_log.info("GameServer " + serverName + ": " + e.getMessage() + ".");
 		}
 		finally
@@ -173,7 +173,7 @@ public class GameServerThread extends Thread
 			if (isAuthed())
 			{
 				_gsi.setDown();
-				_log.info("GameServer [" + getServerId() + "] " + GameServerTable.getInstance().getServerNameById(getServerId()) + " is now set as disconnected.");
+				_log.info("GameServer [" + getServerId() + "] " + GameServerTable.getInstance().getServerNames().get(getServerId()) + " is now set as disconnected.");
 			}
 			L2LoginServer.getInstance().getGameServerListener().removeGameServer(this);
 			L2LoginServer.getInstance().getGameServerListener().removeFloodProtection(_connectionIp);
@@ -266,7 +266,7 @@ public class GameServerThread extends Thread
 		final int id = gameServerAuth.getDesiredID();
 		final byte[] hexId = gameServerAuth.getHexID();
 		
-		GameServerInfo gsi = GameServerTable.getInstance().getRegisteredGameServerById(id);
+		GameServerInfo gsi = GameServerTable.getInstance().getRegisteredGameServers().get(id);
 		// is there a gameserver registered with this id?
 		if (gsi != null)
 		{
@@ -277,7 +277,7 @@ public class GameServerThread extends Thread
 				synchronized (gsi)
 				{
 					if (gsi.isAuthed())
-						forceClose(LoginServerFail.REASON_ALREADY_LOGGED8IN);
+						forceClose(LoginServerFail.REASON_ALREADY_LOGGED_IN);
 					else
 						attachGameServerInfo(gsi, gameServerAuth);
 				}
@@ -289,7 +289,7 @@ public class GameServerThread extends Thread
 				if (Config.ACCEPT_NEW_GAMESERVER && gameServerAuth.acceptAlternateID())
 				{
 					gsi = new GameServerInfo(id, hexId, this);
-					if (GameServerTable.getInstance().registerWithFirstAvaliableId(gsi))
+					if (GameServerTable.getInstance().registerWithFirstAvailableId(gsi))
 					{
 						attachGameServerInfo(gsi, gameServerAuth);
 						GameServerTable.getInstance().registerServerOnDB(gsi);
@@ -470,7 +470,7 @@ public class GameServerThread extends Thread
 		else
 			_gsi.setInternalIp(_connectionIp);
 		
-		_log.info("Hooked gameserver: [" + getServerId() + "] " + GameServerTable.getInstance().getServerNameById(getServerId()));
+		_log.info("Hooked gameserver: [" + getServerId() + "] " + GameServerTable.getInstance().getServerNames().get(getServerId()));
 		_log.info("Internal/External IP(s): " + ((oldInternal == null) ? gameInternalHost : oldInternal) + "/" + ((oldExternal == null) ? gameExternalHost : oldExternal));
 	}
 	

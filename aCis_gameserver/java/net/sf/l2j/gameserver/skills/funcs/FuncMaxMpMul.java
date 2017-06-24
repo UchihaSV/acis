@@ -36,6 +36,6 @@ public class FuncMaxMpMul extends Func
 	@Override
 	public void calc(Env env)
 	{
-		env.mulValue(Formulas.MENbonus[env.getCharacter().getMEN()]);
+		env.mulValue(Formulas.MEN_BONUS[env.getCharacter().getMEN()]);
 	}
 }

@@ -16,8 +16,9 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.concurrent.Future;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -93,7 +94,7 @@ public final class L2TamedBeastInstance extends L2FeedableBeastInstance
 				_foodTask.cancel(true);
 			
 			// Start the food check.
-			_foodTask = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new FoodCheck(this), DURATION_CHECK_INTERVAL, DURATION_CHECK_INTERVAL);
+			_foodTask = ThreadPool.scheduleAtFixedRate(new FoodCheck(this), DURATION_CHECK_INTERVAL, DURATION_CHECK_INTERVAL);
 		}
 	}
 	
@@ -148,7 +149,7 @@ public final class L2TamedBeastInstance extends L2FeedableBeastInstance
 				_buffTask.cancel(true);
 			
 			// Start the buff task.
-			_buffTask = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new CheckOwnerBuffs(this, getTemplate().getBuffSkills().size()), BUFF_INTERVAL, BUFF_INTERVAL);
+			_buffTask = ThreadPool.scheduleAtFixedRate(new CheckOwnerBuffs(this, getTemplate().getBuffSkills().size()), BUFF_INTERVAL, BUFF_INTERVAL);
 		}
 		// Despawn if no owner
 		else

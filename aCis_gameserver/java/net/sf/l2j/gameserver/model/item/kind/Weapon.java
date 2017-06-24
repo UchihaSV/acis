@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.handler.SkillHandler;
 import net.sf.l2j.gameserver.model.L2Effect;

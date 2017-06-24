@@ -20,8 +20,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
@@ -72,31 +73,21 @@ public final class L2WorldRegion
 	
 	public void revalidateZones(L2Character character)
 	{
-		// do NOT update the world region while the character is still in the process of teleporting
-		// Once the teleport is COMPLETED, revalidation occurs safely, at that time.
-		
+		// Do NOT update the world region while the character is still in the process of teleporting
 		if (character.isTeleporting())
 			return;
 		
-		for (L2ZoneType z : getZones())
-		{
-			if (z != null)
-				z.revalidateInZone(character);
-		}
+		_zones.forEach(z -> z.revalidateInZone(character));
 	}
 	
 	public void removeFromZones(L2Character character)
 	{
-		for (L2ZoneType z : getZones())
-		{
-			if (z != null)
-				z.removeCharacter(character);
-		}
+		_zones.forEach(z -> z.removeCharacter(character));
 	}
 	
 	public boolean containsZone(int zoneId)
 	{
-		for (L2ZoneType z : getZones())
+		for (L2ZoneType z : _zones)
 		{
 			if (z.getId() == zoneId)
 				return true;
@@ -112,7 +103,7 @@ public final class L2WorldRegion
 		final int left = x + range;
 		final int right = x - range;
 		
-		for (L2ZoneType e : getZones())
+		for (L2ZoneType e : _zones)
 		{
 			if ((e instanceof L2TownZone && ((L2TownZone) e).isPeaceZone()) || e instanceof L2DerbyTrackZone || e instanceof L2PeaceZone)
 			{
@@ -137,20 +128,12 @@ public final class L2WorldRegion
 	
 	public void onDeath(L2Character character)
 	{
-		for (L2ZoneType z : getZones())
-		{
-			if (z != null)
-				z.onDieInside(character);
-		}
+		_zones.stream().filter(z -> z.isCharacterInZone(character)).forEach(z -> z.onDieInside(character));
 	}
 	
 	public void onRevive(L2Character character)
 	{
-		for (L2ZoneType z : getZones())
-		{
-			if (z != null)
-				z.onReviveInside(character);
-		}
+		_zones.stream().filter(z -> z.isCharacterInZone(character)).forEach(z -> z.onReviveInside(character));
 	}
 	
 	/** Task of AI notification */
@@ -204,7 +187,7 @@ public final class L2WorldRegion
 					// Stop all active skills effects in progress on the L2Character
 					mob.stopAllEffects();
 					
-					mob.clearAggroList();
+					mob.getAggroList().clear();
 					mob.getAttackByList().clear();
 					mob.getKnownList().removeAllKnownObjects();
 					
@@ -290,7 +273,7 @@ public final class L2WorldRegion
 			}
 			
 			// then, set a timer to activate the neighbors
-			_neighborsTask = ThreadPoolManager.getInstance().scheduleGeneral(new NeighborsTask(true), 1000 * Config.GRID_NEIGHBOR_TURNON_TIME);
+			_neighborsTask = ThreadPool.schedule(new NeighborsTask(true), 1000 * Config.GRID_NEIGHBOR_TURNON_TIME);
 		}
 	}
 	
@@ -310,7 +293,7 @@ public final class L2WorldRegion
 			
 			// start a timer to "suggest" a deactivate to self and neighbors.
 			// suggest means: first check if a neighbor has L2PcInstances in it. If not, deactivate.
-			_neighborsTask = ThreadPoolManager.getInstance().scheduleGeneral(new NeighborsTask(false), 1000 * Config.GRID_NEIGHBOR_TURNOFF_TIME);
+			_neighborsTask = ThreadPool.schedule(new NeighborsTask(false), 1000 * Config.GRID_NEIGHBOR_TURNOFF_TIME);
 		}
 	}
 	
@@ -325,7 +308,7 @@ public final class L2WorldRegion
 		if (object == null)
 			return;
 		
-		assert object.getWorldRegion() == this;
+		assert object.getRegion() == this;
 		
 		_visibleObjects.put(object.getObjectId(), object);
 		
@@ -351,7 +334,7 @@ public final class L2WorldRegion
 		if (object == null)
 			return;
 		
-		assert object.getWorldRegion() == this || object.getWorldRegion() == null;
+		assert object.getRegion() == this || object.getRegion() == null;
 		
 		_visibleObjects.remove(object.getObjectId());
 		
@@ -406,7 +389,7 @@ public final class L2WorldRegion
 				final L2Spawn spawn = ((L2Npc) obj).getSpawn();
 				if (spawn != null)
 				{
-					spawn.stopRespawn();
+					spawn.setRespawnState(false);
 					SpawnTable.getInstance().deleteSpawn(spawn, false);
 				}
 			}

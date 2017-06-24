@@ -20,9 +20,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
 
+import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.commons.random.Rnd;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -177,8 +178,8 @@ abstract public class OlympiadGameNormal extends AbstractOlympiadGame
 		if (_playerOne.player == null || _playerTwo.player == null)
 			return false;
 		
-		_playerOne.player.setIsOlympiadStart(true);
-		_playerTwo.player.setIsOlympiadStart(true);
+		_playerOne.player.setOlympiadStart(true);
+		_playerTwo.player.setOlympiadStart(true);
 		return true;
 	}
 	

@@ -28,7 +28,7 @@ public class ChatAlliance implements IChatHandler
 	@Override
 	public void handleChat(int type, L2PcInstance activeChar, String target, String text)
 	{
-		if (activeChar.getClan() == null)
+		if (activeChar.getClan() == null || activeChar.getClan().getAllyId() == 0)
 			return;
 		
 		activeChar.getClan().broadcastToOnlineAllyMembers(new CreatureSay(activeChar.getObjectId(), type, activeChar.getName(), text));

@@ -41,47 +41,37 @@ public class AdminAnnouncements implements IAdminCommandHandler
 	{
 		if (command.startsWith("admin_announce"))
 		{
-			final String[] tokens = command.split(" ", 3);
-			switch (tokens[1])
+			try
 			{
-				case "list":
-					AnnouncementTable.getInstance().listAnnouncements(activeChar);
-					break;
-				
-				case "all":
-					for (L2PcInstance player : L2World.getInstance().getPlayers())
-						AnnouncementTable.getInstance().showAnnouncements(player, false);
+				final String[] tokens = command.split(" ", 3);
+				switch (tokens[1])
+				{
+					case "list":
+						AnnouncementTable.getInstance().listAnnouncements(activeChar);
+						break;
 					
-					AnnouncementTable.getInstance().listAnnouncements(activeChar);
-					break;
-				
-				case "all_auto":
-					for (L2PcInstance player : L2World.getInstance().getPlayers())
-						AnnouncementTable.getInstance().showAnnouncements(player, true);
+					case "all":
+					case "all_auto":
+						final boolean isAuto = tokens[1].equalsIgnoreCase("all_auto");
+						for (L2PcInstance player : L2World.getInstance().getPlayers())
+							AnnouncementTable.getInstance().showAnnouncements(player, isAuto);
+						
+						AnnouncementTable.getInstance().listAnnouncements(activeChar);
+						break;
 					
-					AnnouncementTable.getInstance().listAnnouncements(activeChar);
-					break;
-				
-				case "add":
-					try
-					{
-						final String[] split = tokens[2].split(" ", 2); // boolean string
-						final boolean crit = Boolean.parseBoolean(split[0]);
+					case "add":
+						String[] split = tokens[2].split(" ", 2); // boolean string
+						boolean crit = Boolean.parseBoolean(split[0]);
 						
 						if (!AnnouncementTable.getInstance().addAnnouncement(split[1], crit, false, -1, -1, -1))
 							activeChar.sendMessage("Invalid //announce message content ; can't be null or empty.");
-					}
-					catch (Exception e)
-					{
-					}
-					AnnouncementTable.getInstance().listAnnouncements(activeChar);
-					break;
-				
-				case "add_auto":
-					try
-					{
-						final String[] split = tokens[2].split(" ", 6); // boolean boolean int int int string
-						final boolean crit = Boolean.parseBoolean(split[0]);
+						
+						AnnouncementTable.getInstance().listAnnouncements(activeChar);
+						break;
+					
+					case "add_auto":
+						split = tokens[2].split(" ", 6); // boolean boolean int int int string
+						crit = Boolean.parseBoolean(split[0]);
 						final boolean auto = Boolean.parseBoolean(split[1]);
 						final int idelay = Integer.parseInt(split[2]);
 						final int delay = Integer.parseInt(split[3]);
@@ -90,27 +80,23 @@ public class AdminAnnouncements implements IAdminCommandHandler
 						
 						if (!AnnouncementTable.getInstance().addAnnouncement(msg, crit, auto, idelay, delay, limit))
 							activeChar.sendMessage("Invalid //announce message content ; can't be null or empty.");
-					}
-					catch (Exception e)
-					{
-					}
-					AnnouncementTable.getInstance().listAnnouncements(activeChar);
-					break;
-				
-				case "del":
-					try
-					{
+						
+						AnnouncementTable.getInstance().listAnnouncements(activeChar);
+						break;
+					
+					case "del":
 						AnnouncementTable.getInstance().delAnnouncement(Integer.parseInt(tokens[2]));
-					}
-					catch (Exception e)
-					{
-					}
-					AnnouncementTable.getInstance().listAnnouncements(activeChar);
-					break;
-				
-				default:
-					activeChar.sendMessage("Possible //announce parameters : <list|all|add|add_auto|del>");
-					return false;
+						AnnouncementTable.getInstance().listAnnouncements(activeChar);
+						break;
+					
+					default:
+						activeChar.sendMessage("Possible //announce parameters : <list|all|add|add_auto|del>");
+						break;
+				}
+			}
+			catch (Exception e)
+			{
+				activeChar.sendMessage("Possible //announce parameters : <list|all|add|add_auto|del>");
 			}
 		}
 		else if (command.startsWith("admin_ann") || command.startsWith("admin_say"))

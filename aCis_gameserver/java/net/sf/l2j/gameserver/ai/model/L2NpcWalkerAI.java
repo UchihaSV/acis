@@ -16,11 +16,13 @@ package net.sf.l2j.gameserver.ai.model;
 
 import java.util.List;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.NpcWalkerRoutesTable;
-import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2NpcWalkerNode;
+import net.sf.l2j.gameserver.model.Location;
+import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2NpcWalkerInstance;
 
@@ -44,7 +46,7 @@ public class L2NpcWalkerAI extends L2CharacterAI implements Runnable
 		_route = NpcWalkerRoutesTable.getInstance().getRouteForNpc(getActor().getNpcId());
 		
 		if (_route != null)
-			ThreadPoolManager.getInstance().scheduleAiAtFixedRate(this, 1000, 1000);
+			ThreadPool.scheduleAtFixedRate(this, 1000, 1000);
 		else
 			_log.warning(getClass().getSimpleName() + ": Missing route data for NpcID: " + _actor);
 	}
@@ -70,15 +72,15 @@ public class L2NpcWalkerAI extends L2CharacterAI implements Runnable
 	
 	/**
 	 * If npc can't walk to it's target then just teleport to next point
-	 * @param blockedPos ignoring it
+	 * @param loc ignoring it
 	 */
 	@Override
-	protected void onEvtArrivedBlocked(L2CharPosition blockedPos)
+	protected void onEvtArrivedBlocked(SpawnLocation loc)
 	{
-		_log.warning("NpcWalker ID: " + getActor().getNpcId() + ": Blocked at coords: " + blockedPos.x + ", " + blockedPos.y + ", " + blockedPos.z + ". Teleporting to next point.");
+		_log.warning("NpcWalker ID: " + getActor().getNpcId() + ": Blocked at coords: " + loc.toString() + ". Teleporting to next point.");
 		
 		getActor().teleToLocation(_currentNode.getMoveX(), _currentNode.getMoveY(), _currentNode.getMoveZ(), 0);
-		super.onEvtArrivedBlocked(blockedPos);
+		super.onEvtArrivedBlocked(loc);
 	}
 	
 	private void checkArrived()
@@ -109,7 +111,7 @@ public class L2NpcWalkerAI extends L2CharacterAI implements Runnable
 			getActor().setWalking();
 		
 		_walkingToNextPoint = true;
-		setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(_currentNode.getMoveX(), _currentNode.getMoveY(), _currentNode.getMoveZ(), 0));
+		setIntention(CtrlIntention.MOVE_TO, new Location(_currentNode.getMoveX(), _currentNode.getMoveY(), _currentNode.getMoveZ()));
 	}
 	
 	@Override

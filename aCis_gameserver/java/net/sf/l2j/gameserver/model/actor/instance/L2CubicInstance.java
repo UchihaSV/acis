@@ -20,8 +20,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.ai.CtrlEvent;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.handler.ISkillHandler;
@@ -132,7 +133,7 @@ public class L2CubicInstance
 				_skills.add(SkillTable.getInstance().getInfo(5116, level));
 				break;
 		}
-		_disappearTask = ThreadPoolManager.getInstance().scheduleGeneral(new Disappear(), totallifetime); // disappear
+		_disappearTask = ThreadPool.schedule(new Disappear(), totallifetime); // disappear
 	}
 	
 	public synchronized void doAction()
@@ -152,11 +153,11 @@ public class L2CubicInstance
 			case VAMPIRIC_CUBIC:
 			case VIPER_CUBIC:
 			case ATTRACT_CUBIC:
-				_actionTask = ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(new Action(_activationchance), 0, _activationtime);
+				_actionTask = ThreadPool.scheduleAtFixedRate(new Action(_activationchance), 0, _activationtime);
 				break;
 			
 			case LIFE_CUBIC:
-				_actionTask = ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(new Heal(), 0, _activationtime);
+				_actionTask = ThreadPool.scheduleAtFixedRate(new Heal(), 0, _activationtime);
 				break;
 		}
 	}

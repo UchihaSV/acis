@@ -20,9 +20,11 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SkillTreeTable;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -425,7 +427,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 		_triggeredId = set.getInteger("triggeredId", 0);
 		_triggeredLevel = set.getInteger("triggeredLevel", 0);
 		_chanceType = set.getString("chanceType", "");
-		if (!_chanceType.isEmpty() && !_chanceType.isEmpty())
+		if (!_chanceType.isEmpty())
 			_chanceCondition = ChanceCondition.parse(set);
 		
 		_isOffensive = set.getBool("offensive", isSkillTypeOffensive());
@@ -1786,7 +1788,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 					targetList.add(activeChar);
 					for (L2Npc newTarget : activeChar.getKnownList().getKnownTypeInRadius(L2Npc.class, _castRange))
 					{
-						if (newTarget.isDead() || !Util.contains(((L2Npc) activeChar).getClans(), newTarget.getClans()))
+						if (newTarget.isDead() || !ArraysUtil.contains(((L2Npc) activeChar).getTemplate().getClans(), newTarget.getTemplate().getClans()))
 							continue;
 						
 						targetList.add(newTarget);
@@ -1970,7 +1972,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 					if (target.isAlikeDead() || !target.isUndead())
 						continue;
 					
-					if (!PathFinding.getInstance().canSeeTarget(activeChar, target))
+					if (!GeoEngine.getInstance().canSeeTarget(activeChar, target))
 						continue;
 					
 					if (onlyFirst)
@@ -2098,7 +2100,7 @@ public abstract class L2Skill implements IChanceSkillTrigger
 			if (skill.isOffensive() && !target.isAutoAttackable(caster))
 				return false;
 		}
-		return PathFinding.getInstance().canSeeTarget(caster, target);
+		return GeoEngine.getInstance().canSeeTarget(caster, target);
 	}
 	
 	public static final boolean addSummon(L2Character caster, L2PcInstance owner, int radius, boolean isDead)

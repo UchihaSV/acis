@@ -1,6 +1,6 @@
 /*
  * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as publishe d by the Free Software
+ * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or (at your option) any later
  * version.
  * 
@@ -14,81 +14,114 @@
  */
 package net.sf.l2j.gameserver.model.multisell;
 
+import net.sf.l2j.gameserver.datatables.ItemTable;
+import net.sf.l2j.gameserver.model.item.kind.Armor;
+import net.sf.l2j.gameserver.model.item.kind.Item;
+import net.sf.l2j.gameserver.model.item.kind.Weapon;
+import net.sf.l2j.gameserver.templates.StatsSet;
+
 public class Ingredient
 {
-	private int _itemId, _itemCount, _enchantmentLevel;
-	private boolean _isTaxIngredient, _maintainIngredient;
+	private int _itemId;
+	private int _itemCount;
+	private int _enchantmentLevel;
+	
+	private boolean _isTaxIngredient;
+	private boolean _maintainIngredient;
+	
+	private Item _template = null;
+	
+	public Ingredient(StatsSet set)
+	{
+		this(set.getInteger("id"), set.getInteger("count"), set.getBool("isTaxIngredient", false), set.getBool("maintainIngredient", false));
+	}
 	
 	public Ingredient(int itemId, int itemCount, boolean isTaxIngredient, boolean maintainIngredient)
 	{
-		this(itemId, itemCount, 0, isTaxIngredient, maintainIngredient);
-	}
-	
-	public Ingredient(int itemId, int itemCount, int enchantmentLevel, boolean isTaxIngredient, boolean mantainIngredient)
-	{
-		setItemId(itemId);
-		setItemCount(itemCount);
-		setEnchantmentLevel(enchantmentLevel);
-		setIsTaxIngredient(isTaxIngredient);
-		setMaintainIngredient(mantainIngredient);
-	}
-	
-	public Ingredient(Ingredient e)
-	{
-		_itemId = e.getItemId();
-		_itemCount = e.getItemCount();
-		_enchantmentLevel = e.getEnchantmentLevel();
-		_isTaxIngredient = e.isTaxIngredient();
-		_maintainIngredient = e.getMaintainIngredient();
-	}
-	
-	public void setItemId(int itemId)
-	{
 		_itemId = itemId;
+		_itemCount = itemCount;
+		_isTaxIngredient = isTaxIngredient;
+		_maintainIngredient = maintainIngredient;
+		
+		if (_itemId > 0)
+			_template = ItemTable.getInstance().getTemplate(_itemId);
 	}
 	
-	public int getItemId()
+	/**
+	 * @return a new Ingredient instance with the same values as this.
+	 */
+	public Ingredient getCopy()
+	{
+		return new Ingredient(_itemId, _itemCount, _isTaxIngredient, _maintainIngredient);
+	}
+	
+	public final int getItemId()
 	{
 		return _itemId;
 	}
 	
-	public void setItemCount(int itemCount)
+	public final void setItemId(int itemId)
 	{
-		_itemCount = itemCount;
+		_itemId = itemId;
 	}
 	
-	public int getItemCount()
+	public final int getItemCount()
 	{
 		return _itemCount;
 	}
 	
-	public void setEnchantmentLevel(int enchantmentLevel)
+	public final void setItemCount(int itemCount)
 	{
-		_enchantmentLevel = enchantmentLevel;
+		_itemCount = itemCount;
 	}
 	
-	public int getEnchantmentLevel()
+	public final int getEnchantLevel()
 	{
 		return _enchantmentLevel;
 	}
 	
-	public void setIsTaxIngredient(boolean isTaxIngredient)
+	public final void setEnchantLevel(int enchantmentLevel)
 	{
-		_isTaxIngredient = isTaxIngredient;
+		_enchantmentLevel = enchantmentLevel;
 	}
 	
-	public boolean isTaxIngredient()
+	public final boolean isTaxIngredient()
 	{
 		return _isTaxIngredient;
 	}
 	
-	public void setMaintainIngredient(boolean maintainIngredient)
+	public final void setIsTaxIngredient(boolean isTaxIngredient)
+	{
+		_isTaxIngredient = isTaxIngredient;
+	}
+	
+	public final boolean getMaintainIngredient()
+	{
+		return _maintainIngredient;
+	}
+	
+	public final void setMaintainIngredient(boolean maintainIngredient)
 	{
 		_maintainIngredient = maintainIngredient;
 	}
 	
-	public boolean getMaintainIngredient()
+	public final Item getTemplate()
 	{
-		return _maintainIngredient;
+		return _template;
+	}
+	
+	public final boolean isStackable()
+	{
+		return (_template == null) ? true : _template.isStackable();
+	}
+	
+	public final boolean isArmorOrWeapon()
+	{
+		return (_template == null) ? false : (_template instanceof Armor) || (_template instanceof Weapon);
+	}
+	
+	public final int getWeight()
+	{
+		return (_template == null) ? 0 : _template.getWeight();
 	}
 }

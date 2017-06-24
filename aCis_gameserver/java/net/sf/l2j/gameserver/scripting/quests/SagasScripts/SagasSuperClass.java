@@ -19,8 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Party;
@@ -42,7 +43,6 @@ public class SagasSuperClass extends Quest
 	public int[] Items = {};
 	public int[] Mob = {};
 	
-	public String qn = "SagasSuperClass";
 	public int classid;
 	public int prevclass;
 	
@@ -122,39 +122,6 @@ public class SagasSuperClass extends Quest
 	{
 		// initialize superclass
 		super(-1, "Saga's SuperClass");
-		
-		// initialize subclasses
-		new SagaOfEvasSaint();
-		new SagaOfEvasTemplar();
-		new SagaOfTheAdventurer();
-		new SagaOfTheArcanaLord();
-		new SagaOfTheArchmage();
-		new SagaOfTheCardinal();
-		new SagaOfTheDominator();
-		new SagaOfTheDoomcryer();
-		new SagaOfTheDreadnought();
-		new SagaOfTheDuelist();
-		new SagaOfTheElementalMaster();
-		new SagaOfTheFortuneSeeker();
-		new SagaOfTheGhostHunter();
-		new SagaOfTheGhostSentinel();
-		new SagaOfTheGrandKhavatari();
-		new SagaOfTheHellKnight();
-		new SagaOfTheHierophant();
-		new SagaOfTheMaestro();
-		new SagaOfTheMoonlightSentinel();
-		new SagaOfTheMysticMuse();
-		new SagaOfThePhoenixKnight();
-		new SagaOfTheSagittarius();
-		new SagaOfTheShillienSaint();
-		new SagaOfTheShillienTemplar();
-		new SagaOfTheSoultaker();
-		new SagaOfTheSpectralDancer();
-		new SagaOfTheSpectralMaster();
-		new SagaOfTheStormScreamer();
-		new SagaOfTheSwordMuse();
-		new SagaOfTheTitan();
-		new SagaOfTheWindRider();
 	}
 	
 	public SagasSuperClass(int id, String descr)
@@ -218,7 +185,7 @@ public class SagasSuperClass extends Quest
 		{
 			final L2PcInstance player = L2World.getInstance().getPlayer(_SpawnList.get(npc));
 			if (player != null)
-				return player.getQuestState(qn);
+				return player.getQuestState(getName());
 		}
 		return null;
 	}
@@ -249,7 +216,7 @@ public class SagasSuperClass extends Quest
 	
 	public QuestState findQuest(L2PcInstance player)
 	{
-		QuestState st = player.getQuestState(qn);
+		QuestState st = player.getQuestState(getName());
 		if (st != null && player.getClassId().getId() == QuestClass[qnu - 70])
 			return st;
 		
@@ -269,7 +236,7 @@ public class SagasSuperClass extends Quest
 	@Override
 	public String onAdvEvent(String event, L2Npc npc, L2PcInstance player)
 	{
-		QuestState st = player.getQuestState(qn);
+		QuestState st = player.getQuestState(getName());
 		String htmltext = "";
 		if (st != null)
 		{
@@ -585,7 +552,7 @@ public class SagasSuperClass extends Quest
 	public String onTalk(L2Npc npc, L2PcInstance player)
 	{
 		String htmltext = getNoQuestMsg();
-		QuestState st = player.getQuestState(qn);
+		QuestState st = player.getQuestState(getName());
 		if (st != null)
 		{
 			int npcId = npc.getNpcId();
@@ -755,7 +722,7 @@ public class SagasSuperClass extends Quest
 	public String onFirstTalk(L2Npc npc, L2PcInstance player)
 	{
 		String htmltext = "";
-		QuestState st = player.getQuestState(qn);
+		QuestState st = player.getQuestState(getName());
 		int npcId = npc.getNpcId();
 		if (st != null)
 		{
@@ -812,14 +779,14 @@ public class SagasSuperClass extends Quest
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance player, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance player, int damage, boolean isPet, L2Skill skill)
 	{
 		QuestState st2 = findRightState(npc);
 		if (st2 == null)
-			return super.onAttack(npc, player, damage, isPet);
+			return super.onAttack(npc, player, damage, isPet, skill);
 		
 		int cond = st2.getInt("cond");
-		QuestState st = player.getQuestState(qn);
+		QuestState st = player.getQuestState(getName());
 		int npcId = npc.getNpcId();
 		if (npcId == Mob[2] && st == st2 && cond == 17)
 		{
@@ -845,7 +812,7 @@ public class SagasSuperClass extends Quest
 				DeleteSpawn(st2, npc);
 			}
 		}
-		return super.onAttack(npc, player, damage, isPet);
+		return super.onAttack(npc, player, damage, isPet, skill);
 	}
 	
 	@Override
@@ -959,7 +926,7 @@ public class SagasSuperClass extends Quest
 			}
 		}
 		
-		QuestState st = player.getQuestState(qn);
+		QuestState st = player.getQuestState(getName());
 		if (st != null && npcId != Mob[2])
 		{
 			QuestState st2 = findRightState(npc);

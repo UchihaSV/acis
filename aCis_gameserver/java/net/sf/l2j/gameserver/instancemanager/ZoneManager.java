@@ -16,6 +16,9 @@ package net.sf.l2j.gameserver.instancemanager;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.L2WorldRegion;
@@ -36,6 +40,7 @@ import net.sf.l2j.gameserver.model.zone.form.ZoneCuboid;
 import net.sf.l2j.gameserver.model.zone.form.ZoneCylinder;
 import net.sf.l2j.gameserver.model.zone.form.ZoneNPoly;
 import net.sf.l2j.gameserver.model.zone.type.L2ArenaZone;
+import net.sf.l2j.gameserver.model.zone.type.L2BossZone;
 import net.sf.l2j.gameserver.model.zone.type.L2OlympiadStadiumZone;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
@@ -51,6 +56,9 @@ public class ZoneManager
 {
 	private static final Logger _log = Logger.getLogger(ZoneManager.class.getName());
 	
+	private static final String DELETE_GRAND_BOSS_LIST = "DELETE FROM grandboss_list";
+	private static final String INSERT_GRAND_BOSS_LIST = "INSERT INTO grandboss_list (player_id,zone) VALUES (?,?)";
+	
 	private final Map<Class<? extends L2ZoneType>, Map<Integer, ? extends L2ZoneType>> _classZones = new HashMap<>();
 	private int _lastDynamicId = 0;
 	private final List<ItemInstance> _debugItems = new ArrayList<>();
@@ -62,12 +70,17 @@ public class ZoneManager
 	
 	protected ZoneManager()
 	{
+		_log.info("ZoneManager: Loading zones...");
+		
 		load();
 	}
 	
 	public void reload()
 	{
-		// Get the world regions
+		// save L2BossZone
+		save();
+		
+		// remove zones from world
 		int count = 0;
 		for (L2WorldRegion[] worldRegion : L2World.getInstance().getWorldRegions())
 		{
@@ -77,12 +90,17 @@ public class ZoneManager
 				count++;
 			}
 		}
-		GrandBossManager.getInstance().getZones().clear();
-		_log.info("Removed zones in " + count + " regions.");
 		
-		// Load the zones
+		_log.info("ZoneManager: Removed zones in " + count + " regions.");
+		
+		// clear
+		_classZones.clear();
+		clearDebugItems();
+		
+		// load all zones
 		load();
 		
+		// revalidate objects in zones
 		for (L2Object o : L2World.getInstance().getObjects())
 		{
 			if (o instanceof L2Character)
@@ -92,9 +110,6 @@ public class ZoneManager
 	
 	private final void load()
 	{
-		_log.info("Loading zones...");
-		_classZones.clear();
-		
 		// Get the world regions
 		L2WorldRegion[][] worldRegions = L2World.getInstance().getWorldRegions();
 		
@@ -104,7 +119,7 @@ public class ZoneManager
 			final File mainDir = new File("./data/xml/zones");
 			if (!mainDir.isDirectory())
 			{
-				_log.log(Level.SEVERE, "ZoneManager: Main dir " + mainDir.getAbsolutePath() + " hasn't been found.");
+				_log.warning("ZoneManager: Main directory " + mainDir.getAbsolutePath() + " hasn't been found.");
 				return;
 			}
 			
@@ -121,11 +136,16 @@ public class ZoneManager
 		}
 		catch (Exception e)
 		{
-			_log.log(Level.SEVERE, "Error while loading zones.", e);
+			_log.log(Level.SEVERE, "ZoneManager: Error while loading zones.", e);
 			return;
 		}
 		
-		_log.info("ZoneManager: loaded " + _classZones.size() + " zones classes and " + getSize() + " zones.");
+		// get size
+		int size = 0;
+		for (Map<Integer, ? extends L2ZoneType> map : _classZones.values())
+			size += map.size();
+		
+		_log.info("ZoneManager: Loaded " + _classZones.size() + " zones classes and total " + size + " zones.");
 	}
 	
 	private void loadFileZone(final File f, L2WorldRegion[][] worldRegions) throws Exception
@@ -312,14 +332,35 @@ public class ZoneManager
 		}
 	}
 	
-	public int getSize()
+	public final void save()
 	{
-		int i = 0;
-		for (Map<Integer, ? extends L2ZoneType> map : _classZones.values())
+		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			i += map.size();
+			// clear table first
+			PreparedStatement ps = con.prepareStatement(DELETE_GRAND_BOSS_LIST);
+			ps.executeUpdate();
+			ps.close();
+			
+			// store actual data
+			ps = con.prepareStatement(INSERT_GRAND_BOSS_LIST);
+			for (L2ZoneType zone : _classZones.get(L2BossZone.class).values())
+			{
+				for (int player : ((L2BossZone) zone).getAllowedPlayers())
+				{
+					ps.setInt(1, player);
+					ps.setInt(2, zone.getId());
+					ps.addBatch();
+				}
+			}
+			ps.executeBatch();
+			ps.close();
+			
+			_log.info("ZoneManager: Saved L2BossZone data.");
 		}
-		return i;
+		catch (SQLException e)
+		{
+			_log.log(Level.WARNING, "ZoneManager: Couldn't store boss zones to database: " + e.getMessage(), e);
+		}
 	}
 	
 	public boolean checkId(int id)
@@ -415,6 +456,7 @@ public class ZoneManager
 	{
 		if (object == null)
 			return null;
+		
 		return getZone(object.getX(), object.getY(), object.getZ(), type);
 	}
 	
@@ -426,9 +468,8 @@ public class ZoneManager
 	 */
 	public List<L2ZoneType> getZones(int x, int y)
 	{
-		L2WorldRegion region = L2World.getInstance().getRegion(x, y);
-		List<L2ZoneType> temp = new ArrayList<>();
-		for (L2ZoneType zone : region.getZones())
+		final List<L2ZoneType> temp = new ArrayList<>();
+		for (L2ZoneType zone : L2World.getInstance().getRegion(x, y).getZones())
 		{
 			if (zone.isInsideZone(x, y))
 				temp.add(zone);
@@ -445,9 +486,8 @@ public class ZoneManager
 	 */
 	public List<L2ZoneType> getZones(int x, int y, int z)
 	{
-		L2WorldRegion region = L2World.getInstance().getRegion(x, y);
-		List<L2ZoneType> temp = new ArrayList<>();
-		for (L2ZoneType zone : region.getZones())
+		final List<L2ZoneType> temp = new ArrayList<>();
+		for (L2ZoneType zone : L2World.getInstance().getRegion(x, y).getZones())
 		{
 			if (zone.isInsideZone(x, y, z))
 				temp.add(zone);
@@ -467,8 +507,7 @@ public class ZoneManager
 	@SuppressWarnings("unchecked")
 	public <T extends L2ZoneType> T getZone(int x, int y, int z, Class<T> type)
 	{
-		L2WorldRegion region = L2World.getInstance().getRegion(x, y);
-		for (L2ZoneType zone : region.getZones())
+		for (L2ZoneType zone : L2World.getInstance().getRegion(x, y).getZones())
 		{
 			if (zone.isInsideZone(x, y, z) && type.isInstance(zone))
 				return (T) zone;

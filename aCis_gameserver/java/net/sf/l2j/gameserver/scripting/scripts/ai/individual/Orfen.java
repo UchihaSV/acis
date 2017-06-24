@@ -14,15 +14,17 @@
  */
 package net.sf.l2j.gameserver.scripting.scripts.ai.individual;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Spawn;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -31,16 +33,12 @@ import net.sf.l2j.gameserver.model.actor.instance.L2GrandBossInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.zone.type.L2BossZone;
 import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 import net.sf.l2j.gameserver.templates.StatsSet;
 
-/**
- * Orfen AI
- * @author Emperorc, rewrote by Tryskell.
- */
-public class Orfen extends AbstractNpcAI
+public class Orfen extends L2AttackableAIScript
 {
-	private static final L2BossZone ORFEN_LAIR = GrandBossManager.getInstance().getZoneById(110013);
+	private static final L2BossZone ORFEN_LAIR = ZoneManager.getInstance().getZoneById(110013, L2BossZone.class);
 	
 	private static final SpawnLocation[] ORFEN_LOCATION =
 	{
@@ -72,11 +70,6 @@ public class Orfen extends AbstractNpcAI
 	public Orfen()
 	{
 		super("ai/individual");
-		
-		addKillId(ORFEN);
-		addAttackId(ORFEN, RIBA_IREN);
-		addFactionCallId(RAIKEL_LEOS, RIBA_IREN);
-		addSkillSeeId(ORFEN);
 		
 		_isTeleported = false;
 		
@@ -115,6 +108,15 @@ public class Orfen extends AbstractNpcAI
 			orfen.setCurrentHpMp(hp, mp);
 			spawnBoss(orfen);
 		}
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addAttackId(ORFEN, RIBA_IREN);
+		addFactionCallId(RAIKEL_LEOS, RIBA_IREN);
+		addKillId(ORFEN);
+		addSkillSeeId(ORFEN);
 	}
 	
 	@Override
@@ -200,7 +202,7 @@ public class Orfen extends AbstractNpcAI
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (npc.getNpcId() == ORFEN)
 		{
@@ -229,7 +231,7 @@ public class Orfen extends AbstractNpcAI
 				npc.doCast(SkillTable.getInstance().getInfo(4516, 1));
 			}
 		}
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 	
 	@Override
@@ -260,19 +262,17 @@ public class Orfen extends AbstractNpcAI
 	 */
 	private static void goTo(L2Npc npc, SpawnLocation index)
 	{
-		((L2Attackable) npc).clearAggroList();
+		((L2Attackable) npc).getAggroList().clear();
 		npc.getAI().setIntention(CtrlIntention.IDLE, null, null);
 		
 		// Edit the spawn location in case server crashes.
 		L2Spawn spawn = npc.getSpawn();
-		spawn.setLocx(index.getX());
-		spawn.setLocy(index.getY());
-		spawn.setLocz(index.getZ());
+		spawn.setLoc(index);
 		
 		if (index.getX() == 43728) // Hack !
 			npc.teleToLocation(index.getX(), index.getY(), index.getZ(), 0);
 		else
-			npc.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(index.getX(), index.getY(), index.getZ(), 0));
+			npc.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(index.getX(), index.getY(), index.getZ()));
 	}
 	
 	private void spawnBoss(L2GrandBossInstance npc)

@@ -14,8 +14,9 @@
  */
 package net.sf.l2j.gameserver.taskmanager;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.L2WorldRegion;
@@ -44,7 +45,7 @@ public final class KnownListUpdateTaskManager implements Runnable
 	
 	protected KnownListUpdateTaskManager()
 	{
-		ThreadPoolManager.getInstance().scheduleAiAtFixedRate(this, Config.KNOWNLIST_UPDATE_INTERVAL, Config.KNOWNLIST_UPDATE_INTERVAL);
+		ThreadPool.scheduleAtFixedRate(this, Config.KNOWNLIST_UPDATE_INTERVAL, Config.KNOWNLIST_UPDATE_INTERVAL);
 	}
 	
 	@Override

@@ -96,8 +96,8 @@ public class DayNightSpawnManager
 					if (spawn == null)
 						continue;
 					
-					spawn.stopRespawn();
-					L2Npc last = spawn.getLastSpawn();
+					spawn.setRespawnState(false);
+					L2Npc last = spawn.getNpc();
 					if (last != null)
 					{
 						last.deleteMe();
@@ -113,8 +113,8 @@ public class DayNightSpawnManager
 				if (spawnDat == null)
 					continue;
 				
-				spawnDat.startRespawn();
-				spawnDat.doSpawn();
+				spawnDat.setRespawnState(true);
+				spawnDat.doSpawn(false);
 				i++;
 			}
 			
@@ -184,7 +184,7 @@ public class DayNightSpawnManager
 					{
 						final L2Spawn spawn = infoEntry.getKey();
 						
-						boss = (L2RaidBossInstance) spawn.doSpawn();
+						boss = (L2RaidBossInstance) spawn.doSpawn(false);
 						RaidBossSpawnManager.getInstance().notifySpawnNightBoss(boss);
 						
 						_bosses.put(spawn, boss);
@@ -227,7 +227,7 @@ public class DayNightSpawnManager
 		
 		if (GameTimeTaskManager.getInstance().isNight())
 		{
-			L2RaidBossInstance raidboss = (L2RaidBossInstance) spawnDat.doSpawn();
+			L2RaidBossInstance raidboss = (L2RaidBossInstance) spawnDat.doSpawn(false);
 			_bosses.put(spawnDat, raidboss);
 			
 			return raidboss;

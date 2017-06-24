@@ -19,7 +19,6 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
-import net.sf.l2j.gameserver.model.actor.instance.L2NpcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
 public class AttackableKnownList extends NpcKnownList
@@ -52,7 +51,7 @@ public class AttackableKnownList extends NpcKnownList
 	@Override
 	public int getDistanceToWatchObject(L2Object object)
 	{
-		if (object instanceof L2NpcInstance || !(object instanceof L2Character))
+		if (!(object instanceof L2Character))
 			return 0;
 		
 		if (object instanceof L2Playable)
@@ -61,6 +60,12 @@ public class AttackableKnownList extends NpcKnownList
 		// get attackable
 		final L2Attackable attackable = (L2Attackable) _activeObject;
 		
-		return Math.max(300, Math.max(attackable.getAggroRange(), attackable.getClanRange()));
+		return Math.max(300, Math.max(attackable.getTemplate().getAggroRange(), attackable.getTemplate().getClanRange()));
+	}
+	
+	@Override
+	public int getDistanceToForgetObject(L2Object object)
+	{
+		return (int) (getDistanceToWatchObject(object) * 1.5);
 	}
 }

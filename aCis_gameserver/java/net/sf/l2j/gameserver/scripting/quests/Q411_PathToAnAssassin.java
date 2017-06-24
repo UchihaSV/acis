@@ -61,8 +61,8 @@ public class Q411_PathToAnAssassin extends Quest
 		
 		if (event.equalsIgnoreCase("30416-05.htm"))
 		{
-			if (player.getClassId() != ClassId.darkFighter)
-				htmltext = (player.getClassId() == ClassId.assassin) ? "30416-02a.htm" : "30416-02.htm";
+			if (player.getClassId() != ClassId.DARK_FIGHTER)
+				htmltext = (player.getClassId() == ClassId.ASSASSIN) ? "30416-02a.htm" : "30416-02.htm";
 			else if (player.getLevel() < 19)
 				htmltext = "30416-03.htm";
 			else if (st.hasQuestItems(IRON_HEART))

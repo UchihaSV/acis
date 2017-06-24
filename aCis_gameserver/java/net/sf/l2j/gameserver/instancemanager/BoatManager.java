@@ -20,7 +20,7 @@ import java.util.Map;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.VehiclePathPoint;
-import net.sf.l2j.gameserver.model.actor.instance.L2BoatInstance;
+import net.sf.l2j.gameserver.model.actor.L2Vehicle;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
@@ -28,7 +28,7 @@ import net.sf.l2j.gameserver.templates.StatsSet;
 
 public class BoatManager
 {
-	private final Map<Integer, L2BoatInstance> _boats = new HashMap<>();
+	private final Map<Integer, L2Vehicle> _boats = new HashMap<>();
 	private final boolean[] _docksBusy = new boolean[3];
 	
 	public static final int TALKING_ISLAND = 0;
@@ -46,7 +46,7 @@ public class BoatManager
 	{
 	}
 	
-	public L2BoatInstance getNewBoat(int boatId, int x, int y, int z, int heading)
+	public L2Vehicle getNewBoat(int boatId, int x, int y, int z, int heading)
 	{
 		StatsSet npcDat = new StatsSet();
 		npcDat.set("id", boatId);
@@ -84,7 +84,7 @@ public class BoatManager
 		npcDat.set("runSpd", 0);
 		
 		CharTemplate template = new CharTemplate(npcDat);
-		L2BoatInstance boat = new L2BoatInstance(IdFactory.getInstance().getNextId(), template);
+		L2Vehicle boat = new L2Vehicle(IdFactory.getInstance().getNextId(), template);
 		
 		_boats.put(boat.getObjectId(), boat);
 		
@@ -99,7 +99,7 @@ public class BoatManager
 	 * @param boatId
 	 * @return
 	 */
-	public L2BoatInstance getBoat(int boatId)
+	public L2Vehicle getBoat(int boatId)
 	{
 		return _boats.get(boatId);
 	}

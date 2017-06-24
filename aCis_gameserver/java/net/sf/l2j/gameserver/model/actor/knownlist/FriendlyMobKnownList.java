@@ -69,7 +69,7 @@ public class FriendlyMobKnownList extends AttackableKnownList
 		
 		if (monster.isVisible() && getKnownType(L2PcInstance.class).isEmpty())
 		{
-			monster.clearAggroList();
+			monster.getAggroList().clear();
 			if (monster.hasAI())
 				monster.getAI().setIntention(CtrlIntention.IDLE, null);
 		}

@@ -36,6 +36,8 @@ public final class GeoStructure
 	public static final byte CELL_FLAG_N_AND_W = CELL_FLAG_N | CELL_FLAG_W;
 	
 	public static final int CELL_SIZE = 16;
+	public static final int CELL_HEIGHT = 8;
+	public static final int CELL_IGNORE_HEIGHT = CELL_HEIGHT * 6;
 	
 	// blocks
 	public static final byte TYPE_FLAT_L2J_L2OFF = 0;
@@ -44,13 +46,8 @@ public final class GeoStructure
 	public static final byte TYPE_COMPLEX_L2OFF = 0x40;
 	public static final byte TYPE_COMPLEX_L2D = (byte) 0xD1;
 	public static final byte TYPE_MULTILAYER_L2J = 2;
-	// public static final byte TYPE_MULTILAYER_L2OFF = 0x47; // does officially not exist
+	// public static final byte TYPE_MULTILAYER_L2OFF = 0x41; // officially not does exist, is anything above complex block (0x41 - 0xFFFF)
 	public static final byte TYPE_MULTILAYER_L2D = (byte) 0xD2;
-	
-	public static final byte NULL = 0;
-	public static final byte FLAT = 1;
-	public static final byte COMPLEX = 2;
-	public static final byte MULTILAYER = 3;
 	
 	public static final int BLOCK_CELLS_X = 8;
 	public static final int BLOCK_CELLS_Y = 8;

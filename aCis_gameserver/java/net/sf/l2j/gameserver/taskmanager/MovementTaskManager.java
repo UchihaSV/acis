@@ -20,7 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.ai.CtrlEvent;
 import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -96,7 +97,7 @@ public final class MovementTaskManager extends Thread
 						continue;
 					
 					// Inform AI about arrival.
-					ThreadPoolManager.getInstance().executeAi(new Runnable()
+					ThreadPool.execute(new Runnable()
 					{
 						@Override
 						public final void run()

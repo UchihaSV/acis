@@ -32,7 +32,7 @@ public class TradeItemUpdate extends L2GameServerPacket
 		_currentTrade = trade.getItems();
 	}
 	
-	private int getItemCount(int objectId) // TODO replace for ItemContainer method
+	private int getItemCount(int objectId)
 	{
 		for (ItemInstance item : _items)
 			if (item.getObjectId() == objectId)

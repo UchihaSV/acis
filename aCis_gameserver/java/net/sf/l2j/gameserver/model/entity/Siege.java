@@ -25,10 +25,11 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.commons.lang.StringUtil;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.datatables.NpcTable;
@@ -42,7 +43,6 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2SiegeClan;
 import net.sf.l2j.gameserver.model.L2SiegeClan.SiegeClanType;
 import net.sf.l2j.gameserver.model.L2Spawn;
-import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.TowerSpawn;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2ControlTowerInstance;
@@ -66,11 +66,11 @@ public class Siege implements Siegable
 	
 	public static enum TeleportWhoType
 	{
-		All,
-		Attacker,
-		DefenderNotOwner,
-		Owner,
-		Spectator
+		ALL,
+		ATTACKER,
+		DEFENDER_NOT_OWNER,
+		OWNER,
+		SPECTATOR
 	}
 	
 	private final List<L2SiegeClan> _attackerClans = new CopyOnWriteArrayList<>();
@@ -156,9 +156,9 @@ public class Siege implements Siegable
 			getCastle().updateClansReputation();
 			removeFlags(); // Removes all flags. Note: Remove flag before teleporting players
 			
-			teleportPlayer(TeleportWhoType.Attacker, TeleportWhereType.Town);
-			teleportPlayer(TeleportWhoType.DefenderNotOwner, TeleportWhereType.Town);
-			teleportPlayer(TeleportWhoType.Spectator, TeleportWhereType.Town);
+			teleportPlayer(TeleportWhoType.ATTACKER, TeleportWhereType.TOWN);
+			teleportPlayer(TeleportWhoType.DEFENDER_NOT_OWNER, TeleportWhereType.TOWN);
+			teleportPlayer(TeleportWhoType.SPECTATOR, TeleportWhereType.TOWN);
 			
 			_isInProgress = false; // Flag so that siege instance can be started
 			updatePlayerSiegeStateFlags(true);
@@ -184,6 +184,8 @@ public class Siege implements Siegable
 	{
 		if (_isInProgress) // Siege still in progress
 		{
+			_siegeGuardManager.unspawnSiegeGuard(); // Remove all spawned siege guard from this castle
+			
 			if (getCastle().getOwnerId() > 0)
 				_siegeGuardManager.removeMercs(); // Remove all merc entry from db
 				
@@ -254,8 +256,8 @@ public class Siege implements Siegable
 						}
 					}
 				}
-				teleportPlayer(TeleportWhoType.Attacker, TeleportWhereType.SiegeFlag); // Teleport to the second closest town
-				teleportPlayer(TeleportWhoType.Spectator, TeleportWhereType.Town); // Teleport to the second closest town
+				teleportPlayer(TeleportWhoType.ATTACKER, TeleportWhereType.SIEGE_FLAG); // Teleport to the second closest town
+				teleportPlayer(TeleportWhoType.SPECTATOR, TeleportWhereType.TOWN); // Teleport to the second closest town
 				
 				removeDefenderFlags(); // Removes defenders' flags.
 				getCastle().removeDoorUpgrade(); // Remove all castle doors upgrades.
@@ -264,9 +266,7 @@ public class Siege implements Siegable
 				
 				removeTowers(); // Remove all towers from this castle.
 				
-				_controlTowerCount = 0;// Each new siege midvictory CT are completely respawned.
-				
-				spawnControlTowers();
+				spawnControlTowers(); // Each new siege midvictory CT are completely respawned.
 				spawnFlameTowers();
 				
 				updatePlayerSiegeStateFlags(false);
@@ -300,9 +300,7 @@ public class Siege implements Siegable
 			
 			loadSiegeClan(); // Load siege clan from db
 			updatePlayerSiegeStateFlags(false);
-			teleportPlayer(TeleportWhoType.Attacker, TeleportWhereType.Town); // Teleport to the closest town
-			
-			_controlTowerCount = 0;
+			teleportPlayer(TeleportWhoType.ATTACKER, TeleportWhereType.TOWN); // Teleport to the closest town
 			
 			spawnControlTowers(); // Spawn control towers
 			spawnFlameTowers(); // Spawn flame towers
@@ -316,7 +314,7 @@ public class Siege implements Siegable
 			// Schedule a task to prepare auto siege end
 			_siegeEndDate = Calendar.getInstance();
 			_siegeEndDate.add(Calendar.MINUTE, SiegeManager.SIEGE_LENGTH);
-			ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleEndSiegeTask(getCastle()), 1000);
+			ThreadPool.schedule(new ScheduleEndSiegeTask(getCastle()), 1000);
 			
 			Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.SIEGE_OF_S1_HAS_STARTED).addString(getCastle().getName()));
 			Broadcast.toAllOnlinePlayers(new PlaySound("systemmsg_e.17"));
@@ -797,7 +795,7 @@ public class Siege implements Siegable
 			if (_scheduledStartSiegeTask != null)
 				_scheduledStartSiegeTask.cancel(false);
 			
-			_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(getCastle()), 1000);
+			_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(getCastle()), 1000);
 		}
 	}
 	
@@ -811,18 +809,22 @@ public class Siege implements Siegable
 		List<L2PcInstance> players;
 		switch (teleportWho)
 		{
-			case Owner:
+			case OWNER:
 				players = getOwnersInZone();
 				break;
-			case Attacker:
+			
+			case ATTACKER:
 				players = getAttackersInZone();
 				break;
-			case DefenderNotOwner:
+			
+			case DEFENDER_NOT_OWNER:
 				players = getDefendersButNotOwnersInZone();
 				break;
-			case Spectator:
+			
+			case SPECTATOR:
 				players = getSpectatorsInZone();
 				break;
+			
 			default:
 				players = getPlayersInZone();
 		}
@@ -1038,7 +1040,7 @@ public class Siege implements Siegable
 		if (_scheduledStartSiegeTask != null)
 		{
 			_scheduledStartSiegeTask.cancel(true);
-			_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(getCastle()), 1000);
+			_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(getCastle()), 1000);
 		}
 		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
@@ -1147,13 +1149,9 @@ public class Siege implements Siegable
 			try
 			{
 				final L2Spawn spawn = new L2Spawn(NpcTable.getInstance().getTemplate(ts.getId()));
+				spawn.setLoc(ts.getLocation());
 				
-				final Location loc = ts.getLocation(); // TODO : implements spawn via Location.
-				spawn.setLocx(loc.getX());
-				spawn.setLocy(loc.getY());
-				spawn.setLocz(loc.getZ());
-				
-				_controlTowers.add((L2ControlTowerInstance) spawn.doSpawn());
+				_controlTowers.add((L2ControlTowerInstance) spawn.doSpawn(false));
 			}
 			catch (Exception e)
 			{
@@ -1173,13 +1171,9 @@ public class Siege implements Siegable
 			try
 			{
 				final L2Spawn spawn = new L2Spawn(NpcTable.getInstance().getTemplate(ts.getId()));
+				spawn.setLoc(ts.getLocation());
 				
-				final Location loc = ts.getLocation(); // TODO : implements spawn via Location.
-				spawn.setLocx(loc.getX());
-				spawn.setLocy(loc.getY());
-				spawn.setLocz(loc.getZ());
-				
-				final L2FlameTowerInstance tower = (L2FlameTowerInstance) spawn.doSpawn();
+				final L2FlameTowerInstance tower = (L2FlameTowerInstance) spawn.doSpawn(false);
 				tower.setUpgradeLevel(ts.getUpgradeLevel());
 				tower.setZoneList(ts.getZoneList());
 				_flameTowers.add(tower);
@@ -1196,34 +1190,29 @@ public class Siege implements Siegable
 	 */
 	private void spawnSiegeGuard()
 	{
-		getSiegeGuardManager().spawnSiegeGuard();
+		_siegeGuardManager.spawnSiegeGuard();
 		
-		// Register guard to the closest Control Tower
-		// When CT dies, so do all the guards that it controls
-		if (!getSiegeGuardManager().getSiegeGuardSpawn().isEmpty() && !_controlTowers.isEmpty())
+		// Register guard to the closest Control Tower - when CT dies, so do all the guards that it controls.
+		if (!_siegeGuardManager.getSiegeGuardSpawn().isEmpty() && !_controlTowers.isEmpty())
 		{
-			L2ControlTowerInstance closestCt;
-			int x, y, z;
-			double distance;
-			double distanceClosest = 0;
-			for (L2Spawn spawn : getSiegeGuardManager().getSiegeGuardSpawn())
+			for (L2Spawn spawn : _siegeGuardManager.getSiegeGuardSpawn())
 			{
 				if (spawn == null)
 					continue;
 				
-				closestCt = null;
-				distanceClosest = Integer.MAX_VALUE;
+				L2ControlTowerInstance closestCt = null;
+				double distanceClosest = Integer.MAX_VALUE;
 				
-				x = spawn.getLocx();
-				y = spawn.getLocy();
-				z = spawn.getLocz();
+				int x = spawn.getLocX();
+				int y = spawn.getLocY();
+				int z = spawn.getLocZ();
 				
 				for (L2ControlTowerInstance ct : _controlTowers)
 				{
 					if (ct == null)
 						continue;
 					
-					distance = ct.getDistanceSq(x, y, z);
+					double distance = ct.getDistanceSq(x, y, z);
 					
 					if (distance < distanceClosest)
 					{
@@ -1231,6 +1220,7 @@ public class Siege implements Siegable
 						distanceClosest = distance;
 					}
 				}
+				
 				if (closestCt != null)
 					closestCt.registerGuard(spawn);
 			}
@@ -1390,27 +1380,27 @@ public class Siege implements Siegable
 				if (timeRemaining > 3600000)
 				{
 					announceToPlayer(SystemMessage.getSystemMessage(SystemMessageId.S1_HOURS_UNTIL_SIEGE_CONCLUSION).addNumber(2), true);
-					ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleEndSiegeTask(_castleInst), timeRemaining - 3600000);
+					ThreadPool.schedule(new ScheduleEndSiegeTask(_castleInst), timeRemaining - 3600000);
 				}
 				else if (timeRemaining <= 3600000 && timeRemaining > 600000)
 				{
 					announceToPlayer(SystemMessage.getSystemMessage(SystemMessageId.S1_MINUTES_UNTIL_SIEGE_CONCLUSION).addNumber(Math.round(timeRemaining / 60000)), true);
-					ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleEndSiegeTask(_castleInst), timeRemaining - 600000);
+					ThreadPool.schedule(new ScheduleEndSiegeTask(_castleInst), timeRemaining - 600000);
 				}
 				else if (timeRemaining <= 600000 && timeRemaining > 300000)
 				{
 					announceToPlayer(SystemMessage.getSystemMessage(SystemMessageId.S1_MINUTES_UNTIL_SIEGE_CONCLUSION).addNumber(Math.round(timeRemaining / 60000)), true);
-					ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleEndSiegeTask(_castleInst), timeRemaining - 300000);
+					ThreadPool.schedule(new ScheduleEndSiegeTask(_castleInst), timeRemaining - 300000);
 				}
 				else if (timeRemaining <= 300000 && timeRemaining > 10000)
 				{
 					announceToPlayer(SystemMessage.getSystemMessage(SystemMessageId.S1_MINUTES_UNTIL_SIEGE_CONCLUSION).addNumber(Math.round(timeRemaining / 60000)), true);
-					ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleEndSiegeTask(_castleInst), timeRemaining - 10000);
+					ThreadPool.schedule(new ScheduleEndSiegeTask(_castleInst), timeRemaining - 10000);
 				}
 				else if (timeRemaining <= 10000 && timeRemaining > 0)
 				{
 					announceToPlayer(SystemMessage.getSystemMessage(SystemMessageId.CASTLE_SIEGE_S1_SECONDS_LEFT).addNumber(Math.round(timeRemaining / 1000)), true);
-					ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleEndSiegeTask(_castleInst), timeRemaining);
+					ThreadPool.schedule(new ScheduleEndSiegeTask(_castleInst), timeRemaining);
 				}
 				else
 					_castleInst.getSiege().endSiege();
@@ -1445,7 +1435,7 @@ public class Siege implements Siegable
 					long regTimeRemaining = getSiegeRegistrationEndDate().getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
 					if (regTimeRemaining > 0)
 					{
-						_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(_castleInst), regTimeRemaining);
+						_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(_castleInst), regTimeRemaining);
 						return;
 					}
 					endTimeRegistration(true);
@@ -1454,22 +1444,22 @@ public class Siege implements Siegable
 				long timeRemaining = getSiegeDate().getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
 				
 				if (timeRemaining > 86400000)
-					_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 86400000);
+					_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 86400000);
 				else if ((timeRemaining <= 86400000) && (timeRemaining > 13600000))
 				{
 					Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.REGISTRATION_TERM_FOR_S1_ENDED).addString(getCastle().getName()));
 					_isRegistrationOver = true;
 					clearSiegeWaitingClan();
-					_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 13600000);
+					_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 13600000);
 				}
 				else if ((timeRemaining <= 13600000) && (timeRemaining > 600000))
-					_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 600000);
+					_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 600000);
 				else if ((timeRemaining <= 600000) && (timeRemaining > 300000))
-					_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 300000);
+					_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 300000);
 				else if ((timeRemaining <= 300000) && (timeRemaining > 10000))
-					_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 10000);
+					_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(_castleInst), timeRemaining - 10000);
 				else if ((timeRemaining <= 10000) && (timeRemaining > 0))
-					_scheduledStartSiegeTask = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleStartSiegeTask(_castleInst), timeRemaining);
+					_scheduledStartSiegeTask = ThreadPool.schedule(new ScheduleStartSiegeTask(_castleInst), timeRemaining);
 				else
 					_castleInst.getSiege().startSiege();
 			}

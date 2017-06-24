@@ -162,7 +162,7 @@ public class BlockList
 		if (listOwner == null)
 			return;
 		
-		String charName = CharNameTable.getInstance().getNameById(targetId);
+		String charName = CharNameTable.getInstance().getPlayerName(targetId);
 		
 		if (listOwner.getFriendList().contains(targetId))
 		{
@@ -200,7 +200,7 @@ public class BlockList
 			return;
 		
 		SystemMessage sm;
-		String charName = CharNameTable.getInstance().getNameById(targetId);
+		String charName = CharNameTable.getInstance().getPlayerName(targetId);
 		
 		if (!listOwner.getBlockList().getBlockList().contains(targetId))
 		{
@@ -237,7 +237,7 @@ public class BlockList
 		listOwner.sendPacket(SystemMessageId.BLOCK_LIST_HEADER);
 		
 		for (int playerId : listOwner.getBlockList().getBlockList())
-			listOwner.sendMessage((i++) + ". " + CharNameTable.getInstance().getNameById(playerId));
+			listOwner.sendMessage((i++) + ". " + CharNameTable.getInstance().getPlayerName(playerId));
 		
 		listOwner.sendPacket(SystemMessageId.FRIEND_LIST_FOOTER);
 	}

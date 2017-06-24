@@ -18,20 +18,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.clientpackets.Say2;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
 import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
-/**
- * @author Slyce
- */
-public class PolymorphingOnAttack extends AbstractNpcAI
+public class PolymorphingOnAttack extends L2AttackableAIScript
 {
 	private static final Map<Integer, Integer[]> MOBSPAWNS = new HashMap<>();
+	
+	static
 	{
 		MOBSPAWNS.put(21258, new Integer[]
 		{
@@ -126,7 +127,7 @@ public class PolymorphingOnAttack extends AbstractNpcAI
 		}); // Fang of Splendor
 	}
 	
-	protected static final String[][] MOBTEXTS =
+	private static final String[][] MOBTEXTS =
 	{
 		new String[]
 		{
@@ -151,12 +152,16 @@ public class PolymorphingOnAttack extends AbstractNpcAI
 	public PolymorphingOnAttack()
 	{
 		super("ai/group");
-		
-		registerMobs(MOBSPAWNS.keySet(), EventType.ON_ATTACK);
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	protected void registerNpcs()
+	{
+		addEventIds(MOBSPAWNS.keySet(), EventType.ON_ATTACK);
+	}
+	
+	@Override
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (npc.isVisible() && !npc.isDead())
 		{
@@ -167,7 +172,7 @@ public class PolymorphingOnAttack extends AbstractNpcAI
 				{
 					if (tmp[3] >= 0)
 					{
-						String text = MOBTEXTS[tmp[3]][Rnd.get(MOBTEXTS[tmp[3]].length)];
+						String text = Rnd.get(MOBTEXTS[tmp[3]]);
 						npc.broadcastPacket(new CreatureSay(npc.getObjectId(), Say2.ALL, npc.getName(), text));
 					}
 					npc.deleteMe();
@@ -177,6 +182,6 @@ public class PolymorphingOnAttack extends AbstractNpcAI
 				}
 			}
 		}
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 }

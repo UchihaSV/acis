@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
@@ -86,8 +87,8 @@ public class Q416_PathToAnOrcShaman extends Quest
 		// TATARU ZU HESTUI
 		if (event.equalsIgnoreCase("30585-05.htm"))
 		{
-			if (player.getClassId() != ClassId.orcMage)
-				htmltext = (player.getClassId() == ClassId.orcShaman) ? "30585-02a.htm" : "30585-02.htm";
+			if (player.getClassId() != ClassId.ORC_MYSTIC)
+				htmltext = (player.getClassId() == ClassId.ORC_SHAMAN) ? "30585-02a.htm" : "30585-02.htm";
 			else if (player.getLevel() < 19)
 				htmltext = "30585-03.htm";
 			else if (st.hasQuestItems(MASK_OF_MEDIUM))

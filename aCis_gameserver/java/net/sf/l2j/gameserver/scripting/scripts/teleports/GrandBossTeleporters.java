@@ -16,10 +16,12 @@ package net.sf.l2j.gameserver.scripting.scripts.teleports;
 
 import java.util.List;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.DoorTable;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2GrandBossInstance;
@@ -105,7 +107,7 @@ public class GrandBossTeleporters extends Quest
 				st.takeItems(4295, 1);
 				
 				// allow entry for the player for the next 30 secs.
-				GrandBossManager.getInstance().getZoneById(110002).allowPlayerEntry(player, 30);
+				ZoneManager.getInstance().getZoneById(110002, L2BossZone.class).allowPlayerEntry(player, 30);
 				player.teleToLocation(baiumTeleIn, 0);
 			}
 		}
@@ -177,7 +179,7 @@ public class GrandBossTeleporters extends Quest
 					if (st.hasQuestItems(3865))
 					{
 						st.takeItems(3865, 1);
-						GrandBossManager.getInstance().getZoneById(110001).allowPlayerEntry(player, 30);
+						ZoneManager.getInstance().getZoneById(110001, L2BossZone.class).allowPlayerEntry(player, 30);
 						
 						player.teleToLocation(175300 + Rnd.get(-350, 350), 115180 + Rnd.get(-1000, 1000), -7709, 0);
 						
@@ -205,7 +207,7 @@ public class GrandBossTeleporters extends Quest
 					else if (st.getInt("allowEnter") == 1)
 					{
 						st.unset("allowEnter");
-						GrandBossManager.getInstance().getZoneById(110010).allowPlayerEntry(player, 30);
+						ZoneManager.getInstance().getZoneById(110010, L2BossZone.class).allowPlayerEntry(player, 30);
 						
 						player.teleToLocation(204328, -111874, 70, 300);
 						
@@ -287,7 +289,7 @@ public class GrandBossTeleporters extends Quest
 							// Take item from party leader.
 							st.takeItems(8784, 1);
 							
-							final L2BossZone nest = GrandBossManager.getInstance().getZoneById(110015);
+							final L2BossZone nest = ZoneManager.getInstance().getZoneById(110015, L2BossZone.class);
 							
 							// Teleport players.
 							for (L2PcInstance member : party)

@@ -18,15 +18,12 @@ import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.L2ManufactureItem;
 import net.sf.l2j.gameserver.model.L2ManufactureList;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.PrivateStoreType;
+import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.StoreType;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.RecipeShopMsg;
 
-/**
- * cd(dd)
- */
 public final class RequestRecipeShopListSet extends L2GameClientPacket
 {
 	private int _count;
@@ -84,7 +81,7 @@ public final class RequestRecipeShopListSet extends L2GameClientPacket
 			createList.setStoreName(player.getCreateList() != null ? player.getCreateList().getStoreName() : "");
 			player.setCreateList(createList);
 			
-			player.setPrivateStoreType(PrivateStoreType.MANUFACTURE);
+			player.setStoreType(StoreType.MANUFACTURE);
 			player.sitDown();
 			player.broadcastUserInfo();
 			player.broadcastPacket(new RecipeShopMsg(player));

@@ -15,13 +15,14 @@
 package net.sf.l2j.gameserver.model.actor.knownlist;
 
 import net.sf.l2j.gameserver.model.L2Object;
+import net.sf.l2j.gameserver.model.L2Object.PolyType;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Vehicle;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.DeleteObject;
-import net.sf.l2j.gameserver.network.serverpackets.SpawnItemPoly;
+import net.sf.l2j.gameserver.network.serverpackets.SpawnItem;
 
-public class PcKnownList extends PlayableKnownList
+public class PcKnownList extends CharKnownList
 {
 	public PcKnownList(L2PcInstance activeChar)
 	{
@@ -86,16 +87,38 @@ public class PcKnownList extends PlayableKnownList
 	public int getDistanceToWatchObject(L2Object object)
 	{
 		if (object instanceof L2Vehicle)
-			return 8000;
+			return 9000;
 		
-		return Math.max(1800, 3600 - (_knownObjects.size() * 20));
+		final int knownlistSize = getKnownObjects().size();
+		if (knownlistSize <= 25)
+			return 3400;
+		
+		if (knownlistSize <= 35)
+			return 2900;
+		
+		if (knownlistSize <= 70)
+			return 2300;
+		
+		return 1700;
 	}
 	
 	@Override
 	public int getDistanceToForgetObject(L2Object object)
 	{
-		// distance to watch + 50%
-		return (int) Math.round(1.5 * getDistanceToWatchObject(object));
+		if (object instanceof L2Vehicle)
+			return 10000;
+		
+		final int knownlistSize = getKnownObjects().size();
+		if (knownlistSize <= 25)
+			return 4000;
+		
+		if (knownlistSize <= 35)
+			return 3500;
+		
+		if (knownlistSize <= 70)
+			return 2910;
+		
+		return 2310;
 	}
 	
 	public final void refreshInfos()
@@ -114,8 +137,8 @@ public class PcKnownList extends PlayableKnownList
 		// get player
 		final L2PcInstance player = (L2PcInstance) _activeObject;
 		
-		if (object.getPoly().isMorphed() && object.getPoly().getPolyType().equals("item"))
-			player.sendPacket(new SpawnItemPoly(object));
+		if (object.getPolyType() == PolyType.ITEM)
+			player.sendPacket(new SpawnItem(object));
 		else
 		{
 			// send object info to player

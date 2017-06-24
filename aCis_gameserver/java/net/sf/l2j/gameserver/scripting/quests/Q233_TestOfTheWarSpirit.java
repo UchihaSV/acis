@@ -13,10 +13,11 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
-import net.sf.l2j.gameserver.model.base.Race;
+import net.sf.l2j.gameserver.model.base.ClassRace;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
@@ -109,28 +110,49 @@ public class Q233_TestOfTheWarSpirit extends Quest
 			return htmltext;
 		
 		// SOMAK
-		if (event.equalsIgnoreCase("30510-05e.htm"))
+		if (event.equalsIgnoreCase("30510-05.htm"))
 		{
 			st.setState(STATE_STARTED);
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
-			st.giveItems(DIMENSIONAL_DIAMOND, 92);
+			
+			if (!player.getMemos().getBool("secondClassChange39", false))
+			{
+				htmltext = "30510-05e.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_39.get(player.getClassId().getId()));
+				player.getMemos().set("secondClassChange39", true);
+			}
 		}
 		// ORIM
 		else if (event.equalsIgnoreCase("30630-04.htm"))
+		{
+			st.playSound(QuestState.SOUND_ITEMGET);
 			st.giveItems(ORIM_CONTRACT, 1);
+		}
 		// RACOY
 		else if (event.equalsIgnoreCase("30507-02.htm"))
+		{
+			st.playSound(QuestState.SOUND_ITEMGET);
 			st.giveItems(RACOY_TOTEM, 1);
+		}
 		// VIVYAN
 		else if (event.equalsIgnoreCase("30030-04.htm"))
+		{
+			st.playSound(QuestState.SOUND_ITEMGET);
 			st.giveItems(VIVYAN_LETTER, 1);
+		}
 		// PEKIRON
 		else if (event.equalsIgnoreCase("30682-02.htm"))
+		{
+			st.playSound(QuestState.SOUND_ITEMGET);
 			st.giveItems(PEKIRON_TOTEM, 1);
+		}
 		// MANAKIA
 		else if (event.equalsIgnoreCase("30515-02.htm"))
+		{
+			st.playSound(QuestState.SOUND_ITEMGET);
 			st.giveItems(MANAKIA_TOTEM, 1);
+		}
 		// ANCESTOR MARTANKUS
 		else if (event.equalsIgnoreCase("30649-03.htm"))
 		{
@@ -161,10 +183,10 @@ public class Q233_TestOfTheWarSpirit extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				if (player.getClassId() == ClassId.orcShaman)
+				if (player.getClassId() == ClassId.ORC_SHAMAN)
 					htmltext = (player.getLevel() < 39) ? "30510-03.htm" : "30510-04.htm";
 				else
-					htmltext = (player.getRace() == Race.Orc) ? "30510-02.htm" : "30510-01.htm";
+					htmltext = (player.getRace() == ClassRace.ORC) ? "30510-02.htm" : "30510-01.htm";
 				break;
 			
 			case STATE_STARTED:
@@ -222,6 +244,8 @@ public class Q233_TestOfTheWarSpirit extends Quest
 									st.set("cond", "2");
 									st.playSound(QuestState.SOUND_MIDDLE);
 								}
+								else
+									st.playSound(QuestState.SOUND_ITEMGET);
 							}
 							else
 								htmltext = "30630-05.htm";
@@ -256,6 +280,8 @@ public class Q233_TestOfTheWarSpirit extends Quest
 										st.set("cond", "2");
 										st.playSound(QuestState.SOUND_MIDDLE);
 									}
+									else
+										st.playSound(QuestState.SOUND_ITEMGET);
 								}
 								else
 									htmltext = "30507-05.htm";
@@ -287,6 +313,7 @@ public class Q233_TestOfTheWarSpirit extends Quest
 							if (st.hasQuestItems(VIVYAN_LETTER))
 							{
 								htmltext = "30436-01.htm";
+								st.playSound(QuestState.SOUND_ITEMGET);
 								st.takeItems(VIVYAN_LETTER, 1);
 								st.giveItems(INSECT_DIAGRAM_BOOK, 1);
 							}
@@ -318,6 +345,8 @@ public class Q233_TestOfTheWarSpirit extends Quest
 									st.set("cond", "2");
 									st.playSound(QuestState.SOUND_MIDDLE);
 								}
+								else
+									st.playSound(QuestState.SOUND_ITEMGET);
 							}
 							else
 								htmltext = "30682-03.htm";
@@ -347,6 +376,8 @@ public class Q233_TestOfTheWarSpirit extends Quest
 									st.set("cond", "2");
 									st.playSound(QuestState.SOUND_MIDDLE);
 								}
+								else
+									st.playSound(QuestState.SOUND_ITEMGET);
 							}
 							else
 								htmltext = "30515-03.htm";

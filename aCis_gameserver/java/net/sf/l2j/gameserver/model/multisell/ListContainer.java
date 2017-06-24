@@ -15,58 +15,70 @@
 package net.sf.l2j.gameserver.model.multisell;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ListContainer
 {
-	private int _listId;
-	private boolean _applyTaxes = false;
-	private boolean _maintainEnchantment = false;
+	private final int _id;
 	
-	List<Entry> _entries;
+	private boolean _applyTaxes;
+	private boolean _maintainEnchantment;
 	
-	public ListContainer()
+	protected List<Entry> _entries = new ArrayList<>();
+	protected Set<Integer> _npcsAllowed = null;
+	
+	public ListContainer(int id)
 	{
-		_entries = new ArrayList<>();
+		_id = id;
 	}
 	
-	public void setListId(int listId)
+	public final List<Entry> getEntries()
 	{
-		_listId = listId;
+		return _entries;
 	}
 	
-	public int getListId()
+	public final int getId()
 	{
-		return _listId;
+		return _id;
 	}
 	
-	public void setApplyTaxes(boolean applyTaxes)
-	{
-		_applyTaxes = applyTaxes;
-	}
-	
-	public boolean getApplyTaxes()
+	public final boolean getApplyTaxes()
 	{
 		return _applyTaxes;
 	}
 	
-	public void setMaintainEnchantment(boolean maintainEnchantment)
+	public final void setApplyTaxes(boolean applyTaxes)
 	{
-		_maintainEnchantment = maintainEnchantment;
+		_applyTaxes = applyTaxes;
 	}
 	
-	public boolean getMaintainEnchantment()
+	public final boolean getMaintainEnchantment()
 	{
 		return _maintainEnchantment;
 	}
 	
-	public void addEntry(Entry e)
+	public final void setMaintainEnchantment(boolean maintainEnchantment)
 	{
-		_entries.add(e);
+		_maintainEnchantment = maintainEnchantment;
 	}
 	
-	public List<Entry> getEntries()
+	public void allowNpc(int npcId)
 	{
-		return _entries;
+		if (_npcsAllowed == null)
+			_npcsAllowed = new HashSet<>();
+		
+		_npcsAllowed.add(npcId);
+	}
+	
+	public boolean isNpcAllowed(int npcId)
+	{
+		return _npcsAllowed == null || _npcsAllowed.contains(npcId);
+	}
+	
+	public boolean isNpcOnly()
+	{
+		return _npcsAllowed != null;
 	}
 }

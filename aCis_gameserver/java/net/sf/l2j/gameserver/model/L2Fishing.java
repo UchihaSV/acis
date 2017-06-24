@@ -16,8 +16,9 @@ package net.sf.l2j.gameserver.model;
 
 import java.util.concurrent.Future;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.FishingChampionshipManager;
@@ -103,7 +104,7 @@ public class L2Fishing implements Runnable
 		_fisher.sendPacket(SystemMessageId.GOT_A_BITE);
 		
 		if (_fishAiTask == null)
-			_fishAiTask = ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(this, 1000, 1000);
+			_fishAiTask = ThreadPool.scheduleAtFixedRate(this, 1000, 1000);
 	}
 	
 	public void changeHp(int hp, int pen)

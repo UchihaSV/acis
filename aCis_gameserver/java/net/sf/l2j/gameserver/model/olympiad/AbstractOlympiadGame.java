@@ -144,14 +144,14 @@ public abstract class AbstractOlympiadGame
 		
 		try
 		{
-			player.getSavedLocation().setXYZ(player.getX(), player.getY(), player.getZ());
+			player.getSavedLocation().set(player.getX(), player.getY(), player.getZ());
 			
 			player.forceStandUp();
 			player.setTarget(null);
 			
 			player.setOlympiadGameId(id);
-			player.setIsInOlympiadMode(true);
-			player.setIsOlympiadStart(false);
+			player.setOlympiadMode(true);
+			player.setOlympiadStart(false);
 			player.setOlympiadSide(par.side);
 			player.teleToLocation(loc, 0);
 			player.sendPacket(new ExOlympiadMode(par.side));
@@ -275,7 +275,7 @@ public abstract class AbstractOlympiadGame
 		try
 		{
 			// prevent players kill each other
-			player.setIsOlympiadStart(false);
+			player.setOlympiadStart(false);
 			player.setTarget(null);
 			player.abortAttack();
 			player.abortCast();
@@ -310,8 +310,8 @@ public abstract class AbstractOlympiadGame
 		{
 			player.forceStandUp();
 			
-			player.setIsInOlympiadMode(false);
-			player.setIsOlympiadStart(false);
+			player.setOlympiadMode(false);
+			player.setOlympiadStart(false);
 			player.setOlympiadSide(-1);
 			player.setOlympiadGameId(-1);
 			player.sendPacket(new ExOlympiadMode(0));
@@ -354,11 +354,11 @@ public abstract class AbstractOlympiadGame
 			return;
 		
 		final Location loc = player.getSavedLocation();
-		if (loc.equals(0, 0, 0))
+		if (loc.equals(Location.DUMMY_LOC))
 			return;
 		
 		player.teleToLocation(loc, 0);
-		player.getSavedLocation().setXYZ(player.getX(), player.getY(), player.getZ());
+		player.getSavedLocation().set(player.getX(), player.getY(), player.getZ());
 	}
 	
 	public static final void rewardParticipant(L2PcInstance player, int[][] reward)

@@ -17,16 +17,18 @@ package net.sf.l2j.gameserver.ai.model;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import net.sf.l2j.Config;
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.util.ArraysUtil;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.instancemanager.DimensionalRiftManager;
-import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Skill.SkillTargetType;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -51,7 +53,7 @@ import net.sf.l2j.gameserver.util.Util;
 public class L2AttackableAI extends L2CharacterAI implements Runnable
 {
 	protected static final int RANDOM_WALK_RATE = 30;
-	protected static final int MAX_ATTACK_TIMEOUT = 120000; // 2min
+	protected static final int MAX_ATTACK_TIMEOUT = 90000; // 1m30
 	
 	/** The L2Attackable AI task executed every 1s (call onEvtThink method) */
 	protected Future<?> _aiTask;
@@ -127,7 +129,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		if (target instanceof L2Playable)
 		{
 			// Check if target is in the Aggro range
-			if (!me.isInsideRadius(target, me.getAggroRange(), true, false))
+			if (!me.isInsideRadius(target, me.getTemplate().getAggroRange(), true, false))
 				return false;
 			
 			// Check if the AI isn't a Raid Boss, can See Silent Moving players and the target isn't in silent move mode
@@ -143,11 +145,11 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 					return false;
 				
 				// Check if player is an allied Varka.
-				if (Util.contains(me.getClans(), "varka_silenos_clan") && targetPlayer.isAlliedWithVarka())
+				if (ArraysUtil.contains(me.getTemplate().getClans(), "varka_silenos_clan") && targetPlayer.isAlliedWithVarka())
 					return false;
 				
 				// Check if player is an allied Ketra.
-				if (Util.contains(me.getClans(), "ketra_orc_clan") && targetPlayer.isAlliedWithKetra())
+				if (ArraysUtil.contains(me.getTemplate().getClans(), "ketra_orc_clan") && targetPlayer.isAlliedWithKetra())
 					return false;
 				
 				// check if the target is within the grace period for JUST getting up from fake death
@@ -170,11 +172,11 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		{
 			// Check if the L2PcInstance target has karma (=PK)
 			if (target instanceof L2PcInstance && ((L2PcInstance) target).getKarma() > 0)
-				return PathFinding.getInstance().canSeeTarget(me, target);
+				return GeoEngine.getInstance().canSeeTarget(me, target);
 			
 			// Check if the L2MonsterInstance target is aggressive
 			if (target instanceof L2MonsterInstance && Config.GUARD_ATTACK_AGGRO_MOB)
-				return (((L2MonsterInstance) target).isAggressive() && PathFinding.getInstance().canSeeTarget(me, target));
+				return (((L2MonsterInstance) target).isAggressive() && GeoEngine.getInstance().canSeeTarget(me, target));
 			
 			return false;
 		}
@@ -187,7 +189,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			
 			// Check if the L2PcInstance target has karma (=PK)
 			if (target instanceof L2PcInstance && ((L2PcInstance) target).getKarma() > 0)
-				return PathFinding.getInstance().canSeeTarget(me, target); // Los Check
+				return GeoEngine.getInstance().canSeeTarget(me, target); // Los Check
 				
 			return false;
 		}
@@ -195,7 +197,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		else
 		{
 			if (target instanceof L2Attackable && me.isConfused())
-				return PathFinding.getInstance().canSeeTarget(me, target);
+				return GeoEngine.getInstance().canSeeTarget(me, target);
 			
 			if (target instanceof L2Npc)
 				return false;
@@ -206,7 +208,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				return false;
 			
 			// Check if the actor is Aggressive
-			return (me.isAggressive() && PathFinding.getInstance().canSeeTarget(me, target));
+			return (me.isAggressive() && GeoEngine.getInstance().canSeeTarget(me, target));
 		}
 	}
 	
@@ -247,7 +249,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 					if (npc.getSpawn() != null)
 					{
 						final int range = Config.MAX_DRIFT_RANGE;
-						if (!npc.isInsideRadius(npc.getSpawn().getLocx(), npc.getSpawn().getLocy(), npc.getSpawn().getLocz(), range + range, true, false))
+						if (!npc.isInsideRadius(npc.getSpawn().getLocX(), npc.getSpawn().getLocY(), npc.getSpawn().getLocZ(), range + range, true, false))
 							intention = CtrlIntention.ACTIVE;
 					}
 				}
@@ -259,11 +261,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				super.changeIntention(CtrlIntention.IDLE, null, null);
 				
 				// Stop AI task and detach AI from NPC
-				if (_aiTask != null)
-				{
-					_aiTask.cancel(true);
-					_aiTask = null;
-				}
+				stopAITask();
 				
 				// Cancel the AI
 				_actor.detachAI();
@@ -276,7 +274,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		
 		// If not idle - create an AI task (schedule onEvtThink repeatedly)
 		if (_aiTask == null)
-			_aiTask = ThreadPoolManager.getInstance().scheduleAiAtFixedRate(this, 1000, 1000);
+			_aiTask = ThreadPool.scheduleAtFixedRate(this, 1000, 1000);
 	}
 	
 	/**
@@ -294,18 +292,8 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		// Calculate the attack timeout
 		_attackTimeout = System.currentTimeMillis() + MAX_ATTACK_TIMEOUT;
 		
-		// Buffs
-		if (Rnd.get(RANDOM_WALK_RATE) == 0)
-		{
-			for (L2Skill sk : getActiveChar().getTemplate().getBuffSkills())
-			{
-				if (getActiveChar().getFirstEffect(sk) != null)
-					continue;
-				
-				clientStopMoving(null);
-				_actor.doCast(sk);
-			}
-		}
+		// Check buff.
+		checkBuffAndSetBackTarget(target);
 		
 		// Manage the attack intention : stop current attack (if necessary), start a new attack and launch Think event.
 		super.onIntentionAttack(target);
@@ -392,27 +380,20 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			}
 		}
 		
-		// Order to the L2GuardInstance to return to its home location because there's no target to attack
-		if (npc instanceof L2GuardInstance)
-		{
-			/**
-			 * TODO returnHome for guards currently don't launch setIsReturningToSpawnPoint flag.<br>
-			 * Either drop that flag entirely through experiences with geodata, put it on for that particular case, or create a new system (based on timer and teleport if failed to reach the place in X time).
-			 */
-			((L2GuardInstance) npc).returnHome();
-			return;
-		}
-		
 		// If this is a festival monster, then it remains in the same location.
 		if (npc instanceof L2FestivalMonsterInstance)
+			return;
+		
+		// Check buffs.
+		if (checkBuffAndSetBackTarget(_actor.getTarget()))
 			return;
 		
 		// Minions following leader
 		final L2Attackable leader = npc.getLeader();
 		if (leader != null && !leader.isAlikeDead())
 		{
-			final int offset = 100 + npc.getCollisionRadius() + leader.getCollisionRadius();
-			final int minRadius = leader.getCollisionRadius() + 30;
+			final int offset = (int) (100 + npc.getCollisionRadius() + leader.getCollisionRadius());
+			final int minRadius = (int) (leader.getCollisionRadius() + 30);
 			
 			if (leader.isRunning())
 				npc.setRunning();
@@ -440,52 +421,32 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				moveTo(x1, y1, leader.getZ());
 				return;
 			}
-			else if (Rnd.get(RANDOM_WALK_RATE) == 0)
-			{
-				for (L2Skill sk : getActiveChar().getTemplate().getBuffSkills())
-				{
-					if (npc.getFirstEffect(sk) != null)
-						continue;
-					
-					clientStopMoving(null);
-					_actor.doCast(sk);
-					return;
-				}
-			}
 		}
-		// Order to the L2MonsterInstance to random walk
-		else if (npc.getSpawn() != null && Rnd.get(RANDOM_WALK_RATE) == 0 && !npc.isNoRndWalk())
+		else
 		{
-			for (L2Skill sk : getActiveChar().getTemplate().getBuffSkills())
-			{
-				if (npc.getFirstEffect(sk) != null)
-					continue;
-				
-				clientStopMoving(null);
-				_actor.doCast(sk);
+			// Return to home if too far.
+			if (npc.returnHome())
 				return;
-			}
 			
-			int x1 = npc.getSpawn().getLocx();
-			int y1 = npc.getSpawn().getLocy();
-			int z1 = npc.getSpawn().getLocz();
-			
-			final int range = Config.MAX_DRIFT_RANGE;
-			
-			if (!npc.isInsideRadius(x1, y1, range, false))
-				npc.setIsReturningToSpawnPoint(true);
-			else
+			// Random walk otherwise.
+			if (npc.getSpawn() != null && !npc.isNoRndWalk() && Rnd.get(RANDOM_WALK_RATE) == 0)
 			{
+				int x1 = npc.getSpawn().getLocX();
+				int y1 = npc.getSpawn().getLocY();
+				int z1 = npc.getSpawn().getLocZ();
+				
+				final int range = Config.MAX_DRIFT_RANGE;
+				
 				x1 = Rnd.get(range * 2); // x
 				y1 = Rnd.get(x1, range * 2); // distance
 				y1 = (int) Math.sqrt(y1 * y1 - x1 * x1); // y
-				x1 += npc.getSpawn().getLocx() - range;
-				y1 += npc.getSpawn().getLocy() - range;
+				x1 += npc.getSpawn().getLocX() - range;
+				y1 += npc.getSpawn().getLocY() - range;
 				z1 = npc.getZ();
+				
+				// Move the actor to Location (x,y,z)
+				moveTo(x1, y1, z1);
 			}
-			
-			// Move the actor to Location (x,y,z)
-			moveTo(x1, y1, z1);
 		}
 	}
 	
@@ -504,66 +465,17 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		if (npc.isCastingNow())
 			return;
 		
-		L2Character attackTarget = (L2Character) getTarget();
+		// Pickup most hated character.
+		L2Character attackTarget = npc.getMostHated();
 		
-		// If target doesn't exist, is dead or if timeout is expired (non-aggro mobs or mobs which are too far stop to attack)
-		if (attackTarget == null || attackTarget.isAlikeDead() || (_attackTimeout < System.currentTimeMillis() && (!npc.isAggressive() || Math.sqrt(npc.getPlanDistanceSq(attackTarget.getX(), attackTarget.getY())) > npc.getAggroRange() * 2)))
+		// If target doesn't exist, is too far or if timeout is expired.
+		if (attackTarget == null || _attackTimeout < System.currentTimeMillis() || Util.calculateDistance(npc, attackTarget, true) > 2000)
 		{
 			// Stop hating this target after the attack timeout or if target is dead
-			if (attackTarget != null)
-				npc.stopHating(attackTarget);
-			
-			// Search the nearest target. If a target is found, continue regular process, else drop angry behavior.
-			attackTarget = targetReconsider(npc.getAggroRange(), false);
-			if (attackTarget == null)
-			{
-				setIntention(CtrlIntention.ACTIVE);
-				npc.setWalking();
-				return;
-			}
-		}
-		
-		final int actorCollision = npc.getTemplate().getCollisionRadius();
-		
-		/**
-		 * FACTION CHECKS<br>
-		 * Handle agression behavior towards monsters of same faction.
-		 */
-		
-		final String[] actorClans = npc.getClans();
-		if (actorClans != null)
-		{
-			for (L2Npc called : npc.getKnownList().getKnownTypeInRadius(L2Npc.class, npc.getClanRange()))
-			{
-				// Caller clan doesn't correspond to the called clan.
-				if (!Util.contains(actorClans, called.getClans()))
-					continue;
-				
-				// Called mob doesnt care about that type of caller id (the bitch !).
-				if (Util.contains(called.getIgnoredIds(), npc.getNpcId()))
-					continue;
-				
-				// Check if the L2Object is inside the Faction Range of the actor
-				if (called.hasAI() && PathFinding.getInstance().canSeeTarget(npc, called) && npc.getAttackByList().contains(attackTarget) && (called.getAI()._intention == CtrlIntention.IDLE || called.getAI()._intention == CtrlIntention.ACTIVE))
-				{
-					if (attackTarget instanceof L2Playable)
-					{
-						List<Quest> quests = called.getTemplate().getEventQuests(EventType.ON_FACTION_CALL);
-						if (quests != null)
-						{
-							L2PcInstance player = attackTarget.getActingPlayer();
-							boolean isSummon = attackTarget instanceof L2Summon;
-							for (Quest quest : quests)
-								quest.notifyFactionCall(called, npc, player, isSummon);
-						}
-					}
-					else if (called instanceof L2Attackable && called.getAI()._intention != CtrlIntention.ATTACK)
-					{
-						((L2Attackable) called).addDamageHate(attackTarget, 0, npc.getHating(attackTarget));
-						called.getAI().setIntention(CtrlIntention.ATTACK, attackTarget);
-					}
-				}
-			}
+			npc.stopHating(attackTarget);
+			setIntention(CtrlIntention.ACTIVE);
+			npc.setWalking();
+			return;
 		}
 		
 		// Corpse AIs, as AI scripts, are stopped here.
@@ -607,7 +519,8 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		 * Used for range and distance check.
 		 */
 		
-		final int combinedCollision = actorCollision + attackTarget.getTemplate().getCollisionRadius();
+		final int actorCollision = (int) npc.getCollisionRadius();
+		final int combinedCollision = (int) (actorCollision + attackTarget.getCollisionRadius());
 		final double dist = Math.sqrt(npc.getPlanDistanceSq(attackTarget.getX(), attackTarget.getY()));
 		
 		int range = combinedCollision;
@@ -637,7 +550,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			
 			// -------------------------------------------------------------------------------
 			// Suicide possibility if HPs are < 15%.
-			defaultList = getActiveChar().getTemplate().getSuicideSkills();
+			defaultList = npc.getTemplate().getSuicideSkills();
 			if (!defaultList.isEmpty() && (npc.getCurrentHp() / npc.getMaxHp() < 0.15))
 			{
 				final L2Skill skill = Rnd.get(defaultList);
@@ -647,7 +560,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			
 			// -------------------------------------------------------------------------------
 			// Heal
-			defaultList = getActiveChar().getTemplate().getHealSkills();
+			defaultList = npc.getTemplate().getHealSkills();
 			if (!defaultList.isEmpty())
 			{
 				// First priority is to heal leader (if npc is a minion).
@@ -664,14 +577,14 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 							if (!checkSkillCastConditions(sk))
 								continue;
 							
-							final int overallRange = sk.getCastRange() + actorCollision + leader.getTemplate().getCollisionRadius();
+							final int overallRange = (int) (sk.getCastRange() + actorCollision + leader.getCollisionRadius());
 							if (!Util.checkIfInRange(overallRange, npc, leader, false) && sk.getTargetType() != SkillTargetType.TARGET_PARTY && !npc.isMovementDisabled())
 							{
 								moveToPawn(leader, overallRange);
 								return;
 							}
 							
-							if (PathFinding.getInstance().canSeeTarget(npc, leader))
+							if (GeoEngine.getInstance().canSeeTarget(npc, leader))
 							{
 								clientStopMoving(null);
 								npc.setTarget(leader);
@@ -704,17 +617,18 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 					
 					if (sk.getTargetType() == SkillTargetType.TARGET_ONE)
 					{
+						final String[] actorClans = npc.getTemplate().getClans();
 						for (L2Attackable obj : npc.getKnownList().getKnownTypeInRadius(L2Attackable.class, sk.getCastRange() + actorCollision))
 						{
 							if (obj.isDead())
 								continue;
 							
-							if (!Util.contains(actorClans, obj.getClans()))
+							if (!ArraysUtil.contains(actorClans, obj.getTemplate().getClans()))
 								continue;
 							
 							if (obj.getCurrentHp() / obj.getMaxHp() < 0.75)
 							{
-								if (PathFinding.getInstance().canSeeTarget(npc, obj))
+								if (GeoEngine.getInstance().canSeeTarget(npc, obj))
 								{
 									clientStopMoving(null);
 									npc.setTarget(obj);
@@ -735,16 +649,38 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			}
 			
 			// -------------------------------------------------------------------------------
+			// Buff
+			defaultList = npc.getTemplate().getBuffSkills();
+			if (!defaultList.isEmpty())
+			{
+				for (L2Skill sk : defaultList)
+				{
+					if (!checkSkillCastConditions(sk))
+						continue;
+					
+					if (npc.getFirstEffect(sk) == null)
+					{
+						clientStopMoving(null);
+						
+						npc.setTarget(npc);
+						npc.doCast(sk);
+						npc.setTarget(attackTarget);
+						return;
+					}
+				}
+			}
+			
+			// -------------------------------------------------------------------------------
 			// Debuff - 10% luck to get debuffed.
-			defaultList = getActiveChar().getTemplate().getDebuffSkills();
+			defaultList = npc.getTemplate().getDebuffSkills();
 			if (Rnd.get(100) < 10 && !defaultList.isEmpty())
 			{
 				for (L2Skill sk : defaultList)
 				{
-					if (!checkSkillCastConditions(sk) || (sk.getCastRange() + npc.getTemplate().getCollisionRadius() + attackTarget.getTemplate().getCollisionRadius() <= dist && !canAura(sk)))
+					if (!checkSkillCastConditions(sk) || (sk.getCastRange() + npc.getCollisionRadius() + attackTarget.getCollisionRadius() <= dist && !canAura(sk)))
 						continue;
 					
-					if (!PathFinding.getInstance().canSeeTarget(npc, attackTarget))
+					if (!GeoEngine.getInstance().canSeeTarget(npc, attackTarget))
 						continue;
 					
 					if (attackTarget.getFirstEffect(sk) == null)
@@ -758,7 +694,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			
 			// -------------------------------------------------------------------------------
 			// General attack skill - short range is checked, then long range.
-			defaultList = getActiveChar().getTemplate().getShortRangeSkills();
+			defaultList = npc.getTemplate().getShortRangeSkills();
 			if (!defaultList.isEmpty() && dist <= 150)
 			{
 				final L2Skill skill = Rnd.get(defaultList);
@@ -767,7 +703,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			}
 			else
 			{
-				defaultList = getActiveChar().getTemplate().getLongRangeSkills();
+				defaultList = npc.getTemplate().getLongRangeSkills();
 				if (!defaultList.isEmpty() && dist > 150)
 				{
 					final L2Skill skill = Rnd.get(defaultList);
@@ -824,7 +760,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 					if (!npc.isInsideRadius(newX, newY, actorCollision, false))
 					{
 						int newZ = npc.getZ() + 30;
-						if (PathFinding.getInstance().canMoveToTarget(npc.getX(), npc.getY(), npc.getZ(), newX, newY, newZ))
+						if (GeoEngine.getInstance().canMoveToTarget(npc.getX(), npc.getY(), npc.getZ(), newX, newY, newZ))
 							moveTo(newX, newY, newZ);
 					}
 					return;
@@ -837,15 +773,15 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		 * Test the flee possibility. Archers got 25% chance to flee.
 		 */
 		
-		if (npc.getAiType() == AIType.ARCHER && dist <= (60 + combinedCollision) && Rnd.get(4) > 1)
+		if (npc.getTemplate().getAiType() == AIType.ARCHER && dist <= (60 + combinedCollision) && Rnd.get(4) > 1)
 		{
 			final int posX = npc.getX() + ((attackTarget.getX() < npc.getX()) ? 300 : -300);
 			final int posY = npc.getY() + ((attackTarget.getY() < npc.getY()) ? 300 : -300);
 			final int posZ = npc.getZ() + 30;
 			
-			if (PathFinding.getInstance().canMoveToTarget(npc.getX(), npc.getY(), npc.getZ(), posX, posY, posZ))
+			if (GeoEngine.getInstance().canMoveToTarget(npc.getX(), npc.getY(), npc.getZ(), posX, posY, posZ))
 			{
-				setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(posX, posY, posZ, 0));
+				setIntention(CtrlIntention.MOVE_TO, new Location(posX, posY, posZ));
 				return;
 			}
 		}
@@ -854,10 +790,18 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		 * BASIC MELEE ATTACK
 		 */
 		
-		if (maybeMoveToPawn(getTarget(), npc.getPhysicalAttackRange()))
+		if (dist > range || !GeoEngine.getInstance().canSeeTarget(npc, attackTarget))
+		{
+			if (attackTarget.isMoving())
+				range -= 30;
+			
+			if (range < 5)
+				range = 5;
+			
+			moveToPawn(attackTarget, range);
 			return;
+		}
 		
-		clientStopMoving(null);
 		_actor.doAttack((L2Character) getTarget());
 	}
 	
@@ -873,10 +817,6 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		
 		if (!checkSkillCastConditions(sk))
 			return false;
-		
-		if (getTarget() == null)
-			if (caster.getMostHated() != null)
-				setTarget(caster.getMostHated());
 		
 		L2Character attackTarget = (L2Character) getTarget();
 		if (attackTarget == null)
@@ -937,11 +877,11 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 					L2Character leader = caster.getLeader();
 					if (leader != null && !leader.isDead() && Rnd.get(100) > (leader.getCurrentHp() / leader.getMaxHp() * 100))
 					{
-						final int overallRange = sk.getCastRange() + caster.getTemplate().getCollisionRadius() + leader.getTemplate().getCollisionRadius();
+						final int overallRange = (int) (sk.getCastRange() + caster.getCollisionRadius() + leader.getCollisionRadius());
 						if (!Util.checkIfInRange(overallRange, caster, leader, false) && sk.getTargetType() != SkillTargetType.TARGET_PARTY && !caster.isMovementDisabled())
 							moveToPawn(leader, overallRange);
 						
-						if (PathFinding.getInstance().canSeeTarget(caster, leader))
+						if (GeoEngine.getInstance().canSeeTarget(caster, leader))
 						{
 							clientStopMoving(null);
 							caster.setTarget(leader);
@@ -963,18 +903,18 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				
 				if (sk.getTargetType() == SkillTargetType.TARGET_ONE)
 				{
-					for (L2Attackable obj : caster.getKnownList().getKnownTypeInRadius(L2Attackable.class, sk.getCastRange() + caster.getTemplate().getCollisionRadius()))
+					for (L2Attackable obj : caster.getKnownList().getKnownTypeInRadius(L2Attackable.class, (int) (sk.getCastRange() + caster.getCollisionRadius())))
 					{
 						if (obj.isDead())
 							continue;
 						
-						if (!Util.contains(caster.getClans(), obj.getClans()))
+						if (!ArraysUtil.contains(caster.getTemplate().getClans(), obj.getTemplate().getClans()))
 							continue;
 						
 						percentage = obj.getCurrentHp() / obj.getMaxHp() * 100;
 						if (Rnd.get(100) < (100 - percentage) / 10)
 						{
-							if (PathFinding.getInstance().canSeeTarget(caster, obj))
+							if (GeoEngine.getInstance().canSeeTarget(caster, obj))
 							{
 								clientStopMoving(null);
 								caster.setTarget(obj);
@@ -987,9 +927,9 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				
 				if (sk.getTargetType() == SkillTargetType.TARGET_PARTY)
 				{
-					for (L2Attackable obj : caster.getKnownList().getKnownTypeInRadius(L2Attackable.class, sk.getSkillRadius() + caster.getTemplate().getCollisionRadius()))
+					for (L2Attackable obj : caster.getKnownList().getKnownTypeInRadius(L2Attackable.class, (int) (sk.getSkillRadius() + caster.getCollisionRadius())))
 					{
-						if (!Util.contains(caster.getClans(), obj.getClans()))
+						if (!ArraysUtil.contains(caster.getTemplate().getClans(), obj.getTemplate().getClans()))
 							continue;
 						
 						if (obj.getCurrentHp() < obj.getMaxHp() && Rnd.get(100) <= 20)
@@ -1010,7 +950,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			case MDOT:
 			case BLEED:
 			{
-				if (PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !canAOE(sk) && !attackTarget.isDead() && distance <= range)
+				if (GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !canAOE(sk) && !attackTarget.isDead() && distance <= range)
 				{
 					if (attackTarget.getFirstEffect(sk) == null)
 					{
@@ -1028,7 +968,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 						return true;
 					}
 					
-					if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
+					if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
 					{
 						clientStopMoving(null);
 						caster.doCast(sk);
@@ -1082,7 +1022,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 						return true;
 					}
 					
-					if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
+					if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
 					{
 						clientStopMoving(null);
 						caster.doCast(sk);
@@ -1096,7 +1036,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			case STUN:
 			case PARALYZE:
 			{
-				if (PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !canAOE(sk) && distance <= range)
+				if (GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !canAOE(sk) && distance <= range)
 				{
 					if (attackTarget.getFirstEffect(sk) == null)
 					{
@@ -1113,7 +1053,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 						caster.doCast(sk);
 						return true;
 					}
-					else if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
+					else if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
 					{
 						clientStopMoving(null);
 						caster.doCast(sk);
@@ -1136,7 +1076,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			case MUTE:
 			case FEAR:
 			{
-				if (PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !canAOE(sk) && distance <= range)
+				if (GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !canAOE(sk) && distance <= range)
 				{
 					if (attackTarget.getFirstEffect(sk) == null)
 					{
@@ -1154,7 +1094,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 						return true;
 					}
 					
-					if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
+					if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
 					{
 						clientStopMoving(null);
 						caster.doCast(sk);
@@ -1183,7 +1123,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				
 				if (sk.getTargetType() == SkillTargetType.TARGET_ONE)
 				{
-					if (attackTarget.getFirstEffect(L2EffectType.BUFF) != null && PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
+					if (attackTarget.getFirstEffect(L2EffectType.BUFF) != null && GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
 					{
 						clientStopMoving(null);
 						caster.doCast(sk);
@@ -1203,13 +1143,13 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				}
 				else if (canAOE(sk))
 				{
-					if ((sk.getTargetType() == SkillTargetType.TARGET_AURA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AURA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AURA) && PathFinding.getInstance().canSeeTarget(caster, attackTarget))
+					if ((sk.getTargetType() == SkillTargetType.TARGET_AURA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AURA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AURA) && GeoEngine.getInstance().canSeeTarget(caster, attackTarget))
 					{
 						clientStopMoving(null);
 						caster.doCast(sk);
 						return true;
 					}
-					else if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
+					else if ((sk.getTargetType() == SkillTargetType.TARGET_AREA || sk.getTargetType() == SkillTargetType.TARGET_BEHIND_AREA || sk.getTargetType() == SkillTargetType.TARGET_FRONT_AREA) && GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
 					{
 						clientStopMoving(null);
 						caster.doCast(sk);
@@ -1223,7 +1163,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			{
 				if (!canAura(sk))
 				{
-					if (PathFinding.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
+					if (GeoEngine.getInstance().canSeeTarget(caster, attackTarget) && !attackTarget.isDead() && distance <= range)
 					{
 						clientStopMoving(null);
 						caster.doCast(sk);
@@ -1281,7 +1221,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 	 */
 	protected boolean willCastASpell()
 	{
-		switch (getActiveChar().getAiType())
+		switch (getActiveChar().getTemplate().getAiType())
 		{
 			case HEALER:
 			case MAGE:
@@ -1309,7 +1249,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		final L2Attackable actor = getActiveChar();
 		
 		// Verify first if aggro list is empty, if not search a victim following his aggro position.
-		if (!actor.gotNoTarget())
+		if (!actor.getAggroList().isEmpty())
 		{
 			// Store aggro value && most hated, in order to add it to the random target we will choose.
 			final L2Character previousMostHated = actor.getMostHated();
@@ -1323,7 +1263,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				if (rangeCheck)
 				{
 					// Verify the distance, -15 if the victim is moving, -15 if the npc is moving.
-					double dist = Math.sqrt(actor.getPlanDistanceSq(obj.getX(), obj.getY())) - obj.getTemplate().getCollisionRadius();
+					double dist = Math.sqrt(actor.getPlanDistanceSq(obj.getX(), obj.getY())) - obj.getCollisionRadius();
 					if (actor.isMoving())
 						dist -= 15;
 					
@@ -1346,7 +1286,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 		// If hate list gave nothing, then verify first if the actor is aggressive, and then pickup a victim from his knownlist.
 		if (actor.isAggressive())
 		{
-			for (L2Character target : actor.getKnownList().getKnownTypeInRadius(L2Character.class, actor.getAggroRange()))
+			for (L2Character target : actor.getKnownList().getKnownTypeInRadius(L2Character.class, actor.getTemplate().getAggroRange()))
 			{
 				if (!autoAttackCondition(target))
 					continue;
@@ -1354,7 +1294,7 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 				if (rangeCheck)
 				{
 					// Verify the distance, -15 if the victim is moving, -15 if the npc is moving.
-					double dist = Math.sqrt(actor.getPlanDistanceSq(target.getX(), target.getY())) - target.getTemplate().getCollisionRadius();
+					double dist = Math.sqrt(actor.getPlanDistanceSq(target.getX(), target.getY())) - target.getCollisionRadius();
 					if (actor.isMoving())
 						dist -= 15;
 					
@@ -1480,6 +1420,51 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 			}
 		}
 		
+		if (attacker != null)
+		{
+			// Faction check.
+			final String[] actorClans = me.getTemplate().getClans();
+			if (actorClans != null && me.getAttackByList().contains(attacker))
+			{
+				for (L2Attackable called : me.getKnownList().getKnownTypeInRadius(L2Attackable.class, me.getTemplate().getClanRange()))
+				{
+					// Caller hasn't AI or is dead.
+					if (!called.hasAI() || called.isDead())
+						continue;
+					
+					// Caller clan doesn't correspond to the called clan.
+					if (!ArraysUtil.contains(actorClans, called.getTemplate().getClans()))
+						continue;
+					
+					// Called mob doesnt care about that type of caller id (the bitch !).
+					if (ArraysUtil.contains(called.getTemplate().getIgnoredIds(), me.getNpcId()))
+						continue;
+					
+					// Check if the L2Object is inside the Faction Range of the actor
+					final CtrlIntention calledIntention = called.getAI().getIntention();
+					if ((calledIntention == CtrlIntention.IDLE || calledIntention == CtrlIntention.ACTIVE || (calledIntention == CtrlIntention.MOVE_TO && !called.isRunning())) && GeoEngine.getInstance().canSeeTarget(me, called))
+					{
+						if (attacker instanceof L2Playable)
+						{
+							List<Quest> quests = called.getTemplate().getEventQuests(EventType.ON_FACTION_CALL);
+							if (quests != null)
+							{
+								L2PcInstance player = attacker.getActingPlayer();
+								boolean isSummon = attacker instanceof L2Summon;
+								for (Quest quest : quests)
+									quest.notifyFactionCall(called, me, player, isSummon);
+							}
+						}
+						else
+						{
+							called.addDamageHate(attacker, 0, me.getHating(attacker));
+							called.getAI().setIntention(CtrlIntention.ATTACK, attacker);
+						}
+					}
+				}
+			}
+		}
+		
 		super.onEvtAttacked(attacker);
 	}
 	
@@ -1522,6 +1507,51 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 					master.getMinionList().onAssist(me, target);
 			}
 		}
+		
+		if (target == null)
+			return;
+		
+		// Faction check.
+		final String[] actorClans = me.getTemplate().getClans();
+		if (actorClans != null && me.getAttackByList().contains(target))
+		{
+			for (L2Attackable called : me.getKnownList().getKnownTypeInRadius(L2Attackable.class, me.getTemplate().getClanRange()))
+			{
+				// Caller hasn't AI or is dead.
+				if (!called.hasAI() || called.isDead())
+					continue;
+				
+				// Caller clan doesn't correspond to the called clan.
+				if (!ArraysUtil.contains(actorClans, called.getTemplate().getClans()))
+					continue;
+				
+				// Called mob doesnt care about that type of caller id (the bitch !).
+				if (ArraysUtil.contains(called.getTemplate().getIgnoredIds(), me.getNpcId()))
+					continue;
+				
+				// Check if the L2Object is inside the Faction Range of the actor
+				final CtrlIntention calledIntention = called.getAI().getIntention();
+				if ((calledIntention == CtrlIntention.IDLE || calledIntention == CtrlIntention.ACTIVE || (calledIntention == CtrlIntention.MOVE_TO && !called.isRunning())) && GeoEngine.getInstance().canSeeTarget(me, called))
+				{
+					if (target instanceof L2Playable)
+					{
+						List<Quest> quests = called.getTemplate().getEventQuests(EventType.ON_FACTION_CALL);
+						if (quests != null)
+						{
+							L2PcInstance player = target.getActingPlayer();
+							boolean isSummon = target instanceof L2Summon;
+							for (Quest quest : quests)
+								quest.notifyFactionCall(called, me, player, isSummon);
+						}
+					}
+					else
+					{
+						called.addDamageHate(target, 0, me.getHating(target));
+						called.getAI().setIntention(CtrlIntention.ATTACK, target);
+					}
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -1541,5 +1571,25 @@ public class L2AttackableAI extends L2CharacterAI implements Runnable
 	private L2Attackable getActiveChar()
 	{
 		return (L2Attackable) _actor;
+	}
+	
+	private boolean checkBuffAndSetBackTarget(L2Object target)
+	{
+		if (Rnd.get(RANDOM_WALK_RATE) != 0)
+			return false;
+		
+		for (L2Skill sk : getActiveChar().getTemplate().getBuffSkills())
+		{
+			if (getActiveChar().getFirstEffect(sk) != null)
+				continue;
+			
+			clientStopMoving(null);
+			
+			_actor.setTarget(_actor);
+			_actor.doCast(sk);
+			_actor.setTarget(target);
+			return true;
+		}
+		return false;
 	}
 }

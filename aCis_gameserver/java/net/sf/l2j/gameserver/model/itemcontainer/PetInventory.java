@@ -15,7 +15,6 @@
 package net.sf.l2j.gameserver.model.itemcontainer;
 
 import net.sf.l2j.gameserver.datatables.ItemTable;
-import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
@@ -129,22 +128,12 @@ public class PetInventory extends Inventory
 	@Override
 	public void deleteMe()
 	{
-		// Transfer items only if the items list is feeded.
-		if (_items != null)
+		final L2PcInstance petOwner = getOwner().getOwner();
+		if (petOwner != null)
 		{
-			// Retrieves the master of the pet owning the inventory.
-			final L2PcInstance petOwner = getOwner().getOwner();
-			if (petOwner != null)
-			{
-				// Transfer each item to master's inventory.
-				for (ItemInstance item : _items)
-				{
-					getOwner().transferItem("return", item.getObjectId(), item.getCount(), petOwner.getInventory(), petOwner, getOwner());
-					L2World.getInstance().removeObject(item);
-				}
-			}
-			// Clear the internal inventory items list.
-			_items.clear();
+			for (ItemInstance item : _items)
+				getOwner().transferItem("return", item.getObjectId(), item.getCount(), petOwner.getInventory(), petOwner, getOwner());
 		}
+		_items.clear();
 	}
 }

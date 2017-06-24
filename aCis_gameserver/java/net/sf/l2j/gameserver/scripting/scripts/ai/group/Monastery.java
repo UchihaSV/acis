@@ -15,20 +15,24 @@
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
 import net.sf.l2j.gameserver.datatables.SkillTable;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.base.Sex;
 import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 import net.sf.l2j.gameserver.util.Util;
 
-public class Monastery extends AbstractNpcAI
+/**
+ * This script holds MoS monsters behavior. If they see you with an equipped weapon, they will speak and attack you.
+ */
+public class Monastery extends L2AttackableAIScript
 {
-	private static final int[] mobs1 =
+	private static final int[] BROTHERS_SEEKERS_MONKS =
 	{
 		22124,
 		22125,
@@ -37,7 +41,7 @@ public class Monastery extends AbstractNpcAI
 		22129
 	};
 	
-	private static final int[] mobs2 =
+	private static final int[] GUARDIANS_BEHOLDERS =
 	{
 		22134,
 		22135
@@ -46,9 +50,13 @@ public class Monastery extends AbstractNpcAI
 	public Monastery()
 	{
 		super("ai/group");
-		
-		registerMobs(mobs1, EventType.ON_AGGRO, EventType.ON_SPAWN, EventType.ON_SPELL_FINISHED);
-		registerMobs(mobs2, EventType.ON_SKILL_SEE);
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addEventIds(BROTHERS_SEEKERS_MONKS, EventType.ON_AGGRO, EventType.ON_SPAWN, EventType.ON_SPELL_FINISHED);
+		addEventIds(GUARDIANS_BEHOLDERS, EventType.ON_SKILL_SEE);
 	}
 	
 	@Override
@@ -59,7 +67,7 @@ public class Monastery extends AbstractNpcAI
 			if (player.getActiveWeaponInstance() != null)
 			{
 				npc.setTarget(player);
-				npc.broadcastNpcSay(((player.getAppearance().getSex()) ? "Sister " : "Brother ") + player.getName() + ", move your weapon away!");
+				npc.broadcastNpcSay(((player.getAppearance().getSex() == Sex.FEMALE) ? "Sister " : "Brother ") + player.getName() + ", move your weapon away!");
 				
 				switch (npc.getNpcId())
 				{
@@ -88,7 +96,7 @@ public class Monastery extends AbstractNpcAI
 			{
 				if (obj.equals(npc))
 				{
-					npc.broadcastNpcSay(((caster.getAppearance().getSex()) ? "Sister " : "Brother ") + caster.getName() + ", move your weapon away!");
+					npc.broadcastNpcSay(((caster.getAppearance().getSex() == Sex.FEMALE) ? "Sister " : "Brother ") + caster.getName() + ", move your weapon away!");
 					attack(((L2Attackable) npc), caster);
 					break;
 				}
@@ -102,12 +110,12 @@ public class Monastery extends AbstractNpcAI
 	{
 		for (L2PcInstance target : npc.getKnownList().getKnownType(L2PcInstance.class))
 		{
-			if (!target.isDead() && PathFinding.getInstance().canSeeTarget(npc, target) && Util.checkIfInRange(npc.getAggroRange(), npc, target, true))
+			if (!target.isDead() && GeoEngine.getInstance().canSeeTarget(npc, target) && Util.checkIfInRange(npc.getTemplate().getAggroRange(), npc, target, true))
 			{
 				if (target.getActiveWeaponInstance() != null && !npc.isInCombat() && npc.getTarget() == null)
 				{
 					npc.setTarget(target);
-					npc.broadcastNpcSay(((target.getAppearance().getSex()) ? "Sister " : "Brother ") + target.getName() + ", move your weapon away!");
+					npc.broadcastNpcSay(((target.getAppearance().getSex() == Sex.FEMALE) ? "Sister " : "Brother ") + target.getName() + ", move your weapon away!");
 					
 					switch (npc.getNpcId())
 					{

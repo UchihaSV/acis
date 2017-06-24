@@ -13,7 +13,7 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.Quest;
@@ -26,7 +26,7 @@ public class Q021_HiddenTruth extends Quest
 	// NPCs
 	private static final int MYSTERIOUS_WIZARD = 31522;
 	private static final int TOMBSTONE = 31523;
-	private static final int VON_HELLMAN = 31524;
+	private static final int VON_HELLMAN_DUKE = 31524;
 	private static final int VON_HELLMAN_PAGE = 31525;
 	private static final int BROKEN_BOOKSHELF = 31526;
 	private static final int AGRIPEL = 31348;
@@ -38,8 +38,15 @@ public class Q021_HiddenTruth extends Quest
 	private static final int CROSS_OF_EINHASAD = 7140;
 	private static final int CROSS_OF_EINHASAD_NEXT_QUEST = 7141;
 	
-	private L2Npc _vonHellmannPage;
-	private L2Npc _vonHellmann;
+	private static final Location[] PAGE_LOCS =
+	{
+		new Location(51992, -54424, -3160),
+		new Location(52328, -53400, -3160),
+		new Location(51928, -51656, -3096)
+	};
+	
+	private L2Npc _duke;
+	private L2Npc _page;
 	
 	public Q021_HiddenTruth()
 	{
@@ -48,7 +55,7 @@ public class Q021_HiddenTruth extends Quest
 		setItemsIds(CROSS_OF_EINHASAD);
 		
 		addStartNpc(MYSTERIOUS_WIZARD);
-		addTalkId(MYSTERIOUS_WIZARD, TOMBSTONE, VON_HELLMAN, VON_HELLMAN_PAGE, BROKEN_BOOKSHELF, AGRIPEL, DOMINIC, BENEDICT, INNOCENTIN);
+		addTalkId(MYSTERIOUS_WIZARD, TOMBSTONE, VON_HELLMAN_DUKE, VON_HELLMAN_PAGE, BROKEN_BOOKSHELF, AGRIPEL, DOMINIC, BENEDICT, INNOCENTIN);
 	}
 	
 	@Override
@@ -69,23 +76,13 @@ public class Q021_HiddenTruth extends Quest
 		{
 			st.set("cond", "2");
 			st.playSound(QuestState.SOUND_MIDDLE);
-			spawnVonHellmann(st);
+			spawnTheDuke(player);
 		}
 		else if (event.equalsIgnoreCase("31524-06.htm"))
 		{
 			st.set("cond", "3");
 			st.playSound(QuestState.SOUND_MIDDLE);
-			
-			// Spawn the page.
-			if (_vonHellmannPage == null)
-			{
-				_vonHellmannPage = addSpawn(VON_HELLMAN_PAGE, 51462, -54539, -3176, 0, false, 90000, true);
-				_vonHellmannPage.broadcastNpcSay("My master has instructed me to be your guide, " + player.getName() + ".");
-				
-				// Make it move.
-				startQuestTimer("1", 4000, _vonHellmannPage, player, false);
-				startQuestTimer("pageDespawn", 88000, _vonHellmannPage, player, false);
-			}
+			spawnThePage(player);
 		}
 		else if (event.equalsIgnoreCase("31526-08.htm"))
 		{
@@ -100,34 +97,38 @@ public class Q021_HiddenTruth extends Quest
 		}
 		else if (event.equalsIgnoreCase("1"))
 		{
-			_vonHellmannPage.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(52373, -54296, -3136, 0));
-			_vonHellmannPage.broadcastNpcSay("Follow me...");
-			startQuestTimer("2", 5000, _vonHellmannPage, player, false);
+			_page.getAI().setIntention(CtrlIntention.MOVE_TO, PAGE_LOCS[0]);
+			_page.broadcastNpcSay("Follow me...");
+			
+			startQuestTimer("2", 5000, _page, player, false);
 			return null;
 		}
 		else if (event.equalsIgnoreCase("2"))
 		{
-			_vonHellmannPage.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(52279, -53064, -3161, 0));
-			startQuestTimer("3", 12000, _vonHellmannPage, player, false);
+			_page.getAI().setIntention(CtrlIntention.MOVE_TO, PAGE_LOCS[1]);
+			
+			startQuestTimer("3", 12000, _page, player, false);
 			return null;
 		}
 		else if (event.equalsIgnoreCase("3"))
 		{
-			_vonHellmannPage.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(51909, -51725, -3125, 0));
-			startQuestTimer("4", 15000, _vonHellmannPage, player, false);
+			_page.getAI().setIntention(CtrlIntention.MOVE_TO, PAGE_LOCS[2]);
+			
+			startQuestTimer("4", 18000, _page, player, false);
 			return null;
 		}
 		else if (event.equalsIgnoreCase("4"))
 		{
-			_vonHellmannPage.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(52438, -51240, -3097, 0));
-			_vonHellmannPage.broadcastNpcSay("This where that here...");
-			startQuestTimer("5", 5000, _vonHellmannPage, player, false);
+			st.set("end_walk", "1");
+			
+			_page.broadcastNpcSay("Please check this bookcase, " + player.getName() + ".");
+			
+			startQuestTimer("5", 47000, _page, player, false);
 			return null;
 		}
 		else if (event.equalsIgnoreCase("5"))
 		{
-			_vonHellmannPage.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(52143, -51418, -3085, 0));
-			_vonHellmannPage.broadcastNpcSay("I want to speak to you...");
+			_page.broadcastNpcSay("I'm confused! Maybe it's time to go back.");
 			return null;
 		}
 		else if (event.equalsIgnoreCase("31328-05.htm"))
@@ -140,8 +141,20 @@ public class Q021_HiddenTruth extends Quest
 				st.exitQuest(false);
 			}
 		}
+		else if (event.equalsIgnoreCase("dukeDespawn"))
+		{
+			_duke.deleteMe();
+			_duke = null;
+			
+			return null;
+		}
 		else if (event.equalsIgnoreCase("pageDespawn"))
-			_vonHellmannPage = null;
+		{
+			_page.deleteMe();
+			_page = null;
+			
+			return null;
+		}
 		
 		return htmltext;
 	}
@@ -174,60 +187,63 @@ public class Q021_HiddenTruth extends Quest
 						else if (cond == 2 || cond == 3)
 						{
 							htmltext = "31523-04.htm";
-							spawnVonHellmann(st);
+							spawnTheDuke(player);
 						}
 						else if (cond > 3)
 							htmltext = "31523-04.htm";
 						break;
 					
-					case VON_HELLMAN:
+					case VON_HELLMAN_DUKE:
 						if (cond == 2)
 							htmltext = "31524-01.htm";
 						else if (cond == 3)
+						{
 							htmltext = "31524-07.htm";
+							spawnThePage(player);
+						}
 						else if (cond > 3)
 							htmltext = "31524-07a.htm";
 						break;
 					
 					case VON_HELLMAN_PAGE:
-						if (cond == 3 || cond == 4)
+						if (cond == 3)
 						{
-							htmltext = "31525-01.htm";
-							if (!_vonHellmannPage.isMoving())
+							if (st.getInt("end_walk") == 1)
 							{
 								htmltext = "31525-02.htm";
-								if (cond == 3)
-								{
-									st.set("cond", "4");
-									st.playSound(QuestState.SOUND_MIDDLE);
-								}
+								st.set("cond", "4");
+								st.playSound(QuestState.SOUND_MIDDLE);
 							}
+							else
+								htmltext = "31525-01.htm";
 						}
+						else if (cond == 4)
+							htmltext = "31525-02.htm";
 						break;
 					
 					case BROKEN_BOOKSHELF:
-						if (cond == 3 || cond == 4)
+						if ((cond == 3 && st.getInt("end_walk") == 1) || cond == 4)
 						{
 							htmltext = "31526-01.htm";
 							
-							if (!_vonHellmannPage.isMoving())
+							st.set("cond", "5");
+							st.playSound(QuestState.SOUND_MIDDLE);
+							
+							if (_page != null)
 							{
-								st.set("cond", "5");
-								st.playSound(QuestState.SOUND_MIDDLE);
+								cancelQuestTimer("5", _page, player);
+								cancelQuestTimer("pageDespawn", _page, player);
 								
-								if (_vonHellmannPage != null)
-								{
-									_vonHellmannPage.deleteMe();
-									_vonHellmannPage = null;
-									
-									cancelQuestTimer("pageDespawn", null, player);
-								}
+								_page.deleteMe();
+								_page = null;
+							}
+							
+							if (_duke != null)
+							{
+								cancelQuestTimer("dukeDespawn", _duke, player);
 								
-								if (_vonHellmann != null)
-								{
-									_vonHellmann.deleteMe();
-									_vonHellmann = null;
-								}
+								_duke.deleteMe();
+								_duke = null;
 							}
 						}
 						else if (cond == 5)
@@ -294,12 +310,26 @@ public class Q021_HiddenTruth extends Quest
 		return htmltext;
 	}
 	
-	private void spawnVonHellmann(QuestState st)
+	private void spawnTheDuke(L2PcInstance player)
 	{
-		if (_vonHellmann == null)
+		if (_duke == null)
 		{
-			_vonHellmann = addSpawn(VON_HELLMAN, 51432, -54570, -3136, 0, false, 0, true);
-			_vonHellmann.broadcastNpcSay("Who awoke me?");
+			_duke = addSpawn(VON_HELLMAN_DUKE, 51432, -54570, -3136, 0, false, 0, true);
+			_duke.broadcastNpcSay("Who awoke me?");
+			
+			startQuestTimer("dukeDespawn", 300000, _duke, player, false);
+		}
+	}
+	
+	private void spawnThePage(L2PcInstance player)
+	{
+		if (_page == null)
+		{
+			_page = addSpawn(VON_HELLMAN_PAGE, 51608, -54520, -3168, 0, false, 0, true);
+			_page.broadcastNpcSay("My master has instructed me to be your guide, " + player.getName() + ".");
+			
+			startQuestTimer("1", 4000, _page, player, false);
+			startQuestTimer("pageDespawn", 90000, _page, player, false);
 		}
 	}
 }

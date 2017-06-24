@@ -20,10 +20,10 @@ import java.util.logging.Level;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.datatables.PetDataTable;
 import net.sf.l2j.gameserver.instancemanager.CursedWeaponsManager;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.StatusUpdate;
@@ -116,10 +116,10 @@ public final class RequestDestroyItem extends L2GameClientPacket
 		}
 		
 		// if it's a pet control item.
-		if (PetDataTable.isPetCollar(itemId))
+		if (itemToRemove.getItemType() == EtcItemType.PET_COLLAR)
 		{
 			// See if pet or mount is active ; can't destroy item linked to that pet.
-			if ((activeChar.getPet() != null && activeChar.getPet().getControlItemId() == _objectId) || (activeChar.isMounted() && activeChar.getMountObjectID() == _objectId))
+			if ((activeChar.getPet() != null && activeChar.getPet().getControlItemId() == _objectId) || (activeChar.isMounted() && activeChar.getMountObjectId() == _objectId))
 			{
 				activeChar.sendPacket(SystemMessageId.PET_SUMMONED_MAY_NOT_DESTROYED);
 				return;

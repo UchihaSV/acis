@@ -145,7 +145,7 @@ public final class StringUtil
 	 */
 	public static boolean isValidPlayerName(String text)
 	{
-		return isValidName(text, "^[A-Za-z0-9]{1,16}$");
+		return isValidName(text, "^[A-Za-z0-9]{3,16}$");
 	}
 	
 	/**
@@ -161,5 +161,28 @@ public final class StringUtil
 		StringUtil.append(sb, "=[ ", text, " ]");
 		
 		LOG.info(sb.toString());
+	}
+	
+	/**
+	 * Format a time given in seconds into "h m s" String format.
+	 * @param time : a time given in seconds.
+	 * @return a "h m s" formated String.
+	 */
+	public static String getTimeStamp(int time)
+	{
+		final int hours = time / 3600;
+		time %= 3600;
+		final int minutes = time / 60;
+		time %= 60;
+		
+		String result = "";
+		if (hours > 0)
+			result += hours + "h";
+		if (minutes > 0)
+			result += " " + minutes + "m";
+		if (time > 0 || result.length() == 0)
+			result += " " + time + "s";
+		
+		return result;
 	}
 }

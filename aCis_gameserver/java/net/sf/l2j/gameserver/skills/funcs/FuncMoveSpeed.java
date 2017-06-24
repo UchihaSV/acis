@@ -36,6 +36,6 @@ public class FuncMoveSpeed extends Func
 	@Override
 	public void calc(Env env)
 	{
-		env.mulValue(Formulas.DEXbonus[env.getCharacter().getDEX()]);
+		env.mulValue(Formulas.DEX_BONUS[env.getCharacter().getDEX()]);
 	}
 }

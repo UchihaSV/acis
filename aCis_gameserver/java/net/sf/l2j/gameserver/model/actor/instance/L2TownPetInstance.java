@@ -14,10 +14,13 @@
  */
 package net.sf.l2j.gameserver.model.actor.instance;
 
+import java.util.concurrent.ScheduledFuture;
+
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
@@ -25,14 +28,14 @@ import net.sf.l2j.gameserver.network.serverpackets.MoveToPawn;
 
 public class L2TownPetInstance extends L2NpcInstance
 {
-	int randomX, randomY, spawnX, spawnY;
+	private ScheduledFuture<?> _aiTask;
 	
 	public L2TownPetInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
 		setRunning();
 		
-		ThreadPoolManager.getInstance().scheduleAiAtFixedRate(new RandomWalkTask(), 1000, 10000);
+		_aiTask = ThreadPool.scheduleAtFixedRate(new RandomWalkTask(), 1000, 10000);
 	}
 	
 	@Override
@@ -57,11 +60,14 @@ public class L2TownPetInstance extends L2NpcInstance
 	}
 	
 	@Override
-	public void onSpawn()
+	public void deleteMe()
 	{
-		super.onSpawn();
-		spawnX = getX();
-		spawnY = getY();
+		if (_aiTask != null)
+		{
+			_aiTask.cancel(true);
+			_aiTask = null;
+		}
+		super.deleteMe();
 	}
 	
 	public class RandomWalkTask implements Runnable
@@ -69,11 +75,10 @@ public class L2TownPetInstance extends L2NpcInstance
 		@Override
 		public void run()
 		{
-			randomX = spawnX + Rnd.get(150) - 75;
-			randomY = spawnY + Rnd.get(150) - 75;
+			if (!hasAI() || getSpawn() == null)
+				return;
 			
-			if ((randomX != getX()) && (randomY != getY()))
-				getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(randomX, randomY, getZ(), 0));
+			getAI().setIntention(CtrlIntention.MOVE_TO, GeoEngine.getInstance().canMoveToTargetLoc(getX(), getY(), getZ(), getSpawn().getLocX() + Rnd.get(-75, 75), getSpawn().getLocY() + Rnd.get(-75, 75), getZ()));
 		}
 	}
 }

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.templates.L2HelperBuff;
+import net.sf.l2j.gameserver.model.HelperBuff;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
@@ -28,43 +28,26 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /**
- * This class represents the Newbie Helper Buff list Author: Ayor
+ * This class loads and store newbie buffs into a List of HelperBuff.
  */
 public class HelperBuffTable
 {
 	private static Logger _log = Logger.getLogger(HelperBuffTable.class.getName());
 	
-	/** The table containing all Buff of the Newbie Helper */
-	private final List<L2HelperBuff> _helperBuff;
+	private final List<HelperBuff> _helperBuff = new ArrayList<>();
 	
-	/**
-	 * The player level since Newbie Helper can give the first buff <BR>
-	 * Used to generate message : "Come back here when you have reached level ...")
-	 */
 	private int _magicClassLowestLevel = 100;
 	private int _physicClassLowestLevel = 100;
 	
-	/**
-	 * The player level above which Newbie Helper won't give any buff <BR>
-	 * Used to generate message : "Only novice character of level ... or less can receive my support magic.")
-	 */
 	private int _magicClassHighestLevel = 1;
 	private int _physicClassHighestLevel = 1;
 	
-	public static HelperBuffTable getInstance()
-	{
-		return SingletonHolder._instance;
-	}
-	
-	/**
-	 * Create and Load the Newbie Helper Buff list from helper_buff_list.xml
-	 */
 	protected HelperBuffTable()
 	{
-		_helperBuff = new ArrayList<>();
-		
 		try
 		{
+			final StatsSet set = new StatsSet();
+			
 			File f = new File("./data/xml/helper_buff_list.xml");
 			Document doc = XMLDocumentFactory.getInstance().loadDocument(f);
 			
@@ -75,41 +58,37 @@ public class HelperBuffTable
 				{
 					NamedNodeMap attrs = d.getAttributes();
 					
-					int id = Integer.valueOf(attrs.getNamedItem("id").getNodeValue());
-					int skill_id = Integer.valueOf(attrs.getNamedItem("skill_id").getNodeValue());
-					int skill_level = Integer.valueOf(attrs.getNamedItem("skill_level").getNodeValue());
-					int lower_level = Integer.valueOf(attrs.getNamedItem("lower_level").getNodeValue());
-					int upper_level = Integer.valueOf(attrs.getNamedItem("upper_level").getNodeValue());
-					boolean is_magic_class = Boolean.valueOf(attrs.getNamedItem("is_magic_class").getNodeValue());
+					int skillId = Integer.valueOf(attrs.getNamedItem("skillId").getNodeValue());
+					int skillLevel = Integer.valueOf(attrs.getNamedItem("skillLevel").getNodeValue());
+					int lowerLevel = Integer.valueOf(attrs.getNamedItem("lowerLevel").getNodeValue());
+					int upperLevel = Integer.valueOf(attrs.getNamedItem("upperLevel").getNodeValue());
+					boolean isMagicClass = Boolean.valueOf(attrs.getNamedItem("isMagicClass").getNodeValue());
 					
-					StatsSet helperBuffDat = new StatsSet();
+					set.set("skillId", skillId);
+					set.set("skillLevel", skillLevel);
+					set.set("lowerLevel", lowerLevel);
+					set.set("upperLevel", upperLevel);
+					set.set("isMagicClass", isMagicClass);
 					
-					helperBuffDat.set("id", id);
-					helperBuffDat.set("skillID", skill_id);
-					helperBuffDat.set("skillLevel", skill_level);
-					helperBuffDat.set("lowerLevel", lower_level);
-					helperBuffDat.set("upperLevel", upper_level);
-					helperBuffDat.set("isMagicClass", is_magic_class);
-					
-					if (!is_magic_class)
+					if (!isMagicClass)
 					{
-						if (lower_level < _physicClassLowestLevel)
-							_physicClassLowestLevel = lower_level;
+						if (lowerLevel < _physicClassLowestLevel)
+							_physicClassLowestLevel = lowerLevel;
 						
-						if (upper_level > _physicClassHighestLevel)
-							_physicClassHighestLevel = upper_level;
+						if (upperLevel > _physicClassHighestLevel)
+							_physicClassHighestLevel = upperLevel;
 					}
 					else
 					{
-						if (lower_level < _magicClassLowestLevel)
-							_magicClassLowestLevel = lower_level;
+						if (lowerLevel < _magicClassLowestLevel)
+							_magicClassLowestLevel = lowerLevel;
 						
-						if (upper_level > _magicClassHighestLevel)
-							_magicClassHighestLevel = upper_level;
+						if (upperLevel > _magicClassHighestLevel)
+							_magicClassHighestLevel = upperLevel;
 					}
 					
-					// Add this Helper Buff to the Helper Buff List
-					_helperBuff.add(new L2HelperBuff(helperBuffDat));
+					_helperBuff.add(new HelperBuff(set));
+					set.clear();
 				}
 			}
 		}
@@ -124,7 +103,7 @@ public class HelperBuffTable
 	/**
 	 * @return the Helper Buff List
 	 */
-	public List<L2HelperBuff> getHelperBuffTable()
+	public List<HelperBuff> getHelperBuffTable()
 	{
 		return _helperBuff;
 	}
@@ -159,6 +138,11 @@ public class HelperBuffTable
 	public int getPhysicClassLowestLevel()
 	{
 		return _physicClassLowestLevel;
+	}
+	
+	public static HelperBuffTable getInstance()
+	{
+		return SingletonHolder._instance;
 	}
 	
 	private static class SingletonHolder

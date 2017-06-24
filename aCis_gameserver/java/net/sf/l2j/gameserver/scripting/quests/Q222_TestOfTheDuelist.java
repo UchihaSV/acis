@@ -14,7 +14,7 @@ package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.base.Race;
+import net.sf.l2j.gameserver.model.base.ClassRace;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
@@ -91,7 +91,7 @@ public class Q222_TestOfTheDuelist extends Quest
 		
 		if (event.equalsIgnoreCase("30623-04.htm"))
 		{
-			if (player.getRace() == Race.Orc)
+			if (player.getRace() == ClassRace.ORC)
 				htmltext = "30623-05.htm";
 		}
 		else if (event.equalsIgnoreCase("30623-07.htm"))
@@ -105,7 +105,13 @@ public class Q222_TestOfTheDuelist extends Quest
 			st.giveItems(ORDER_GIRAN, 1);
 			st.giveItems(ORDER_OREN, 1);
 			st.giveItems(ORDER_ADEN, 1);
-			st.giveItems(DIMENSIONAL_DIAMOND, 72);
+			
+			if (!player.getMemos().getBool("secondClassChange39", false))
+			{
+				htmltext = "30623-07a.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_39.get(player.getClassId().getId()));
+				player.getMemos().set("secondClassChange39", true);
+			}
 		}
 		else if (event.equalsIgnoreCase("30623-16.htm"))
 		{

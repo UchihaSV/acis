@@ -26,7 +26,7 @@ public class AuthResponse extends ServerBasePacket
 	{
 		writeC(0x02);
 		writeC(serverId);
-		writeS(GameServerTable.getInstance().getServerNameById(serverId));
+		writeS(GameServerTable.getInstance().getServerNames().get(serverId));
 	}
 	
 	@Override

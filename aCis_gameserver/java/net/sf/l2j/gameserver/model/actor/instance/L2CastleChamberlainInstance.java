@@ -19,6 +19,7 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
@@ -532,7 +533,7 @@ public class L2CastleChamberlainInstance extends L2MerchantInstance
 			if (door == null)
 				return;
 			
-			final int currentHpRatio = door.getUpgradeHpRatio();
+			final int currentHpRatio = door.getStat().getUpgradeHpRatio();
 			
 			final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 			

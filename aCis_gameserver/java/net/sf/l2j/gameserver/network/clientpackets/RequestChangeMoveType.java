@@ -29,10 +29,16 @@ public final class RequestChangeMoveType extends L2GameClientPacket
 	@Override
 	protected void runImpl()
 	{
+		// Get player.
 		final L2PcInstance player = getClient().getActiveChar();
 		if (player == null)
 			return;
 		
+		// Player is mounted, do not allow to change movement type.
+		if (player.isMounted())
+			return;
+		
+		// Change movement type.
 		if (_typeRun)
 			player.setRunning();
 		else

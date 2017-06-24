@@ -69,8 +69,8 @@ public class Q408_PathToAnElvenWizard extends Quest
 		
 		if (event.equalsIgnoreCase("30414-06.htm"))
 		{
-			if (player.getClassId() != ClassId.elvenMage)
-				htmltext = (player.getClassId() == ClassId.elvenWizard) ? "30414-02a.htm" : "30414-03.htm";
+			if (player.getClassId() != ClassId.ELVEN_MYSTIC)
+				htmltext = (player.getClassId() == ClassId.ELVEN_WIZARD) ? "30414-02a.htm" : "30414-03.htm";
 			else if (player.getLevel() < 19)
 				htmltext = "30414-04.htm";
 			else if (st.hasQuestItems(ETERNITY_DIAMOND))

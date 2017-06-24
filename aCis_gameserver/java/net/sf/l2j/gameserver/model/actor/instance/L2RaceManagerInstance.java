@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.games.MonsterRace;
 import net.sf.l2j.gameserver.instancemanager.games.MonsterRace.HistoryInfo;
@@ -170,7 +171,7 @@ public class L2RaceManagerInstance extends L2NpcInstance
 				player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.ACQUIRED_S1_S2).addNumber(MonsterRace.getInstance().getRaceNumber()).addItemName(4443));
 				
 				// Refresh lane bet.
-				MonsterRace.setBetOnLane(ticket, TICKET_PRICES[priceId - 1], true);
+				MonsterRace.getInstance().setBetOnLane(ticket, TICKET_PRICES[priceId - 1], true);
 				super.onBypassFeedback(player, "Chat 0");
 				return;
 			}

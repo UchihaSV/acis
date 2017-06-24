@@ -15,7 +15,7 @@ package net.sf.l2j.gameserver.scripting.quests;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
-import net.sf.l2j.gameserver.model.base.Race;
+import net.sf.l2j.gameserver.model.base.ClassRace;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
@@ -99,7 +99,13 @@ public class Q232_TestOfTheLord extends Quest
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
 			st.giveItems(ORDEAL_NECKLACE, 1);
-			st.giveItems(DIMENSIONAL_DIAMOND, 92);
+			
+			if (!player.getMemos().getBool("secondClassChange39", false))
+			{
+				htmltext = "30565-05b.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_39.get(player.getClassId().getId()));
+				player.getMemos().set("secondClassChange39", true);
+			}
 		}
 		else if (event.equalsIgnoreCase("30565-08.htm"))
 		{
@@ -185,9 +191,9 @@ public class Q232_TestOfTheLord extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				if (player.getRace() != Race.Orc)
+				if (player.getRace() != ClassRace.ORC)
 					htmltext = "30565-01.htm";
-				else if (player.getClassId() != ClassId.orcShaman)
+				else if (player.getClassId() != ClassId.ORC_SHAMAN)
 					htmltext = "30565-02.htm";
 				else if (player.getLevel() < 39)
 					htmltext = "30565-03.htm";

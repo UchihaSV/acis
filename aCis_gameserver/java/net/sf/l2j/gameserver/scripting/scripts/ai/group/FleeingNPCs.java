@@ -15,54 +15,44 @@
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
+import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
-public class FleeingNPCs extends AbstractNpcAI
+/**
+ * Elpies and 4s victims behavior.<br>
+ * Hitting such NPC will lead them to flee everytime.
+ */
+public class FleeingNPCs extends L2AttackableAIScript
 {
-	// Victims and elpies
-	private final int[] _npcId =
-	{
-		18150,
-		18151,
-		18152,
-		18153,
-		18154,
-		18155,
-		18156,
-		18157,
-		20432
-	};
-	
 	public FleeingNPCs()
 	{
 		super("ai/group");
-		
-		for (int element : _npcId)
-			addEventId(element, EventType.ON_ATTACK);
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	protected void registerNpcs()
 	{
-		if (npc.getNpcId() >= 18150 && npc.getNpcId() <= 18157)
-		{
-			npc.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition((npc.getX() + Rnd.get(-40, 40)), (npc.getY() + Rnd.get(-40, 40)), npc.getZ(), npc.getHeading()));
-			npc.getAI().setIntention(CtrlIntention.IDLE, null, null);
-			return null;
-		}
-		else if (npc.getNpcId() == 20432)
-		{
-			if (Rnd.get(3) == 2)
-				npc.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition((npc.getX() + Rnd.get(-200, 200)), (npc.getY() + Rnd.get(-200, 200)), npc.getZ(), npc.getHeading()));
-			
-			npc.getAI().setIntention(CtrlIntention.IDLE, null, null);
-			return null;
-		}
-		return super.onAttack(npc, attacker, damage, isPet);
+		addAttackId(18150, 18151, 18152, 18153, 18154, 18155, 18156, 18157, 20432);
+	}
+	
+	@Override
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
+	{
+		// Calculate random coords.
+		final int rndX = npc.getX() + Rnd.get(-Config.MAX_DRIFT_RANGE, Config.MAX_DRIFT_RANGE);
+		final int rndY = npc.getY() + Rnd.get(-Config.MAX_DRIFT_RANGE, Config.MAX_DRIFT_RANGE);
+		
+		// Wait the NPC to be immobile to move him again. Also check destination point.
+		if (!npc.isMoving() && GeoEngine.getInstance().canMoveToTarget(npc.getX(), npc.getY(), npc.getZ(), rndX, rndY, npc.getZ()))
+			npc.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(rndX, rndY, npc.getZ()));
+		
+		return null;
 	}
 }

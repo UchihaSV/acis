@@ -184,7 +184,7 @@ public final class RequestBypassToServer extends L2GameClientPacket
 		}
 		catch (Exception e)
 		{
-			_log.log(Level.WARNING, "Bad RequestBypassToServer: ", e);
+			_log.log(Level.WARNING, "Bad RequestBypassToServer: " + e, e);
 		}
 	}
 	

@@ -14,19 +14,20 @@
  */
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
-import net.sf.l2j.gameserver.ai.CtrlEvent;
+import net.sf.l2j.commons.util.ArraysUtil;
+
+import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
-import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
-import net.sf.l2j.gameserver.util.Util;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
 /**
  * Primeval Isle AIs. This script controls following behaviors :
@@ -36,7 +37,7 @@ import net.sf.l2j.gameserver.util.Util;
  * <li>Pterosaurs and Tyrannosaurus : can see through Silent Move.</li>
  * </ul>
  */
-public class PrimevalIsle extends AbstractNpcAI
+public class PrimevalIsle extends L2AttackableAIScript
 {
 	private static final int[] SPRIGANTS =
 	{
@@ -62,10 +63,14 @@ public class PrimevalIsle extends AbstractNpcAI
 		super("ai/group");
 		
 		for (L2Spawn npc : SpawnTable.getInstance().getSpawnTable())
-			if (Util.contains(MOBIDS, npc.getNpcId()) && npc.getLastSpawn() != null && npc.getLastSpawn() instanceof L2Attackable)
-				((L2Attackable) npc.getLastSpawn()).seeThroughSilentMove(true);
-		
-		registerMobs(SPRIGANTS, EventType.ON_AGGRO, EventType.ON_KILL);
+			if (ArraysUtil.contains(MOBIDS, npc.getNpcId()) && npc.getNpc() != null && npc.getNpc() instanceof L2Attackable)
+				((L2Attackable) npc.getNpc()).seeThroughSilentMove(true);
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addEventIds(SPRIGANTS, EventType.ON_AGGRO, EventType.ON_KILL);
 		addAttackId(ANCIENT_EGG);
 		addSpawnId(MOBIDS);
 	}
@@ -79,7 +84,7 @@ public class PrimevalIsle extends AbstractNpcAI
 		if (event.equalsIgnoreCase("skill"))
 		{
 			int playableCounter = 0;
-			for (L2Playable playable : npc.getKnownList().getKnownTypeInRadius(L2Playable.class, npc.getAggroRange()))
+			for (L2Playable playable : npc.getKnownList().getKnownTypeInRadius(L2Playable.class, npc.getTemplate().getAggroRange()))
 			{
 				if (!playable.isDead())
 					playableCounter++;
@@ -125,21 +130,22 @@ public class PrimevalIsle extends AbstractNpcAI
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance player, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
-		if (player == null)
-			return null;
-		
 		// Retrieve the attacker.
-		final L2Character originalAttacker = (isPet ? player.getPet() : player);
+		final L2Playable originalAttacker = (isPet ? attacker.getPet() : attacker);
 		
 		// Make all mobs found in a radius 2k aggressive towards attacker.
-		for (L2Attackable obj : player.getKnownList().getKnownTypeInRadius(L2Attackable.class, 2000))
+		for (L2Attackable called : attacker.getKnownList().getKnownTypeInRadius(L2Attackable.class, 2000))
 		{
-			if (obj.isDead() || obj == npc)
+			// Caller hasn't AI or is dead.
+			if (!called.hasAI() || called.isDead())
 				continue;
 			
-			obj.getAI().notifyEvent(CtrlEvent.EVT_AGGRESSION, originalAttacker, 1);
+			// Check if the L2Object is inside the Faction Range of the actor
+			final CtrlIntention calledIntention = called.getAI().getIntention();
+			if ((calledIntention == CtrlIntention.IDLE || calledIntention == CtrlIntention.ACTIVE || (calledIntention == CtrlIntention.MOVE_TO && !called.isRunning())) && GeoEngine.getInstance().canSeeTarget(originalAttacker, called))
+				attack(called, originalAttacker, 1);
 		}
 		
 		return null;

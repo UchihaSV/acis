@@ -15,8 +15,7 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.instancemanager.BoatManager;
-import net.sf.l2j.gameserver.model.Location;
-import net.sf.l2j.gameserver.model.actor.instance.L2BoatInstance;
+import net.sf.l2j.gameserver.model.actor.L2Vehicle;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.GetOnVehicle;
@@ -24,17 +23,17 @@ import net.sf.l2j.gameserver.network.serverpackets.GetOnVehicle;
 public final class RequestGetOnVehicle extends L2GameClientPacket
 {
 	private int _boatId;
-	private Location _pos;
+	private int _x;
+	private int _y;
+	private int _z;
 	
 	@Override
 	protected void readImpl()
 	{
-		int x, y, z;
 		_boatId = readD();
-		x = readD();
-		y = readD();
-		z = readD();
-		_pos = new Location(x, y, z);
+		_x = readD();
+		_y = readD();
+		_z = readD();
 	}
 	
 	@Override
@@ -44,7 +43,7 @@ public final class RequestGetOnVehicle extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		L2BoatInstance boat;
+		L2Vehicle boat;
 		if (activeChar.isInBoat())
 		{
 			boat = activeChar.getBoat();
@@ -64,9 +63,9 @@ public final class RequestGetOnVehicle extends L2GameClientPacket
 			}
 		}
 		
-		activeChar.setInVehiclePosition(_pos);
+		activeChar.getVehiclePosition().set(_x, _y, _z, activeChar.getHeading());
 		activeChar.setVehicle(boat);
-		activeChar.broadcastPacket(new GetOnVehicle(activeChar.getObjectId(), boat.getObjectId(), _pos));
+		activeChar.broadcastPacket(new GetOnVehicle(activeChar.getObjectId(), boat.getObjectId(), _x, _y, _z));
 		
 		activeChar.setXYZ(boat.getX(), boat.getY(), boat.getZ());
 		activeChar.revalidateZone(true);

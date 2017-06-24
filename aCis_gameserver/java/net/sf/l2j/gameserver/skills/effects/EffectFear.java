@@ -14,12 +14,9 @@
  */
 package net.sf.l2j.gameserver.skills.effects;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.model.L2Effect;
-import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2NpcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
@@ -89,21 +86,17 @@ public class EffectFear extends L2Effect
 	@Override
 	public boolean onActionTime()
 	{
-		int posX = getEffected().getX() + (((getEffected().getX() > getEffector().getX()) ? 1 : -1) * FEAR_RANGE);
-		int posY = getEffected().getY() + (((getEffected().getY() > getEffector().getY()) ? 1 : -1) * FEAR_RANGE);
-		int posZ = getEffected().getZ();
-		
-		if (Config.GEODATA > 0)
-		{
-			Location destiny = PathFinding.getInstance().canMoveToTargetLoc(getEffected().getX(), getEffected().getY(), getEffected().getZ(), posX, posY, posZ);
-			posX = destiny.getX();
-			posY = destiny.getY();
-		}
-		
 		if (!(getEffected() instanceof L2PetInstance))
 			getEffected().setRunning();
 		
-		getEffected().getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(posX, posY, posZ, 0));
+		final int victimX = getEffected().getX();
+		final int victimY = getEffected().getY();
+		final int victimZ = getEffected().getZ();
+		
+		final int posX = victimX + (((victimX > getEffector().getX()) ? 1 : -1) * FEAR_RANGE);
+		final int posY = victimY + (((victimY > getEffector().getY()) ? 1 : -1) * FEAR_RANGE);
+		
+		getEffected().getAI().setIntention(CtrlIntention.MOVE_TO, GeoEngine.getInstance().canMoveToTargetLoc(victimX, victimY, victimZ, posX, posY, victimZ));
 		return true;
 	}
 	

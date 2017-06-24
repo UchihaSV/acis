@@ -17,6 +17,7 @@ package net.sf.l2j.gameserver.network.clientpackets;
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.BlockList;
 import net.sf.l2j.gameserver.model.L2World;
+import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SendTradeRequest;
@@ -55,14 +56,14 @@ public final class TradeRequest extends L2GameClientPacket
 		
 		if (target.isInOlympiadMode() || player.isInOlympiadMode())
 		{
-			player.sendMessage("You or your target can't trade during Olympiad.");
+			player.sendMessage("You or your target cannot trade during Olympiad.");
 			return;
 		}
 		
 		// Alt game - Karma punishment
 		if (!Config.KARMA_PLAYER_CAN_TRADE && (player.getKarma() > 0 || target.getKarma() > 0))
 		{
-			player.sendMessage("Chaotic players can't trade.");
+			player.sendMessage("You cannot trade in a chaotic state.");
 			return;
 		}
 		
@@ -87,7 +88,7 @@ public final class TradeRequest extends L2GameClientPacket
 		
 		if (target.getTradeRefusal())
 		{
-			player.sendMessage("Target is in trade refusal mode.");
+			player.sendMessage("Your target is in trade refusal mode.");
 			return;
 		}
 		
@@ -98,7 +99,7 @@ public final class TradeRequest extends L2GameClientPacket
 			return;
 		}
 		
-		if (Util.calculateDistance(player, target, true) > 150)
+		if (Util.calculateDistance(player, target, true) > L2Npc.INTERACTION_DISTANCE)
 		{
 			player.sendPacket(SystemMessageId.TARGET_TOO_FAR);
 			return;

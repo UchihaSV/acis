@@ -14,8 +14,8 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.datatables.PetDataTable;
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.handler.ItemHandler;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -27,6 +27,16 @@ import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
 public final class RequestPetUseItem extends L2GameClientPacket
 {
+	private static final int[] PET_FOOD_IDS =
+	{
+		2515,
+		4038,
+		5168,
+		5169,
+		6316,
+		7582
+	};
+	
 	private int _objectId;
 	
 	@Override
@@ -54,14 +64,8 @@ public final class RequestPetUseItem extends L2GameClientPacket
 			return;
 		}
 		
-		if (!item.isEquipped())
-		{
-			if (!item.getItem().checkCondition(pet, pet, true))
-				return;
-		}
-		
-		if (Config.DEBUG)
-			_log.finest(activeChar.getObjectId() + ": pet use item " + _objectId);
+		if (!item.isEquipped() && !item.getItem().checkCondition(pet, pet, true))
+			return;
 		
 		// Check if item is pet armor or pet weapon
 		if (item.isPetItem())
@@ -74,21 +78,25 @@ public final class RequestPetUseItem extends L2GameClientPacket
 			}
 			
 			if (item.isEquipped())
+			{
 				pet.getInventory().unEquipItemInSlot(item.getLocationSlot());
+				activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.PET_TOOK_OFF_S1).addItemName(item));
+			}
 			else
+			{
 				pet.getInventory().equipPetItem(item);
+				activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.PET_PUT_ON_S1).addItemName(item));
+			}
 			
 			activeChar.sendPacket(new PetItemList(pet));
 			pet.updateAndBroadcastStatus(1);
 			return;
 		}
-		else if (PetDataTable.isPetFood(item.getItemId()))
+		
+		if (ArraysUtil.contains(PET_FOOD_IDS, item.getItemId()) && !pet.getTemplate().canEatFood(item.getItemId()))
 		{
-			if (!pet.canEatFoodId(item.getItemId()))
-			{
-				activeChar.sendPacket(SystemMessageId.PET_CANNOT_USE_ITEM);
-				return;
-			}
+			activeChar.sendPacket(SystemMessageId.PET_CANNOT_USE_ITEM);
+			return;
 		}
 		
 		// If pet food check is successful or if the item got an handler, use that item.

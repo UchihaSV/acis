@@ -25,7 +25,7 @@ public class EffectGrow extends L2Effect
 		if (getEffected() instanceof L2Npc)
 		{
 			L2Npc npc = (L2Npc) getEffected();
-			npc.setCollisionRadius((int) (npc.getCollisionRadius() * 1.19));
+			npc.setCollisionRadius(npc.getCollisionRadius() * 1.19);
 			
 			getEffected().startAbnormalEffect(AbnormalEffect.GROW);
 			return true;

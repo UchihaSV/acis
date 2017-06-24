@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -49,10 +50,7 @@ public class Unlock implements ISkillHandler
 			}
 			
 			if (doorUnlock(skill) && (!door.isOpened()))
-			{
 				door.openMe();
-				door.onOpen();
-			}
 			else
 				activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.FAILED_TO_UNLOCK_DOOR));
 		}

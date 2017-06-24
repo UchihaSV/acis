@@ -16,18 +16,21 @@ package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
 /**
  * Those monsters don't attack at sight players owning itemId 8064, 8065 or 8067.
- * @author Tryskell
  */
-public class GatekeeperZombies extends AbstractNpcAI
+public class GatekeeperZombies extends L2AttackableAIScript
 {
 	public GatekeeperZombies()
 	{
 		super("ai/group");
-		
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
 		addAggroRangeEnterId(22136);
 	}
 	

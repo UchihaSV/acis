@@ -18,7 +18,7 @@ import java.nio.BufferUnderflowException;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
@@ -89,7 +89,7 @@ public class MoveBackwardToLocation extends L2GameClientPacket
 		}
 		
 		// Correcting targetZ from floor level to head level
-		_targetZ += activeChar.getTemplate().getCollisionHeight();
+		_targetZ += activeChar.getCollisionHeight();
 		
 		if (activeChar.getTeleMode() > 0)
 		{
@@ -109,6 +109,6 @@ public class MoveBackwardToLocation extends L2GameClientPacket
 			activeChar.sendPacket(ActionFailed.STATIC_PACKET);
 			return;
 		}
-		activeChar.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(_targetX, _targetY, _targetZ, 0));
+		activeChar.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(_targetX, _targetY, _targetZ));
 	}
 }

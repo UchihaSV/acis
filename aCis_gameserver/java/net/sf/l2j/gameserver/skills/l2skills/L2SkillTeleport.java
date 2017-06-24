@@ -15,13 +15,15 @@
 package net.sf.l2j.gameserver.skills.l2skills;
 
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
-import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
+import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.zone.type.L2BossZone;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
 
@@ -51,7 +53,7 @@ public class L2SkillTeleport extends L2Skill
 		if (activeChar instanceof L2PcInstance)
 		{
 			// Check invalid states.
-			if (activeChar.isAfraid() || ((L2PcInstance) activeChar).isInOlympiadMode() || GrandBossManager.getInstance().isInBossZone(activeChar))
+			if (activeChar.isAfraid() || ((L2PcInstance) activeChar).isInOlympiadMode() || ZoneManager.getInstance().getZone(activeChar, L2BossZone.class) != null)
 				return;
 		}
 		
@@ -77,7 +79,7 @@ public class L2SkillTeleport extends L2Skill
 					if (targetChar.isInOlympiadMode())
 						continue;
 					
-					if (GrandBossManager.getInstance().isInBossZone(targetChar))
+					if (ZoneManager.getInstance().getZone(targetChar, L2BossZone.class) != null)
 						continue;
 				}
 			}
@@ -94,11 +96,11 @@ public class L2SkillTeleport extends L2Skill
 			else
 			{
 				if (_recallType.equalsIgnoreCase("Castle"))
-					loc = MapRegionTable.getInstance().getTeleToLocation(target, MapRegionTable.TeleportWhereType.Castle);
+					loc = MapRegionTable.getInstance().getTeleToLocation(target, TeleportWhereType.CASTLE);
 				else if (_recallType.equalsIgnoreCase("ClanHall"))
-					loc = MapRegionTable.getInstance().getTeleToLocation(target, MapRegionTable.TeleportWhereType.ClanHall);
+					loc = MapRegionTable.getInstance().getTeleToLocation(target, TeleportWhereType.CLAN_HALL);
 				else
-					loc = MapRegionTable.getInstance().getTeleToLocation(target, MapRegionTable.TeleportWhereType.Town);
+					loc = MapRegionTable.getInstance().getTeleToLocation(target, TeleportWhereType.TOWN);
 			}
 			
 			if (loc != null)

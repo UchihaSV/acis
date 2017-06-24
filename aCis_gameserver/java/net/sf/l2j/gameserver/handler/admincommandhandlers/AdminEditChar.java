@@ -24,9 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.commons.math.MathUtil;
+
+import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.gameserver.datatables.CharNameTable;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
@@ -38,6 +40,7 @@ import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
+import net.sf.l2j.gameserver.model.base.Sex;
 import net.sf.l2j.gameserver.network.L2GameClient;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.GMViewItemList;
@@ -212,7 +215,7 @@ public class AdminEditChar implements IAdminCommandHandler
 				boolean valid = false;
 				
 				final int classidval = Integer.parseInt(command.substring(15));
-				for (ClassId classid : ClassId.values())
+				for (ClassId classid : ClassId.VALUES)
 					if (classidval == classid.getId())
 						valid = true;
 				
@@ -283,6 +286,7 @@ public class AdminEditChar implements IAdminCommandHandler
 					return false;
 				
 				player.setName(val);
+				CharNameTable.getInstance().updatePlayerData(player, false);
 				player.sendMessage("Your name has been changed by a GM.");
 				player.broadcastUserInfo();
 				player.store();
@@ -302,12 +306,29 @@ public class AdminEditChar implements IAdminCommandHandler
 			else
 				return false;
 			
-			player.getAppearance().setSex(!player.getAppearance().getSex());
-			player.sendMessage("Your gender has been changed by a GM.");
-			player.broadcastUserInfo();
+			Sex sex = Sex.MALE;
+			try
+			{
+				final StringTokenizer st = new StringTokenizer(command, " ");
+				st.nextToken();
+				
+				sex = Enum.valueOf(Sex.class, st.nextToken().toUpperCase());
+			}
+			catch (Exception e)
+			{
+			}
 			
-			player.decayMe();
-			player.spawnMe(player.getX(), player.getY(), player.getZ());
+			if (sex != player.getAppearance().getSex())
+			{
+				player.getAppearance().setSex(sex);
+				player.sendMessage("Your gender has been changed to " + sex.toString() + " by a GM.");
+				player.broadcastUserInfo();
+				
+				player.decayMe();
+				player.spawnMe();
+			}
+			else
+				activeChar.sendMessage("The character sex is already defined as " + sex.toString() + ".");
 		}
 		else if (command.startsWith("admin_setcolor"))
 		{
@@ -428,7 +449,7 @@ public class AdminEditChar implements IAdminCommandHandler
 			if (target instanceof L2PetInstance)
 			{
 				L2PetInstance targetPet = (L2PetInstance) target;
-				targetPet.setCurrentFed(targetPet.getMaxFed());
+				targetPet.setCurrentFed(targetPet.getPetData().getMaxMeal());
 			}
 			else
 				activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
@@ -635,7 +656,7 @@ public class AdminEditChar implements IAdminCommandHandler
 		html.replace("%accuracy%", player.getAccuracy());
 		html.replace("%evasion%", player.getEvasionRate(null));
 		html.replace("%critical%", player.getCriticalHit(null, null));
-		html.replace("%runspeed%", player.getRunSpeed());
+		html.replace("%runspeed%", player.getMoveSpeed());
 		html.replace("%patkspd%", player.getPAtkSpd());
 		html.replace("%matkspd%", player.getMAtkSpd());
 		html.replace("%account%", account);
@@ -901,7 +922,7 @@ public class AdminEditChar implements IAdminCommandHandler
 			final L2PetInstance pet = ((L2PetInstance) target);
 			
 			html.replace("%inv%", " <a action=\"bypass admin_show_pet_inv " + target.getActingPlayer().getObjectId() + "\">view</a>");
-			html.replace("%food%", pet.getCurrentFed() + "/" + pet.getPetLevelData().getPetMaxFeed());
+			html.replace("%food%", pet.getCurrentFed() + "/" + pet.getPetData().getMaxMeal());
 			html.replace("%load%", pet.getInventory().getTotalWeight() + "/" + pet.getMaxLoad());
 		}
 		else

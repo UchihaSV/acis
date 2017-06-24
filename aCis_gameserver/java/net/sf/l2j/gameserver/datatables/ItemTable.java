@@ -19,14 +19,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2World;
@@ -38,6 +36,7 @@ import net.sf.l2j.gameserver.model.item.kind.Armor;
 import net.sf.l2j.gameserver.model.item.kind.EtcItem;
 import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.item.kind.Weapon;
+import net.sf.l2j.gameserver.model.item.type.EtcItemType;
 import net.sf.l2j.gameserver.skills.DocumentItem;
 
 public class ItemTable
@@ -157,24 +156,14 @@ public class ItemTable
 		
 		if (process.equalsIgnoreCase("loot"))
 		{
-			ScheduledFuture<?> itemLootShedule;
-			if (reference instanceof L2Attackable && ((L2Attackable) reference).isRaid()) // loot privilege for raids
+			if (reference instanceof L2Attackable && ((L2Attackable) reference).isRaid())
 			{
-				L2Attackable raid = (L2Attackable) reference;
-				// if in CommandChannel and was killing a World/RaidBoss
+				final L2Attackable raid = (L2Attackable) reference;
 				if (raid.getFirstCommandChannelAttacked() != null && !Config.AUTO_LOOT_RAID)
-				{
-					item.setOwnerId(raid.getFirstCommandChannelAttacked().getChannelLeader().getObjectId());
-					itemLootShedule = ThreadPoolManager.getInstance().scheduleGeneral(new ResetOwner(item), 300000);
-					item.setItemLootShedule(itemLootShedule);
-				}
+					item.setDropProtection(raid.getFirstCommandChannelAttacked().getChannelLeader().getObjectId(), true);
 			}
 			else if (!Config.AUTO_LOOT)
-			{
-				item.setOwnerId(actor.getObjectId());
-				itemLootShedule = ThreadPoolManager.getInstance().scheduleGeneral(new ResetOwner(item), 15000);
-				item.setItemLootShedule(itemLootShedule);
-			}
+				item.setDropProtection(actor.getObjectId(), false);
 		}
 		
 		// Add the ItemInstance object to _allObjects of L2world
@@ -247,7 +236,7 @@ public class ItemTable
 			}
 			
 			// if it's a pet control item, delete the pet as well
-			if (PetDataTable.isPetCollar(item.getItemId()))
+			if (item.getItemType() == EtcItemType.PET_COLLAR)
 			{
 				try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 				{
@@ -271,23 +260,6 @@ public class ItemTable
 		_weapons.clear();
 		
 		load();
-	}
-	
-	protected static class ResetOwner implements Runnable
-	{
-		ItemInstance _item;
-		
-		public ResetOwner(ItemInstance item)
-		{
-			_item = item;
-		}
-		
-		@Override
-		public void run()
-		{
-			_item.setOwnerId(0);
-			_item.setItemLootShedule(null);
-		}
 	}
 	
 	private static class SingletonHolder

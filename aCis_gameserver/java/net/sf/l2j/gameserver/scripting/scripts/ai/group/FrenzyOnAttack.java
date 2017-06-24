@@ -15,11 +15,12 @@
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
 /**
  * Frenzy behavior, so far 5 types of orcs.<br>
@@ -31,9 +32,8 @@ import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
  * <li>Alpine Buffalo</li>
  * <li>Alpine Cougar</li>
  * </ul>
- * @author Tryskell
  */
-public class FrenzyOnAttack extends AbstractNpcAI
+public class FrenzyOnAttack extends L2AttackableAIScript
 {
 	private static final L2Skill ULTIMATE_BUFF = SkillTable.getInstance().getInfo(4318, 1);
 	
@@ -48,20 +48,24 @@ public class FrenzyOnAttack extends AbstractNpcAI
 	public FrenzyOnAttack()
 	{
 		super("ai/group");
-		
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
 		addAttackId(20270, 20495, 20588, 20778, 21116);
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		// The only requirements are HPs < 25% and not already under the buff. It's not 100% aswell.
 		if (npc.getCurrentHp() / npc.getMaxHp() < 0.25 && npc.getFirstEffect(ULTIMATE_BUFF) == null && Rnd.get(10) == 0)
 		{
-			npc.broadcastNpcSay(ORCS_WORDS[Rnd.get(ORCS_WORDS.length)]);
+			npc.broadcastNpcSay(Rnd.get(ORCS_WORDS));
 			npc.setTarget(npc);
 			npc.doCast(ULTIMATE_BUFF);
 		}
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 }

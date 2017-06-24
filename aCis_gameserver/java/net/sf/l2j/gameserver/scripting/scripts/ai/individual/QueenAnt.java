@@ -17,11 +17,13 @@ package net.sf.l2j.gameserver.scripting.scripts.ai.individual;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable.FrequentSkill;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -35,16 +37,12 @@ import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 import net.sf.l2j.gameserver.templates.StatsSet;
 
-/**
- * Queen Ant AI
- * @author Emperorc
- */
-public class QueenAnt extends AbstractNpcAI
+public class QueenAnt extends L2AttackableAIScript
 {
-	private static final L2BossZone AQ_LAIR = GrandBossManager.getInstance().getZoneById(110012);
+	private static final L2BossZone AQ_LAIR = ZoneManager.getInstance().getZoneById(110012, L2BossZone.class);
 	
 	private static final int QUEEN = 29001;
 	private static final int LARVA = 29002;
@@ -80,9 +78,6 @@ public class QueenAnt extends AbstractNpcAI
 	public QueenAnt()
 	{
 		super("ai/individual");
-		
-		registerMobs(MOBS, EventType.ON_SPAWN, EventType.ON_KILL, EventType.ON_AGGRO);
-		addFactionCallId(NURSE);
 		
 		StatsSet info = GrandBossManager.getInstance().getStatsSet(QUEEN);
 		if (GrandBossManager.getInstance().getBossStatus(QUEEN) == DEAD)
@@ -120,6 +115,13 @@ public class QueenAnt extends AbstractNpcAI
 			queen.setCurrentHpMp(hp, mp);
 			spawnBoss(queen);
 		}
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addEventIds(MOBS, EventType.ON_SPAWN, EventType.ON_KILL, EventType.ON_AGGRO);
+		addFactionCallId(NURSE);
 	}
 	
 	private void spawnBoss(L2GrandBossInstance npc)

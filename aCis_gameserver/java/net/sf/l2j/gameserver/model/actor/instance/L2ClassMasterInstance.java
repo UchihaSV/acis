@@ -16,8 +16,9 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.List;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.lang.StringUtil;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
@@ -170,9 +171,12 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 				if (player.getLevel() >= minLevel || Config.ALLOW_ENTIRE_TREE)
 				{
 					final StringBuilder menu = new StringBuilder(100);
-					for (ClassId cid : ClassId.values())
+					for (ClassId cid : ClassId.VALUES)
 					{
-						if (validateClassId(currentClassId, cid) && cid.level() == level)
+						if (cid.level() != level)
+							continue;
+						
+						if (validateClassId(currentClassId, cid))
 							StringUtil.append(menu, "<a action=\"bypass -h npc_%objectId%_change_class ", cid.getId(), "\">", CharTemplateTable.getInstance().getClassNameById(cid.getId()), "</a><br>");
 					}
 					
@@ -291,7 +295,7 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 	{
 		try
 		{
-			return validateClassId(oldCID, ClassId.values()[val]);
+			return validateClassId(oldCID, ClassId.VALUES[val]);
 		}
 		catch (Exception e)
 		{
@@ -308,10 +312,10 @@ public final class L2ClassMasterInstance extends L2NpcInstance
 	 */
 	private static final boolean validateClassId(ClassId oldCID, ClassId newCID)
 	{
-		if (newCID == null || newCID.getRace() == null)
+		if (newCID == null)
 			return false;
 		
-		if (oldCID.equals(newCID.getParent()))
+		if (oldCID == newCID.getParent())
 			return true;
 		
 		if (Config.ALLOW_ENTIRE_TREE && newCID.childOf(oldCID))

@@ -66,8 +66,8 @@ public class Q407_PathToAnElvenScout extends Quest
 		
 		if (event.equalsIgnoreCase("30328-05.htm"))
 		{
-			if (player.getClassId() != ClassId.elvenFighter)
-				htmltext = (player.getClassId() == ClassId.elvenScout) ? "30328-02a.htm" : "30328-02.htm";
+			if (player.getClassId() != ClassId.ELVEN_FIGHTER)
+				htmltext = (player.getClassId() == ClassId.ELVEN_SCOUT) ? "30328-02a.htm" : "30328-02.htm";
 			else if (player.getLevel() < 19)
 				htmltext = "30328-03.htm";
 			else if (st.hasQuestItems(REISA_RECOMMENDATION))

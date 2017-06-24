@@ -49,8 +49,8 @@ public final class DlgAnswer extends L2GameClientPacket
 		else if (_messageId == 1983 && Config.ALLOW_WEDDING)
 			activeChar.EngageAnswer(_answer);
 		else if (_messageId == SystemMessageId.WOULD_YOU_LIKE_TO_OPEN_THE_GATE.getId())
-			activeChar.gatesAnswer(_answer, 1);
+			activeChar.activateGate(_answer, 1);
 		else if (_messageId == SystemMessageId.WOULD_YOU_LIKE_TO_CLOSE_THE_GATE.getId())
-			activeChar.gatesAnswer(_answer, 0);
+			activeChar.activateGate(_answer, 0);
 	}
 }

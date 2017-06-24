@@ -20,18 +20,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
+import net.sf.l2j.commons.geometry.Polygon;
+
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
+import net.sf.l2j.gameserver.geoengine.geodata.ABlock;
+import net.sf.l2j.gameserver.geoengine.geodata.GeoStructure;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
-import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
-import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
-import net.sf.l2j.gameserver.model.actor.template.CharTemplate;
+import net.sf.l2j.gameserver.model.actor.template.DoorTemplate;
+import net.sf.l2j.gameserver.model.actor.template.DoorTemplate.DoorType;
 import net.sf.l2j.gameserver.model.entity.Castle;
-import net.sf.l2j.gameserver.model.entity.ClanHall;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
@@ -43,8 +44,7 @@ public class DoorTable
 {
 	private static final Logger _log = Logger.getLogger(DoorTable.class.getName());
 	
-	private final Map<Integer, L2DoorInstance> _staticItems = new HashMap<>();
-	private final Map<Integer, ArrayList<L2DoorInstance>> _regions = new HashMap<>();
+	private final Map<Integer, L2DoorInstance> _doors = new HashMap<>();
 	
 	public static DoorTable getInstance()
 	{
@@ -53,205 +53,229 @@ public class DoorTable
 	
 	protected DoorTable()
 	{
-		parseData();
-		onStart();
+		load();
 	}
 	
-	public void reload()
+	public final void reload()
 	{
-		_staticItems.clear();
-		_regions.clear();
+		for (L2DoorInstance door : _doors.values())
+			door.openMe();
 		
-		parseData();
+		_doors.clear();
+		
+		for (Castle castle : CastleManager.getInstance().getCastles())
+			castle.getDoors().clear();
+		
+		load();
+		spawn();
 	}
 	
-	public void parseData()
+	private final void load()
 	{
 		try
 		{
+			// load doors
 			File f = new File("./data/xml/doors.xml");
 			Document doc = XMLDocumentFactory.getInstance().loadDocument(f);
 			
 			for (Node n = doc.getFirstChild(); n != null; n = n.getNextSibling())
 			{
-				if ("list".equalsIgnoreCase(n.getNodeName()))
+				if ("list".equals(n.getNodeName()))
 				{
 					for (Node d = n.getFirstChild(); d != null; d = d.getNextSibling())
 					{
-						if (d.getNodeName().equalsIgnoreCase("door"))
+						if (d.getNodeName().equals("door"))
 						{
-							// Initialize variables.
-							int castleId = 0;
-							// int sChId = 0;
-							
-							int x = 0;
-							int y = 0;
-							int z = 0;
-							
-							int rangeXMin = 0;
-							int rangeYMin = 0;
-							int rangeZMin = 0;
-							
-							int rangeXMax = 0;
-							int rangeYMax = 0;
-							int rangeZMax = 0;
-							
-							int hp = 0;
-							int pdef = 0;
-							int mdef = 0;
-							
-							boolean unlockable = false;
-							int collisionRadius = 0;
-							
 							NamedNodeMap attrs = d.getAttributes();
+							final StatsSet stats = new StatsSet();
 							
 							// Verify if the door got an id, else skip it
 							Node att = attrs.getNamedItem("id");
 							if (att == null)
 							{
-								_log.severe("DoorTable: Missing id for door, skipping.");
+								_log.severe("DoorTable: Missing ID for door, skipping.");
 								continue;
 							}
-							int id = Integer.valueOf(att.getNodeValue());
+							int id = Integer.parseInt(att.getNodeValue());
+							stats.set("id", id);
+							
+							// Verify if the door got an id, else skip it
+							att = attrs.getNamedItem("type");
+							if (att == null)
+							{
+								_log.severe("DoorTable: Missing type for door id: " + stats.getString("id") + ", skipping.");
+								continue;
+							}
+							stats.set("type", att.getNodeValue());
+							
+							// Verify if the door got a level, else skip it
+							att = attrs.getNamedItem("level");
+							if (att == null)
+							{
+								_log.severe("DoorTable: Missing level for door id: " + stats.getString("id") + ", skipping.");
+								continue;
+							}
+							stats.set("level", att.getNodeValue());
 							
 							// Verify if the door got a name, else skip it
 							att = attrs.getNamedItem("name");
 							if (att == null)
 							{
-								_log.severe("DoorTable: Missing name for door id: " + id + ", skipping.");
+								_log.severe("DoorTable: Missing name for door id: " + stats.getString("id") + ", skipping.");
 								continue;
 							}
-							String name = att.getNodeValue();
+							stats.set("name", att.getNodeValue());
 							
-							for (Node c = d.getFirstChild(); c != null; c = c.getNextSibling())
+							int posX = 0;
+							int posY = 0;
+							int posZ = 0;
+							
+							List<int[]> _coords = new ArrayList<>();
+							int minX = Integer.MAX_VALUE;
+							int maxX = Integer.MIN_VALUE;
+							int minY = Integer.MAX_VALUE;
+							int maxY = Integer.MIN_VALUE;
+							for (Node data = d.getFirstChild(); data != null; data = data.getNextSibling())
 							{
-								attrs = c.getAttributes();
-								if ("castle".equalsIgnoreCase(c.getNodeName()))
-								{
-									castleId = Integer.valueOf(attrs.getNamedItem("id").getNodeValue());
-								}
-								else if ("siegableclanhall".equalsIgnoreCase(c.getNodeName()))
-								{
-									// FIXME sChId = Integer.valueOf(attrs.getNamedItem("id").getNodeValue());
-								}
-								else if ("position".equalsIgnoreCase(c.getNodeName()))
-								{
-									x = Integer.valueOf(attrs.getNamedItem("x").getNodeValue());
-									y = Integer.valueOf(attrs.getNamedItem("y").getNodeValue());
-									z = Integer.valueOf(attrs.getNamedItem("z").getNodeValue());
-								}
-								else if ("minpos".equalsIgnoreCase(c.getNodeName()))
-								{
-									rangeXMin = Integer.valueOf(attrs.getNamedItem("x").getNodeValue());
-									rangeYMin = Integer.valueOf(attrs.getNamedItem("y").getNodeValue());
-									rangeZMin = Integer.valueOf(attrs.getNamedItem("z").getNodeValue());
-								}
-								else if ("maxpos".equalsIgnoreCase(c.getNodeName()))
-								{
-									rangeXMax = Integer.valueOf(attrs.getNamedItem("x").getNodeValue());
-									rangeYMax = Integer.valueOf(attrs.getNamedItem("y").getNodeValue());
-									rangeZMax = Integer.valueOf(attrs.getNamedItem("z").getNodeValue());
-								}
-								else if ("stats".equalsIgnoreCase(c.getNodeName()))
-								{
-									hp = Integer.valueOf(attrs.getNamedItem("hp").getNodeValue());
-									pdef = Integer.valueOf(attrs.getNamedItem("pdef").getNodeValue());
-									mdef = Integer.valueOf(attrs.getNamedItem("mdef").getNodeValue());
-								}
-								else if ("unlockable".equalsIgnoreCase(c.getNodeName()))
-									unlockable = Boolean.valueOf(attrs.getNamedItem("val").getNodeValue());
-							}
-							
-							if (rangeXMin > rangeXMax)
-								_log.severe("DoorTable: Error on rangeX min/max, ID:" + id);
-							if (rangeYMin > rangeYMax)
-								_log.severe("DoorTable: Error on rangeY min/max, ID:" + id);
-							if (rangeZMin > rangeZMax)
-								_log.severe("DoorTable: Error on rangeZ min/max, ID:" + id);
-							
-							if ((rangeXMax - rangeXMin) > (rangeYMax - rangeYMin))
-								collisionRadius = rangeYMax - rangeYMin;
-							else
-								collisionRadius = rangeXMax - rangeXMin;
-							
-							// Template initialization
-							final StatsSet npcDat = new StatsSet();
-							
-							npcDat.set("id", id);
-							npcDat.set("name", name);
-							
-							npcDat.set("hp", hp);
-							npcDat.set("mp", 0);
-							
-							npcDat.set("hpRegen", 3.e-3f);
-							npcDat.set("mpRegen", 3.e-3f);
-							
-							npcDat.set("radius", collisionRadius);
-							npcDat.set("height", rangeZMax - rangeZMin);
-							
-							npcDat.set("pAtk", 0);
-							npcDat.set("mAtk", 0);
-							npcDat.set("pDef", pdef);
-							npcDat.set("mDef", mdef);
-							
-							npcDat.set("runSpd", 0); // Have to keep this, static object MUST BE 0 (critical error otherwise).
-							
-							final L2DoorInstance door = new L2DoorInstance(IdFactory.getInstance().getNextId(), new CharTemplate(npcDat), id, name, unlockable);
-							door.setRange(rangeXMin, rangeYMin, rangeZMin, rangeXMax, rangeYMax, rangeZMax);
-							door.setCurrentHpMp(door.getMaxHp(), door.getMaxMp());
-							door.setXYZInvisible(x, y, z);
-							door.setMapRegion(MapRegionTable.getMapRegion(x, y));
-							door.setOpen(false);
-							
-							// Attach door to a castle if a castleId is found
-							if (castleId > 0)
-							{
-								Castle castle = CastleManager.getInstance().getCastleById(castleId);
-								if (castle != null)
-								{
-									// Set the door as a wall if door name contains "wall".
-									if (name.contains("wall"))
-										door.setIsWall(true);
-									
-									castle.getDoors().add(door); // Add the door to castle doors list.
-									
-									if (Config.DEBUG)
-										_log.warning("DoorTable: Door " + door.getDoorId() + " is now attached to " + castle.getName() + " castle.");
-								}
-							}
-							// Test door, and attach it to a CH if a CH is found near
-							else
-							{
-								ClanHall clanhall = ClanHallManager.getInstance().getNearbyClanHall(door.getX(), door.getY(), 500);
-								if (clanhall != null)
-								{
-									clanhall.getDoors().add(door); // Add the door to CH doors list.
-									door.setClanHall(clanhall);
-									
-									if (Config.DEBUG)
-										_log.warning("DoorTable: Door " + door.getDoorId() + " is now attached to " + clanhall.getName() + " clanhall.");
-								}
-							}
-							
-							_staticItems.put(door.getDoorId(), door);
-							
-							if (_regions.containsKey(door.getMapRegion()))
-								_regions.get(door.getMapRegion()).add(door);
-							else
-							{
-								final ArrayList<L2DoorInstance> region = new ArrayList<>();
-								region.add(door);
+								attrs = data.getAttributes();
 								
-								_regions.put(door.getMapRegion(), region);
+								if (data.getNodeName().equals("castle"))
+								{
+									stats.set("castle", attrs.getNamedItem("id").getNodeValue());
+								}
+								else if (data.getNodeName().equals("position"))
+								{
+									posX = Integer.parseInt(attrs.getNamedItem("x").getNodeValue());
+									posY = Integer.parseInt(attrs.getNamedItem("y").getNodeValue());
+									posZ = Integer.parseInt(attrs.getNamedItem("z").getNodeValue());
+								}
+								else if (data.getNodeName().equals("coordinates"))
+								{
+									for (Node loc = data.getFirstChild(); loc != null; loc = loc.getNextSibling())
+									{
+										if (!loc.getNodeName().equals("loc"))
+											continue;
+										
+										attrs = loc.getAttributes();
+										int x = Integer.parseInt(attrs.getNamedItem("x").getNodeValue());
+										int y = Integer.parseInt(attrs.getNamedItem("y").getNodeValue());
+										
+										_coords.add(new int[]
+										{
+											x,
+											y
+										});
+										
+										minX = Math.min(minX, x);
+										maxX = Math.max(maxX, x);
+										minY = Math.min(minY, y);
+										maxY = Math.max(maxY, y);
+									}
+								}
+								else if (data.getNodeName().equals("stats") || data.getNodeName().equals("function"))
+								{
+									// loads hp, pDef, height, etc stats and special function parameters
+									
+									// get all nodes
+									for (int i = 0; i < attrs.getLength(); i++)
+									{
+										// add them to stats by node name and node value
+										Node node = attrs.item(i);
+										stats.set(node.getNodeName(), node.getNodeValue());
+									}
+								}
 							}
 							
-							door.spawnMe(door.getX(), door.getY(), door.getZ());
+							// create basic description of door, taking extended outer dimensions of door
+							final int x = GeoEngine.getGeoX(minX) - 1;
+							final int y = GeoEngine.getGeoY(minY) - 1;
+							final int sizeX = (GeoEngine.getGeoX(maxX) + 1) - x + 1;
+							final int sizeY = (GeoEngine.getGeoY(maxY) + 1) - y + 1;
+							
+							// check door Z and adjust it
+							final int geoX = GeoEngine.getGeoX(posX);
+							final int geoY = GeoEngine.getGeoY(posY);
+							final int geoZ = GeoEngine.getInstance().getHeightNearest(geoX, geoY, posZ);
+							final ABlock block = GeoEngine.getInstance().getBlock(geoX, geoY);
+							final int i = block.getIndexAbove(geoX, geoY, geoZ);
+							if (i != -1)
+							{
+								final int layerDiff = block.getHeight(i) - geoZ;
+								if (stats.getInteger("height") > layerDiff)
+									stats.set("height", layerDiff - GeoStructure.CELL_IGNORE_HEIGHT);
+							}
+							
+							final int limit = stats.getEnum("type", DoorType.class) == DoorType.WALL ? GeoStructure.CELL_IGNORE_HEIGHT * 4 : GeoStructure.CELL_IGNORE_HEIGHT;
+							
+							// create 2D door description and calculate limit coordinates
+							final boolean[][] inside = new boolean[sizeX][sizeY];
+							final Polygon polygon = new Polygon(id, _coords);
+							for (int ix = 0; ix < sizeX; ix++)
+							{
+								for (int iy = 0; iy < sizeY; iy++)
+								{
+									// get geodata coordinates
+									int gx = x + ix;
+									int gy = y + iy;
+									
+									// check layer height
+									int z = GeoEngine.getInstance().getHeightNearest(gx, gy, posZ);
+									if (Math.abs(z - posZ) > limit)
+										continue;
+									
+									// get world coordinates
+									int worldX = GeoEngine.getWorldX(gx);
+									int worldY = GeoEngine.getWorldY(gy);
+									
+									// set inside flag
+									cell:
+									for (int wix = worldX - 6; wix <= worldX + 6; wix += 2)
+									{
+										for (int wiy = worldY - 6; wiy <= worldY + 6; wiy += 2)
+										{
+											if (polygon.isInside(wix, wiy))
+											{
+												inside[ix][iy] = true;
+												break cell;
+											}
+										}
+									}
+								}
+							}
+							
+							// set world coordinates
+							stats.set("posX", posX);
+							stats.set("posY", posY);
+							stats.set("posZ", posZ);
+							
+							// set geodata coordinates and geodata
+							stats.set("geoX", x);
+							stats.set("geoY", y);
+							stats.set("geoZ", geoZ);
+							stats.set("geoData", GeoEngine.calculateGeoObject(inside));
+							
+							// set other required stats as default value
+							stats.set("pAtk", 0);
+							stats.set("mAtk", 0);
+							stats.set("runSpd", 0);
+							// default radius set to 16 - affects distance for melee attacks
+							stats.set("radius", 16);
+							
+							// create door template
+							final DoorTemplate template = new DoorTemplate(stats);
+							
+							// create door instance
+							final L2DoorInstance door = new L2DoorInstance(IdFactory.getInstance().getNextId(), template);
+							door.setCurrentHpMp(door.getMaxHp(), door.getMaxMp());
+							door.setXYZInvisible(posX, posY, posZ);
+							
+							_doors.put(door.getDoorId(), door);
 						}
 					}
 				}
 			}
 			
-			_log.info("DoorTable: Loaded " + _staticItems.size() + " doors templates for " + _regions.size() + " regions.");
+			_log.info("DoorTable: Loaded " + _doors.size() + " doors templates.");
 		}
 		catch (Exception e)
 		{
@@ -259,120 +283,30 @@ public class DoorTable
 		}
 	}
 	
-	public L2DoorInstance getDoor(Integer id)
+	/**
+	 * Spawns doors into the world.
+	 */
+	public final void spawn()
 	{
-		return _staticItems.get(id);
+		// Note: keep as side-method, do not join to the load(). On initial load, the DoorTable.getInstance() is not initialized, yet L2DoorInstance is calling it during spawn process...causing NPE -> one advantage/disadvantage of singletons.
+		
+		// spawn doors
+		for (L2DoorInstance door : _doors.values())
+			door.spawnMe();
+		
+		// load doors upgrades
+		for (Castle castle : CastleManager.getInstance().getCastles())
+			castle.loadDoorUpgrade();
+	}
+	
+	public L2DoorInstance getDoor(int id)
+	{
+		return _doors.get(id);
 	}
 	
 	public Collection<L2DoorInstance> getDoors()
 	{
-		return _staticItems.values();
-	}
-	
-	public boolean checkIfDoorsBetween(Location start, Location end)
-	{
-		return checkIfDoorsBetween(start.getX(), start.getY(), start.getZ(), end.getX(), end.getY(), end.getZ());
-	}
-	
-	public boolean checkIfDoorsBetween(int ox, int oy, int oz, int tx, int ty, int tz)
-	{
-		List<L2DoorInstance> doors = _regions.get(MapRegionTable.getMapRegion(ox, oy));
-		if (doors == null)
-			return false;
-		
-		for (L2DoorInstance door : doors)
-		{
-			if (door.isOpened() || door.getCurrentHp() <= 0)
-				continue;
-			
-			int maxX = door.getXMax();
-			int maxY = door.getYMax();
-			int maxZ = door.getZMax();
-			int minX = door.getXMin();
-			int minY = door.getYMin();
-			int minZ = door.getZMin();
-			
-			// line segment goes through box
-			// first basic checks to stop most calculations short
-			// phase 1, x
-			if ((ox <= maxX && tx >= minX) || (tx <= maxX && ox >= minX))
-			{
-				// phase 2, y
-				if ((oy <= maxY && ty >= minY) || (ty <= maxY && oy >= minY))
-				{
-					// phase 3, basically only z remains but now we calculate it with another formula (by rage)
-					// in some cases the direct line check (only) in the beginning isn't sufficient,
-					// when char z changes a lot along the path
-					int l = tx - ox;
-					int m = ty - oy;
-					int n = tz - oz;
-					
-					int dk;
-					
-					if ((dk = (door.getA() * l + door.getB() * m + door.getC() * n)) == 0)
-						continue; // Parallel
-						
-					float p = (float) (door.getA() * ox + door.getB() * oy + door.getC() * oz + door.getD()) / (float) dk;
-					
-					int fx = (int) (ox - l * p);
-					int fy = (int) (oy - m * p);
-					int fz = (int) (oz - n * p);
-					
-					if ((Math.min(ox, tx) <= fx && fx <= Math.max(ox, tx)) && (Math.min(oy, ty) <= fy && fy <= Math.max(oy, ty)) && (Math.min(oz, tz) <= fz && fz <= Math.max(oz, tz)))
-					{
-						if (((fx >= minX && fx <= maxX) || (fx >= maxX && fx <= minX)) && ((fy >= minY && fy <= maxY) || (fy >= maxY && fy <= minY)) && ((fz >= minZ && fz <= maxZ) || (fz >= maxZ && fz <= minZ)))
-							return true; // Door between
-					}
-				}
-			}
-		}
-		
-		return false;
-	}
-	
-	/**
-	 * Simple operations to handle at server startup :
-	 * <ul>
-	 * <li>Open some doors types.</li>
-	 * <li>Schedule open/close tasks.</li>
-	 * <li>Load castle doors upgrades.</li>
-	 * </ul>
-	 */
-	private void onStart()
-	{
-		try
-		{
-			// Open following doors at server start: coliseums, ToI - RB Area Doors
-			getDoor(24190001).openMe();
-			getDoor(24190002).openMe();
-			getDoor(24190003).openMe();
-			getDoor(24190004).openMe();
-			getDoor(23180001).openMe();
-			getDoor(23180002).openMe();
-			getDoor(23180003).openMe();
-			getDoor(23180004).openMe();
-			getDoor(23180005).openMe();
-			getDoor(23180006).openMe();
-			
-			// Schedules a task to automatically open/close doors
-			for (L2DoorInstance doorInst : getDoors())
-			{
-				// Garden of Eva (every 7 minutes)
-				if (doorInst.getName().startsWith("Eva"))
-					doorInst.setAutoActionDelay(420000);
-				// Tower of Insolence (every 5 minutes)
-				else if (doorInst.getName().startsWith("hubris"))
-					doorInst.setAutoActionDelay(300000);
-			}
-			
-			// Load doors upgrades.
-			for (Castle castle : CastleManager.getInstance().getCastles())
-				castle.loadDoorUpgrade();
-		}
-		catch (NullPointerException e)
-		{
-			_log.log(Level.WARNING, "There are errors in doors.xml.", e);
-		}
+		return _doors.values();
 	}
 	
 	private static class SingletonHolder

@@ -29,7 +29,7 @@ import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
 import net.sf.l2j.commons.config.ExProperties;
-import net.sf.l2j.gameserver.geoengine.geodata.GeoFormat;
+
 import net.sf.l2j.gameserver.model.holder.BuffSkillHolder;
 import net.sf.l2j.gameserver.model.holder.IntIntHolder;
 
@@ -40,7 +40,7 @@ import net.sf.l2j.gameserver.model.holder.IntIntHolder;
  */
 public final class Config
 {
-	protected static final Logger _log = Logger.getLogger(Config.class.getName());
+	private static final Logger _log = Logger.getLogger(Config.class.getName());
 	
 	public static final String CLANS_FILE = "./config/clans.properties";
 	public static final String EVENTS_FILE = "./config/events.properties";
@@ -227,9 +227,7 @@ public final class Config
 	// --------------------------------------------------
 	
 	/** Geodata */
-	public static int GEODATA;
 	public static String GEODATA_PATH;
-	public static GeoFormat GEODATA_FORMAT;
 	public static int COORD_SYNCHRONIZE;
 	
 	/** Path checking */
@@ -237,6 +235,7 @@ public final class Config
 	public static int MAX_OBSTACLE_HEIGHT;
 	
 	/** Path finding */
+	public static boolean PATHFINDING;
 	public static String PATHFIND_BUFFERS;
 	public static int BASE_WEIGHT;
 	public static int DIAGONAL_WEIGHT;
@@ -244,6 +243,7 @@ public final class Config
 	public static int OBSTACLE_MULTIPLIER;
 	public static int MAX_ITERATIONS;
 	public static boolean DEBUG_PATH;
+	public static boolean DEBUG_GEO_NODE;
 	
 	// --------------------------------------------------
 	// HexID
@@ -362,7 +362,7 @@ public final class Config
 	public static int SPAWN_INTERVAL_ZAKEN;
 	public static int RANDOM_SPAWN_TIME_ZAKEN;
 	
-	/** IA */
+	/** AI */
 	public static boolean GUARD_ATTACK_AGGRO_MOB;
 	public static int MAX_DRIFT_RANGE;
 	public static long KNOWNLIST_UPDATE_INTERVAL;
@@ -594,7 +594,6 @@ public final class Config
 	public static int WEAR_PRICE;
 	public static boolean ALLOW_LOTTERY;
 	public static boolean ALLOW_WATER;
-	public static boolean ALLOWFISHING;
 	public static boolean ALLOW_BOAT;
 	public static boolean ALLOW_CURSED_WEAPONS;
 	public static boolean ALLOW_MANOR;
@@ -635,9 +634,14 @@ public final class Config
 	public static int TRADE_CHAT_TIME;
 	public static int SOCIAL_TIME;
 	
+	/** ThreadPool */
+	public static int SCHEDULED_THREAD_POOL_COUNT;
+	public static int THREADS_PER_SCHEDULED_THREAD_POOL;
+	public static int INSTANT_THREAD_POOL_COUNT;
+	public static int THREADS_PER_INSTANT_THREAD_POOL;
+	
 	/** Misc */
 	public static boolean L2WALKER_PROTECTION;
-	public static boolean AUTODELETE_INVALID_QUEST_DATA;
 	public static boolean SERVER_NEWS;
 	public static int ZONE_TOWN;
 	public static boolean DISABLE_TUTORIAL;
@@ -646,14 +650,6 @@ public final class Config
 	// Those "hidden" settings haven't configs to avoid admins to fuck their server
 	// You still can experiment changing values here. But don't say I didn't warn you.
 	// --------------------------------------------------
-	
-	/** Threads & Packets size */
-	public static int THREAD_P_EFFECTS = 6; // default 6
-	public static int THREAD_P_GENERAL = 15; // default 15
-	public static int GENERAL_PACKET_THREAD_CORE_SIZE = 4; // default 4
-	public static int IO_PACKET_THREAD_CORE_SIZE = 2; // default 2
-	public static int GENERAL_THREAD_CORE_SIZE = 4; // default 4
-	public static int AI_MAX_THREAD = 10; // default 10
 	
 	/** Reserve Host on LoginServerThread */
 	public static boolean RESERVE_HOST_ON_LOGIN = false; // default false
@@ -678,615 +674,296 @@ public final class Config
 	// --------------------------------------------------
 	
 	/**
-	 * This class initializes all global variables for configuration.<br>
-	 * If key doesn't appear in properties file, a default value is setting on by this class.
+	 * Initialize {@link ExProperties} from specified configuration file.
+	 * @param filename : File name to be loaded.
+	 * @return ExProperties : Initialized {@link ExProperties}.
 	 */
-	public static void load()
+	public static final ExProperties initProperties(String filename)
 	{
-		if (Server.serverMode == Server.MODE_GAMESERVER)
+		final ExProperties result = new ExProperties();
+		
+		try
 		{
-			_log.info("Loading gameserver configuration files.");
-			
-			// Clans settings
-			ExProperties clans = load(CLANS_FILE);
-			ALT_CLAN_JOIN_DAYS = clans.getProperty("DaysBeforeJoinAClan", 5);
-			ALT_CLAN_CREATE_DAYS = clans.getProperty("DaysBeforeCreateAClan", 10);
-			ALT_MAX_NUM_OF_CLANS_IN_ALLY = clans.getProperty("AltMaxNumOfClansInAlly", 3);
-			ALT_CLAN_MEMBERS_FOR_WAR = clans.getProperty("AltClanMembersForWar", 15);
-			ALT_CLAN_WAR_PENALTY_WHEN_ENDED = clans.getProperty("AltClanWarPenaltyWhenEnded", 5);
-			ALT_CLAN_DISSOLVE_DAYS = clans.getProperty("DaysToPassToDissolveAClan", 7);
-			ALT_ALLY_JOIN_DAYS_WHEN_LEAVED = clans.getProperty("DaysBeforeJoinAllyWhenLeaved", 1);
-			ALT_ALLY_JOIN_DAYS_WHEN_DISMISSED = clans.getProperty("DaysBeforeJoinAllyWhenDismissed", 1);
-			ALT_ACCEPT_CLAN_DAYS_WHEN_DISMISSED = clans.getProperty("DaysBeforeAcceptNewClanWhenDismissed", 1);
-			ALT_CREATE_ALLY_DAYS_WHEN_DISSOLVED = clans.getProperty("DaysBeforeCreateNewAllyWhenDissolved", 10);
-			ALT_MEMBERS_CAN_WITHDRAW_FROM_CLANWH = clans.getProperty("AltMembersCanWithdrawFromClanWH", false);
-			REMOVE_CASTLE_CIRCLETS = clans.getProperty("RemoveCastleCirclets", true);
-			
-			ALT_MANOR_REFRESH_TIME = clans.getProperty("AltManorRefreshTime", 20);
-			ALT_MANOR_REFRESH_MIN = clans.getProperty("AltManorRefreshMin", 0);
-			ALT_MANOR_APPROVE_TIME = clans.getProperty("AltManorApproveTime", 6);
-			ALT_MANOR_APPROVE_MIN = clans.getProperty("AltManorApproveMin", 0);
-			ALT_MANOR_MAINTENANCE_PERIOD = clans.getProperty("AltManorMaintenancePeriod", 360000);
-			ALT_MANOR_SAVE_ALL_ACTIONS = clans.getProperty("AltManorSaveAllActions", false);
-			ALT_MANOR_SAVE_PERIOD_RATE = clans.getProperty("AltManorSavePeriodRate", 2);
-			
-			CH_TELE_FEE_RATIO = clans.getProperty("ClanHallTeleportFunctionFeeRatio", 86400000);
-			CH_TELE1_FEE = clans.getProperty("ClanHallTeleportFunctionFeeLvl1", 7000);
-			CH_TELE2_FEE = clans.getProperty("ClanHallTeleportFunctionFeeLvl2", 14000);
-			CH_SUPPORT_FEE_RATIO = clans.getProperty("ClanHallSupportFunctionFeeRatio", 86400000);
-			CH_SUPPORT1_FEE = clans.getProperty("ClanHallSupportFeeLvl1", 17500);
-			CH_SUPPORT2_FEE = clans.getProperty("ClanHallSupportFeeLvl2", 35000);
-			CH_SUPPORT3_FEE = clans.getProperty("ClanHallSupportFeeLvl3", 49000);
-			CH_SUPPORT4_FEE = clans.getProperty("ClanHallSupportFeeLvl4", 77000);
-			CH_SUPPORT5_FEE = clans.getProperty("ClanHallSupportFeeLvl5", 147000);
-			CH_SUPPORT6_FEE = clans.getProperty("ClanHallSupportFeeLvl6", 252000);
-			CH_SUPPORT7_FEE = clans.getProperty("ClanHallSupportFeeLvl7", 259000);
-			CH_SUPPORT8_FEE = clans.getProperty("ClanHallSupportFeeLvl8", 364000);
-			CH_MPREG_FEE_RATIO = clans.getProperty("ClanHallMpRegenerationFunctionFeeRatio", 86400000);
-			CH_MPREG1_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl1", 14000);
-			CH_MPREG2_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl2", 26250);
-			CH_MPREG3_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl3", 45500);
-			CH_MPREG4_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl4", 96250);
-			CH_MPREG5_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl5", 140000);
-			CH_HPREG_FEE_RATIO = clans.getProperty("ClanHallHpRegenerationFunctionFeeRatio", 86400000);
-			CH_HPREG1_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl1", 4900);
-			CH_HPREG2_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl2", 5600);
-			CH_HPREG3_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl3", 7000);
-			CH_HPREG4_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl4", 8166);
-			CH_HPREG5_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl5", 10500);
-			CH_HPREG6_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl6", 12250);
-			CH_HPREG7_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl7", 14000);
-			CH_HPREG8_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl8", 15750);
-			CH_HPREG9_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl9", 17500);
-			CH_HPREG10_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl10", 22750);
-			CH_HPREG11_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl11", 26250);
-			CH_HPREG12_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl12", 29750);
-			CH_HPREG13_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl13", 36166);
-			CH_EXPREG_FEE_RATIO = clans.getProperty("ClanHallExpRegenerationFunctionFeeRatio", 86400000);
-			CH_EXPREG1_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl1", 21000);
-			CH_EXPREG2_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl2", 42000);
-			CH_EXPREG3_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl3", 63000);
-			CH_EXPREG4_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl4", 105000);
-			CH_EXPREG5_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl5", 147000);
-			CH_EXPREG6_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl6", 163331);
-			CH_EXPREG7_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl7", 210000);
-			CH_ITEM_FEE_RATIO = clans.getProperty("ClanHallItemCreationFunctionFeeRatio", 86400000);
-			CH_ITEM1_FEE = clans.getProperty("ClanHallItemCreationFunctionFeeLvl1", 210000);
-			CH_ITEM2_FEE = clans.getProperty("ClanHallItemCreationFunctionFeeLvl2", 490000);
-			CH_ITEM3_FEE = clans.getProperty("ClanHallItemCreationFunctionFeeLvl3", 980000);
-			CH_CURTAIN_FEE_RATIO = clans.getProperty("ClanHallCurtainFunctionFeeRatio", 86400000);
-			CH_CURTAIN1_FEE = clans.getProperty("ClanHallCurtainFunctionFeeLvl1", 2002);
-			CH_CURTAIN2_FEE = clans.getProperty("ClanHallCurtainFunctionFeeLvl2", 2625);
-			CH_FRONT_FEE_RATIO = clans.getProperty("ClanHallFrontPlatformFunctionFeeRatio", 86400000);
-			CH_FRONT1_FEE = clans.getProperty("ClanHallFrontPlatformFunctionFeeLvl1", 3031);
-			CH_FRONT2_FEE = clans.getProperty("ClanHallFrontPlatformFunctionFeeLvl2", 9331);
-			
-			// Events config
-			ExProperties events = load(EVENTS_FILE);
-			ALT_OLY_START_TIME = events.getProperty("AltOlyStartTime", 18);
-			ALT_OLY_MIN = events.getProperty("AltOlyMin", 0);
-			ALT_OLY_CPERIOD = events.getProperty("AltOlyCPeriod", 21600000);
-			ALT_OLY_BATTLE = events.getProperty("AltOlyBattle", 180000);
-			ALT_OLY_WPERIOD = events.getProperty("AltOlyWPeriod", 604800000);
-			ALT_OLY_VPERIOD = events.getProperty("AltOlyVPeriod", 86400000);
-			ALT_OLY_WAIT_TIME = events.getProperty("AltOlyWaitTime", 30);
-			ALT_OLY_WAIT_BATTLE = events.getProperty("AltOlyWaitBattle", 60);
-			ALT_OLY_WAIT_END = events.getProperty("AltOlyWaitEnd", 40);
-			ALT_OLY_START_POINTS = events.getProperty("AltOlyStartPoints", 18);
-			ALT_OLY_WEEKLY_POINTS = events.getProperty("AltOlyWeeklyPoints", 3);
-			ALT_OLY_MIN_MATCHES = events.getProperty("AltOlyMinMatchesToBeClassed", 5);
-			ALT_OLY_CLASSED = events.getProperty("AltOlyClassedParticipants", 5);
-			ALT_OLY_NONCLASSED = events.getProperty("AltOlyNonClassedParticipants", 9);
-			ALT_OLY_CLASSED_REWARD = parseItemsList(events.getProperty("AltOlyClassedReward", "6651,50"));
-			ALT_OLY_NONCLASSED_REWARD = parseItemsList(events.getProperty("AltOlyNonClassedReward", "6651,30"));
-			ALT_OLY_GP_PER_POINT = events.getProperty("AltOlyGPPerPoint", 1000);
-			ALT_OLY_HERO_POINTS = events.getProperty("AltOlyHeroPoints", 300);
-			ALT_OLY_RANK1_POINTS = events.getProperty("AltOlyRank1Points", 100);
-			ALT_OLY_RANK2_POINTS = events.getProperty("AltOlyRank2Points", 75);
-			ALT_OLY_RANK3_POINTS = events.getProperty("AltOlyRank3Points", 55);
-			ALT_OLY_RANK4_POINTS = events.getProperty("AltOlyRank4Points", 40);
-			ALT_OLY_RANK5_POINTS = events.getProperty("AltOlyRank5Points", 30);
-			ALT_OLY_MAX_POINTS = events.getProperty("AltOlyMaxPoints", 10);
-			ALT_OLY_DIVIDER_CLASSED = events.getProperty("AltOlyDividerClassed", 3);
-			ALT_OLY_DIVIDER_NON_CLASSED = events.getProperty("AltOlyDividerNonClassed", 3);
-			ALT_OLY_ANNOUNCE_GAMES = events.getProperty("AltOlyAnnounceGames", true);
-			
-			ALT_GAME_CASTLE_DAWN = events.getProperty("AltCastleForDawn", true);
-			ALT_GAME_CASTLE_DUSK = events.getProperty("AltCastleForDusk", true);
-			ALT_FESTIVAL_MIN_PLAYER = events.getProperty("AltFestivalMinPlayer", 5);
-			ALT_MAXIMUM_PLAYER_CONTRIB = events.getProperty("AltMaxPlayerContrib", 1000000);
-			ALT_FESTIVAL_MANAGER_START = events.getProperty("AltFestivalManagerStart", 120000);
-			ALT_FESTIVAL_LENGTH = events.getProperty("AltFestivalLength", 1080000);
-			ALT_FESTIVAL_CYCLE_LENGTH = events.getProperty("AltFestivalCycleLength", 2280000);
-			ALT_FESTIVAL_FIRST_SPAWN = events.getProperty("AltFestivalFirstSpawn", 120000);
-			ALT_FESTIVAL_FIRST_SWARM = events.getProperty("AltFestivalFirstSwarm", 300000);
-			ALT_FESTIVAL_SECOND_SPAWN = events.getProperty("AltFestivalSecondSpawn", 540000);
-			ALT_FESTIVAL_SECOND_SWARM = events.getProperty("AltFestivalSecondSwarm", 720000);
-			ALT_FESTIVAL_CHEST_SPAWN = events.getProperty("AltFestivalChestSpawn", 900000);
-			ALT_SEVENSIGNS_LAZY_UPDATE = events.getProperty("AltSevenSignsLazyUpdate", true);
-			
-			FS_TIME_ATTACK = events.getProperty("TimeOfAttack", 50);
-			FS_TIME_ENTRY = events.getProperty("TimeOfEntry", 3);
-			FS_TIME_WARMUP = events.getProperty("TimeOfWarmUp", 2);
-			FS_PARTY_MEMBER_COUNT = events.getProperty("NumberOfNecessaryPartyMembers", 4);
-			
-			RIFT_MIN_PARTY_SIZE = events.getProperty("RiftMinPartySize", 2);
-			RIFT_MAX_JUMPS = events.getProperty("MaxRiftJumps", 4);
-			RIFT_SPAWN_DELAY = events.getProperty("RiftSpawnDelay", 10000);
-			RIFT_AUTO_JUMPS_TIME_MIN = events.getProperty("AutoJumpsDelayMin", 480);
-			RIFT_AUTO_JUMPS_TIME_MAX = events.getProperty("AutoJumpsDelayMax", 600);
-			RIFT_ENTER_COST_RECRUIT = events.getProperty("RecruitCost", 18);
-			RIFT_ENTER_COST_SOLDIER = events.getProperty("SoldierCost", 21);
-			RIFT_ENTER_COST_OFFICER = events.getProperty("OfficerCost", 24);
-			RIFT_ENTER_COST_CAPTAIN = events.getProperty("CaptainCost", 27);
-			RIFT_ENTER_COST_COMMANDER = events.getProperty("CommanderCost", 30);
-			RIFT_ENTER_COST_HERO = events.getProperty("HeroCost", 33);
-			RIFT_BOSS_ROOM_TIME_MUTIPLY = events.getProperty("BossRoomTimeMultiply", 1.);
-			
-			ALLOW_WEDDING = events.getProperty("AllowWedding", false);
-			WEDDING_PRICE = events.getProperty("WeddingPrice", 1000000);
-			WEDDING_SAMESEX = events.getProperty("WeddingAllowSameSex", false);
-			WEDDING_FORMALWEAR = events.getProperty("WeddingFormalWear", true);
-			
-			ALT_LOTTERY_PRIZE = events.getProperty("AltLotteryPrize", 50000);
-			ALT_LOTTERY_TICKET_PRICE = events.getProperty("AltLotteryTicketPrice", 2000);
-			ALT_LOTTERY_5_NUMBER_RATE = events.getProperty("AltLottery5NumberRate", 0.6);
-			ALT_LOTTERY_4_NUMBER_RATE = events.getProperty("AltLottery4NumberRate", 0.2);
-			ALT_LOTTERY_3_NUMBER_RATE = events.getProperty("AltLottery3NumberRate", 0.2);
-			ALT_LOTTERY_2_AND_1_NUMBER_PRIZE = events.getProperty("AltLottery2and1NumberPrize", 200);
-			
-			ALT_FISH_CHAMPIONSHIP_ENABLED = events.getProperty("AltFishChampionshipEnabled", true);
-			ALT_FISH_CHAMPIONSHIP_REWARD_ITEM = events.getProperty("AltFishChampionshipRewardItemId", 57);
-			ALT_FISH_CHAMPIONSHIP_REWARD_1 = events.getProperty("AltFishChampionshipReward1", 800000);
-			ALT_FISH_CHAMPIONSHIP_REWARD_2 = events.getProperty("AltFishChampionshipReward2", 500000);
-			ALT_FISH_CHAMPIONSHIP_REWARD_3 = events.getProperty("AltFishChampionshipReward3", 300000);
-			ALT_FISH_CHAMPIONSHIP_REWARD_4 = events.getProperty("AltFishChampionshipReward4", 200000);
-			ALT_FISH_CHAMPIONSHIP_REWARD_5 = events.getProperty("AltFishChampionshipReward5", 100000);
-			
-			// Geoengine
-			ExProperties geoengine = load(GEOENGINE_FILE);
-			GEODATA = geoengine.getProperty("GeoData", 0);
-			GEODATA_PATH = geoengine.getProperty("GeoDataPath", "./data/geodata/");
-			GEODATA_FORMAT = Enum.valueOf(GeoFormat.class, geoengine.getProperty("GeoDataFormat", GeoFormat.L2J.toString()));
-			COORD_SYNCHRONIZE = geoengine.getProperty("CoordSynchronize", -1);
-			
-			PART_OF_CHARACTER_HEIGHT = geoengine.getProperty("PartOfCharacterHeight", 75);
-			MAX_OBSTACLE_HEIGHT = geoengine.getProperty("MaxObstacleHeight", 32);
-			
-			PATHFIND_BUFFERS = geoengine.getProperty("PathFindBuffers", "100x6;128x6;192x6;256x4;320x4;384x4;500x2");
-			BASE_WEIGHT = geoengine.getProperty("BaseWeight", 10);
-			DIAGONAL_WEIGHT = geoengine.getProperty("DiagonalWeight", 14);
-			OBSTACLE_MULTIPLIER = geoengine.getProperty("ObstacleMultiplier", 10);
-			HEURISTIC_WEIGHT = geoengine.getProperty("HeuristicWeight", 20);
-			MAX_ITERATIONS = geoengine.getProperty("MaxIterations", 3500);
-			DEBUG_PATH = geoengine.getProperty("DebugPath", false);
-			
-			// HexID
-			ExProperties hexid = load(HEXID_FILE);
-			SERVER_ID = Integer.parseInt(hexid.getProperty("ServerID"));
-			HEX_ID = new BigInteger(hexid.getProperty("HexID"), 16).toByteArray();
-			
-			// NPCs / Monsters
-			ExProperties npcs = load(NPCS_FILE);
-			CHAMPION_FREQUENCY = npcs.getProperty("ChampionFrequency", 0);
-			CHAMP_MIN_LVL = npcs.getProperty("ChampionMinLevel", 20);
-			CHAMP_MAX_LVL = npcs.getProperty("ChampionMaxLevel", 70);
-			CHAMPION_HP = npcs.getProperty("ChampionHp", 8);
-			CHAMPION_HP_REGEN = npcs.getProperty("ChampionHpRegen", 1.);
-			CHAMPION_REWARDS = npcs.getProperty("ChampionRewards", 8);
-			CHAMPION_ADENAS_REWARDS = npcs.getProperty("ChampionAdenasRewards", 1);
-			CHAMPION_ATK = npcs.getProperty("ChampionAtk", 1.);
-			CHAMPION_SPD_ATK = npcs.getProperty("ChampionSpdAtk", 1.);
-			CHAMPION_REWARD = npcs.getProperty("ChampionRewardItem", 0);
-			CHAMPION_REWARD_ID = npcs.getProperty("ChampionRewardItemID", 6393);
-			CHAMPION_REWARD_QTY = npcs.getProperty("ChampionRewardItemQty", 1);
-			
-			BUFFER_MAX_SCHEMES = npcs.getProperty("BufferMaxSchemesPerChar", 4);
-			BUFFER_MAX_SKILLS = npcs.getProperty("BufferMaxSkillsPerScheme", 24);
-			BUFFER_STATIC_BUFF_COST = npcs.getProperty("BufferStaticCostPerBuff", -1);
-			BUFFER_BUFFS = npcs.getProperty("BufferBuffs");
-			
-			BUFFER_BUFFLIST = new HashMap<>();
-			for (String skillInfo : BUFFER_BUFFS.split(";"))
+			result.load(new File(filename));
+		}
+		catch (IOException e)
+		{
+			_log.warning("Config: Error loading \"" + filename + "\" config.");
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * itemId1,itemNumber1;itemId2,itemNumber2... to the int[n][2] = [itemId1][itemNumber1],[itemId2][itemNumber2]...
+	 * @param line
+	 * @return an array consisting of parsed items.
+	 */
+	private static final int[][] parseItemsList(String line)
+	{
+		final String[] propertySplit = line.split(";");
+		if (propertySplit.length == 0)
+			return null;
+		
+		int i = 0;
+		String[] valueSplit;
+		final int[][] result = new int[propertySplit.length][];
+		for (String value : propertySplit)
+		{
+			valueSplit = value.split(",");
+			if (valueSplit.length != 2)
 			{
-				final String[] infos = skillInfo.split(",");
-				BUFFER_BUFFLIST.put(Integer.valueOf(infos[0]), new BuffSkillHolder(Integer.valueOf(infos[0]), Integer.valueOf(infos[1]), infos[2]));
+				_log.warning("Config: Error parsing entry -> \"" + valueSplit[0] + "\", should be itemId,itemNumber");
+				return null;
 			}
 			
-			ALLOW_CLASS_MASTERS = npcs.getProperty("AllowClassMasters", false);
-			ALLOW_ENTIRE_TREE = npcs.getProperty("AllowEntireTree", false);
-			if (ALLOW_CLASS_MASTERS)
-				CLASS_MASTER_SETTINGS = new ClassMasterSettings(npcs.getProperty("ConfigClassMaster"));
-			
-			ALT_GAME_FREE_TELEPORT = npcs.getProperty("AltFreeTeleporting", false);
-			ANNOUNCE_MAMMON_SPAWN = npcs.getProperty("AnnounceMammonSpawn", true);
-			ALT_MOB_AGRO_IN_PEACEZONE = npcs.getProperty("AltMobAgroInPeaceZone", true);
-			SHOW_NPC_LVL = npcs.getProperty("ShowNpcLevel", false);
-			SHOW_NPC_CREST = npcs.getProperty("ShowNpcCrest", false);
-			SHOW_SUMMON_CREST = npcs.getProperty("ShowSummonCrest", false);
-			
-			WYVERN_ALLOW_UPGRADER = npcs.getProperty("AllowWyvernUpgrader", true);
-			WYVERN_REQUIRED_LEVEL = npcs.getProperty("RequiredStriderLevel", 55);
-			WYVERN_REQUIRED_CRYSTALS = npcs.getProperty("RequiredCrystalsNumber", 10);
-			
-			RAID_HP_REGEN_MULTIPLIER = npcs.getProperty("RaidHpRegenMultiplier", 1.);
-			RAID_MP_REGEN_MULTIPLIER = npcs.getProperty("RaidMpRegenMultiplier", 1.);
-			RAID_DEFENCE_MULTIPLIER = npcs.getProperty("RaidDefenceMultiplier", 1.);
-			RAID_MINION_RESPAWN_TIMER = npcs.getProperty("RaidMinionRespawnTime", 300000);
-			
-			RAID_DISABLE_CURSE = npcs.getProperty("DisableRaidCurse", false);
-			RAID_CHAOS_TIME = npcs.getProperty("RaidChaosTime", 30);
-			GRAND_CHAOS_TIME = npcs.getProperty("GrandChaosTime", 30);
-			MINION_CHAOS_TIME = npcs.getProperty("MinionChaosTime", 30);
-			
-			SPAWN_INTERVAL_AQ = npcs.getProperty("AntQueenSpawnInterval", 36);
-			RANDOM_SPAWN_TIME_AQ = npcs.getProperty("AntQueenRandomSpawn", 17);
-			
-			SPAWN_INTERVAL_ANTHARAS = npcs.getProperty("AntharasSpawnInterval", 264);
-			RANDOM_SPAWN_TIME_ANTHARAS = npcs.getProperty("AntharasRandomSpawn", 72);
-			WAIT_TIME_ANTHARAS = npcs.getProperty("AntharasWaitTime", 30) * 60000;
-			
-			SPAWN_INTERVAL_BAIUM = npcs.getProperty("BaiumSpawnInterval", 168);
-			RANDOM_SPAWN_TIME_BAIUM = npcs.getProperty("BaiumRandomSpawn", 48);
-			
-			SPAWN_INTERVAL_CORE = npcs.getProperty("CoreSpawnInterval", 60);
-			RANDOM_SPAWN_TIME_CORE = npcs.getProperty("CoreRandomSpawn", 23);
-			
-			SPAWN_INTERVAL_FRINTEZZA = npcs.getProperty("FrintezzaSpawnInterval", 48);
-			RANDOM_SPAWN_TIME_FRINTEZZA = npcs.getProperty("FrintezzaRandomSpawn", 8);
-			WAIT_TIME_FRINTEZZA = npcs.getProperty("FrintezzaWaitTime", 1) * 60000;
-			
-			SPAWN_INTERVAL_ORFEN = npcs.getProperty("OrfenSpawnInterval", 48);
-			RANDOM_SPAWN_TIME_ORFEN = npcs.getProperty("OrfenRandomSpawn", 20);
-			
-			SPAWN_INTERVAL_SAILREN = npcs.getProperty("SailrenSpawnInterval", 36);
-			RANDOM_SPAWN_TIME_SAILREN = npcs.getProperty("SailrenRandomSpawn", 24);
-			WAIT_TIME_SAILREN = npcs.getProperty("SailrenWaitTime", 5) * 60000;
-			
-			SPAWN_INTERVAL_VALAKAS = npcs.getProperty("ValakasSpawnInterval", 264);
-			RANDOM_SPAWN_TIME_VALAKAS = npcs.getProperty("ValakasRandomSpawn", 72);
-			WAIT_TIME_VALAKAS = npcs.getProperty("ValakasWaitTime", 30) * 60000;
-			
-			SPAWN_INTERVAL_ZAKEN = npcs.getProperty("ZakenSpawnInterval", 60);
-			RANDOM_SPAWN_TIME_ZAKEN = npcs.getProperty("ZakenRandomSpawn", 20);
-			
-			GUARD_ATTACK_AGGRO_MOB = npcs.getProperty("GuardAttackAggroMob", false);
-			MAX_DRIFT_RANGE = npcs.getProperty("MaxDriftRange", 300);
-			KNOWNLIST_UPDATE_INTERVAL = npcs.getProperty("KnownListUpdateInterval", 1250);
-			MIN_NPC_ANIMATION = npcs.getProperty("MinNPCAnimation", 20);
-			MAX_NPC_ANIMATION = npcs.getProperty("MaxNPCAnimation", 40);
-			MIN_MONSTER_ANIMATION = npcs.getProperty("MinMonsterAnimation", 10);
-			MAX_MONSTER_ANIMATION = npcs.getProperty("MaxMonsterAnimation", 40);
-			
-			GRIDS_ALWAYS_ON = npcs.getProperty("GridsAlwaysOn", false);
-			GRID_NEIGHBOR_TURNON_TIME = npcs.getProperty("GridNeighborTurnOnTime", 1);
-			GRID_NEIGHBOR_TURNOFF_TIME = npcs.getProperty("GridNeighborTurnOffTime", 90);
-			
-			// players
-			ExProperties players = load(PLAYERS_FILE);
-			STARTING_ADENA = players.getProperty("StartingAdena", 100);
-			EFFECT_CANCELING = players.getProperty("CancelLesserEffect", true);
-			HP_REGEN_MULTIPLIER = players.getProperty("HpRegenMultiplier", 1.);
-			MP_REGEN_MULTIPLIER = players.getProperty("MpRegenMultiplier", 1.);
-			CP_REGEN_MULTIPLIER = players.getProperty("CpRegenMultiplier", 1.);
-			PLAYER_SPAWN_PROTECTION = players.getProperty("PlayerSpawnProtection", 0);
-			PLAYER_FAKEDEATH_UP_PROTECTION = players.getProperty("PlayerFakeDeathUpProtection", 0);
-			RESPAWN_RESTORE_HP = players.getProperty("RespawnRestoreHP", 0.7);
-			MAX_PVTSTORE_SLOTS_DWARF = players.getProperty("MaxPvtStoreSlotsDwarf", 5);
-			MAX_PVTSTORE_SLOTS_OTHER = players.getProperty("MaxPvtStoreSlotsOther", 4);
-			DEEPBLUE_DROP_RULES = players.getProperty("UseDeepBlueDropRules", true);
-			ALT_GAME_DELEVEL = players.getProperty("Delevel", true);
-			DEATH_PENALTY_CHANCE = players.getProperty("DeathPenaltyChance", 20);
-			
-			INVENTORY_MAXIMUM_NO_DWARF = players.getProperty("MaximumSlotsForNoDwarf", 80);
-			INVENTORY_MAXIMUM_DWARF = players.getProperty("MaximumSlotsForDwarf", 100);
-			INVENTORY_MAXIMUM_QUEST_ITEMS = players.getProperty("MaximumSlotsForQuestItems", 100);
-			INVENTORY_MAXIMUM_PET = players.getProperty("MaximumSlotsForPet", 12);
-			MAX_ITEM_IN_PACKET = Math.max(INVENTORY_MAXIMUM_NO_DWARF, INVENTORY_MAXIMUM_DWARF);
-			ALT_WEIGHT_LIMIT = players.getProperty("AltWeightLimit", 1);
-			WAREHOUSE_SLOTS_NO_DWARF = players.getProperty("MaximumWarehouseSlotsForNoDwarf", 100);
-			WAREHOUSE_SLOTS_DWARF = players.getProperty("MaximumWarehouseSlotsForDwarf", 120);
-			WAREHOUSE_SLOTS_CLAN = players.getProperty("MaximumWarehouseSlotsForClan", 150);
-			FREIGHT_SLOTS = players.getProperty("MaximumFreightSlots", 20);
-			ALT_GAME_FREIGHTS = players.getProperty("AltGameFreights", false);
-			ALT_GAME_FREIGHT_PRICE = players.getProperty("AltGameFreightPrice", 1000);
-			
-			ENCHANT_CHANCE_WEAPON_MAGIC = players.getProperty("EnchantChanceMagicWeapon", 0.4);
-			ENCHANT_CHANCE_WEAPON_MAGIC_15PLUS = players.getProperty("EnchantChanceMagicWeapon15Plus", 0.2);
-			ENCHANT_CHANCE_WEAPON_NONMAGIC = players.getProperty("EnchantChanceNonMagicWeapon", 0.7);
-			ENCHANT_CHANCE_WEAPON_NONMAGIC_15PLUS = players.getProperty("EnchantChanceNonMagicWeapon15Plus", 0.35);
-			ENCHANT_CHANCE_ARMOR = players.getProperty("EnchantChanceArmor", 0.66);
-			ENCHANT_MAX_WEAPON = players.getProperty("EnchantMaxWeapon", 0);
-			ENCHANT_MAX_ARMOR = players.getProperty("EnchantMaxArmor", 0);
-			ENCHANT_SAFE_MAX = players.getProperty("EnchantSafeMax", 3);
-			ENCHANT_SAFE_MAX_FULL = players.getProperty("EnchantSafeMaxFull", 4);
-			
-			AUGMENTATION_NG_SKILL_CHANCE = players.getProperty("AugmentationNGSkillChance", 15);
-			AUGMENTATION_NG_GLOW_CHANCE = players.getProperty("AugmentationNGGlowChance", 0);
-			AUGMENTATION_MID_SKILL_CHANCE = players.getProperty("AugmentationMidSkillChance", 30);
-			AUGMENTATION_MID_GLOW_CHANCE = players.getProperty("AugmentationMidGlowChance", 40);
-			AUGMENTATION_HIGH_SKILL_CHANCE = players.getProperty("AugmentationHighSkillChance", 45);
-			AUGMENTATION_HIGH_GLOW_CHANCE = players.getProperty("AugmentationHighGlowChance", 70);
-			AUGMENTATION_TOP_SKILL_CHANCE = players.getProperty("AugmentationTopSkillChance", 60);
-			AUGMENTATION_TOP_GLOW_CHANCE = players.getProperty("AugmentationTopGlowChance", 100);
-			AUGMENTATION_BASESTAT_CHANCE = players.getProperty("AugmentationBaseStatChance", 1);
-			
-			KARMA_PLAYER_CAN_BE_KILLED_IN_PZ = players.getProperty("KarmaPlayerCanBeKilledInPeaceZone", false);
-			KARMA_PLAYER_CAN_SHOP = players.getProperty("KarmaPlayerCanShop", true);
-			KARMA_PLAYER_CAN_USE_GK = players.getProperty("KarmaPlayerCanUseGK", false);
-			KARMA_PLAYER_CAN_TELEPORT = players.getProperty("KarmaPlayerCanTeleport", true);
-			KARMA_PLAYER_CAN_TRADE = players.getProperty("KarmaPlayerCanTrade", true);
-			KARMA_PLAYER_CAN_USE_WH = players.getProperty("KarmaPlayerCanUseWareHouse", true);
-			KARMA_DROP_GM = players.getProperty("CanGMDropEquipment", false);
-			KARMA_AWARD_PK_KILL = players.getProperty("AwardPKKillPVPPoint", true);
-			KARMA_PK_LIMIT = players.getProperty("MinimumPKRequiredToDrop", 5);
-			KARMA_NONDROPPABLE_PET_ITEMS = players.getProperty("ListOfPetItems", "2375,3500,3501,3502,4422,4423,4424,4425,6648,6649,6650");
-			KARMA_NONDROPPABLE_ITEMS = players.getProperty("ListOfNonDroppableItemsForPK", "1147,425,1146,461,10,2368,7,6,2370,2369");
-			
-			String[] array = KARMA_NONDROPPABLE_PET_ITEMS.split(",");
-			KARMA_LIST_NONDROPPABLE_PET_ITEMS = new int[array.length];
-			
-			for (int i = 0; i < array.length; i++)
-				KARMA_LIST_NONDROPPABLE_PET_ITEMS[i] = Integer.parseInt(array[i]);
-			
-			array = KARMA_NONDROPPABLE_ITEMS.split(",");
-			KARMA_LIST_NONDROPPABLE_ITEMS = new int[array.length];
-			
-			for (int i = 0; i < array.length; i++)
-				KARMA_LIST_NONDROPPABLE_ITEMS[i] = Integer.parseInt(array[i]);
-			
-			// sorting so binarySearch can be used later
-			Arrays.sort(KARMA_LIST_NONDROPPABLE_PET_ITEMS);
-			Arrays.sort(KARMA_LIST_NONDROPPABLE_ITEMS);
-			
-			PVP_NORMAL_TIME = players.getProperty("PvPVsNormalTime", 15000);
-			PVP_PVP_TIME = players.getProperty("PvPVsPvPTime", 30000);
-			
-			PARTY_XP_CUTOFF_METHOD = players.getProperty("PartyXpCutoffMethod", "level");
-			PARTY_XP_CUTOFF_PERCENT = players.getProperty("PartyXpCutoffPercent", 3.);
-			PARTY_XP_CUTOFF_LEVEL = players.getProperty("PartyXpCutoffLevel", 20);
-			ALT_PARTY_RANGE = players.getProperty("AltPartyRange", 1600);
-			ALT_PARTY_RANGE2 = players.getProperty("AltPartyRange2", 1400);
-			ALT_LEAVE_PARTY_LEADER = players.getProperty("AltLeavePartyLeader", false);
-			
-			EVERYBODY_HAS_ADMIN_RIGHTS = players.getProperty("EverybodyHasAdminRights", false);
-			MASTERACCESS_LEVEL = players.getProperty("MasterAccessLevel", 127);
-			MASTERACCESS_NAME_COLOR = Integer.decode("0x" + players.getProperty("MasterNameColor", "00FF00"));
-			MASTERACCESS_TITLE_COLOR = Integer.decode("0x" + players.getProperty("MasterTitleColor", "00FF00"));
-			GM_HERO_AURA = players.getProperty("GMHeroAura", false);
-			GM_STARTUP_INVULNERABLE = players.getProperty("GMStartupInvulnerable", true);
-			GM_STARTUP_INVISIBLE = players.getProperty("GMStartupInvisible", true);
-			GM_STARTUP_SILENCE = players.getProperty("GMStartupSilence", true);
-			GM_STARTUP_AUTO_LIST = players.getProperty("GMStartupAutoList", true);
-			
-			PETITIONING_ALLOWED = players.getProperty("PetitioningAllowed", true);
-			MAX_PETITIONS_PER_PLAYER = players.getProperty("MaxPetitionsPerPlayer", 5);
-			MAX_PETITIONS_PENDING = players.getProperty("MaxPetitionsPending", 25);
-			
-			IS_CRAFTING_ENABLED = players.getProperty("CraftingEnabled", true);
-			DWARF_RECIPE_LIMIT = players.getProperty("DwarfRecipeLimit", 50);
-			COMMON_RECIPE_LIMIT = players.getProperty("CommonRecipeLimit", 50);
-			ALT_BLACKSMITH_USE_RECIPES = players.getProperty("AltBlacksmithUseRecipes", true);
-			
-			AUTO_LEARN_SKILLS = players.getProperty("AutoLearnSkills", false);
-			ALT_GAME_MAGICFAILURES = players.getProperty("MagicFailures", true);
-			ALT_GAME_SHIELD_BLOCKS = players.getProperty("AltShieldBlocks", false);
-			ALT_PERFECT_SHLD_BLOCK = players.getProperty("AltPerfectShieldBlockRate", 10);
-			LIFE_CRYSTAL_NEEDED = players.getProperty("LifeCrystalNeeded", true);
-			SP_BOOK_NEEDED = players.getProperty("SpBookNeeded", true);
-			ES_SP_BOOK_NEEDED = players.getProperty("EnchantSkillSpBookNeeded", true);
-			DIVINE_SP_BOOK_NEEDED = players.getProperty("DivineInspirationSpBookNeeded", true);
-			ALT_GAME_SUBCLASS_WITHOUT_QUESTS = players.getProperty("AltSubClassWithoutQuests", false);
-			
-			BUFFS_MAX_AMOUNT = players.getProperty("MaxBuffsAmount", 20);
-			STORE_SKILL_COOLTIME = players.getProperty("StoreSkillCooltime", true);
-			
-			// server
-			ExProperties server = load(SERVER_FILE);
-			
-			GAMESERVER_HOSTNAME = server.getProperty("GameserverHostname");
-			PORT_GAME = server.getProperty("GameserverPort", 7777);
-			
-			EXTERNAL_HOSTNAME = server.getProperty("ExternalHostname", "*");
-			INTERNAL_HOSTNAME = server.getProperty("InternalHostname", "*");
-			
-			GAME_SERVER_LOGIN_PORT = server.getProperty("LoginPort", 9014);
-			GAME_SERVER_LOGIN_HOST = server.getProperty("LoginHost", "127.0.0.1");
-			
-			REQUEST_ID = server.getProperty("RequestServerID", 0);
-			ACCEPT_ALTERNATE_ID = server.getProperty("AcceptAlternateID", true);
-			
-			DATABASE_URL = server.getProperty("URL", "jdbc:mysql://localhost/acis");
-			DATABASE_LOGIN = server.getProperty("Login", "root");
-			DATABASE_PASSWORD = server.getProperty("Password", "");
-			DATABASE_MAX_CONNECTIONS = server.getProperty("MaximumDbConnections", 10);
-			DATABASE_MAX_IDLE_TIME = server.getProperty("MaximumDbIdleTime", 0);
-			
-			SERVER_LIST_BRACKET = server.getProperty("ServerListBrackets", false);
-			SERVER_LIST_CLOCK = server.getProperty("ServerListClock", false);
-			SERVER_GMONLY = server.getProperty("ServerGMOnly", false);
-			SERVER_LIST_TESTSERVER = server.getProperty("TestServer", false);
-			
-			DELETE_DAYS = server.getProperty("DeleteCharAfterDays", 7);
-			MAXIMUM_ONLINE_USERS = server.getProperty("MaximumOnlineUsers", 100);
-			MIN_PROTOCOL_REVISION = server.getProperty("MinProtocolRevision", 730);
-			MAX_PROTOCOL_REVISION = server.getProperty("MaxProtocolRevision", 746);
-			if (MIN_PROTOCOL_REVISION > MAX_PROTOCOL_REVISION)
-				throw new Error("MinProtocolRevision is bigger than MaxProtocolRevision in server.properties.");
-			
-			DEFAULT_PUNISH = server.getProperty("DefaultPunish", 2);
-			DEFAULT_PUNISH_PARAM = server.getProperty("DefaultPunishParam", 0);
-			
-			AUTO_LOOT = server.getProperty("AutoLoot", false);
-			AUTO_LOOT_HERBS = server.getProperty("AutoLootHerbs", false);
-			AUTO_LOOT_RAID = server.getProperty("AutoLootRaid", false);
-			
-			ALLOW_DISCARDITEM = server.getProperty("AllowDiscardItem", true);
-			MULTIPLE_ITEM_DROP = server.getProperty("MultipleItemDrop", true);
-			HERB_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyHerbTime", 15) * 1000;
-			ITEM_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyItemTime", 600) * 1000;
-			EQUIPABLE_ITEM_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyEquipableItemTime", 0) * 1000;
-			SPECIAL_ITEM_DESTROY_TIME = new HashMap<>();
-			String[] data = server.getProperty("AutoDestroySpecialItemTime", (String[]) null, ",");
-			if (data != null)
+			result[i] = new int[2];
+			try
 			{
-				for (String itemData : data)
-				{
-					String[] item = itemData.split("-");
-					SPECIAL_ITEM_DESTROY_TIME.put(Integer.parseInt(item[0]), Integer.parseInt(item[1]) * 1000);
-				}
+				result[i][0] = Integer.parseInt(valueSplit[0]);
 			}
-			PLAYER_DROPPED_ITEM_MULTIPLIER = server.getProperty("PlayerDroppedItemMultiplier", 1);
-			SAVE_DROPPED_ITEM = server.getProperty("SaveDroppedItem", false);
+			catch (NumberFormatException e)
+			{
+				_log.warning("Config: Error parsing item ID -> \"" + valueSplit[0] + "\"");
+				return null;
+			}
 			
-			RATE_XP = server.getProperty("RateXp", 1.);
-			RATE_SP = server.getProperty("RateSp", 1.);
-			RATE_PARTY_XP = server.getProperty("RatePartyXp", 1.);
-			RATE_PARTY_SP = server.getProperty("RatePartySp", 1.);
-			RATE_DROP_ADENA = server.getProperty("RateDropAdena", 1.);
-			RATE_CONSUMABLE_COST = server.getProperty("RateConsumableCost", 1.);
-			RATE_DROP_ITEMS = server.getProperty("RateDropItems", 1.);
-			RATE_DROP_ITEMS_BY_RAID = server.getProperty("RateRaidDropItems", 1.);
-			RATE_DROP_SPOIL = server.getProperty("RateDropSpoil", 1.);
-			RATE_DROP_MANOR = server.getProperty("RateDropManor", 1);
-			RATE_QUEST_DROP = server.getProperty("RateQuestDrop", 1.);
-			RATE_QUEST_REWARD = server.getProperty("RateQuestReward", 1.);
-			RATE_QUEST_REWARD_XP = server.getProperty("RateQuestRewardXP", 1.);
-			RATE_QUEST_REWARD_SP = server.getProperty("RateQuestRewardSP", 1.);
-			RATE_QUEST_REWARD_ADENA = server.getProperty("RateQuestRewardAdena", 1.);
-			RATE_KARMA_EXP_LOST = server.getProperty("RateKarmaExpLost", 1.);
-			RATE_SIEGE_GUARDS_PRICE = server.getProperty("RateSiegeGuardsPrice", 1.);
-			RATE_DROP_COMMON_HERBS = server.getProperty("RateCommonHerbs", 1.);
-			RATE_DROP_HP_HERBS = server.getProperty("RateHpHerbs", 1.);
-			RATE_DROP_MP_HERBS = server.getProperty("RateMpHerbs", 1.);
-			RATE_DROP_SPECIAL_HERBS = server.getProperty("RateSpecialHerbs", 1.);
-			PLAYER_DROP_LIMIT = server.getProperty("PlayerDropLimit", 3);
-			PLAYER_RATE_DROP = server.getProperty("PlayerRateDrop", 5);
-			PLAYER_RATE_DROP_ITEM = server.getProperty("PlayerRateDropItem", 70);
-			PLAYER_RATE_DROP_EQUIP = server.getProperty("PlayerRateDropEquip", 25);
-			PLAYER_RATE_DROP_EQUIP_WEAPON = server.getProperty("PlayerRateDropEquipWeapon", 5);
-			PET_XP_RATE = server.getProperty("PetXpRate", 1.);
-			PET_FOOD_RATE = server.getProperty("PetFoodRate", 1);
-			SINEATER_XP_RATE = server.getProperty("SinEaterXpRate", 1.);
-			KARMA_DROP_LIMIT = server.getProperty("KarmaDropLimit", 10);
-			KARMA_RATE_DROP = server.getProperty("KarmaRateDrop", 70);
-			KARMA_RATE_DROP_ITEM = server.getProperty("KarmaRateDropItem", 50);
-			KARMA_RATE_DROP_EQUIP = server.getProperty("KarmaRateDropEquip", 40);
-			KARMA_RATE_DROP_EQUIP_WEAPON = server.getProperty("KarmaRateDropEquipWeapon", 10);
-			
-			ALLOW_FREIGHT = server.getProperty("AllowFreight", true);
-			ALLOW_WAREHOUSE = server.getProperty("AllowWarehouse", true);
-			ALLOW_WEAR = server.getProperty("AllowWear", true);
-			WEAR_DELAY = server.getProperty("WearDelay", 5);
-			WEAR_PRICE = server.getProperty("WearPrice", 10);
-			ALLOW_LOTTERY = server.getProperty("AllowLottery", true);
-			ALLOW_WATER = server.getProperty("AllowWater", true);
-			ALLOWFISHING = server.getProperty("AllowFishing", false);
-			ALLOW_MANOR = server.getProperty("AllowManor", true);
-			ALLOW_BOAT = server.getProperty("AllowBoat", true);
-			ALLOW_CURSED_WEAPONS = server.getProperty("AllowCursedWeapons", true);
-			
-			String str = server.getProperty("EnableFallingDamage", "auto");
-			ENABLE_FALLING_DAMAGE = "auto".equalsIgnoreCase(str) ? GEODATA > 0 : Boolean.parseBoolean(str);
-			
-			ALT_DEV_NO_SPAWNS = server.getProperty("NoSpawns", false);
-			DEBUG = server.getProperty("Debug", false);
-			DEVELOPER = server.getProperty("Developer", false);
-			PACKET_HANDLER_DEBUG = server.getProperty("PacketHandlerDebug", false);
-			
-			DEADLOCK_DETECTOR = server.getProperty("DeadLockDetector", false);
-			DEADLOCK_CHECK_INTERVAL = server.getProperty("DeadLockCheckInterval", 20);
-			RESTART_ON_DEADLOCK = server.getProperty("RestartOnDeadlock", false);
-			
-			LOG_CHAT = server.getProperty("LogChat", false);
-			LOG_ITEMS = server.getProperty("LogItems", false);
-			GMAUDIT = server.getProperty("GMAudit", false);
-			
-			ENABLE_COMMUNITY_BOARD = server.getProperty("EnableCommunityBoard", false);
-			BBS_DEFAULT = server.getProperty("BBSDefault", "_bbshome");
-			
-			ROLL_DICE_TIME = server.getProperty("RollDiceTime", 4200);
-			HERO_VOICE_TIME = server.getProperty("HeroVoiceTime", 10000);
-			SUBCLASS_TIME = server.getProperty("SubclassTime", 2000);
-			DROP_ITEM_TIME = server.getProperty("DropItemTime", 1000);
-			SERVER_BYPASS_TIME = server.getProperty("ServerBypassTime", 500);
-			MULTISELL_TIME = server.getProperty("MultisellTime", 100);
-			MANUFACTURE_TIME = server.getProperty("ManufactureTime", 300);
-			MANOR_TIME = server.getProperty("ManorTime", 3000);
-			SENDMAIL_TIME = server.getProperty("SendMailTime", 10000);
-			CHARACTER_SELECT_TIME = server.getProperty("CharacterSelectTime", 3000);
-			GLOBAL_CHAT_TIME = server.getProperty("GlobalChatTime", 0);
-			TRADE_CHAT_TIME = server.getProperty("TradeChatTime", 0);
-			SOCIAL_TIME = server.getProperty("SocialTime", 2000);
-			
-			L2WALKER_PROTECTION = server.getProperty("L2WalkerProtection", false);
-			AUTODELETE_INVALID_QUEST_DATA = server.getProperty("AutoDeleteInvalidQuestData", false);
-			ZONE_TOWN = server.getProperty("ZoneTown", 0);
-			SERVER_NEWS = server.getProperty("ShowServerNews", false);
-			DISABLE_TUTORIAL = server.getProperty("DisableTutorial", false);
+			try
+			{
+				result[i][1] = Integer.parseInt(valueSplit[1]);
+			}
+			catch (NumberFormatException e)
+			{
+				_log.warning("Config: Error parsing item amount -> \"" + valueSplit[1] + "\"");
+				return null;
+			}
+			i++;
 		}
-		else if (Server.serverMode == Server.MODE_LOGINSERVER)
-		{
-			_log.info("Loading loginserver configuration files.");
-			
-			ExProperties server = load(LOGIN_CONFIGURATION_FILE);
-			GAME_SERVER_LOGIN_HOST = server.getProperty("LoginHostname", "*");
-			GAME_SERVER_LOGIN_PORT = server.getProperty("LoginPort", 9013);
-			
-			LOGIN_BIND_ADDRESS = server.getProperty("LoginserverHostname", "*");
-			PORT_LOGIN = server.getProperty("LoginserverPort", 2106);
-			
-			DEBUG = server.getProperty("Debug", false);
-			DEVELOPER = server.getProperty("Developer", false);
-			PACKET_HANDLER_DEBUG = server.getProperty("PacketHandlerDebug", false);
-			ACCEPT_NEW_GAMESERVER = server.getProperty("AcceptNewGameServer", true);
-			REQUEST_ID = server.getProperty("RequestServerID", 0);
-			ACCEPT_ALTERNATE_ID = server.getProperty("AcceptAlternateID", true);
-			
-			LOGIN_TRY_BEFORE_BAN = server.getProperty("LoginTryBeforeBan", 10);
-			LOGIN_BLOCK_AFTER_BAN = server.getProperty("LoginBlockAfterBan", 600);
-			
-			LOG_LOGIN_CONTROLLER = server.getProperty("LogLoginController", false);
-			
-			INTERNAL_HOSTNAME = server.getProperty("InternalHostname", "localhost");
-			EXTERNAL_HOSTNAME = server.getProperty("ExternalHostname", "localhost");
-			
-			DATABASE_URL = server.getProperty("URL", "jdbc:mysql://localhost/acis");
-			DATABASE_LOGIN = server.getProperty("Login", "root");
-			DATABASE_PASSWORD = server.getProperty("Password", "");
-			DATABASE_MAX_CONNECTIONS = server.getProperty("MaximumDbConnections", 10);
-			DATABASE_MAX_IDLE_TIME = server.getProperty("MaximumDbIdleTime", 0);
-			
-			SHOW_LICENCE = server.getProperty("ShowLicence", true);
-			
-			AUTO_CREATE_ACCOUNTS = server.getProperty("AutoCreateAccounts", true);
-			
-			FLOOD_PROTECTION = server.getProperty("EnableFloodProtection", true);
-			FAST_CONNECTION_LIMIT = server.getProperty("FastConnectionLimit", 15);
-			NORMAL_CONNECTION_TIME = server.getProperty("NormalConnectionTime", 700);
-			FAST_CONNECTION_TIME = server.getProperty("FastConnectionTime", 350);
-			MAX_CONNECTION_PER_IP = server.getProperty("MaxConnectionPerIP", 50);
-		}
-		else
-			_log.severe("Couldn't load configs: server mode wasn't set.");
+		return result;
 	}
 	
-	// It has no instances
-	private Config()
+	/**
+	 * Loads clan and clan hall settings.
+	 */
+	private static final void loadClans()
 	{
+		final ExProperties clans = initProperties(CLANS_FILE);
+		ALT_CLAN_JOIN_DAYS = clans.getProperty("DaysBeforeJoinAClan", 5);
+		ALT_CLAN_CREATE_DAYS = clans.getProperty("DaysBeforeCreateAClan", 10);
+		ALT_MAX_NUM_OF_CLANS_IN_ALLY = clans.getProperty("AltMaxNumOfClansInAlly", 3);
+		ALT_CLAN_MEMBERS_FOR_WAR = clans.getProperty("AltClanMembersForWar", 15);
+		ALT_CLAN_WAR_PENALTY_WHEN_ENDED = clans.getProperty("AltClanWarPenaltyWhenEnded", 5);
+		ALT_CLAN_DISSOLVE_DAYS = clans.getProperty("DaysToPassToDissolveAClan", 7);
+		ALT_ALLY_JOIN_DAYS_WHEN_LEAVED = clans.getProperty("DaysBeforeJoinAllyWhenLeaved", 1);
+		ALT_ALLY_JOIN_DAYS_WHEN_DISMISSED = clans.getProperty("DaysBeforeJoinAllyWhenDismissed", 1);
+		ALT_ACCEPT_CLAN_DAYS_WHEN_DISMISSED = clans.getProperty("DaysBeforeAcceptNewClanWhenDismissed", 1);
+		ALT_CREATE_ALLY_DAYS_WHEN_DISSOLVED = clans.getProperty("DaysBeforeCreateNewAllyWhenDissolved", 10);
+		ALT_MEMBERS_CAN_WITHDRAW_FROM_CLANWH = clans.getProperty("AltMembersCanWithdrawFromClanWH", false);
+		REMOVE_CASTLE_CIRCLETS = clans.getProperty("RemoveCastleCirclets", true);
+		
+		ALT_MANOR_REFRESH_TIME = clans.getProperty("AltManorRefreshTime", 20);
+		ALT_MANOR_REFRESH_MIN = clans.getProperty("AltManorRefreshMin", 0);
+		ALT_MANOR_APPROVE_TIME = clans.getProperty("AltManorApproveTime", 6);
+		ALT_MANOR_APPROVE_MIN = clans.getProperty("AltManorApproveMin", 0);
+		ALT_MANOR_MAINTENANCE_PERIOD = clans.getProperty("AltManorMaintenancePeriod", 360000);
+		ALT_MANOR_SAVE_ALL_ACTIONS = clans.getProperty("AltManorSaveAllActions", false);
+		ALT_MANOR_SAVE_PERIOD_RATE = clans.getProperty("AltManorSavePeriodRate", 2);
+		
+		CH_TELE_FEE_RATIO = clans.getProperty("ClanHallTeleportFunctionFeeRatio", 86400000);
+		CH_TELE1_FEE = clans.getProperty("ClanHallTeleportFunctionFeeLvl1", 7000);
+		CH_TELE2_FEE = clans.getProperty("ClanHallTeleportFunctionFeeLvl2", 14000);
+		CH_SUPPORT_FEE_RATIO = clans.getProperty("ClanHallSupportFunctionFeeRatio", 86400000);
+		CH_SUPPORT1_FEE = clans.getProperty("ClanHallSupportFeeLvl1", 17500);
+		CH_SUPPORT2_FEE = clans.getProperty("ClanHallSupportFeeLvl2", 35000);
+		CH_SUPPORT3_FEE = clans.getProperty("ClanHallSupportFeeLvl3", 49000);
+		CH_SUPPORT4_FEE = clans.getProperty("ClanHallSupportFeeLvl4", 77000);
+		CH_SUPPORT5_FEE = clans.getProperty("ClanHallSupportFeeLvl5", 147000);
+		CH_SUPPORT6_FEE = clans.getProperty("ClanHallSupportFeeLvl6", 252000);
+		CH_SUPPORT7_FEE = clans.getProperty("ClanHallSupportFeeLvl7", 259000);
+		CH_SUPPORT8_FEE = clans.getProperty("ClanHallSupportFeeLvl8", 364000);
+		CH_MPREG_FEE_RATIO = clans.getProperty("ClanHallMpRegenerationFunctionFeeRatio", 86400000);
+		CH_MPREG1_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl1", 14000);
+		CH_MPREG2_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl2", 26250);
+		CH_MPREG3_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl3", 45500);
+		CH_MPREG4_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl4", 96250);
+		CH_MPREG5_FEE = clans.getProperty("ClanHallMpRegenerationFeeLvl5", 140000);
+		CH_HPREG_FEE_RATIO = clans.getProperty("ClanHallHpRegenerationFunctionFeeRatio", 86400000);
+		CH_HPREG1_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl1", 4900);
+		CH_HPREG2_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl2", 5600);
+		CH_HPREG3_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl3", 7000);
+		CH_HPREG4_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl4", 8166);
+		CH_HPREG5_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl5", 10500);
+		CH_HPREG6_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl6", 12250);
+		CH_HPREG7_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl7", 14000);
+		CH_HPREG8_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl8", 15750);
+		CH_HPREG9_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl9", 17500);
+		CH_HPREG10_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl10", 22750);
+		CH_HPREG11_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl11", 26250);
+		CH_HPREG12_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl12", 29750);
+		CH_HPREG13_FEE = clans.getProperty("ClanHallHpRegenerationFeeLvl13", 36166);
+		CH_EXPREG_FEE_RATIO = clans.getProperty("ClanHallExpRegenerationFunctionFeeRatio", 86400000);
+		CH_EXPREG1_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl1", 21000);
+		CH_EXPREG2_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl2", 42000);
+		CH_EXPREG3_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl3", 63000);
+		CH_EXPREG4_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl4", 105000);
+		CH_EXPREG5_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl5", 147000);
+		CH_EXPREG6_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl6", 163331);
+		CH_EXPREG7_FEE = clans.getProperty("ClanHallExpRegenerationFeeLvl7", 210000);
+		CH_ITEM_FEE_RATIO = clans.getProperty("ClanHallItemCreationFunctionFeeRatio", 86400000);
+		CH_ITEM1_FEE = clans.getProperty("ClanHallItemCreationFunctionFeeLvl1", 210000);
+		CH_ITEM2_FEE = clans.getProperty("ClanHallItemCreationFunctionFeeLvl2", 490000);
+		CH_ITEM3_FEE = clans.getProperty("ClanHallItemCreationFunctionFeeLvl3", 980000);
+		CH_CURTAIN_FEE_RATIO = clans.getProperty("ClanHallCurtainFunctionFeeRatio", 86400000);
+		CH_CURTAIN1_FEE = clans.getProperty("ClanHallCurtainFunctionFeeLvl1", 2002);
+		CH_CURTAIN2_FEE = clans.getProperty("ClanHallCurtainFunctionFeeLvl2", 2625);
+		CH_FRONT_FEE_RATIO = clans.getProperty("ClanHallFrontPlatformFunctionFeeRatio", 86400000);
+		CH_FRONT1_FEE = clans.getProperty("ClanHallFrontPlatformFunctionFeeLvl1", 3031);
+		CH_FRONT2_FEE = clans.getProperty("ClanHallFrontPlatformFunctionFeeLvl2", 9331);
 	}
 	
-	public static void saveHexid(int serverId, String string)
+	/**
+	 * Loads event settings.<br>
+	 * Such as olympiad, seven signs festival, four sepulchures, dimensional rift, weddings, lottery, fishing championship.
+	 */
+	private static final void loadEvents()
 	{
-		Config.saveHexid(serverId, string, HEXID_FILE);
+		final ExProperties events = initProperties(EVENTS_FILE);
+		ALT_OLY_START_TIME = events.getProperty("AltOlyStartTime", 18);
+		ALT_OLY_MIN = events.getProperty("AltOlyMin", 0);
+		ALT_OLY_CPERIOD = events.getProperty("AltOlyCPeriod", 21600000);
+		ALT_OLY_BATTLE = events.getProperty("AltOlyBattle", 180000);
+		ALT_OLY_WPERIOD = events.getProperty("AltOlyWPeriod", 604800000);
+		ALT_OLY_VPERIOD = events.getProperty("AltOlyVPeriod", 86400000);
+		ALT_OLY_WAIT_TIME = events.getProperty("AltOlyWaitTime", 30);
+		ALT_OLY_WAIT_BATTLE = events.getProperty("AltOlyWaitBattle", 60);
+		ALT_OLY_WAIT_END = events.getProperty("AltOlyWaitEnd", 40);
+		ALT_OLY_START_POINTS = events.getProperty("AltOlyStartPoints", 18);
+		ALT_OLY_WEEKLY_POINTS = events.getProperty("AltOlyWeeklyPoints", 3);
+		ALT_OLY_MIN_MATCHES = events.getProperty("AltOlyMinMatchesToBeClassed", 5);
+		ALT_OLY_CLASSED = events.getProperty("AltOlyClassedParticipants", 5);
+		ALT_OLY_NONCLASSED = events.getProperty("AltOlyNonClassedParticipants", 9);
+		ALT_OLY_CLASSED_REWARD = parseItemsList(events.getProperty("AltOlyClassedReward", "6651,50"));
+		ALT_OLY_NONCLASSED_REWARD = parseItemsList(events.getProperty("AltOlyNonClassedReward", "6651,30"));
+		ALT_OLY_GP_PER_POINT = events.getProperty("AltOlyGPPerPoint", 1000);
+		ALT_OLY_HERO_POINTS = events.getProperty("AltOlyHeroPoints", 300);
+		ALT_OLY_RANK1_POINTS = events.getProperty("AltOlyRank1Points", 100);
+		ALT_OLY_RANK2_POINTS = events.getProperty("AltOlyRank2Points", 75);
+		ALT_OLY_RANK3_POINTS = events.getProperty("AltOlyRank3Points", 55);
+		ALT_OLY_RANK4_POINTS = events.getProperty("AltOlyRank4Points", 40);
+		ALT_OLY_RANK5_POINTS = events.getProperty("AltOlyRank5Points", 30);
+		ALT_OLY_MAX_POINTS = events.getProperty("AltOlyMaxPoints", 10);
+		ALT_OLY_DIVIDER_CLASSED = events.getProperty("AltOlyDividerClassed", 3);
+		ALT_OLY_DIVIDER_NON_CLASSED = events.getProperty("AltOlyDividerNonClassed", 3);
+		ALT_OLY_ANNOUNCE_GAMES = events.getProperty("AltOlyAnnounceGames", true);
+		
+		ALT_GAME_CASTLE_DAWN = events.getProperty("AltCastleForDawn", true);
+		ALT_GAME_CASTLE_DUSK = events.getProperty("AltCastleForDusk", true);
+		ALT_FESTIVAL_MIN_PLAYER = events.getProperty("AltFestivalMinPlayer", 5);
+		ALT_MAXIMUM_PLAYER_CONTRIB = events.getProperty("AltMaxPlayerContrib", 1000000);
+		ALT_FESTIVAL_MANAGER_START = events.getProperty("AltFestivalManagerStart", 120000);
+		ALT_FESTIVAL_LENGTH = events.getProperty("AltFestivalLength", 1080000);
+		ALT_FESTIVAL_CYCLE_LENGTH = events.getProperty("AltFestivalCycleLength", 2280000);
+		ALT_FESTIVAL_FIRST_SPAWN = events.getProperty("AltFestivalFirstSpawn", 120000);
+		ALT_FESTIVAL_FIRST_SWARM = events.getProperty("AltFestivalFirstSwarm", 300000);
+		ALT_FESTIVAL_SECOND_SPAWN = events.getProperty("AltFestivalSecondSpawn", 540000);
+		ALT_FESTIVAL_SECOND_SWARM = events.getProperty("AltFestivalSecondSwarm", 720000);
+		ALT_FESTIVAL_CHEST_SPAWN = events.getProperty("AltFestivalChestSpawn", 900000);
+		ALT_SEVENSIGNS_LAZY_UPDATE = events.getProperty("AltSevenSignsLazyUpdate", true);
+		
+		FS_TIME_ATTACK = events.getProperty("TimeOfAttack", 50);
+		FS_TIME_ENTRY = events.getProperty("TimeOfEntry", 3);
+		FS_TIME_WARMUP = events.getProperty("TimeOfWarmUp", 2);
+		FS_PARTY_MEMBER_COUNT = events.getProperty("NumberOfNecessaryPartyMembers", 4);
+		
+		RIFT_MIN_PARTY_SIZE = events.getProperty("RiftMinPartySize", 2);
+		RIFT_MAX_JUMPS = events.getProperty("MaxRiftJumps", 4);
+		RIFT_SPAWN_DELAY = events.getProperty("RiftSpawnDelay", 10000);
+		RIFT_AUTO_JUMPS_TIME_MIN = events.getProperty("AutoJumpsDelayMin", 480);
+		RIFT_AUTO_JUMPS_TIME_MAX = events.getProperty("AutoJumpsDelayMax", 600);
+		RIFT_ENTER_COST_RECRUIT = events.getProperty("RecruitCost", 18);
+		RIFT_ENTER_COST_SOLDIER = events.getProperty("SoldierCost", 21);
+		RIFT_ENTER_COST_OFFICER = events.getProperty("OfficerCost", 24);
+		RIFT_ENTER_COST_CAPTAIN = events.getProperty("CaptainCost", 27);
+		RIFT_ENTER_COST_COMMANDER = events.getProperty("CommanderCost", 30);
+		RIFT_ENTER_COST_HERO = events.getProperty("HeroCost", 33);
+		RIFT_BOSS_ROOM_TIME_MUTIPLY = events.getProperty("BossRoomTimeMultiply", 1.);
+		
+		ALLOW_WEDDING = events.getProperty("AllowWedding", false);
+		WEDDING_PRICE = events.getProperty("WeddingPrice", 1000000);
+		WEDDING_SAMESEX = events.getProperty("WeddingAllowSameSex", false);
+		WEDDING_FORMALWEAR = events.getProperty("WeddingFormalWear", true);
+		
+		ALT_LOTTERY_PRIZE = events.getProperty("AltLotteryPrize", 50000);
+		ALT_LOTTERY_TICKET_PRICE = events.getProperty("AltLotteryTicketPrice", 2000);
+		ALT_LOTTERY_5_NUMBER_RATE = events.getProperty("AltLottery5NumberRate", 0.6);
+		ALT_LOTTERY_4_NUMBER_RATE = events.getProperty("AltLottery4NumberRate", 0.2);
+		ALT_LOTTERY_3_NUMBER_RATE = events.getProperty("AltLottery3NumberRate", 0.2);
+		ALT_LOTTERY_2_AND_1_NUMBER_PRIZE = events.getProperty("AltLottery2and1NumberPrize", 200);
+		
+		ALT_FISH_CHAMPIONSHIP_ENABLED = events.getProperty("AltFishChampionshipEnabled", true);
+		ALT_FISH_CHAMPIONSHIP_REWARD_ITEM = events.getProperty("AltFishChampionshipRewardItemId", 57);
+		ALT_FISH_CHAMPIONSHIP_REWARD_1 = events.getProperty("AltFishChampionshipReward1", 800000);
+		ALT_FISH_CHAMPIONSHIP_REWARD_2 = events.getProperty("AltFishChampionshipReward2", 500000);
+		ALT_FISH_CHAMPIONSHIP_REWARD_3 = events.getProperty("AltFishChampionshipReward3", 300000);
+		ALT_FISH_CHAMPIONSHIP_REWARD_4 = events.getProperty("AltFishChampionshipReward4", 200000);
+		ALT_FISH_CHAMPIONSHIP_REWARD_5 = events.getProperty("AltFishChampionshipReward5", 100000);
 	}
 	
-	public static void saveHexid(int serverId, String hexId, String fileName)
+	/**
+	 * Loads geoengine settings.
+	 */
+	private static final void loadGeoengine()
+	{
+		final ExProperties geoengine = initProperties(GEOENGINE_FILE);
+		GEODATA_PATH = geoengine.getProperty("GeoDataPath", "./data/geodata/");
+		COORD_SYNCHRONIZE = geoengine.getProperty("CoordSynchronize", -1);
+		
+		PART_OF_CHARACTER_HEIGHT = geoengine.getProperty("PartOfCharacterHeight", 75);
+		MAX_OBSTACLE_HEIGHT = geoengine.getProperty("MaxObstacleHeight", 32);
+		
+		PATHFINDING = geoengine.getProperty("PathFinding", true);
+		PATHFIND_BUFFERS = geoengine.getProperty("PathFindBuffers", "100x6;128x6;192x6;256x4;320x4;384x4;500x2");
+		BASE_WEIGHT = geoengine.getProperty("BaseWeight", 10);
+		DIAGONAL_WEIGHT = geoengine.getProperty("DiagonalWeight", 14);
+		OBSTACLE_MULTIPLIER = geoengine.getProperty("ObstacleMultiplier", 10);
+		HEURISTIC_WEIGHT = geoengine.getProperty("HeuristicWeight", 20);
+		MAX_ITERATIONS = geoengine.getProperty("MaxIterations", 3500);
+		DEBUG_PATH = geoengine.getProperty("DebugPath", false);
+		DEBUG_GEO_NODE = geoengine.getProperty("DebugGeoNode", false);
+	}
+	
+	/**
+	 * Loads hex ID settings.
+	 */
+	private static final void loadHexID()
+	{
+		final ExProperties hexid = initProperties(HEXID_FILE);
+		SERVER_ID = Integer.parseInt(hexid.getProperty("ServerID"));
+		HEX_ID = new BigInteger(hexid.getProperty("HexID"), 16).toByteArray();
+	}
+	
+	/**
+	 * Saves hex ID file.
+	 * @param serverId : The ID of server.
+	 * @param hexId : The hex ID of server.
+	 */
+	public static final void saveHexid(int serverId, String hexId)
+	{
+		saveHexid(serverId, hexId, HEXID_FILE);
+	}
+	
+	/**
+	 * Saves hexID file.
+	 * @param serverId : The ID of server.
+	 * @param hexId : The hexID of server.
+	 * @param filename : The file name.
+	 */
+	public static final void saveHexid(int serverId, String hexId, String filename)
 	{
 		try
 		{
 			Properties hexSetting = new Properties();
-			File file = new File(fileName);
+			File file = new File(filename);
 			file.createNewFile();
 			
 			OutputStream out = new FileOutputStream(file);
@@ -1297,12 +974,494 @@ public final class Config
 		}
 		catch (Exception e)
 		{
-			_log.warning("Failed to save hex id to " + fileName + " file.");
+			_log.warning("Config: Failed to save hex ID to \"" + filename + "\" file.");
 			e.printStackTrace();
 		}
 	}
 	
-	public static class ClassMasterSettings
+	/**
+	 * Loads NPC settings.<br>
+	 * Such as champion monsters, NPC buffer, class master, wyvern, raid bosses and grand bosses, AI.
+	 */
+	private static final void loadNpcs()
+	{
+		final ExProperties npcs = initProperties(NPCS_FILE);
+		CHAMPION_FREQUENCY = npcs.getProperty("ChampionFrequency", 0);
+		CHAMP_MIN_LVL = npcs.getProperty("ChampionMinLevel", 20);
+		CHAMP_MAX_LVL = npcs.getProperty("ChampionMaxLevel", 70);
+		CHAMPION_HP = npcs.getProperty("ChampionHp", 8);
+		CHAMPION_HP_REGEN = npcs.getProperty("ChampionHpRegen", 1.);
+		CHAMPION_REWARDS = npcs.getProperty("ChampionRewards", 8);
+		CHAMPION_ADENAS_REWARDS = npcs.getProperty("ChampionAdenasRewards", 1);
+		CHAMPION_ATK = npcs.getProperty("ChampionAtk", 1.);
+		CHAMPION_SPD_ATK = npcs.getProperty("ChampionSpdAtk", 1.);
+		CHAMPION_REWARD = npcs.getProperty("ChampionRewardItem", 0);
+		CHAMPION_REWARD_ID = npcs.getProperty("ChampionRewardItemID", 6393);
+		CHAMPION_REWARD_QTY = npcs.getProperty("ChampionRewardItemQty", 1);
+		
+		BUFFER_MAX_SCHEMES = npcs.getProperty("BufferMaxSchemesPerChar", 4);
+		BUFFER_MAX_SKILLS = npcs.getProperty("BufferMaxSkillsPerScheme", 24);
+		BUFFER_STATIC_BUFF_COST = npcs.getProperty("BufferStaticCostPerBuff", -1);
+		BUFFER_BUFFS = npcs.getProperty("BufferBuffs");
+		
+		BUFFER_BUFFLIST = new HashMap<>();
+		for (String skillInfo : BUFFER_BUFFS.split(";"))
+		{
+			final String[] infos = skillInfo.split(",");
+			BUFFER_BUFFLIST.put(Integer.valueOf(infos[0]), new BuffSkillHolder(Integer.valueOf(infos[0]), Integer.valueOf(infos[1]), infos[2]));
+		}
+		
+		ALLOW_CLASS_MASTERS = npcs.getProperty("AllowClassMasters", false);
+		ALLOW_ENTIRE_TREE = npcs.getProperty("AllowEntireTree", false);
+		if (ALLOW_CLASS_MASTERS)
+			CLASS_MASTER_SETTINGS = new ClassMasterSettings(npcs.getProperty("ConfigClassMaster"));
+		
+		ALT_GAME_FREE_TELEPORT = npcs.getProperty("AltFreeTeleporting", false);
+		ANNOUNCE_MAMMON_SPAWN = npcs.getProperty("AnnounceMammonSpawn", true);
+		ALT_MOB_AGRO_IN_PEACEZONE = npcs.getProperty("AltMobAgroInPeaceZone", true);
+		SHOW_NPC_LVL = npcs.getProperty("ShowNpcLevel", false);
+		SHOW_NPC_CREST = npcs.getProperty("ShowNpcCrest", false);
+		SHOW_SUMMON_CREST = npcs.getProperty("ShowSummonCrest", false);
+		
+		WYVERN_ALLOW_UPGRADER = npcs.getProperty("AllowWyvernUpgrader", true);
+		WYVERN_REQUIRED_LEVEL = npcs.getProperty("RequiredStriderLevel", 55);
+		WYVERN_REQUIRED_CRYSTALS = npcs.getProperty("RequiredCrystalsNumber", 10);
+		
+		RAID_HP_REGEN_MULTIPLIER = npcs.getProperty("RaidHpRegenMultiplier", 1.);
+		RAID_MP_REGEN_MULTIPLIER = npcs.getProperty("RaidMpRegenMultiplier", 1.);
+		RAID_DEFENCE_MULTIPLIER = npcs.getProperty("RaidDefenceMultiplier", 1.);
+		RAID_MINION_RESPAWN_TIMER = npcs.getProperty("RaidMinionRespawnTime", 300000);
+		
+		RAID_DISABLE_CURSE = npcs.getProperty("DisableRaidCurse", false);
+		RAID_CHAOS_TIME = npcs.getProperty("RaidChaosTime", 30);
+		GRAND_CHAOS_TIME = npcs.getProperty("GrandChaosTime", 30);
+		MINION_CHAOS_TIME = npcs.getProperty("MinionChaosTime", 30);
+		
+		SPAWN_INTERVAL_AQ = npcs.getProperty("AntQueenSpawnInterval", 36);
+		RANDOM_SPAWN_TIME_AQ = npcs.getProperty("AntQueenRandomSpawn", 17);
+		
+		SPAWN_INTERVAL_ANTHARAS = npcs.getProperty("AntharasSpawnInterval", 264);
+		RANDOM_SPAWN_TIME_ANTHARAS = npcs.getProperty("AntharasRandomSpawn", 72);
+		WAIT_TIME_ANTHARAS = npcs.getProperty("AntharasWaitTime", 30) * 60000;
+		
+		SPAWN_INTERVAL_BAIUM = npcs.getProperty("BaiumSpawnInterval", 168);
+		RANDOM_SPAWN_TIME_BAIUM = npcs.getProperty("BaiumRandomSpawn", 48);
+		
+		SPAWN_INTERVAL_CORE = npcs.getProperty("CoreSpawnInterval", 60);
+		RANDOM_SPAWN_TIME_CORE = npcs.getProperty("CoreRandomSpawn", 23);
+		
+		SPAWN_INTERVAL_FRINTEZZA = npcs.getProperty("FrintezzaSpawnInterval", 48);
+		RANDOM_SPAWN_TIME_FRINTEZZA = npcs.getProperty("FrintezzaRandomSpawn", 8);
+		WAIT_TIME_FRINTEZZA = npcs.getProperty("FrintezzaWaitTime", 1) * 60000;
+		
+		SPAWN_INTERVAL_ORFEN = npcs.getProperty("OrfenSpawnInterval", 48);
+		RANDOM_SPAWN_TIME_ORFEN = npcs.getProperty("OrfenRandomSpawn", 20);
+		
+		SPAWN_INTERVAL_SAILREN = npcs.getProperty("SailrenSpawnInterval", 36);
+		RANDOM_SPAWN_TIME_SAILREN = npcs.getProperty("SailrenRandomSpawn", 24);
+		WAIT_TIME_SAILREN = npcs.getProperty("SailrenWaitTime", 5) * 60000;
+		
+		SPAWN_INTERVAL_VALAKAS = npcs.getProperty("ValakasSpawnInterval", 264);
+		RANDOM_SPAWN_TIME_VALAKAS = npcs.getProperty("ValakasRandomSpawn", 72);
+		WAIT_TIME_VALAKAS = npcs.getProperty("ValakasWaitTime", 30) * 60000;
+		
+		SPAWN_INTERVAL_ZAKEN = npcs.getProperty("ZakenSpawnInterval", 60);
+		RANDOM_SPAWN_TIME_ZAKEN = npcs.getProperty("ZakenRandomSpawn", 20);
+		
+		GUARD_ATTACK_AGGRO_MOB = npcs.getProperty("GuardAttackAggroMob", false);
+		MAX_DRIFT_RANGE = npcs.getProperty("MaxDriftRange", 300);
+		KNOWNLIST_UPDATE_INTERVAL = npcs.getProperty("KnownListUpdateInterval", 1250);
+		MIN_NPC_ANIMATION = npcs.getProperty("MinNPCAnimation", 20);
+		MAX_NPC_ANIMATION = npcs.getProperty("MaxNPCAnimation", 40);
+		MIN_MONSTER_ANIMATION = npcs.getProperty("MinMonsterAnimation", 10);
+		MAX_MONSTER_ANIMATION = npcs.getProperty("MaxMonsterAnimation", 40);
+		
+		GRIDS_ALWAYS_ON = npcs.getProperty("GridsAlwaysOn", false);
+		GRID_NEIGHBOR_TURNON_TIME = npcs.getProperty("GridNeighborTurnOnTime", 1);
+		GRID_NEIGHBOR_TURNOFF_TIME = npcs.getProperty("GridNeighborTurnOffTime", 90);
+	}
+	
+	/**
+	 * Loads player settings.<br>
+	 * Such as stats, inventory/warehouse, enchant, augmentation, karma, party, admin, petition, skill learn.
+	 */
+	private static final void loadPlayers()
+	{
+		final ExProperties players = initProperties(PLAYERS_FILE);
+		STARTING_ADENA = players.getProperty("StartingAdena", 100);
+		EFFECT_CANCELING = players.getProperty("CancelLesserEffect", true);
+		HP_REGEN_MULTIPLIER = players.getProperty("HpRegenMultiplier", 1.);
+		MP_REGEN_MULTIPLIER = players.getProperty("MpRegenMultiplier", 1.);
+		CP_REGEN_MULTIPLIER = players.getProperty("CpRegenMultiplier", 1.);
+		PLAYER_SPAWN_PROTECTION = players.getProperty("PlayerSpawnProtection", 0);
+		PLAYER_FAKEDEATH_UP_PROTECTION = players.getProperty("PlayerFakeDeathUpProtection", 0);
+		RESPAWN_RESTORE_HP = players.getProperty("RespawnRestoreHP", 0.7);
+		MAX_PVTSTORE_SLOTS_DWARF = players.getProperty("MaxPvtStoreSlotsDwarf", 5);
+		MAX_PVTSTORE_SLOTS_OTHER = players.getProperty("MaxPvtStoreSlotsOther", 4);
+		DEEPBLUE_DROP_RULES = players.getProperty("UseDeepBlueDropRules", true);
+		ALT_GAME_DELEVEL = players.getProperty("Delevel", true);
+		DEATH_PENALTY_CHANCE = players.getProperty("DeathPenaltyChance", 20);
+		
+		INVENTORY_MAXIMUM_NO_DWARF = players.getProperty("MaximumSlotsForNoDwarf", 80);
+		INVENTORY_MAXIMUM_DWARF = players.getProperty("MaximumSlotsForDwarf", 100);
+		INVENTORY_MAXIMUM_QUEST_ITEMS = players.getProperty("MaximumSlotsForQuestItems", 100);
+		INVENTORY_MAXIMUM_PET = players.getProperty("MaximumSlotsForPet", 12);
+		MAX_ITEM_IN_PACKET = Math.max(INVENTORY_MAXIMUM_NO_DWARF, INVENTORY_MAXIMUM_DWARF);
+		ALT_WEIGHT_LIMIT = players.getProperty("AltWeightLimit", 1);
+		WAREHOUSE_SLOTS_NO_DWARF = players.getProperty("MaximumWarehouseSlotsForNoDwarf", 100);
+		WAREHOUSE_SLOTS_DWARF = players.getProperty("MaximumWarehouseSlotsForDwarf", 120);
+		WAREHOUSE_SLOTS_CLAN = players.getProperty("MaximumWarehouseSlotsForClan", 150);
+		FREIGHT_SLOTS = players.getProperty("MaximumFreightSlots", 20);
+		ALT_GAME_FREIGHTS = players.getProperty("AltGameFreights", false);
+		ALT_GAME_FREIGHT_PRICE = players.getProperty("AltGameFreightPrice", 1000);
+		
+		ENCHANT_CHANCE_WEAPON_MAGIC = players.getProperty("EnchantChanceMagicWeapon", 0.4);
+		ENCHANT_CHANCE_WEAPON_MAGIC_15PLUS = players.getProperty("EnchantChanceMagicWeapon15Plus", 0.2);
+		ENCHANT_CHANCE_WEAPON_NONMAGIC = players.getProperty("EnchantChanceNonMagicWeapon", 0.7);
+		ENCHANT_CHANCE_WEAPON_NONMAGIC_15PLUS = players.getProperty("EnchantChanceNonMagicWeapon15Plus", 0.35);
+		ENCHANT_CHANCE_ARMOR = players.getProperty("EnchantChanceArmor", 0.66);
+		ENCHANT_MAX_WEAPON = players.getProperty("EnchantMaxWeapon", 0);
+		ENCHANT_MAX_ARMOR = players.getProperty("EnchantMaxArmor", 0);
+		ENCHANT_SAFE_MAX = players.getProperty("EnchantSafeMax", 3);
+		ENCHANT_SAFE_MAX_FULL = players.getProperty("EnchantSafeMaxFull", 4);
+		
+		AUGMENTATION_NG_SKILL_CHANCE = players.getProperty("AugmentationNGSkillChance", 15);
+		AUGMENTATION_NG_GLOW_CHANCE = players.getProperty("AugmentationNGGlowChance", 0);
+		AUGMENTATION_MID_SKILL_CHANCE = players.getProperty("AugmentationMidSkillChance", 30);
+		AUGMENTATION_MID_GLOW_CHANCE = players.getProperty("AugmentationMidGlowChance", 40);
+		AUGMENTATION_HIGH_SKILL_CHANCE = players.getProperty("AugmentationHighSkillChance", 45);
+		AUGMENTATION_HIGH_GLOW_CHANCE = players.getProperty("AugmentationHighGlowChance", 70);
+		AUGMENTATION_TOP_SKILL_CHANCE = players.getProperty("AugmentationTopSkillChance", 60);
+		AUGMENTATION_TOP_GLOW_CHANCE = players.getProperty("AugmentationTopGlowChance", 100);
+		AUGMENTATION_BASESTAT_CHANCE = players.getProperty("AugmentationBaseStatChance", 1);
+		
+		KARMA_PLAYER_CAN_BE_KILLED_IN_PZ = players.getProperty("KarmaPlayerCanBeKilledInPeaceZone", false);
+		KARMA_PLAYER_CAN_SHOP = players.getProperty("KarmaPlayerCanShop", true);
+		KARMA_PLAYER_CAN_USE_GK = players.getProperty("KarmaPlayerCanUseGK", false);
+		KARMA_PLAYER_CAN_TELEPORT = players.getProperty("KarmaPlayerCanTeleport", true);
+		KARMA_PLAYER_CAN_TRADE = players.getProperty("KarmaPlayerCanTrade", true);
+		KARMA_PLAYER_CAN_USE_WH = players.getProperty("KarmaPlayerCanUseWareHouse", true);
+		KARMA_DROP_GM = players.getProperty("CanGMDropEquipment", false);
+		KARMA_AWARD_PK_KILL = players.getProperty("AwardPKKillPVPPoint", true);
+		KARMA_PK_LIMIT = players.getProperty("MinimumPKRequiredToDrop", 5);
+		KARMA_NONDROPPABLE_PET_ITEMS = players.getProperty("ListOfPetItems", "2375,3500,3501,3502,4422,4423,4424,4425,6648,6649,6650");
+		KARMA_NONDROPPABLE_ITEMS = players.getProperty("ListOfNonDroppableItemsForPK", "1147,425,1146,461,10,2368,7,6,2370,2369");
+		
+		String[] array = KARMA_NONDROPPABLE_PET_ITEMS.split(",");
+		KARMA_LIST_NONDROPPABLE_PET_ITEMS = new int[array.length];
+		
+		for (int i = 0; i < array.length; i++)
+			KARMA_LIST_NONDROPPABLE_PET_ITEMS[i] = Integer.parseInt(array[i]);
+		
+		array = KARMA_NONDROPPABLE_ITEMS.split(",");
+		KARMA_LIST_NONDROPPABLE_ITEMS = new int[array.length];
+		
+		for (int i = 0; i < array.length; i++)
+			KARMA_LIST_NONDROPPABLE_ITEMS[i] = Integer.parseInt(array[i]);
+		
+		// sorting so binarySearch can be used later
+		Arrays.sort(KARMA_LIST_NONDROPPABLE_PET_ITEMS);
+		Arrays.sort(KARMA_LIST_NONDROPPABLE_ITEMS);
+		
+		PVP_NORMAL_TIME = players.getProperty("PvPVsNormalTime", 15000);
+		PVP_PVP_TIME = players.getProperty("PvPVsPvPTime", 30000);
+		
+		PARTY_XP_CUTOFF_METHOD = players.getProperty("PartyXpCutoffMethod", "level");
+		PARTY_XP_CUTOFF_PERCENT = players.getProperty("PartyXpCutoffPercent", 3.);
+		PARTY_XP_CUTOFF_LEVEL = players.getProperty("PartyXpCutoffLevel", 20);
+		ALT_PARTY_RANGE = players.getProperty("AltPartyRange", 1600);
+		ALT_PARTY_RANGE2 = players.getProperty("AltPartyRange2", 1400);
+		ALT_LEAVE_PARTY_LEADER = players.getProperty("AltLeavePartyLeader", false);
+		
+		EVERYBODY_HAS_ADMIN_RIGHTS = players.getProperty("EverybodyHasAdminRights", false);
+		MASTERACCESS_LEVEL = players.getProperty("MasterAccessLevel", 127);
+		MASTERACCESS_NAME_COLOR = Integer.decode("0x" + players.getProperty("MasterNameColor", "00FF00"));
+		MASTERACCESS_TITLE_COLOR = Integer.decode("0x" + players.getProperty("MasterTitleColor", "00FF00"));
+		GM_HERO_AURA = players.getProperty("GMHeroAura", false);
+		GM_STARTUP_INVULNERABLE = players.getProperty("GMStartupInvulnerable", true);
+		GM_STARTUP_INVISIBLE = players.getProperty("GMStartupInvisible", true);
+		GM_STARTUP_SILENCE = players.getProperty("GMStartupSilence", true);
+		GM_STARTUP_AUTO_LIST = players.getProperty("GMStartupAutoList", true);
+		
+		PETITIONING_ALLOWED = players.getProperty("PetitioningAllowed", true);
+		MAX_PETITIONS_PER_PLAYER = players.getProperty("MaxPetitionsPerPlayer", 5);
+		MAX_PETITIONS_PENDING = players.getProperty("MaxPetitionsPending", 25);
+		
+		IS_CRAFTING_ENABLED = players.getProperty("CraftingEnabled", true);
+		DWARF_RECIPE_LIMIT = players.getProperty("DwarfRecipeLimit", 50);
+		COMMON_RECIPE_LIMIT = players.getProperty("CommonRecipeLimit", 50);
+		ALT_BLACKSMITH_USE_RECIPES = players.getProperty("AltBlacksmithUseRecipes", true);
+		
+		AUTO_LEARN_SKILLS = players.getProperty("AutoLearnSkills", false);
+		ALT_GAME_MAGICFAILURES = players.getProperty("MagicFailures", true);
+		ALT_GAME_SHIELD_BLOCKS = players.getProperty("AltShieldBlocks", false);
+		ALT_PERFECT_SHLD_BLOCK = players.getProperty("AltPerfectShieldBlockRate", 10);
+		LIFE_CRYSTAL_NEEDED = players.getProperty("LifeCrystalNeeded", true);
+		SP_BOOK_NEEDED = players.getProperty("SpBookNeeded", true);
+		ES_SP_BOOK_NEEDED = players.getProperty("EnchantSkillSpBookNeeded", true);
+		DIVINE_SP_BOOK_NEEDED = players.getProperty("DivineInspirationSpBookNeeded", true);
+		ALT_GAME_SUBCLASS_WITHOUT_QUESTS = players.getProperty("AltSubClassWithoutQuests", false);
+		
+		BUFFS_MAX_AMOUNT = players.getProperty("MaxBuffsAmount", 20);
+		STORE_SKILL_COOLTIME = players.getProperty("StoreSkillCooltime", true);
+	}
+	
+	/**
+	 * Loads gameserver settings.<br>
+	 * IP addresses, database, rates, feature enabled/disabled, misc.
+	 */
+	private static final void loadServer()
+	{
+		final ExProperties server = initProperties(SERVER_FILE);
+		
+		GAMESERVER_HOSTNAME = server.getProperty("GameserverHostname");
+		PORT_GAME = server.getProperty("GameserverPort", 7777);
+		
+		EXTERNAL_HOSTNAME = server.getProperty("ExternalHostname", "*");
+		INTERNAL_HOSTNAME = server.getProperty("InternalHostname", "*");
+		
+		GAME_SERVER_LOGIN_PORT = server.getProperty("LoginPort", 9014);
+		GAME_SERVER_LOGIN_HOST = server.getProperty("LoginHost", "127.0.0.1");
+		
+		REQUEST_ID = server.getProperty("RequestServerID", 0);
+		ACCEPT_ALTERNATE_ID = server.getProperty("AcceptAlternateID", true);
+		
+		DATABASE_URL = server.getProperty("URL", "jdbc:mysql://localhost/acis");
+		DATABASE_LOGIN = server.getProperty("Login", "root");
+		DATABASE_PASSWORD = server.getProperty("Password", "");
+		DATABASE_MAX_CONNECTIONS = server.getProperty("MaximumDbConnections", 10);
+		DATABASE_MAX_IDLE_TIME = server.getProperty("MaximumDbIdleTime", 0);
+		
+		SERVER_LIST_BRACKET = server.getProperty("ServerListBrackets", false);
+		SERVER_LIST_CLOCK = server.getProperty("ServerListClock", false);
+		SERVER_GMONLY = server.getProperty("ServerGMOnly", false);
+		SERVER_LIST_TESTSERVER = server.getProperty("TestServer", false);
+		
+		DELETE_DAYS = server.getProperty("DeleteCharAfterDays", 7);
+		MAXIMUM_ONLINE_USERS = server.getProperty("MaximumOnlineUsers", 100);
+		MIN_PROTOCOL_REVISION = server.getProperty("MinProtocolRevision", 730);
+		MAX_PROTOCOL_REVISION = server.getProperty("MaxProtocolRevision", 746);
+		if (MIN_PROTOCOL_REVISION > MAX_PROTOCOL_REVISION)
+			throw new Error("MinProtocolRevision is bigger than MaxProtocolRevision in server.properties.");
+		
+		DEFAULT_PUNISH = server.getProperty("DefaultPunish", 2);
+		DEFAULT_PUNISH_PARAM = server.getProperty("DefaultPunishParam", 0);
+		
+		AUTO_LOOT = server.getProperty("AutoLoot", false);
+		AUTO_LOOT_HERBS = server.getProperty("AutoLootHerbs", false);
+		AUTO_LOOT_RAID = server.getProperty("AutoLootRaid", false);
+		
+		ALLOW_DISCARDITEM = server.getProperty("AllowDiscardItem", true);
+		MULTIPLE_ITEM_DROP = server.getProperty("MultipleItemDrop", true);
+		HERB_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyHerbTime", 15) * 1000;
+		ITEM_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyItemTime", 600) * 1000;
+		EQUIPABLE_ITEM_AUTO_DESTROY_TIME = server.getProperty("AutoDestroyEquipableItemTime", 0) * 1000;
+		SPECIAL_ITEM_DESTROY_TIME = new HashMap<>();
+		String[] data = server.getProperty("AutoDestroySpecialItemTime", (String[]) null, ",");
+		if (data != null)
+		{
+			for (String itemData : data)
+			{
+				String[] item = itemData.split("-");
+				SPECIAL_ITEM_DESTROY_TIME.put(Integer.parseInt(item[0]), Integer.parseInt(item[1]) * 1000);
+			}
+		}
+		PLAYER_DROPPED_ITEM_MULTIPLIER = server.getProperty("PlayerDroppedItemMultiplier", 1);
+		SAVE_DROPPED_ITEM = server.getProperty("SaveDroppedItem", false);
+		
+		RATE_XP = server.getProperty("RateXp", 1.);
+		RATE_SP = server.getProperty("RateSp", 1.);
+		RATE_PARTY_XP = server.getProperty("RatePartyXp", 1.);
+		RATE_PARTY_SP = server.getProperty("RatePartySp", 1.);
+		RATE_DROP_ADENA = server.getProperty("RateDropAdena", 1.);
+		RATE_CONSUMABLE_COST = server.getProperty("RateConsumableCost", 1.);
+		RATE_DROP_ITEMS = server.getProperty("RateDropItems", 1.);
+		RATE_DROP_ITEMS_BY_RAID = server.getProperty("RateRaidDropItems", 1.);
+		RATE_DROP_SPOIL = server.getProperty("RateDropSpoil", 1.);
+		RATE_DROP_MANOR = server.getProperty("RateDropManor", 1);
+		RATE_QUEST_DROP = server.getProperty("RateQuestDrop", 1.);
+		RATE_QUEST_REWARD = server.getProperty("RateQuestReward", 1.);
+		RATE_QUEST_REWARD_XP = server.getProperty("RateQuestRewardXP", 1.);
+		RATE_QUEST_REWARD_SP = server.getProperty("RateQuestRewardSP", 1.);
+		RATE_QUEST_REWARD_ADENA = server.getProperty("RateQuestRewardAdena", 1.);
+		RATE_KARMA_EXP_LOST = server.getProperty("RateKarmaExpLost", 1.);
+		RATE_SIEGE_GUARDS_PRICE = server.getProperty("RateSiegeGuardsPrice", 1.);
+		RATE_DROP_COMMON_HERBS = server.getProperty("RateCommonHerbs", 1.);
+		RATE_DROP_HP_HERBS = server.getProperty("RateHpHerbs", 1.);
+		RATE_DROP_MP_HERBS = server.getProperty("RateMpHerbs", 1.);
+		RATE_DROP_SPECIAL_HERBS = server.getProperty("RateSpecialHerbs", 1.);
+		PLAYER_DROP_LIMIT = server.getProperty("PlayerDropLimit", 3);
+		PLAYER_RATE_DROP = server.getProperty("PlayerRateDrop", 5);
+		PLAYER_RATE_DROP_ITEM = server.getProperty("PlayerRateDropItem", 70);
+		PLAYER_RATE_DROP_EQUIP = server.getProperty("PlayerRateDropEquip", 25);
+		PLAYER_RATE_DROP_EQUIP_WEAPON = server.getProperty("PlayerRateDropEquipWeapon", 5);
+		PET_XP_RATE = server.getProperty("PetXpRate", 1.);
+		PET_FOOD_RATE = server.getProperty("PetFoodRate", 1);
+		SINEATER_XP_RATE = server.getProperty("SinEaterXpRate", 1.);
+		KARMA_DROP_LIMIT = server.getProperty("KarmaDropLimit", 10);
+		KARMA_RATE_DROP = server.getProperty("KarmaRateDrop", 70);
+		KARMA_RATE_DROP_ITEM = server.getProperty("KarmaRateDropItem", 50);
+		KARMA_RATE_DROP_EQUIP = server.getProperty("KarmaRateDropEquip", 40);
+		KARMA_RATE_DROP_EQUIP_WEAPON = server.getProperty("KarmaRateDropEquipWeapon", 10);
+		
+		ALLOW_FREIGHT = server.getProperty("AllowFreight", true);
+		ALLOW_WAREHOUSE = server.getProperty("AllowWarehouse", true);
+		ALLOW_WEAR = server.getProperty("AllowWear", true);
+		WEAR_DELAY = server.getProperty("WearDelay", 5);
+		WEAR_PRICE = server.getProperty("WearPrice", 10);
+		ALLOW_LOTTERY = server.getProperty("AllowLottery", true);
+		ALLOW_WATER = server.getProperty("AllowWater", true);
+		ALLOW_MANOR = server.getProperty("AllowManor", true);
+		ALLOW_BOAT = server.getProperty("AllowBoat", true);
+		ALLOW_CURSED_WEAPONS = server.getProperty("AllowCursedWeapons", true);
+		
+		ENABLE_FALLING_DAMAGE = server.getProperty("EnableFallingDamage", true);
+		
+		ALT_DEV_NO_SPAWNS = server.getProperty("NoSpawns", false);
+		DEBUG = server.getProperty("Debug", false);
+		DEVELOPER = server.getProperty("Developer", false);
+		PACKET_HANDLER_DEBUG = server.getProperty("PacketHandlerDebug", false);
+		
+		DEADLOCK_DETECTOR = server.getProperty("DeadLockDetector", false);
+		DEADLOCK_CHECK_INTERVAL = server.getProperty("DeadLockCheckInterval", 20);
+		RESTART_ON_DEADLOCK = server.getProperty("RestartOnDeadlock", false);
+		
+		LOG_CHAT = server.getProperty("LogChat", false);
+		LOG_ITEMS = server.getProperty("LogItems", false);
+		GMAUDIT = server.getProperty("GMAudit", false);
+		
+		ENABLE_COMMUNITY_BOARD = server.getProperty("EnableCommunityBoard", false);
+		BBS_DEFAULT = server.getProperty("BBSDefault", "_bbshome");
+		
+		ROLL_DICE_TIME = server.getProperty("RollDiceTime", 4200);
+		HERO_VOICE_TIME = server.getProperty("HeroVoiceTime", 10000);
+		SUBCLASS_TIME = server.getProperty("SubclassTime", 2000);
+		DROP_ITEM_TIME = server.getProperty("DropItemTime", 1000);
+		SERVER_BYPASS_TIME = server.getProperty("ServerBypassTime", 500);
+		MULTISELL_TIME = server.getProperty("MultisellTime", 100);
+		MANUFACTURE_TIME = server.getProperty("ManufactureTime", 300);
+		MANOR_TIME = server.getProperty("ManorTime", 3000);
+		SENDMAIL_TIME = server.getProperty("SendMailTime", 10000);
+		CHARACTER_SELECT_TIME = server.getProperty("CharacterSelectTime", 3000);
+		GLOBAL_CHAT_TIME = server.getProperty("GlobalChatTime", 0);
+		TRADE_CHAT_TIME = server.getProperty("TradeChatTime", 0);
+		SOCIAL_TIME = server.getProperty("SocialTime", 2000);
+		
+		SCHEDULED_THREAD_POOL_COUNT = server.getProperty("ScheduledThreadPoolCount", -1);
+		THREADS_PER_SCHEDULED_THREAD_POOL = server.getProperty("ThreadsPerScheduledThreadPool", 4);
+		INSTANT_THREAD_POOL_COUNT = server.getProperty("InstantThreadPoolCount", -1);
+		THREADS_PER_INSTANT_THREAD_POOL = server.getProperty("ThreadsPerInstantThreadPool", 2);
+		
+		L2WALKER_PROTECTION = server.getProperty("L2WalkerProtection", false);
+		ZONE_TOWN = server.getProperty("ZoneTown", 0);
+		SERVER_NEWS = server.getProperty("ShowServerNews", false);
+		DISABLE_TUTORIAL = server.getProperty("DisableTutorial", false);
+	}
+	
+	/**
+	 * Loads loginserver settings.<br>
+	 * IP addresses, database, account, misc.
+	 */
+	private static final void loadLogin()
+	{
+		final ExProperties server = initProperties(LOGIN_CONFIGURATION_FILE);
+		GAME_SERVER_LOGIN_HOST = server.getProperty("LoginHostname", "*");
+		GAME_SERVER_LOGIN_PORT = server.getProperty("LoginPort", 9013);
+		
+		LOGIN_BIND_ADDRESS = server.getProperty("LoginserverHostname", "*");
+		PORT_LOGIN = server.getProperty("LoginserverPort", 2106);
+		
+		DEBUG = server.getProperty("Debug", false);
+		DEVELOPER = server.getProperty("Developer", false);
+		PACKET_HANDLER_DEBUG = server.getProperty("PacketHandlerDebug", false);
+		ACCEPT_NEW_GAMESERVER = server.getProperty("AcceptNewGameServer", true);
+		REQUEST_ID = server.getProperty("RequestServerID", 0);
+		ACCEPT_ALTERNATE_ID = server.getProperty("AcceptAlternateID", true);
+		
+		LOGIN_TRY_BEFORE_BAN = server.getProperty("LoginTryBeforeBan", 3);
+		LOGIN_BLOCK_AFTER_BAN = server.getProperty("LoginBlockAfterBan", 600);
+		
+		LOG_LOGIN_CONTROLLER = server.getProperty("LogLoginController", false);
+		
+		INTERNAL_HOSTNAME = server.getProperty("InternalHostname", "localhost");
+		EXTERNAL_HOSTNAME = server.getProperty("ExternalHostname", "localhost");
+		
+		DATABASE_URL = server.getProperty("URL", "jdbc:mysql://localhost/acis");
+		DATABASE_LOGIN = server.getProperty("Login", "root");
+		DATABASE_PASSWORD = server.getProperty("Password", "");
+		DATABASE_MAX_CONNECTIONS = server.getProperty("MaximumDbConnections", 10);
+		DATABASE_MAX_IDLE_TIME = server.getProperty("MaximumDbIdleTime", 0);
+		
+		SHOW_LICENCE = server.getProperty("ShowLicence", true);
+		
+		AUTO_CREATE_ACCOUNTS = server.getProperty("AutoCreateAccounts", true);
+		
+		FLOOD_PROTECTION = server.getProperty("EnableFloodProtection", true);
+		FAST_CONNECTION_LIMIT = server.getProperty("FastConnectionLimit", 15);
+		NORMAL_CONNECTION_TIME = server.getProperty("NormalConnectionTime", 700);
+		FAST_CONNECTION_TIME = server.getProperty("FastConnectionTime", 350);
+		MAX_CONNECTION_PER_IP = server.getProperty("MaxConnectionPerIP", 50);
+	}
+	
+	public static final void loadGameServer()
+	{
+		_log.info("Loading gameserver configuration files.");
+		
+		// clans settings
+		loadClans();
+		
+		// events settings
+		loadEvents();
+		
+		// geoengine settings
+		loadGeoengine();
+		
+		// hexID
+		loadHexID();
+		
+		// NPCs/monsters settings
+		loadNpcs();
+		
+		// players settings
+		loadPlayers();
+		
+		// server settings
+		loadServer();
+	}
+	
+	public static final void loadLoginServer()
+	{
+		_log.info("Loading loginserver configuration files.");
+		
+		// login settings
+		loadLogin();
+	}
+	
+	public static final void loadAccountManager()
+	{
+		_log.info("Loading account manager configuration files.");
+		
+		// login settings
+		loadLogin();
+	}
+	
+	public static final void loadGameServerRegistration()
+	{
+		_log.info("Loading gameserver registration configuration files.");
+		
+		// login settings
+		loadLogin();
+	}
+	
+	public static final void loadGeodataConverter()
+	{
+		_log.info("Loading geodata converter configuration files.");
+		
+		// geoengine settings
+		loadGeoengine();
+	}
+	
+	public static final class ClassMasterSettings
 	{
 		private final Map<Integer, Boolean> _allowedClassChange;
 		private final Map<Integer, List<IntIntHolder>> _claimItems;
@@ -1380,74 +1539,5 @@ public final class Config
 		{
 			return _claimItems.get(job);
 		}
-	}
-	
-	/**
-	 * itemId1,itemNumber1;itemId2,itemNumber2... to the int[n][2] = [itemId1][itemNumber1],[itemId2][itemNumber2]...
-	 * @param line
-	 * @return an array consisting of parsed items.
-	 */
-	private static int[][] parseItemsList(String line)
-	{
-		final String[] propertySplit = line.split(";");
-		if (propertySplit.length == 0)
-			return null;
-		
-		int i = 0;
-		String[] valueSplit;
-		final int[][] result = new int[propertySplit.length][];
-		for (String value : propertySplit)
-		{
-			valueSplit = value.split(",");
-			if (valueSplit.length != 2)
-			{
-				_log.warning("parseItemsList[Config.load()]: invalid entry -> \"" + valueSplit[0] + "\", should be itemId,itemNumber");
-				return null;
-			}
-			
-			result[i] = new int[2];
-			try
-			{
-				result[i][0] = Integer.parseInt(valueSplit[0]);
-			}
-			catch (NumberFormatException e)
-			{
-				_log.warning("parseItemsList[Config.load()]: invalid itemId -> \"" + valueSplit[0] + "\"");
-				return null;
-			}
-			
-			try
-			{
-				result[i][1] = Integer.parseInt(valueSplit[1]);
-			}
-			catch (NumberFormatException e)
-			{
-				_log.warning("parseItemsList[Config.load()]: invalid item number -> \"" + valueSplit[1] + "\"");
-				return null;
-			}
-			i++;
-		}
-		return result;
-	}
-	
-	public static ExProperties load(String filename)
-	{
-		return load(new File(filename));
-	}
-	
-	public static ExProperties load(File file)
-	{
-		ExProperties result = new ExProperties();
-		
-		try
-		{
-			result.load(file);
-		}
-		catch (IOException e)
-		{
-			_log.warning("Error loading config : " + file.getName() + "!");
-		}
-		
-		return result;
 	}
 }

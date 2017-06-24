@@ -40,7 +40,7 @@ public class L2WaterZone extends L2ZoneType
 		{
 			for (L2PcInstance player : character.getKnownList().getKnownType(L2PcInstance.class))
 			{
-				if (character.getRunSpeed() == 0)
+				if (character.getMoveSpeed() == 0)
 					player.sendPacket(new ServerObjectInfo((L2Npc) character, player));
 				else
 					player.sendPacket(new NpcInfo((L2Npc) character, player));
@@ -60,7 +60,7 @@ public class L2WaterZone extends L2ZoneType
 		{
 			for (L2PcInstance player : character.getKnownList().getKnownType(L2PcInstance.class))
 			{
-				if (character.getRunSpeed() == 0)
+				if (character.getMoveSpeed() == 0)
 					player.sendPacket(new ServerObjectInfo((L2Npc) character, player));
 				else
 					player.sendPacket(new NpcInfo((L2Npc) character, player));

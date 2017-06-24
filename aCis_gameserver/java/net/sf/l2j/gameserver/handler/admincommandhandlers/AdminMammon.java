@@ -20,7 +20,6 @@ import net.sf.l2j.gameserver.instancemanager.AutoSpawnManager.AutoSpawnInstance;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
 /**
  * Admin Command Handler for Mammon NPCs
@@ -32,7 +31,6 @@ public class AdminMammon implements IAdminCommandHandler
 	{
 		"admin_mammon_find",
 		"admin_mammon_respawn",
-		"admin_msg"
 	};
 	
 	@Override
@@ -118,19 +116,6 @@ public class AdminMammon implements IAdminCommandHandler
 			}
 			else
 				activeChar.sendMessage("Blacksmith of Mammon isn't registered.");
-		}
-		// Used for testing SystemMessage IDs - Use //msg <ID>
-		else if (command.startsWith("admin_msg"))
-		{
-			try
-			{
-				activeChar.sendPacket(SystemMessage.getSystemMessage(Integer.parseInt(command.substring(10).trim())));
-			}
-			catch (Exception e)
-			{
-				activeChar.sendMessage("Command format: //msg <SYSTEM_MSG_ID>");
-				return false;
-			}
 		}
 		
 		return true;

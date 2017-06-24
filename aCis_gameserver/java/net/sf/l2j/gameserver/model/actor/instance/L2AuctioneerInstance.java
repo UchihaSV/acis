@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.instancemanager.AuctionManager;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
@@ -403,13 +404,11 @@ public final class L2AuctioneerInstance extends L2NpcInstance
 	@Override
 	public void showChatWindow(L2PcInstance player)
 	{
-		String filename = "data/html/auction/auction-no.htm";
+		String filename = "data/html/auction/auction.htm";
 		
 		int condition = validateCondition();
 		if (condition == COND_BUSY_BECAUSE_OF_SIEGE)
 			filename = "data/html/auction/auction-busy.htm";
-		else
-			filename = "data/html/auction/auction.htm";
 		
 		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile(filename);

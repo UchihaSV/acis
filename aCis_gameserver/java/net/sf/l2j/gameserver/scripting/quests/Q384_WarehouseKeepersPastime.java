@@ -17,11 +17,12 @@ import java.util.Map;
 
 import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.commons.random.Rnd;
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
-import net.sf.l2j.gameserver.util.Util;
 
 public class Q384_WarehouseKeepersPastime extends Quest
 {
@@ -276,7 +277,7 @@ public class Q384_WarehouseKeepersPastime extends Quest
 			String playerArray = st.get("playerArray");
 			
 			// Verify if the given number is already on the player array, if yes, it's invalid, otherwise register it.
-			if (Util.contains(playerArray.split(""), number))
+			if (ArraysUtil.contains(playerArray.split(""), number))
 				htmltext = fillBoard(st, getHtmlText(npcId + "-" + String.valueOf(14 + 2 * playerArray.length()) + ".htm"));
 			else
 			{
@@ -295,7 +296,7 @@ public class Q384_WarehouseKeepersPastime extends Quest
 			String playerArray = st.get("playerArray");
 			
 			// Verify if the given number is already on the player array, if yes, it's invalid, otherwise calculate reward.
-			if (Util.contains(playerArray.split(""), number))
+			if (ArraysUtil.contains(playerArray.split(""), number))
 				htmltext = fillBoard(st, getHtmlText(npcId + "-26.htm"));
 			else
 			{
@@ -313,7 +314,7 @@ public class Q384_WarehouseKeepersPastime extends Quest
 					// test line combination
 					boolean won = true;
 					for (int index : map)
-						won &= Util.contains(playerChoice, board[index]);
+						won &= ArraysUtil.contains(playerChoice, board[index]);
 					
 					// cut the loop, when you won
 					if (won)
@@ -357,7 +358,7 @@ public class Q384_WarehouseKeepersPastime extends Quest
 				for (int i = 1; i < 10; i++)
 				{
 					htmltext = htmltext.replace("<?Cell" + i + "?>", board[i]);
-					htmltext = htmltext.replace("<?FontColor" + i + "?>", (Util.contains(playerChoice, board[i])) ? "ff0000" : "ffffff");
+					htmltext = htmltext.replace("<?FontColor" + i + "?>", (ArraysUtil.contains(playerChoice, board[i])) ? "ff0000" : "ffffff");
 				}
 			}
 		}
@@ -414,7 +415,7 @@ public class Q384_WarehouseKeepersPastime extends Quest
 		final String[] board = st.get("board").split("");
 		
 		for (int i = 1; i < 10; i++)
-			htmltext = htmltext.replace("<?Cell" + i + "?>", (Util.contains(playerArray, board[i])) ? board[i] : "?");
+			htmltext = htmltext.replace("<?Cell" + i + "?>", (ArraysUtil.contains(playerArray, board[i])) ? board[i] : "?");
 		
 		return htmltext;
 	}

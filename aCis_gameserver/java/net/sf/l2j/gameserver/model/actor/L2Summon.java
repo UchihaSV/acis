@@ -14,19 +14,20 @@
  */
 package net.sf.l2j.gameserver.model.actor;
 
+import java.util.Map;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
 import net.sf.l2j.gameserver.ai.model.L2SummonAI;
 import net.sf.l2j.gameserver.datatables.ItemTable;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.handler.ItemHandler;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Skill.SkillTargetType;
-import net.sf.l2j.gameserver.model.L2WorldRegion;
 import net.sf.l2j.gameserver.model.ShotType;
 import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -68,6 +69,9 @@ public abstract class L2Summon extends L2Playable
 	public L2Summon(int objectId, NpcTemplate template, L2PcInstance owner)
 	{
 		super(objectId, template);
+		
+		for (L2Skill skill : template.getSkills().values())
+			addStatFuncs(skill.getStatFuncs(this));
 		
 		_showSummonAnimation = true;
 		_owner = owner;
@@ -182,7 +186,7 @@ public abstract class L2Summon extends L2Playable
 		{
 			if (isAutoAttackable(player))
 			{
-				if (PathFinding.getInstance().canSeeTarget(player, this))
+				if (GeoEngine.getInstance().canSeeTarget(player, this))
 				{
 					player.getAI().setIntention(CtrlIntention.ATTACK, this);
 					player.onActionRequest();
@@ -196,7 +200,7 @@ public abstract class L2Summon extends L2Playable
 				// Send ActionFailed to the player in order to avoid he stucks
 				player.sendPacket(ActionFailed.STATIC_PACKET);
 				
-				if (PathFinding.getInstance().canSeeTarget(player, this))
+				if (GeoEngine.getInstance().canSeeTarget(player, this))
 					player.getAI().setIntention(CtrlIntention.FOLLOW, this);
 			}
 		}
@@ -223,7 +227,7 @@ public abstract class L2Summon extends L2Playable
 			if (this instanceof L2PetInstance)
 			{
 				html.replace("%inv%", " <a action=\"bypass admin_show_pet_inv " + getActingPlayer().getObjectId() + "\">view</a>");
-				html.replace("%food%", ((L2PetInstance) this).getCurrentFed() + "/" + ((L2PetInstance) this).getPetLevelData().getPetMaxFeed());
+				html.replace("%food%", ((L2PetInstance) this).getCurrentFed() + "/" + ((L2PetInstance) this).getPetData().getMaxMeal());
 				html.replace("%load%", ((L2PetInstance) this).getInventory().getTotalWeight() + "/" + ((L2PetInstance) this).getMaxLoad());
 			}
 			else
@@ -234,7 +238,6 @@ public abstract class L2Summon extends L2Playable
 			}
 			
 			player.sendPacket(html);
-			player.sendPacket(ActionFailed.STATIC_PACKET);
 		}
 		super.onActionShift(player);
 	}
@@ -289,12 +292,12 @@ public abstract class L2Summon extends L2Playable
 	
 	public int getSoulShotsPerHit()
 	{
-		return getTemplate().getAIData().getSsCount();
+		return getTemplate().getSsCount();
 	}
 	
 	public int getSpiritShotsPerHit()
 	{
-		return getTemplate().getAIData().getSpsCount();
+		return getTemplate().getSpsCount();
 	}
 	
 	public void followOwner()
@@ -365,12 +368,8 @@ public abstract class L2Summon extends L2Playable
 				getAI().stopAITask();
 			
 			stopAllEffects();
-			L2WorldRegion oldRegion = getWorldRegion();
 			
 			decayMe();
-			
-			if (oldRegion != null)
-				oldRegion.removeFromZones(this);
 			
 			getKnownList().removeAllKnownObjects();
 			setTarget(null);
@@ -611,7 +610,7 @@ public abstract class L2Summon extends L2Playable
 			// Check if the target is attackable
 			if (target instanceof L2DoorInstance)
 			{
-				if (!((L2DoorInstance) target).isAttackable(getOwner()))
+				if (!((L2DoorInstance) target).isAutoAttackable(getOwner()))
 					return false;
 			}
 			else
@@ -744,12 +743,6 @@ public abstract class L2Summon extends L2Playable
 	}
 	
 	@Override
-	public boolean isUndead()
-	{
-		return getTemplate().isUndead();
-	}
-	
-	@Override
 	public void sendPacket(L2GameServerPacket mov)
 	{
 		if (getOwner() != null)
@@ -815,11 +808,6 @@ public abstract class L2Summon extends L2Playable
 			
 			player.sendPacket(new SummonInfo(this, player, val));
 		}
-	}
-	
-	public boolean isHungry()
-	{
-		return false;
 	}
 	
 	@Override
@@ -903,5 +891,15 @@ public abstract class L2Summon extends L2Playable
 			else
 				getOwner().removeAutoSoulShot(itemId);
 		}
+	}
+	
+	/**
+	 * This method is overidden on L2PcInstance, L2Summon and L2Npc.
+	 * @return the skills list of this L2Character.
+	 */
+	@Override
+	public Map<Integer, L2Skill> getSkills()
+	{
+		return getTemplate().getSkills();
 	}
 }

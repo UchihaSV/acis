@@ -24,14 +24,15 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.config.ExProperties;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.commons.config.ExProperties;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
-import net.sf.l2j.gameserver.model.Location;
+import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.TowerSpawn;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.entity.Castle;
@@ -61,7 +62,7 @@ public class SiegeManager
 	
 	protected SiegeManager()
 	{
-		ExProperties sieges = Config.load(Config.SIEGE_FILE);
+		final ExProperties sieges = Config.initProperties(Config.SIEGE_FILE);
 		MAX_ATTACKERS_NUMBER = sieges.getProperty("AttackerMaxClans", 10);
 		ATTACKERS_RESPAWN_DELAY = sieges.getProperty("AttackerRespawn", 10000);
 		MAX_DEFENDERS_NUMBER = sieges.getProperty("DefenderMaxClans", 10);
@@ -87,7 +88,7 @@ public class SiegeManager
 					final int z = Integer.parseInt(st.nextToken());
 					final int npcId = Integer.parseInt(st.nextToken());
 					
-					controlTowers.add(new TowerSpawn(npcId, new Location(x, y, z)));
+					controlTowers.add(new TowerSpawn(npcId, new SpawnLocation(x, y, z, -1)));
 				}
 				catch (Exception e)
 				{
@@ -117,7 +118,7 @@ public class SiegeManager
 					while (st.hasMoreTokens())
 						zoneList.add(Integer.parseInt(st.nextToken()));
 					
-					flameTowers.add(new TowerSpawn(npcId, new Location(x, y, z), zoneList));
+					flameTowers.add(new TowerSpawn(npcId, new SpawnLocation(x, y, z, -1), zoneList));
 				}
 				catch (Exception e)
 				{

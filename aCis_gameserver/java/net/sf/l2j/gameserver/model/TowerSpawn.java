@@ -22,17 +22,17 @@ import java.util.List;
 public class TowerSpawn
 {
 	private final int _npcId;
-	private final Location _location;
+	private final SpawnLocation _location;
 	private List<Integer> _zoneList;
 	private int _upgradeLevel;
 	
-	public TowerSpawn(int npcId, Location location)
+	public TowerSpawn(int npcId, SpawnLocation location)
 	{
 		_location = location;
 		_npcId = npcId;
 	}
 	
-	public TowerSpawn(int npcId, Location location, List<Integer> zoneList)
+	public TowerSpawn(int npcId, SpawnLocation location, List<Integer> zoneList)
 	{
 		_location = location;
 		_npcId = npcId;
@@ -44,7 +44,7 @@ public class TowerSpawn
 		return _npcId;
 	}
 	
-	public Location getLocation()
+	public SpawnLocation getLocation()
 	{
 		return _location;
 	}

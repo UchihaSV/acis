@@ -14,8 +14,9 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.handler.ItemHandler;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -31,6 +32,7 @@ import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.ItemList;
 import net.sf.l2j.gameserver.network.serverpackets.PetItemList;
+import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
 import net.sf.l2j.gameserver.templates.skills.L2SkillType;
@@ -40,27 +42,21 @@ public final class UseItem extends L2GameClientPacket
 	private int _objectId;
 	private boolean _ctrlPressed;
 	
-	/** Weapon Equip Task */
 	public static class WeaponEquipTask implements Runnable
 	{
-		ItemInstance item;
-		L2PcInstance activeChar;
+		ItemInstance _item;
+		L2PcInstance _activeChar;
 		
 		public WeaponEquipTask(ItemInstance it, L2PcInstance character)
 		{
-			item = it;
-			activeChar = character;
+			_item = it;
+			_activeChar = character;
 		}
 		
 		@Override
 		public void run()
 		{
-			// If character is still engaged in strike we should not change weapon
-			if (activeChar.isAttackingNow())
-				return;
-			
-			// Equip or unEquip
-			activeChar.useEquippableItem(item, false);
+			_activeChar.useEquippableItem(_item, false);
 		}
 	}
 	
@@ -165,9 +161,15 @@ public final class UseItem extends L2GameClientPacket
 			
 			// Equip it, removing first the previous item.
 			if (item.isEquipped())
+			{
 				pet.getInventory().unEquipItemInSlot(item.getLocationSlot());
+				activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.PET_TOOK_OFF_S1).addItemName(item));
+			}
 			else
+			{
 				pet.getInventory().equipPetItem(item);
+				activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.PET_PUT_ON_S1).addItemName(item));
+			}
 			
 			activeChar.sendPacket(new PetItemList(pet));
 			pet.updateAndBroadcastStatus(1);
@@ -212,13 +214,9 @@ public final class UseItem extends L2GameClientPacket
 				return;
 			
 			if (activeChar.isAttackingNow())
-			{
-				ThreadPoolManager.getInstance().scheduleGeneral(new WeaponEquipTask(item, activeChar), (activeChar.getAttackEndTime() - System.currentTimeMillis()));
-				return;
-			}
-			
-			// Equip or unEquip
-			activeChar.useEquippableItem(item, true);
+				ThreadPool.schedule(new WeaponEquipTask(item, activeChar), (activeChar.getAttackEndTime() - System.currentTimeMillis()));
+			else
+				activeChar.useEquippableItem(item, true);
 		}
 		else
 		{

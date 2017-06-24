@@ -168,7 +168,9 @@ public class Continuous implements ISkillHandler
 			
 			skill.getEffectsSelf(activeChar);
 		}
-		activeChar.setChargedShot(bsps ? ShotType.BLESSED_SPIRITSHOT : ShotType.SPIRITSHOT, skill.isStaticReuse());
+		
+		if (!skill.isPotion())
+			activeChar.setChargedShot(bsps ? ShotType.BLESSED_SPIRITSHOT : ShotType.SPIRITSHOT, skill.isStaticReuse());
 	}
 	
 	@Override

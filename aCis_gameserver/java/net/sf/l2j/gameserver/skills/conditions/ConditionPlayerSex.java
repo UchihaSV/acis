@@ -21,7 +21,6 @@ import net.sf.l2j.gameserver.skills.Env;
  */
 public class ConditionPlayerSex extends Condition
 {
-	// male 0 female 1
 	private final int _sex;
 	
 	/**
@@ -39,6 +38,6 @@ public class ConditionPlayerSex extends Condition
 		if (env.getPlayer() == null)
 			return false;
 		
-		return (env.getPlayer().getAppearance().getSex() ? 1 : 0) == _sex;
+		return env.getPlayer().getAppearance().getSex().ordinal() == _sex;
 	}
 }

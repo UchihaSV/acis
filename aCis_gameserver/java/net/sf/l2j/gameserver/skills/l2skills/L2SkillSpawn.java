@@ -17,6 +17,7 @@ package net.sf.l2j.gameserver.skills.l2skills;
 import java.util.logging.Level;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -64,21 +65,17 @@ public class L2SkillSpawn extends L2Skill
 		try
 		{
 			final L2Spawn spawn = new L2Spawn(template);
-			spawn.setHeading(-1);
 			
+			int x = caster.getX();
+			int y = caster.getY();
 			if (_randomOffset)
 			{
-				spawn.setLocx(caster.getX() + (Rnd.nextBoolean() ? Rnd.get(20, 50) : Rnd.get(-50, -20)));
-				spawn.setLocy(caster.getY() + (Rnd.nextBoolean() ? Rnd.get(20, 50) : Rnd.get(-50, -20)));
+				x += Rnd.nextBoolean() ? Rnd.get(20, 50) : Rnd.get(-50, -20);
+				y += Rnd.nextBoolean() ? Rnd.get(20, 50) : Rnd.get(-50, -20);
 			}
-			else
-			{
-				spawn.setLocx(caster.getX());
-				spawn.setLocy(caster.getY());
-			}
-			spawn.setLocz(caster.getZ() + 20);
+			spawn.setLoc(x, y, caster.getZ() + 20, caster.getHeading());
 			
-			spawn.stopRespawn();
+			spawn.setRespawnState(false);
 			L2Npc npc = spawn.doSpawn(_summonSpawn);
 			
 			if (_despawnDelay > 0)

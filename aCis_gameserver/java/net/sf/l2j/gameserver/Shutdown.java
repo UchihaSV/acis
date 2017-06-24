@@ -17,9 +17,11 @@ package net.sf.l2j.gameserver;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.gameserver.datatables.BufferTable;
 import net.sf.l2j.gameserver.datatables.ServerMemo;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;
@@ -29,6 +31,7 @@ import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
 import net.sf.l2j.gameserver.instancemanager.RaidBossSpawnManager;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.entity.Hero;
@@ -130,13 +133,7 @@ public class Shutdown extends Thread
 			}
 			
 			// stop all threadpolls
-			try
-			{
-				ThreadPoolManager.getInstance().shutdown();
-			}
-			catch (Throwable t)
-			{
-			}
+			ThreadPool.shutdown();
 			
 			try
 			{
@@ -157,6 +154,9 @@ public class Shutdown extends Thread
 			
 			// Four Sepulchers, stop any working task.
 			FourSepulchersManager.getInstance().stop();
+			
+			// Save zones (grandbosses status)
+			ZoneManager.getInstance().save();
 			
 			// Save raidbosses status
 			RaidBossSpawnManager.getInstance().cleanUp();

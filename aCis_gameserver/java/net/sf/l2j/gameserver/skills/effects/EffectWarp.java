@@ -14,9 +14,8 @@
  */
 package net.sf.l2j.gameserver.skills.effects;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -73,13 +72,10 @@ public class EffectWarp extends L2Effect
 		y = _actor.getY() + y1;
 		z = _actor.getZ();
 		
-		if (Config.GEODATA > 0)
-		{
-			Location destiny = PathFinding.getInstance().canMoveToTargetLoc(_actor.getX(), _actor.getY(), _actor.getZ(), x, y, z);
-			x = destiny.getX();
-			y = destiny.getY();
-			z = destiny.getZ();
-		}
+		Location destiny = GeoEngine.getInstance().canMoveToTargetLoc(_actor.getX(), _actor.getY(), _actor.getZ(), x, y, z);
+		x = destiny.getX();
+		y = destiny.getY();
+		z = destiny.getZ();
 		
 		// TODO: check if this AI intention is retail-like. This stops player's previous movement
 		_actor.getAI().setIntention(CtrlIntention.IDLE);

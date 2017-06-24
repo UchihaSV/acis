@@ -117,7 +117,7 @@ public final class L2World
 	
 	public L2PcInstance getPlayer(String name)
 	{
-		return getPlayer(CharNameTable.getInstance().getIdByName(name));
+		return _players.get(CharNameTable.getInstance().getPlayerObjectId(name));
 	}
 	
 	public L2PcInstance getPlayer(int objectId)
@@ -237,42 +237,39 @@ public final class L2World
 	 */
 	public void removeVisibleObject(L2Object object, L2WorldRegion oldRegion)
 	{
-		if (object == null)
+		if (object == null || oldRegion == null)
 			return;
 		
-		if (oldRegion != null)
+		// Remove the object from the L2ObjectHashSet(L2Object) _visibleObjects of L2WorldRegion
+		// If object is a L2PcInstance, remove it from the L2ObjectHashSet(L2PcInstance) _allPlayers of this L2WorldRegion
+		oldRegion.removeVisibleObject(object);
+		
+		final boolean objectHasKnownlist = (object.getKnownList() != null);
+		
+		// Go through all surrounding L2WorldRegion L2Characters
+		for (L2WorldRegion reg : oldRegion.getSurroundingRegions())
 		{
-			// Remove the object from the L2ObjectHashSet(L2Object) _visibleObjects of L2WorldRegion
-			// If object is a L2PcInstance, remove it from the L2ObjectHashSet(L2PcInstance) _allPlayers of this L2WorldRegion
-			oldRegion.removeVisibleObject(object);
-			
-			final boolean objectHasKnownlist = (object.getKnownList() != null);
-			
-			// Go through all surrounding L2WorldRegion L2Characters
-			for (L2WorldRegion reg : oldRegion.getSurroundingRegions())
+			for (L2Object obj : reg.getVisibleObjects().values())
 			{
-				for (L2Object obj : reg.getVisibleObjects().values())
-				{
-					if (obj.getKnownList() != null)
-						obj.getKnownList().removeKnownObject(object);
-					
-					if (objectHasKnownlist)
-						object.getKnownList().removeKnownObject(obj);
-				}
+				if (obj.getKnownList() != null)
+					obj.getKnownList().removeKnownObject(object);
+				
+				if (objectHasKnownlist)
+					object.getKnownList().removeKnownObject(obj);
 			}
-			
-			// If object is a L2Character :
-			// Remove all L2Object from L2ObjectHashSet(L2Object) containing all L2Object detected by the L2Character
-			// Remove all L2PcInstance from L2ObjectHashSet(L2PcInstance) containing all player ingame detected by the L2Character
-			if (objectHasKnownlist)
-				object.getKnownList().removeAllKnownObjects();
-			
-			// If selected L2Object is a L2PcIntance, remove it from L2ObjectHashSet(L2PcInstance) _allPlayers of L2World
-			if (object instanceof L2PcInstance)
-			{
-				if (!((L2PcInstance) object).isTeleporting())
-					removePlayer((L2PcInstance) object);
-			}
+		}
+		
+		// If object is a L2Character :
+		// Remove all L2Object from L2ObjectHashSet(L2Object) containing all L2Object detected by the L2Character
+		// Remove all L2PcInstance from L2ObjectHashSet(L2PcInstance) containing all player ingame detected by the L2Character
+		if (objectHasKnownlist)
+			object.getKnownList().removeAllKnownObjects();
+		
+		// If selected L2Object is a L2PcIntance, remove it from L2ObjectHashSet(L2PcInstance) _allPlayers of L2World
+		if (object instanceof L2PcInstance)
+		{
+			if (!((L2PcInstance) object).isTeleporting())
+				removePlayer((L2PcInstance) object);
 		}
 	}
 	
@@ -298,7 +295,7 @@ public final class L2World
 		List<L2Object> result = new ArrayList<>();
 		
 		// Go through the FastList of region
-		for (L2WorldRegion regi : object.getWorldRegion().getSurroundingRegions())
+		for (L2WorldRegion regi : object.getRegion().getSurroundingRegions())
 		{
 			// Go through visible objects of the selected region
 			for (L2Object _object : regi.getVisibleObjects().values())

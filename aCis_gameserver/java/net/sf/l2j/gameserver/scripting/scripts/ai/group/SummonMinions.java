@@ -18,13 +18,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
-public class SummonMinions extends AbstractNpcAI
+/**
+ * Summon minions the first time being hitten.<br>
+ * For Orcs case, send also a message.
+ */
+public class SummonMinions extends L2AttackableAIScript
 {
 	private static final String[] ORCS_WORDS =
 	{
@@ -35,6 +41,8 @@ public class SummonMinions extends AbstractNpcAI
 	};
 	
 	private static final Map<Integer, int[]> MINIONS = new HashMap<>();
+	
+	static
 	{
 		MINIONS.put(20767, new int[]
 		{
@@ -59,16 +67,20 @@ public class SummonMinions extends AbstractNpcAI
 	public SummonMinions()
 	{
 		super("ai/group");
-		
-		registerMobs(MINIONS.keySet(), EventType.ON_ATTACK, EventType.ON_KILL);
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	protected void registerNpcs()
+	{
+		addEventIds(MINIONS.keySet(), EventType.ON_ATTACK, EventType.ON_KILL);
+	}
+	
+	@Override
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (npc.isScriptValue(0))
 		{
-			int npcId = npc.getNpcId();
+			final int npcId = npc.getNpcId();
 			if (npcId != 20767)
 			{
 				for (int val : MINIONS.get(npcId))
@@ -82,11 +94,11 @@ public class SummonMinions extends AbstractNpcAI
 				for (int val : MINIONS.get(npcId))
 					addSpawn(val, npc, true, 0, false);
 				
-				npc.broadcastNpcSay(ORCS_WORDS[Rnd.get(ORCS_WORDS.length)]);
+				npc.broadcastNpcSay(Rnd.get(ORCS_WORDS));
 			}
 			npc.setScriptValue(1);
 		}
 		
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 }

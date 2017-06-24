@@ -215,33 +215,28 @@ public class SkillTreeTable
 	
 	/**
 	 * Adds list of skills to general skill tree according to classId.
-	 * @param skills List of general skills to be added.
 	 * @param classId ClassId of skill owner.
-	 * @param parentId Parent id of skill owner.
+	 * @param skills List of general skills to be added.
 	 */
-	public void addSkillsToSkillTrees(final List<L2SkillLearn> skills, final int classId, final int parentId)
+	public void addSkillsToSkillTrees(final ClassId classId, final List<L2SkillLearn> skills)
 	{
 		if (skills == null || skills.isEmpty())
 			return;
 		
 		Map<Integer, L2SkillLearn> tmp = new LinkedHashMap<>();
 		
-		if (parentId > -1)
-		{
-			Map<Integer, L2SkillLearn> parent = _skillTrees.get(ClassId.values()[parentId]);
-			
-			if (parent != null)
-				for (L2SkillLearn skillLearn : parent.values())
-					if (skillLearn != null)
-						tmp.put(SkillTable.getSkillHashCode(skillLearn.getId(), skillLearn.getLevel()), skillLearn);
-		}
+		Map<Integer, L2SkillLearn> parent = _skillTrees.get(classId.getParent());
+		if (parent != null)
+			for (L2SkillLearn skillLearn : parent.values())
+				if (skillLearn != null)
+					tmp.put(SkillTable.getSkillHashCode(skillLearn.getId(), skillLearn.getLevel()), skillLearn);
 		
 		for (L2SkillLearn skillLearn : skills)
 			if (skillLearn != null)
 				tmp.put(SkillTable.getSkillHashCode(skillLearn.getId(), skillLearn.getLevel()), skillLearn);
 		
 		if (!tmp.isEmpty())
-			_skillTrees.put(ClassId.values()[classId], tmp);
+			_skillTrees.put(classId, tmp);
 	}
 	
 	/**
@@ -262,7 +257,7 @@ public class SkillTreeTable
 	{
 		List<L2SkillLearn> result = new ArrayList<>();
 		
-		L2Skill[] chaSkills = cha.getAllSkills();
+		Collection<L2Skill> chaSkills = cha.getSkills().values();
 		int level = cha.getLevel();
 		
 		for (L2SkillLearn sl : _skillTrees.get(classId).values())
@@ -324,7 +319,7 @@ public class SkillTreeTable
 					result.put(skillId, sl);
 			}
 		}
-		for (L2Skill s : cha.getAllSkills())
+		for (L2Skill s : cha.getSkills().values())
 		{
 			skillId = s.getId();
 			skill = result.get(skillId);
@@ -381,7 +376,7 @@ public class SkillTreeTable
 		if (cha.hasDwarvenCraft())
 			skills.addAll(_expandDwarvenCraftSkillTrees);
 		
-		L2Skill[] chaSkills = cha.getAllSkills();
+		Collection<L2Skill> chaSkills = cha.getSkills().values();
 		int level = cha.getLevel();
 		
 		for (L2SkillLearn sl : skills)
@@ -444,9 +439,8 @@ public class SkillTreeTable
 	 */
 	public List<L2EnchantSkillLearn> getAvailableEnchantSkills(L2PcInstance cha)
 	{
-		List<L2EnchantSkillLearn> result = new ArrayList<>();
-		
-		L2Skill[] chaSkills = cha.getAllSkills();
+		final List<L2EnchantSkillLearn> result = new ArrayList<>();
+		final Collection<L2Skill> chaSkills = cha.getSkills().values();
 		
 		for (L2EnchantSkillLearn esl : _enchantSkillTrees)
 		{

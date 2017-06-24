@@ -16,6 +16,8 @@ package net.sf.l2j.gameserver;
 
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.model.L2Clan;
@@ -55,7 +57,7 @@ public class CastleUpdater implements Runnable
 					}
 				}
 				_runCount++;
-				ThreadPoolManager.getInstance().scheduleGeneral(new CastleUpdater(_clan, _runCount), 3600000);
+				ThreadPool.schedule(new CastleUpdater(_clan, _runCount), 3600000);
 			}
 		}
 		catch (Throwable e)

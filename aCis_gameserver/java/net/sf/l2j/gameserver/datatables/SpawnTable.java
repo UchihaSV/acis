@@ -87,17 +87,15 @@ public class SpawnTable
 					else
 					{
 						spawnDat = new L2Spawn(template1);
-						spawnDat.setLocx(rset.getInt("locx"));
-						spawnDat.setLocy(rset.getInt("locy"));
-						spawnDat.setLocz(rset.getInt("locz"));
-						spawnDat.setHeading(rset.getInt("heading"));
+						spawnDat.setLoc(rset.getInt("locx"), rset.getInt("locy"), rset.getInt("locz"), rset.getInt("heading"));
 						spawnDat.setRespawnDelay(rset.getInt("respawn_delay"));
-						spawnDat.setRandomRespawnDelay(rset.getInt("respawn_rand"));
+						spawnDat.setRespawnRandom(rset.getInt("respawn_rand"));
 						
 						switch (rset.getInt("periodOfDay"))
 						{
 							case 0: // default
-								spawnDat.init();
+								spawnDat.setRespawnState(true);
+								spawnDat.doSpawn(false);
 								break;
 							
 							case 1: // Day
@@ -139,11 +137,11 @@ public class SpawnTable
 			{
 				PreparedStatement statement = con.prepareStatement("INSERT INTO spawnlist (npc_templateid,locx,locy,locz,heading,respawn_delay) values(?,?,?,?,?,?)");
 				statement.setInt(1, spawn.getNpcId());
-				statement.setInt(2, spawn.getLocx());
-				statement.setInt(3, spawn.getLocy());
-				statement.setInt(4, spawn.getLocz());
+				statement.setInt(2, spawn.getLocX());
+				statement.setInt(3, spawn.getLocY());
+				statement.setInt(4, spawn.getLocZ());
 				statement.setInt(5, spawn.getHeading());
-				statement.setInt(6, spawn.getRespawnDelay() / 1000);
+				statement.setInt(6, spawn.getRespawnDelay());
 				statement.execute();
 				statement.close();
 			}
@@ -165,9 +163,9 @@ public class SpawnTable
 			try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 			{
 				PreparedStatement statement = con.prepareStatement("DELETE FROM spawnlist WHERE locx=? AND locy=? AND locz=? AND npc_templateid=? AND heading=?");
-				statement.setInt(1, spawn.getLocx());
-				statement.setInt(2, spawn.getLocy());
-				statement.setInt(3, spawn.getLocz());
+				statement.setInt(1, spawn.getLocX());
+				statement.setInt(2, spawn.getLocY());
+				statement.setInt(3, spawn.getLocZ());
 				statement.setInt(4, spawn.getNpcId());
 				statement.setInt(5, spawn.getHeading());
 				statement.execute();

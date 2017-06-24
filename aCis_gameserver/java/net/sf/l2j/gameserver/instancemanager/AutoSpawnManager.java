@@ -27,9 +27,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
+import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
@@ -227,9 +228,9 @@ public class AutoSpawnManager
 				AutoSpawner rs = new AutoSpawner(objectId);
 				
 				if (spawnInst._desDelay > 0)
-					spawnTask = ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(rs, spawnInst._initDelay, spawnInst._resDelay);
+					spawnTask = ThreadPool.scheduleAtFixedRate(rs, spawnInst._initDelay, spawnInst._resDelay);
 				else
-					spawnTask = ThreadPoolManager.getInstance().scheduleEffect(rs, spawnInst._initDelay);
+					spawnTask = ThreadPool.schedule(rs, spawnInst._initDelay);
 				
 				_runningSpawns.put(objectId, spawnTask);
 			}
@@ -241,7 +242,7 @@ public class AutoSpawnManager
 				if (spawnTask != null)
 					spawnTask.cancel(false);
 				
-				ThreadPoolManager.getInstance().scheduleEffect(rd, 0);
+				ThreadPool.schedule(rd, 0);
 			}
 			
 			spawnInst.setSpawnActive(isActive);
@@ -394,26 +395,19 @@ public class AutoSpawnManager
 					_log.warning("Couldnt find npcId: " + spawnInst.getNpcId() + ".");
 					return;
 				}
-				L2Spawn newSpawn = new L2Spawn(npcTemp);
-				
-				newSpawn.setLocx(x);
-				newSpawn.setLocy(y);
-				newSpawn.setLocz(z);
-				
-				if (heading != -1)
-					newSpawn.setHeading(heading);
+				final L2Spawn newSpawn = new L2Spawn(npcTemp);
+				newSpawn.setLoc(x, y, z, heading);
 				
 				if (spawnInst._desDelay == 0)
 					newSpawn.setRespawnDelay(spawnInst._resDelay);
 				
-				// Add the new spawn information to the spawn table, but do not
-				// store it.
+				// Add the new spawn information to the spawn table, but do not store it.
 				SpawnTable.getInstance().addNewSpawn(newSpawn, false);
 				L2Npc npcInst = null;
 				
 				if (spawnInst._spawnCount == 1)
 				{
-					npcInst = newSpawn.doSpawn();
+					npcInst = newSpawn.doSpawn(false);
 					npcInst.setXYZ(npcInst.getX(), npcInst.getY(), npcInst.getZ());
 					spawnInst.addNpcInstance(npcInst);
 				}
@@ -421,7 +415,7 @@ public class AutoSpawnManager
 				{
 					for (int i = 0; i < spawnInst._spawnCount; i++)
 					{
-						npcInst = newSpawn.doSpawn();
+						npcInst = newSpawn.doSpawn(false);
 						
 						// To prevent spawning of more than one NPC in the exact same spot, move it slightly by a small random offset.
 						npcInst.setXYZ(npcInst.getX() + Rnd.get(50), npcInst.getY() + Rnd.get(50), npcInst.getZ());
@@ -437,7 +431,7 @@ public class AutoSpawnManager
 				
 				// If there is no despawn time, do not create a despawn task.
 				if (spawnInst.getDespawnDelay() > 0)
-					ThreadPoolManager.getInstance().scheduleAi(new AutoDespawner(_objectId), spawnInst.getDespawnDelay() - 1000);
+					ThreadPool.schedule(new AutoDespawner(_objectId), spawnInst.getDespawnDelay() - 1000);
 			}
 			catch (Exception e)
 			{

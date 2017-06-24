@@ -79,11 +79,8 @@ public class CharTemplateTable
 					NamedNodeMap attrs = d.getAttributes();
 					StatsSet set = new StatsSet();
 					
-					final int classId = Integer.parseInt(attrs.getNamedItem("id").getNodeValue());
-					final int parentId = Integer.parseInt(attrs.getNamedItem("parentId").getNodeValue());
+					final ClassId classId = ClassId.VALUES[Integer.parseInt(attrs.getNamedItem("id").getNodeValue())];
 					String items = null;
-					
-					set.set("classId", classId);
 					
 					for (Node cd = d.getFirstChild(); cd != null; cd = cd.getNextSibling())
 					{
@@ -111,7 +108,7 @@ public class CharTemplateTable
 									skills.add(skillLearn);
 								}
 							}
-							SkillTreeTable.getInstance().addSkillsToSkillTrees(skills, classId, parentId);
+							SkillTreeTable.getInstance().addSkillsToSkillTrees(classId, skills);
 						}
 						else if ("items".equalsIgnoreCase(cd.getNodeName()))
 						{
@@ -119,7 +116,7 @@ public class CharTemplateTable
 							items = attrs.getNamedItem("val").getNodeValue().trim();
 						}
 					}
-					PcTemplate pcT = new PcTemplate(set);
+					PcTemplate pcT = new PcTemplate(classId, set);
 					
 					// Add items listed in "items" if class possess a filled "items" string.
 					if (items != null)

@@ -15,8 +15,10 @@
 package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.gameserver.datatables.MultisellData;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.entity.Hero;
@@ -31,15 +33,22 @@ import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 
 /**
  * Olympiad Npcs
- * @author godson && Tryskell
+ * @author godson && Tryskell && Hasha
  */
 public class L2OlympiadManagerInstance extends L2NpcInstance
 {
+	private static final List<L2OlympiadManagerInstance> _managers = new CopyOnWriteArrayList<>();
+	
 	private static final int GATE_PASS = 6651;
 	
 	public L2OlympiadManagerInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
+	}
+	
+	public static List<L2OlympiadManagerInstance> getInstances()
+	{
+		return _managers;
 	}
 	
 	@Override
@@ -168,7 +177,7 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 					break;
 				
 				case 7: // Rewards
-					MultisellData.getInstance().separateAndSend(102, player, false, getCastle().getTaxRate());
+					MultisellData.getInstance().separateAndSend("102", player, this, false);
 					break;
 				
 				case 10: // Give tokens to player
@@ -292,5 +301,21 @@ public class L2OlympiadManagerInstance extends L2NpcInstance
 		}
 		else
 			super.onBypassFeedback(player, command);
+	}
+	
+	@Override
+	public void onSpawn()
+	{
+		super.onSpawn();
+		
+		if (getNpcId() == 31688)
+			_managers.add(this);
+	}
+	
+	@Override
+	public void onDecay()
+	{
+		_managers.remove(this);
+		super.onDecay();
 	}
 }

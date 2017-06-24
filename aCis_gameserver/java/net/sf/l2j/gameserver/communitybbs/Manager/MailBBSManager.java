@@ -22,14 +22,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
-import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.commons.lang.StringUtil;
+
+import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.datatables.CharNameTable;
 import net.sf.l2j.gameserver.model.BlockList;
@@ -71,7 +70,7 @@ public class MailBBSManager extends BaseBBSManager
 			return _bypass;
 		}
 		
-		public static final MailType VALUES[] = values();
+		public static final MailType[] VALUES = values();
 	}
 	
 	private final Map<Integer, List<Mail>> _mails = new HashMap<>();
@@ -477,106 +476,122 @@ public class MailBBSManager extends BaseBBSManager
 	
 	public void sendLetter(String recipients, String subject, String message, L2PcInstance activeChar)
 	{
-		int countTodaysLetters = 0;
-		Timestamp ts = new Timestamp(Calendar.getInstance().getTimeInMillis() - 86400000L);
-		long date = Calendar.getInstance().getTimeInMillis();
+		// Current time.
+		final long currentDate = Calendar.getInstance().getTimeInMillis();
 		
-		for (Mail letter : getPlayerMails(activeChar.getObjectId()))
-			if (letter.sentDate.after(ts) && letter.location == MailType.SENTBOX)
-				countTodaysLetters++;
+		// Get the current time - 1 day under timestamp format.
+		final Timestamp ts = new Timestamp(currentDate - 86400000L);
 		
-		if (countTodaysLetters >= 10 && !activeChar.isGM())
+		// Check sender mails based on previous timestamp. If more than 10 mails have been found for today, then cancel the use.
+		if (getPlayerMails(activeChar.getObjectId()).stream().filter(l -> l.sentDate.after(ts) && l.location == MailType.SENTBOX).count() >= 10)
 		{
 			activeChar.sendPacket(SystemMessageId.NO_MORE_MESSAGES_TODAY);
 			return;
 		}
 		
+		// Format recipient names. If more than 5 are found, cancel the mail.
+		final String[] recipientNames = recipients.trim().split(";");
+		if (recipientNames.length > 5 && !activeChar.isGM())
+		{
+			activeChar.sendPacket(SystemMessageId.ONLY_FIVE_RECIPIENTS);
+			return;
+		}
+		
+		// Edit subject, if none.
 		if (subject == null || subject.isEmpty())
 			subject = "(no subject)";
 		
+		// Edit message.
+		message = message.replaceAll("\n", "<br1>");
+		
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
-			Set<String> recipts = new HashSet<>(5);
-			String[] recipAr = recipients.split(";");
-			for (String r : recipAr)
-				recipts.add(r.trim());
+			// Get the current time under timestamp format.
+			final Timestamp time = new Timestamp(currentDate);
 			
-			message = message.replaceAll("\n", "<br1>");
-			
-			boolean sent = false;
-			int countRecips = 0;
-			
-			Timestamp time = new Timestamp(date);
 			PreparedStatement statement = null;
 			
-			for (String recipient : recipts)
+			for (String recipientName : recipientNames)
 			{
-				int recipId = CharNameTable.getInstance().getIdByName(recipient);
-				if (recipId <= 0 || recipId == activeChar.getObjectId())
-					activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
-				else if (!activeChar.isGM())
+				// Recipient is an invalid player, or is the sender.
+				final int recipientId = CharNameTable.getInstance().getPlayerObjectId(recipientName);
+				if (recipientId <= 0 || recipientId == activeChar.getObjectId())
 				{
-					if (isGM(recipId))
-						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANNOT_MAIL_GM_S1).addString(recipient));
-					else if (isBlocked(activeChar, recipId))
-						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_BLOCKED_YOU_CANNOT_MAIL).addString(recipient));
-					else if (isRecipInboxFull(recipId))
+					activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
+					continue;
+				}
+				
+				final L2PcInstance recipientPlayer = L2World.getInstance().getPlayer(recipientId);
+				
+				if (!activeChar.isGM())
+				{
+					// Sender is a regular player, while recipient is a GM.
+					if (isGM(recipientId))
+					{
+						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.CANNOT_MAIL_GM_S1).addString(recipientName));
+						continue;
+					}
+					
+					// The recipient is on block mode.
+					if (isBlocked(activeChar, recipientId))
+					{
+						activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_BLOCKED_YOU_CANNOT_MAIL).addString(recipientName));
+						continue;
+					}
+					
+					// The recipient box is already full.
+					if (isRecipInboxFull(recipientId))
 					{
 						activeChar.sendPacket(SystemMessageId.MESSAGE_NOT_SENT);
+						if (recipientPlayer != null)
+							recipientPlayer.sendPacket(SystemMessageId.MAILBOX_FULL);
 						
-						L2PcInstance PCrecipient = L2World.getInstance().getPlayer(recipient);
-						if (PCrecipient != null)
-							PCrecipient.sendPacket(SystemMessageId.MAILBOX_FULL);
+						continue;
 					}
 				}
-				else if (countRecips < 5 && !activeChar.isGM() || activeChar.isGM())
+				
+				final int id = getNewMailId();
+				
+				if (statement == null)
 				{
-					int id = getNewMailId();
-					if (statement == null)
-					{
-						statement = con.prepareStatement(INSERT_NEW_MAIL);
-						statement.setInt(3, activeChar.getObjectId());
-						statement.setString(4, "inbox");
-						statement.setString(5, recipients);
-						statement.setString(6, abbreviate(subject, 128));
-						statement.setString(7, message);
-						statement.setTimestamp(8, time);
-						statement.setInt(9, 1);
-					}
-					statement.setInt(1, recipId);
-					statement.setInt(2, id);
-					statement.execute();
-					sent = true;
-					
-					Mail letter = new Mail();
-					letter.charId = recipId;
-					letter.letterId = id;
-					letter.senderId = activeChar.getObjectId();
-					letter.location = MailType.INBOX;
-					letter.recipientNames = recipients;
-					letter.subject = abbreviate(subject, 128);
-					letter.message = message;
-					letter.sentDate = time;
-					letter.sentDateString = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(letter.sentDate);
-					letter.unread = true;
-					getPlayerMails(recipId).add(0, letter);
-					
-					countRecips++;
-					
-					L2PcInstance PCrecipient = L2World.getInstance().getPlayer(recipient);
-					if (PCrecipient != null)
-					{
-						PCrecipient.sendPacket(SystemMessageId.NEW_MAIL);
-						PCrecipient.sendPacket(new PlaySound("systemmsg_e.1233"));
-						PCrecipient.sendPacket(ExMailArrived.STATIC_PACKET);
-					}
+					statement = con.prepareStatement(INSERT_NEW_MAIL);
+					statement.setInt(3, activeChar.getObjectId());
+					statement.setString(4, "inbox");
+					statement.setString(5, recipients);
+					statement.setString(6, abbreviate(subject, 128));
+					statement.setString(7, message);
+					statement.setTimestamp(8, time);
+					statement.setInt(9, 1);
+				}
+				statement.setInt(1, recipientId);
+				statement.setInt(2, id);
+				statement.execute();
+				
+				final Mail letter = new Mail();
+				letter.charId = recipientId;
+				letter.letterId = id;
+				letter.senderId = activeChar.getObjectId();
+				letter.location = MailType.INBOX;
+				letter.recipientNames = recipients;
+				letter.subject = abbreviate(subject, 128);
+				letter.message = message;
+				letter.sentDate = time;
+				letter.sentDateString = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(letter.sentDate);
+				letter.unread = true;
+				getPlayerMails(recipientId).add(0, letter);
+				
+				if (recipientPlayer != null)
+				{
+					recipientPlayer.sendPacket(SystemMessageId.NEW_MAIL);
+					recipientPlayer.sendPacket(new PlaySound("systemmsg_e.1233"));
+					recipientPlayer.sendPacket(ExMailArrived.STATIC_PACKET);
 				}
 			}
 			
-			// Create a copy into activeChar's sent box
+			// Create a copy into activeChar's sent box, if at least one recipient has been reached.
 			if (statement != null)
 			{
-				int id = getNewMailId();
+				final int id = getNewMailId();
 				
 				statement.setInt(1, activeChar.getObjectId());
 				statement.setInt(2, id);
@@ -585,7 +600,7 @@ public class MailBBSManager extends BaseBBSManager
 				statement.execute();
 				statement.close();
 				
-				Mail letter = new Mail();
+				final Mail letter = new Mail();
 				letter.charId = activeChar.getObjectId();
 				letter.letterId = id;
 				letter.senderId = activeChar.getObjectId();
@@ -597,13 +612,9 @@ public class MailBBSManager extends BaseBBSManager
 				letter.sentDateString = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(letter.sentDate);
 				letter.unread = false;
 				getPlayerMails(activeChar.getObjectId()).add(0, letter);
-			}
-			
-			if (countRecips > 5 && !activeChar.isGM())
-				activeChar.sendPacket(SystemMessageId.ONLY_FIVE_RECIPIENTS);
-			
-			if (sent)
+				
 				activeChar.sendPacket(SystemMessageId.SENT_MAIL);
+			}
 		}
 		catch (Exception e)
 		{
@@ -720,7 +731,7 @@ public class MailBBSManager extends BaseBBSManager
 	
 	private static String getCharName(int charId)
 	{
-		String name = CharNameTable.getInstance().getNameById(charId);
+		String name = CharNameTable.getInstance().getPlayerName(charId);
 		return name == null ? "Unknown" : name;
 	}
 	

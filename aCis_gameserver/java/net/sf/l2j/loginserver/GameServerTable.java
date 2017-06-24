@@ -25,12 +25,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 import net.sf.l2j.loginserver.network.gameserverpackets.ServerStatus;
 
@@ -38,21 +38,15 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-/**
- * @author KenM
- */
 public class GameServerTable
 {
-	private static Logger _log = Logger.getLogger(GameServerTable.class.getName());
+	private static final Logger _log = Logger.getLogger(GameServerTable.class.getName());
 	
-	// Server Names Config
-	private static Map<Integer, String> _serverNames = new HashMap<>();
+	private static final int KEYS_SIZE = 10;
 	
-	// Game Server Table
+	private final Map<Integer, String> _serverNames = new HashMap<>();
 	private final Map<Integer, GameServerInfo> _gameServerTable = new ConcurrentHashMap<>();
 	
-	// RSA Config
-	private static final int KEYS_SIZE = 10;
 	private KeyPair[] _keyPairs;
 	
 	protected GameServerTable()
@@ -84,7 +78,7 @@ public class GameServerTable
 		}
 	}
 	
-	private static void loadServerNames()
+	private void loadServerNames()
 	{
 		try
 		{
@@ -118,10 +112,10 @@ public class GameServerTable
 			PreparedStatement statement = con.prepareStatement("SELECT * FROM gameservers");
 			ResultSet rset = statement.executeQuery();
 			
-			int id;
 			while (rset.next())
 			{
-				id = rset.getInt("server_id");
+				final int id = rset.getInt("server_id");
+				
 				_gameServerTable.put(id, new GameServerInfo(id, stringToHex(rset.getString("hexid"))));
 			}
 			rset.close();
@@ -138,38 +132,9 @@ public class GameServerTable
 		return _gameServerTable;
 	}
 	
-	public GameServerInfo getRegisteredGameServerById(int id)
+	public boolean registerWithFirstAvailableId(GameServerInfo gsi)
 	{
-		return _gameServerTable.get(id);
-	}
-	
-	public boolean hasRegisteredGameServerOnId(int id)
-	{
-		return _gameServerTable.containsKey(id);
-	}
-	
-	public boolean registerWithFirstAvaliableId(GameServerInfo gsi)
-	{
-		// avoid two servers registering with the same "free" id
-		synchronized (_gameServerTable)
-		{
-			for (Entry<Integer, String> entry : _serverNames.entrySet())
-			{
-				if (!_gameServerTable.containsKey(entry.getKey()))
-				{
-					_gameServerTable.put(entry.getKey(), gsi);
-					gsi.setId(entry.getKey());
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	
-	public boolean register(int id, GameServerInfo gsi)
-	{
-		// avoid two servers registering with the same id
-		synchronized (_gameServerTable)
+		for (int id : _serverNames.keySet())
 		{
 			if (!_gameServerTable.containsKey(id))
 			{
@@ -181,9 +146,20 @@ public class GameServerTable
 		return false;
 	}
 	
+	public boolean register(int id, GameServerInfo gsi)
+	{
+		if (!_gameServerTable.containsKey(id))
+		{
+			_gameServerTable.put(id, gsi);
+			gsi.setId(id);
+			return true;
+		}
+		return false;
+	}
+	
 	public void registerServerOnDB(GameServerInfo gsi)
 	{
-		this.registerServerOnDB(gsi.getHexId(), gsi.getId(), gsi.getExternalHost());
+		registerServerOnDB(gsi.getHexId(), gsi.getId(), gsi.getExternalHost());
 	}
 	
 	public void registerServerOnDB(byte[] hexId, int id, String externalHost)
@@ -203,11 +179,6 @@ public class GameServerTable
 		}
 	}
 	
-	public String getServerNameById(int id)
-	{
-		return getServerNames().get(id);
-	}
-	
 	public Map<Integer, String> getServerNames()
 	{
 		return _serverNames;
@@ -225,10 +196,7 @@ public class GameServerTable
 	
 	private static String hexToString(byte[] hex)
 	{
-		if (hex == null)
-			return "null";
-		
-		return new BigInteger(hex).toString(16);
+		return (hex == null) ? "null" : new BigInteger(hex).toString(16);
 	}
 	
 	public static class GameServerInfo
