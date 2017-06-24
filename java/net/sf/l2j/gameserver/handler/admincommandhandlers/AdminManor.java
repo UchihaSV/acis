@@ -17,8 +17,9 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.lang.StringUtil;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.CastleManorManager;

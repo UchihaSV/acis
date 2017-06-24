@@ -21,8 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.lang.StringUtil;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.GmListTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;

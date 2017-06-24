@@ -13,7 +13,9 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -97,7 +99,13 @@ public class Q223_TestOfTheChampion extends Quest
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
 			st.giveItems(ASCALON_LETTER_1, 1);
-			st.giveItems(DIMENSIONAL_DIAMOND, 64);
+			
+			if (!player.getMemos().getBool("secondClassChange39", false))
+			{
+				htmltext = "30624-06a.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_39.get(player.getClassId().getId()));
+				player.getMemos().set("secondClassChange39", true);
+			}
 		}
 		else if (event.equals("30624-10.htm"))
 		{
@@ -158,12 +166,12 @@ public class Q223_TestOfTheChampion extends Quest
 		{
 			case STATE_CREATED:
 				final ClassId classId = player.getClassId();
-				if (classId != ClassId.warrior && classId != ClassId.orcRaider)
+				if (classId != ClassId.WARRIOR && classId != ClassId.ORC_RAIDER)
 					htmltext = "30624-01.htm";
 				else if (player.getLevel() < 39)
 					htmltext = "30624-02.htm";
 				else
-					htmltext = (classId == ClassId.warrior) ? "30624-03.htm" : "30624-04.htm";
+					htmltext = (classId == ClassId.WARRIOR) ? "30624-03.htm" : "30624-04.htm";
 				break;
 			
 			case STATE_STARTED:
@@ -274,7 +282,7 @@ public class Q223_TestOfTheChampion extends Quest
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		QuestState st = checkPlayerState(attacker, npc, STATE_STARTED);
 		if (st == null)

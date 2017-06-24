@@ -123,18 +123,27 @@ public class Q214_TrialOfTheScholar extends Quest
 			return htmltext;
 		
 		// MIRIEN
-		if (event.equalsIgnoreCase("30461-04a.htm"))
+		if (event.equalsIgnoreCase("30461-04.htm"))
 		{
 			st.setState(STATE_STARTED);
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
 			st.giveItems(MIRIEN_SIGIL_1, 1);
-			st.giveItems(DIMENSIONAL_DIAMOND, 168);
+			
+			if (!player.getMemos().getBool("secondClassChange35", false))
+			{
+				htmltext = "30461-04a.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_35.get(player.getClassId().getId()));
+				player.getMemos().set("secondClassChange35", true);
+			}
 		}
 		else if (event.equalsIgnoreCase("30461-09.htm"))
 		{
 			if (player.getLevel() < 36)
+			{
+				st.playSound(QuestState.SOUND_ITEMGET);
 				st.giveItems(MIRIEN_INSTRUCTION, 1);
+			}
 			else
 			{
 				htmltext = "30461-10.htm";
@@ -278,7 +287,10 @@ public class Q214_TrialOfTheScholar extends Quest
 		}
 		// VALKON
 		else if (event.equalsIgnoreCase("30103-04.htm"))
+		{
+			st.playSound(QuestState.SOUND_ITEMGET);
 			st.giveItems(VALKON_REQUEST, 1);
+		}
 		// CASIAN
 		else if (event.equalsIgnoreCase("30612-04.htm"))
 		{
@@ -313,7 +325,7 @@ public class Q214_TrialOfTheScholar extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				if (player.getClassId() != ClassId.wizard && player.getClassId() != ClassId.elvenWizard && player.getClassId() != ClassId.darkWizard)
+				if (player.getClassId() != ClassId.HUMAN_WIZARD && player.getClassId() != ClassId.ELVEN_WIZARD && player.getClassId() != ClassId.DARK_WIZARD)
 					htmltext = "30461-01.htm";
 				else if (player.getLevel() < 35)
 					htmltext = "30461-02.htm";
@@ -444,6 +456,7 @@ public class Q214_TrialOfTheScholar extends Quest
 							else
 							{
 								htmltext = "30608-18.htm";
+								st.playSound(QuestState.SOUND_ITEMGET);
 								st.takeItems(VALKON_REQUEST, 1);
 								st.giveItems(CRYSTAL_OF_PURITY_2, 1);
 							}
@@ -576,6 +589,7 @@ public class Q214_TrialOfTheScholar extends Quest
 									else
 									{
 										htmltext = "30103-06.htm";
+										st.playSound(QuestState.SOUND_ITEMGET);
 										st.takeItems(CRYSTAL_OF_PURITY_2, 1);
 										st.giveItems(SCRIPTURE_CHAPTER_2, 1);
 									}
@@ -594,6 +608,7 @@ public class Q214_TrialOfTheScholar extends Quest
 							if (!st.hasQuestItems(POITAN_NOTES))
 							{
 								htmltext = "30458-01.htm";
+								st.playSound(QuestState.SOUND_ITEMGET);
 								st.giveItems(POITAN_NOTES, 1);
 							}
 							else

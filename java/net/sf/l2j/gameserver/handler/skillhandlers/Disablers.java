@@ -200,7 +200,7 @@ public class Disablers implements ISkillHandler
 							if (targ.getMostHated() == null && targ.hasAI() && targ.getAI() instanceof L2AttackableAI)
 							{
 								((L2AttackableAI) targ.getAI()).setGlobalAggro(-25);
-								targ.clearAggroList();
+								targ.getAggroList().clear();
 								targ.getAI().setIntention(CtrlIntention.ACTIVE);
 								targ.setWalking();
 							}

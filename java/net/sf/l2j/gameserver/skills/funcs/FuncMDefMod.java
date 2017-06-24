@@ -15,7 +15,6 @@
 package net.sf.l2j.gameserver.skills.funcs;
 
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.skills.Formulas;
@@ -39,9 +38,6 @@ public class FuncMDefMod extends Func
 	@Override
 	public void calc(Env env)
 	{
-		if (env.getCharacter() instanceof L2PetInstance)
-			return;
-		
 		if (env.getCharacter() instanceof L2PcInstance)
 		{
 			final L2PcInstance player = env.getPlayer();
@@ -57,6 +53,6 @@ public class FuncMDefMod extends Func
 				env.subValue(13);
 		}
 		
-		env.mulValue(Formulas.MENbonus[env.getCharacter().getMEN()] * env.getCharacter().getLevelMod());
+		env.mulValue(Formulas.MEN_BONUS[env.getCharacter().getMEN()] * env.getCharacter().getLevelMod());
 	}
 }

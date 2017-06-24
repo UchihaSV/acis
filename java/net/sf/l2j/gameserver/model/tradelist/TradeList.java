@@ -810,8 +810,6 @@ public class TradeList
 			if (ownerInventory.getAdena() < _totalPrice)
 				continue;
 			
-			// TODO: eventually test and fix this.
-			
 			// Check if requested item is available for manipulation
 			int objectId = item.getObjectId();
 			ItemInstance oldItem = player.checkItemManipulation(objectId, item.getCount());

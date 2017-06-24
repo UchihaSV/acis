@@ -17,10 +17,13 @@ package net.sf.l2j.gameserver.scripting.scripts.ai.individual;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2GrandBossInstance;
@@ -29,12 +32,12 @@ import net.sf.l2j.gameserver.model.zone.type.L2BossZone;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.network.serverpackets.SpecialCamera;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 import net.sf.l2j.gameserver.templates.StatsSet;
 
-public class Sailren extends AbstractNpcAI
+public class Sailren extends L2AttackableAIScript
 {
-	private static final L2BossZone SAILREN_LAIR = GrandBossManager.getInstance().getZoneById(110015);
+	private static final L2BossZone SAILREN_LAIR = ZoneManager.getInstance().getZoneById(110015, L2BossZone.class);
 	
 	public static final int SAILREN = 29065;
 	
@@ -59,9 +62,6 @@ public class Sailren extends AbstractNpcAI
 	public Sailren()
 	{
 		super("ai/individual");
-		
-		addAttackId(VELOCIRAPTOR, PTEROSAUR, TREX, SAILREN);
-		addKillId(VELOCIRAPTOR, PTEROSAUR, TREX, SAILREN);
 		
 		final StatsSet info = GrandBossManager.getInstance().getStatsSet(SAILREN);
 		
@@ -94,6 +94,13 @@ public class Sailren extends AbstractNpcAI
 				startQuestTimer("inactivity", INTERVAL_CHECK, null, null, true);
 				break;
 		}
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addAttackId(VELOCIRAPTOR, PTEROSAUR, TREX, SAILREN);
+		addKillId(VELOCIRAPTOR, PTEROSAUR, TREX, SAILREN);
 	}
 	
 	@Override
@@ -255,11 +262,11 @@ public class Sailren extends AbstractNpcAI
 				break;
 		}
 		
-		return null;
+		return super.onKill(npc, killer, isPet);
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (!_mobs.contains(npc) || !SAILREN_LAIR.getAllowedPlayers().contains(attacker.getObjectId()))
 			return null;
@@ -267,6 +274,6 @@ public class Sailren extends AbstractNpcAI
 		// Actualize _timeTracker.
 		_lastAttackTime = System.currentTimeMillis();
 		
-		return null;
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 }

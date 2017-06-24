@@ -21,7 +21,7 @@ import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.ItemRequest;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.PrivateStoreType;
+import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.StoreType;
 import net.sf.l2j.gameserver.model.tradelist.TradeList;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.util.Util;
@@ -79,7 +79,7 @@ public final class RequestPrivateStoreBuy extends L2GameClientPacket
 		if (!player.isInsideRadius(storePlayer, 150, true, false))
 			return;
 		
-		if (!(storePlayer.getPrivateStoreType() == PrivateStoreType.SELL || storePlayer.getPrivateStoreType() == PrivateStoreType.PACKAGE_SELL))
+		if (!(storePlayer.getStoreType() == StoreType.SELL || storePlayer.getStoreType() == StoreType.PACKAGE_SELL))
 			return;
 		
 		TradeList storeList = storePlayer.getSellList();
@@ -92,7 +92,7 @@ public final class RequestPrivateStoreBuy extends L2GameClientPacket
 			return;
 		}
 		
-		if (storePlayer.getPrivateStoreType() == PrivateStoreType.PACKAGE_SELL)
+		if (storePlayer.getStoreType() == StoreType.PACKAGE_SELL)
 		{
 			if (storeList.getItems().size() > _items.size())
 			{
@@ -111,7 +111,7 @@ public final class RequestPrivateStoreBuy extends L2GameClientPacket
 		
 		if (storeList.getItems().isEmpty())
 		{
-			storePlayer.setPrivateStoreType(PrivateStoreType.NONE);
+			storePlayer.setStoreType(StoreType.NONE);
 			storePlayer.broadcastUserInfo();
 		}
 	}

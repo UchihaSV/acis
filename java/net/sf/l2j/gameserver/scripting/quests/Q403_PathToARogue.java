@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
@@ -66,8 +67,8 @@ public class Q403_PathToARogue extends Quest
 		
 		if (event.equalsIgnoreCase("30379-05.htm"))
 		{
-			if (player.getClassId() != ClassId.fighter)
-				htmltext = (player.getClassId() == ClassId.rogue) ? "30379-02a.htm" : "30379-02.htm";
+			if (player.getClassId() != ClassId.HUMAN_FIGHTER)
+				htmltext = (player.getClassId() == ClassId.ROGUE) ? "30379-02a.htm" : "30379-02.htm";
 			else if (player.getLevel() < 19)
 				htmltext = "30379-02.htm";
 			else if (st.hasQuestItems(BEZIQUE_RECOMMENDATION))

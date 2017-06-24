@@ -17,7 +17,7 @@ package net.sf.l2j.gameserver.model.actor.knownlist;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
 
-public class SummonKnownList extends PlayableKnownList
+public class SummonKnownList extends CharKnownList
 {
 	public SummonKnownList(L2Summon activeChar)
 	{

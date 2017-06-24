@@ -28,9 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
+import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -55,15 +56,10 @@ public class MonsterRace
 		RACE_END
 	}
 	
-	protected static final PlaySound _sound1 = new PlaySound(1, "S_Race", 0, 0, 0, 0, 0);
-	protected static final PlaySound _sound2 = new PlaySound(0, "ItemSound2.race_start", 1, 121209259, 12125, 182487, -3559);
+	protected static final PlaySound SOUND_1 = new PlaySound(1, "S_Race", 0, 0, 0, 0, 0);
+	protected static final PlaySound SOUND_2 = new PlaySound(0, "ItemSound2.race_start", 1, 121209259, 12125, 182487, -3559);
 	
-	protected static final List<Integer> _npcTemplates = new ArrayList<>(); // List holding npc templates, shuffled on a new race.
-	protected static final List<HistoryInfo> _history = new ArrayList<>(); // List holding old race records.
-	protected static final Map<Integer, Long> _betsPerLane = new ConcurrentHashMap<>(); // Map holding all bets for each lane ; values setted to 0 after every race.
-	protected static final List<Double> _odds = new ArrayList<>(); // List holding sorted odds per lane ; cleared at new odds calculation.
-	
-	protected static final int[][] _codes =
+	protected static final int[][] CODES =
 	{
 		{
 			-1,
@@ -79,11 +75,16 @@ public class MonsterRace
 		}
 	};
 	
-	protected static int _raceNumber = 1;
-	protected static int _finalCountdown = 0;
-	protected static RaceState _state = RaceState.RACE_END;
+	protected final List<Integer> _npcTemplates = new ArrayList<>(); // List holding npc templates, shuffled on a new race.
+	protected final List<HistoryInfo> _history = new ArrayList<>(); // List holding old race records.
+	protected final Map<Integer, Long> _betsPerLane = new ConcurrentHashMap<>(); // Map holding all bets for each lane ; values setted to 0 after every race.
+	protected final List<Double> _odds = new ArrayList<>(); // List holding sorted odds per lane ; cleared at new odds calculation.
 	
-	protected static MonRaceInfo _packet;
+	protected int _raceNumber = 1;
+	protected int _finalCountdown = 0;
+	protected RaceState _state = RaceState.RACE_END;
+	
+	protected MonRaceInfo _packet;
 	
 	private final L2Npc[] _monsters;
 	private Constructor<?> _constructor;
@@ -107,7 +108,7 @@ public class MonsterRace
 		_first = new int[2];
 		_second = new int[2];
 		
-		ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new Announcement(), 0, 1000);
+		ThreadPool.scheduleAtFixedRate(new Announcement(), 0, 1000);
 	}
 	
 	public static MonsterRace getInstance()
@@ -185,7 +186,7 @@ public class MonsterRace
 					newSpeeds();
 					
 					_state = RaceState.ACCEPTING_BETS;
-					_packet = new MonRaceInfo(_codes[0][0], _codes[0][1], getMonsters(), getSpeeds());
+					_packet = new MonRaceInfo(CODES[0][0], CODES[0][1], getMonsters(), getSpeeds());
 					
 					Broadcast.toAllPlayersInZoneType(L2DerbyTrackZone.class, _packet, SystemMessage.getSystemMessage(SystemMessageId.MONSRACE_TICKETS_AVAILABLE_FOR_S1_RACE).addNumber(_raceNumber));
 					break;
@@ -264,13 +265,13 @@ public class MonsterRace
 				
 				case 1080: // 18 min
 					_state = RaceState.STARTING_RACE;
-					_packet = new MonRaceInfo(_codes[1][0], _codes[1][1], getMonsters(), getSpeeds());
+					_packet = new MonRaceInfo(CODES[1][0], CODES[1][1], getMonsters(), getSpeeds());
 					
-					Broadcast.toAllPlayersInZoneType(L2DerbyTrackZone.class, SystemMessage.getSystemMessage(SystemMessageId.MONSRACE_RACE_START), _sound1, _sound2, _packet);
+					Broadcast.toAllPlayersInZoneType(L2DerbyTrackZone.class, SystemMessage.getSystemMessage(SystemMessageId.MONSRACE_RACE_START), SOUND_1, SOUND_2, _packet);
 					break;
 				
 				case 1085: // 18 min 5 sec
-					_packet = new MonRaceInfo(_codes[2][0], _codes[2][1], getMonsters(), getSpeeds());
+					_packet = new MonRaceInfo(CODES[2][0], CODES[2][1], getMonsters(), getSpeeds());
 					
 					Broadcast.toAllPlayersInZoneType(L2DerbyTrackZone.class, _packet);
 					break;
@@ -362,7 +363,7 @@ public class MonsterRace
 	 * Load past races informations, feeding _history arrayList.<br>
 	 * Also sets _raceNumber, based on latest HistoryInfo loaded.
 	 */
-	protected static void loadHistory()
+	protected void loadHistory()
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -388,7 +389,7 @@ public class MonsterRace
 	 * Save an history record into database.
 	 * @param history The infos to store.
 	 */
-	protected static void saveHistory(HistoryInfo history)
+	protected void saveHistory(HistoryInfo history)
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -409,7 +410,7 @@ public class MonsterRace
 	/**
 	 * Load current bets per lane ; initialize the map keys.
 	 */
-	protected static void loadBets()
+	protected void loadBets()
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -433,7 +434,7 @@ public class MonsterRace
 	 * @param lane : The lane to affect.
 	 * @param sum : The sum to set.
 	 */
-	protected static void saveBet(int lane, long sum)
+	protected void saveBet(int lane, long sum)
 	{
 		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
 		{
@@ -452,7 +453,7 @@ public class MonsterRace
 	/**
 	 * Clear all lanes bets, either on database or Map.
 	 */
-	protected static void clearBets()
+	protected void clearBets()
 	{
 		for (int key : _betsPerLane.keySet())
 			_betsPerLane.put(key, 0L);
@@ -475,7 +476,7 @@ public class MonsterRace
 	 * @param amount : The amount to add.
 	 * @param saveOnDb : Should it be saved on db or not.
 	 */
-	public static void setBetOnLane(int lane, long amount, boolean saveOnDb)
+	public void setBetOnLane(int lane, long amount, boolean saveOnDb)
 	{
 		final long sum = (_betsPerLane.containsKey(lane)) ? _betsPerLane.get(lane) + amount : amount;
 		
@@ -488,7 +489,7 @@ public class MonsterRace
 	/**
 	 * Calculate odds for every lane, based on others lanes.
 	 */
-	protected static void calculateOdds()
+	protected void calculateOdds()
 	{
 		// Clear previous List holding old odds.
 		_odds.clear();

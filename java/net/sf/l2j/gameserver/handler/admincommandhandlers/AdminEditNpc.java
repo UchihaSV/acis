@@ -14,11 +14,13 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.gameserver.datatables.BuyListTable;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.NpcTable;
@@ -265,10 +267,10 @@ public class AdminEditNpc implements IAdminCommandHandler
 			return;
 		}
 		
-		final L2Skill[] skills = npcData.getSkillsArray();
+		final Collection<L2Skill> skills = npcData.getSkills().values();
 		
 		final StringBuilder sb = new StringBuilder(500);
-		StringUtil.append(sb, "<html><body><center><font color=\"LEVEL\">", npcData.getName(), " (", npcId, "): ", skills.length, " skills</font></center><table width=\"100%\">");
+		StringUtil.append(sb, "<html><body><center><font color=\"LEVEL\">", npcData.getName(), " (", npcId, "): ", skills.size(), " skills</font></center><table width=\"100%\">");
 		
 		for (L2Skill skill : skills)
 			StringUtil.append(sb, "<tr><td>", ((skill.getSkillType() == L2SkillType.NOTDONE) ? ("<font color=\"777777\">" + skill.getName() + "</font>") : skill.getName()), " [", skill.getId(), "-", skill.getLevel(), "]</td></tr>");

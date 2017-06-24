@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
@@ -80,12 +81,18 @@ public class Q211_TrialOfTheChallenger extends Quest
 			return htmltext;
 		
 		// KASH
-		if (event.equalsIgnoreCase("30644-05a.htm"))
+		if (event.equalsIgnoreCase("30644-05.htm"))
 		{
 			st.setState(STATE_STARTED);
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
-			st.giveItems(DIMENSIONAL_DIAMOND, 61);
+			
+			if (!player.getMemos().getBool("secondClassChange35", false))
+			{
+				htmltext = "30644-05a.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_35.get(player.getClassId().getId()));
+				player.getMemos().set("secondClassChange35", true);
+			}
 		}
 		// MARTIEN
 		else if (event.equalsIgnoreCase("30645-02.htm"))
@@ -153,7 +160,7 @@ public class Q211_TrialOfTheChallenger extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				if (player.getClassId() != ClassId.warrior && player.getClassId() != ClassId.elvenKnight && player.getClassId() != ClassId.palusKnight && player.getClassId() != ClassId.orcRaider && player.getClassId() != ClassId.orcMonk)
+				if (player.getClassId() != ClassId.WARRIOR && player.getClassId() != ClassId.ELVEN_KNIGHT && player.getClassId() != ClassId.PALUS_KNIGHT && player.getClassId() != ClassId.ORC_RAIDER && player.getClassId() != ClassId.MONK)
 					htmltext = "30644-02.htm";
 				else if (player.getLevel() < 35)
 					htmltext = "30644-01.htm";

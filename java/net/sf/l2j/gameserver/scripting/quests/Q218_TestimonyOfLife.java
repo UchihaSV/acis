@@ -13,9 +13,10 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.base.Race;
+import net.sf.l2j.gameserver.model.base.ClassRace;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.scripting.Quest;
@@ -101,7 +102,13 @@ public class Q218_TestimonyOfLife extends Quest
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
 			st.giveItems(CARDIEN_LETTER, 1);
-			st.giveItems(DIMENSIONAL_DIAMOND, 16);
+			
+			if (!player.getMemos().getBool("secondClassChange37", false))
+			{
+				htmltext = "30460-04a.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_37.get(player.getRace().ordinal()));
+				player.getMemos().set("secondClassChange37", true);
+			}
 		}
 		else if (event.equalsIgnoreCase("30154-07.htm"))
 		{
@@ -189,7 +196,7 @@ public class Q218_TestimonyOfLife extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				if (player.getRace() != Race.Elf)
+				if (player.getRace() != ClassRace.ELF)
 					htmltext = "30460-01.htm";
 				else if (player.getLevel() < 37 || player.getClassId().level() != 1)
 					htmltext = "30460-02.htm";

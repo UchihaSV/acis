@@ -14,12 +14,13 @@
  */
 package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.commons.math.MathUtil;
+
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -51,7 +52,7 @@ public class AdminSkill implements IAdminCommandHandler
 		"admin_st"
 	};
 	
-	private static L2Skill[] ADMIN_SKILLS;
+	private static final List<L2Skill> ADMIN_SKILLS = new ArrayList<>();
 	
 	@Override
 	public boolean useAdminCommand(String command, L2PcInstance activeChar)
@@ -123,7 +124,7 @@ public class AdminSkill implements IAdminCommandHandler
 			{
 				L2PcInstance player = (L2PcInstance) activeChar.getTarget();
 				
-				for (L2Skill skill : player.getAllSkills())
+				for (L2Skill skill : player.getSkills().values())
 					player.removeSkill(skill);
 				
 				activeChar.sendMessage("You removed all skills from " + player.getName() + ".");
@@ -211,7 +212,7 @@ public class AdminSkill implements IAdminCommandHandler
 			return;
 		}
 		
-		List<L2Skill> skills = Arrays.asList(player.getAllSkills());
+		List<L2Skill> skills = new ArrayList<>(player.getSkills().values());
 		
 		final int max = MathUtil.countPagesNumber(skills.size(), PAGE_LIMIT);
 		
@@ -278,31 +279,26 @@ public class AdminSkill implements IAdminCommandHandler
 			player.sendPacket(SystemMessageId.CANNOT_USE_ON_YOURSELF);
 		else
 		{
-			L2Skill[] skills = player.getAllSkills();
-			ADMIN_SKILLS = activeChar.getAllSkills();
+			ADMIN_SKILLS.addAll(activeChar.getSkills().values());
 			
 			for (L2Skill skill : ADMIN_SKILLS)
 				activeChar.removeSkill(skill);
 			
-			for (L2Skill skill : skills)
+			for (L2Skill skill : player.getSkills().values())
 				activeChar.addSkill(skill, true);
 			
 			activeChar.sendMessage("You ninjaed " + player.getName() + "'s skills list.");
 			activeChar.sendSkillList();
-			
-			skills = null;
 		}
 	}
 	
 	private static void adminResetSkills(L2PcInstance activeChar)
 	{
-		if (ADMIN_SKILLS == null)
+		if (ADMIN_SKILLS.isEmpty())
 			activeChar.sendMessage("Ninja first skills of someone to use that command.");
 		else
 		{
-			L2Skill[] skills = activeChar.getAllSkills();
-			
-			for (L2Skill skill : skills)
+			for (L2Skill skill : activeChar.getSkills().values())
 				activeChar.removeSkill(skill);
 			
 			for (L2Skill skill : ADMIN_SKILLS)
@@ -311,8 +307,7 @@ public class AdminSkill implements IAdminCommandHandler
 			activeChar.sendMessage("All your skills have been returned back.");
 			activeChar.sendSkillList();
 			
-			ADMIN_SKILLS = null;
-			skills = null;
+			ADMIN_SKILLS.clear();
 		}
 	}
 	

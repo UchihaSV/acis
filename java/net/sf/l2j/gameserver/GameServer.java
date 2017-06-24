@@ -25,12 +25,13 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
-import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.Server;
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.commons.mmocore.SelectorConfig;
 import net.sf.l2j.commons.mmocore.SelectorThread;
+
+import net.sf.l2j.Config;
+import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.cache.CrestCache;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.communitybbs.Manager.ForumsBBSManager;
@@ -56,7 +57,6 @@ import net.sf.l2j.gameserver.datatables.MapRegionTable;
 import net.sf.l2j.gameserver.datatables.MultisellData;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.NpcWalkerRoutesTable;
-import net.sf.l2j.gameserver.datatables.PetDataTable;
 import net.sf.l2j.gameserver.datatables.RecipeTable;
 import net.sf.l2j.gameserver.datatables.ServerMemo;
 import net.sf.l2j.gameserver.datatables.SkillTable;
@@ -67,8 +67,7 @@ import net.sf.l2j.gameserver.datatables.SpellbookTable;
 import net.sf.l2j.gameserver.datatables.StaticObjects;
 import net.sf.l2j.gameserver.datatables.SummonItemsData;
 import net.sf.l2j.gameserver.datatables.TeleportLocationTable;
-import net.sf.l2j.gameserver.geoengine.GeoData;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.handler.AdminCommandHandler;
 import net.sf.l2j.gameserver.handler.ChatHandler;
 import net.sf.l2j.gameserver.handler.ItemHandler;
@@ -122,7 +121,6 @@ import net.sf.l2j.gameserver.taskmanager.MovementTaskManager;
 import net.sf.l2j.gameserver.taskmanager.PvpFlagTaskManager;
 import net.sf.l2j.gameserver.taskmanager.RandomAnimationTaskManager;
 import net.sf.l2j.gameserver.taskmanager.ShadowItemTaskManager;
-import net.sf.l2j.gameserver.taskmanager.TaskManager;
 import net.sf.l2j.gameserver.taskmanager.WaterTaskManager;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 import net.sf.l2j.util.DeadLockDetector;
@@ -152,11 +150,13 @@ public class GameServer
 	public GameServer() throws Exception
 	{
 		gameServer = this;
-		
-		IdFactory.getInstance();
-		ThreadPoolManager.getInstance();
-		
 		new File("./data/crests").mkdirs();
+		
+		StringUtil.printSection("ThreadPool");
+		ThreadPool.init();
+		
+		StringUtil.printSection("IdFactory");
+		IdFactory.getInstance();
 		
 		StringUtil.printSection("World");
 		L2World.getInstance();
@@ -213,15 +213,10 @@ public class GameServer
 		ClanHallManager.getInstance();
 		
 		StringUtil.printSection("Geodata & Pathfinding");
-		GeoData.initialize();
-		PathFinding.initialize();
-		
-		StringUtil.printSection("World Bosses");
-		GrandBossManager.getInstance();
+		GeoEngine.getInstance();
 		
 		StringUtil.printSection("Zones");
 		ZoneManager.getInstance();
-		GrandBossManager.getInstance().initZones();
 		
 		StringUtil.printSection("Task Managers");
 		AttackStanceTaskManager.getInstance();
@@ -254,13 +249,13 @@ public class GameServer
 		StringUtil.printSection("NPCs");
 		BufferTable.getInstance();
 		HerbDropTable.getInstance();
-		PetDataTable.getInstance();
 		NpcTable.getInstance();
 		NpcWalkerRoutesTable.getInstance();
-		DoorTable.getInstance();
+		DoorTable.getInstance().spawn();
 		StaticObjects.load();
 		SpawnTable.getInstance();
 		RaidBossSpawnManager.getInstance();
+		GrandBossManager.getInstance();
 		DayNightSpawnManager.getInstance();
 		DimensionalRiftManager.getInstance();
 		
@@ -303,7 +298,6 @@ public class GameServer
 			FishingChampionshipManager.getInstance();
 		
 		StringUtil.printSection("System");
-		TaskManager.getInstance();
 		Runtime.getRuntime().addShutdownHook(Shutdown.getInstance());
 		ForumsBBSManager.getInstance();
 		_log.config("IdFactory: Free ObjectIDs remaining: " + IdFactory.getInstance().size());
@@ -369,8 +363,6 @@ public class GameServer
 	
 	public static void main(String[] args) throws Exception
 	{
-		Server.serverMode = Server.MODE_GAMESERVER;
-		
 		final String LOG_FOLDER = "./log"; // Name of folder for log file
 		final String LOG_NAME = "config/log.cfg"; // Name of log file
 		
@@ -386,7 +378,7 @@ public class GameServer
 		StringUtil.printSection("aCis");
 		
 		// Initialize config
-		Config.load();
+		Config.loadGameServer();
 		
 		// Factories
 		XMLDocumentFactory.getInstance();

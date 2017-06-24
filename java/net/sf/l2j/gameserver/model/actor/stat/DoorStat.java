@@ -21,11 +21,13 @@ import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
 
 public class DoorStat extends CharStat
 {
+	private int _upgradeHpRatio;
+	
 	public DoorStat(L2DoorInstance activeChar)
 	{
 		super(activeChar);
 		
-		setLevel((byte) 1);
+		_upgradeHpRatio = 1;
 	}
 	
 	@Override
@@ -59,13 +61,22 @@ public class DoorStat extends CharStat
 		else if (sealOwner == SevenSigns.CABAL_DUSK)
 			defense *= 0.3;
 		
-		// is it necessary to continue calc stat? can doors receive Pdef/Mdef buff?
 		return (int) defense;
 	}
 	
 	@Override
-	public final byte getLevel()
+	public int getMaxHp()
 	{
-		return 1;
+		return super.getMaxHp() * _upgradeHpRatio;
+	}
+	
+	public final void setUpgradeHpRatio(int hpRatio)
+	{
+		_upgradeHpRatio = hpRatio;
+	}
+	
+	public final int getUpgradeHpRatio()
+	{
+		return _upgradeHpRatio;
 	}
 }

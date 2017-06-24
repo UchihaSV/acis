@@ -23,8 +23,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.L2ManufactureItem;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -236,7 +237,7 @@ public class RecipeTable
 			
 			_manaRequired = _recipeList.getMpCost();
 			
-			_player.isInCraftMode(true);
+			_player.setCrafting(true);
 			
 			if (_player.isAlikeDead() || _target.isAlikeDead())
 			{
@@ -305,7 +306,7 @@ public class RecipeTable
 			updateMakeInfo(true);
 			updateStatus();
 			
-			_player.isInCraftMode(false);
+			_player.setCrafting(false);
 			_isValid = true;
 		}
 		
@@ -376,7 +377,7 @@ public class RecipeTable
 			// update load and mana bar of craft window
 			updateStatus();
 			
-			_player.isInCraftMode(false);
+			_player.setCrafting(false);
 			_target.sendPacket(new ItemList(_target, false));
 		}
 		
@@ -439,7 +440,7 @@ public class RecipeTable
 		private void abort()
 		{
 			updateMakeInfo(false);
-			_player.isInCraftMode(false);
+			_player.setCrafting(false);
 		}
 		
 		private void rewardPlayer()
@@ -480,7 +481,7 @@ public class RecipeTable
 		if (recipeList == null || recipeList.getNeededRecipeParts().isEmpty())
 		{
 			player.sendMessage("No recipe for: " + id);
-			player.isInCraftMode(false);
+			player.setCrafting(false);
 			return null;
 		}
 		return recipeList;

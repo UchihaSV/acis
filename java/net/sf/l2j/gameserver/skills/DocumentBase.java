@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 
 import net.sf.l2j.gameserver.model.ChanceCondition;
 import net.sf.l2j.gameserver.model.L2Skill;
-import net.sf.l2j.gameserver.model.base.Race;
+import net.sf.l2j.gameserver.model.base.ClassRace;
 import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.item.type.ArmorType;
 import net.sf.l2j.gameserver.model.item.type.WeaponType;
@@ -404,7 +404,7 @@ abstract class DocumentBase
 			Node a = attrs.item(i);
 			if ("race".equalsIgnoreCase(a.getNodeName()))
 			{
-				Race race = Race.valueOf(a.getNodeValue());
+				ClassRace race = ClassRace.valueOf(a.getNodeValue());
 				cond = joinAnd(cond, new ConditionPlayerRace(race));
 			}
 			else if ("level".equalsIgnoreCase(a.getNodeName()))

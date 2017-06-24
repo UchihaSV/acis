@@ -14,7 +14,6 @@
  */
 package net.sf.l2j.gameserver.skills.funcs;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.skills.Env;
 import net.sf.l2j.gameserver.skills.Formulas;
 import net.sf.l2j.gameserver.skills.Stats;
@@ -37,9 +36,6 @@ public class FuncPAtkMod extends Func
 	@Override
 	public void calc(Env env)
 	{
-		if (env.getCharacter() instanceof L2PetInstance)
-			return;
-		
-		env.mulValue(Formulas.STRbonus[env.getCharacter().getSTR()] * env.getCharacter().getLevelMod());
+		env.mulValue(Formulas.STR_BONUS[env.getCharacter().getSTR()] * env.getCharacter().getLevelMod());
 	}
 }

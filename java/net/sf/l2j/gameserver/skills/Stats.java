@@ -69,9 +69,8 @@ public enum Stats
 	POWER_ATTACK_ANGLE("pAtkAngle"),
 	ATTACK_COUNT_MAX("atkCountMax"),
 	
-	// Run & walk speed
+	// Run speed
 	RUN_SPEED("runSpd"),
-	WALK_SPEED("walkSpd"),
 	
 	// Player-only stats
 	STAT_STR("STR"),

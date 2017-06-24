@@ -19,6 +19,7 @@ import net.sf.l2j.gameserver.model.actor.L2Playable;
 import net.sf.l2j.gameserver.model.base.Experience;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.model.zone.type.L2SwampZone;
+import net.sf.l2j.gameserver.skills.Stats;
 
 public class PlayableStat extends CharStat
 {
@@ -163,21 +164,21 @@ public class PlayableStat extends CharStat
 	}
 	
 	@Override
-	public int getRunSpeed()
+	public float getMoveSpeed()
 	{
-		int val = super.getRunSpeed();
-		if (getActiveChar().isInsideZone(ZoneId.WATER))
-			val *= 0.41;
+		// get base value
+		float baseValue = getBaseMoveSpeed();
 		
+		// apply zone modifier before final calculation
 		if (getActiveChar().isInsideZone(ZoneId.SWAMP))
 		{
-			L2SwampZone zone = ZoneManager.getInstance().getZone(getActiveChar(), L2SwampZone.class);
-			int bonus = zone == null ? 0 : zone.getMoveBonus();
-			double dbonus = bonus / 100.0; // %
-			val += val * dbonus;
+			final L2SwampZone zone = ZoneManager.getInstance().getZone(getActiveChar(), L2SwampZone.class);
+			if (zone != null)
+				baseValue *= (100 + zone.getMoveBonus()) / 100.0;
 		}
 		
-		return val;
+		// calculate speed
+		return (float) calcStat(Stats.RUN_SPEED, baseValue, null, null);
 	}
 	
 	@Override

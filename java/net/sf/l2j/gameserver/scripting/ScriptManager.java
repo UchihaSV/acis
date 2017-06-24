@@ -20,7 +20,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
 
 import org.w3c.dom.Document;
@@ -68,44 +69,45 @@ public final class ScriptManager implements Runnable
 					_log.warning("ScriptManager: The \"path\" is not defined.");
 					continue;
 				}
-				
-				// Create the script.
 				final String path = param.getNodeValue();
+				
 				try
 				{
+					// Create the script.
 					Quest instance = (Quest) Class.forName("net.sf.l2j.gameserver.scripting." + path).newInstance();
 					
-					// The script has been identified as a scheduled script ; make proper checks and schedule the launch.
+					// Add quest, script, AI or any other custom type of script.
+					_quests.add(instance);
+					
+					// The script has been identified as a scheduled script, make proper checks and schedule the launch.
 					if (instance instanceof ScheduledQuest)
 					{
+						// Get schedule parameter, when not exist, script is not scheduled.
 						param = params.getNamedItem("schedule");
-						if (param != null)
+						if (param == null)
+							continue;
+						
+						final String type = param.getNodeValue();
+						
+						// Get mandatory start parameter, when not exist, script is not scheduled.
+						param = params.getNamedItem("start");
+						if (param == null)
 						{
-							final String type = param.getNodeValue();
-							
-							param = params.getNamedItem("start");
-							if (param == null)
-							{
-								_log.warning("ScriptManager: Missing \"start\" parametr for \"" + path + "\".");
-								continue;
-							}
-							final String start = param.getNodeValue();
-							
-							param = params.getNamedItem("end");
-							if (param == null)
-							{
-								_log.warning("ScriptManager: Missing \"end\" parametr for \"" + path + "\".");
-								continue;
-							}
-							final String end = param.getNodeValue();
-							
-							if (((ScheduledQuest) instance).setSchedule(type, start, end))
-								_scheduled.add(((ScheduledQuest) instance));
+							_log.warning("ScriptManager: Missing \"start\" parametr for \"" + path + "\".");
+							continue;
 						}
+						final String start = param.getNodeValue();
+						
+						// Get optional end parameter, when not exist, script is one-event type.
+						param = params.getNamedItem("end");
+						String end = null;
+						if (param != null)
+							end = param.getNodeValue();
+						
+						// Schedule script, when successful, register it.
+						if (((ScheduledQuest) instance).setSchedule(type, start, end))
+							_scheduled.add(((ScheduledQuest) instance));
 					}
-					// The script is an AI or any other custom type of script.
-					else
-						_quests.add(instance);
 				}
 				catch (ClassNotFoundException e)
 				{
@@ -114,14 +116,14 @@ public final class ScriptManager implements Runnable
 				}
 			}
 			
-			_log.info("ScriptManager: Loaded " + _quests.size() + " scripts, " + _scheduled.size() + " schedules.");
+			_log.info("ScriptManager: Loaded " + _quests.size() + " scripts, " + _scheduled.size() + " are scheduled.");
 		}
 		catch (Exception e)
 		{
 			_log.warning("ScriptManager: Error loading \"scripts.xml\" file, " + e);
 		}
 		
-		ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(this, PERIOD, PERIOD);
+		ThreadPool.scheduleAtFixedRate(this, 0, PERIOD);
 	}
 	
 	@Override
@@ -129,13 +131,14 @@ public final class ScriptManager implements Runnable
 	{
 		// each PERIOD
 		final long next = System.currentTimeMillis() + PERIOD;
+		
+		// check all scheduled scripts
 		for (ScheduledQuest script : _scheduled)
 		{
-			// check all scheduled scripts
-			final long eta = script.getTimeLeft();
-			if (eta < next)
-				// and schedule particular ones
-				ThreadPoolManager.getInstance().scheduleGeneral(new Scheduler(script), eta);
+			// when next action triggers in closest period, schedule the script action
+			final long eta = next - script.getTimeNext();
+			if (eta > 0)
+				ThreadPool.schedule(new Scheduler(script), PERIOD - eta);
 		}
 	}
 	
@@ -154,10 +157,10 @@ public final class ScriptManager implements Runnable
 			// notify script
 			_script.notifyAndSchedule();
 			
-			// in case the next action should terminate before the resolution of ScriptManager, schedule the the action again
-			final long eta = _script.getTimeLeft();
-			if (eta < System.currentTimeMillis() + PERIOD)
-				ThreadPoolManager.getInstance().scheduleGeneral(new Scheduler(_script), eta);
+			// in case the next action is triggered before the resolution of ScriptManager, schedule the the action again
+			final long eta = System.currentTimeMillis() + PERIOD - _script.getTimeNext();
+			if (eta > 0)
+				ThreadPool.schedule(this, PERIOD - eta);
 		}
 	}
 	

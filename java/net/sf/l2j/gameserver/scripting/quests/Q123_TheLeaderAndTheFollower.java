@@ -12,7 +12,6 @@
  */
 package net.sf.l2j.gameserver.scripting.quests;
 
-import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.Quest;
@@ -21,10 +20,7 @@ import net.sf.l2j.gameserver.scripting.QuestState;
 public class Q123_TheLeaderAndTheFollower extends Quest
 {
 	private static final String qn = "Q123_TheLeaderAndTheFollower";
-	
-	// Items
-	private static final int BLOOD = 8549;
-	private static final int LEG = 8550;
+	private static final String qn2 = "Q118_ToLeadAndBeLed";
 	
 	// NPC
 	private static final int NEWYEAR = 31961;
@@ -32,6 +28,11 @@ public class Q123_TheLeaderAndTheFollower extends Quest
 	// Mobs
 	private static final int BRUIN_LIZARDMAN = 27321;
 	private static final int PICOT_ARENEID = 27322;
+	
+	// Items
+	private static final int BRUIN_LIZARDMAN_BLOOD = 8549;
+	private static final int PICOT_ARANEID_LEG = 8550;
+	private static final int CRYSTAL_D = 1458;
 	
 	// Rewards
 	private static final int CLAN_OATH_HELM = 7850;
@@ -49,7 +50,7 @@ public class Q123_TheLeaderAndTheFollower extends Quest
 	{
 		super(123, "The Leader and the Follower");
 		
-		setItemsIds(BLOOD, LEG);
+		setItemsIds(BRUIN_LIZARDMAN_BLOOD, PICOT_ARANEID_LEG);
 		
 		addStartNpc(NEWYEAR);
 		addTalkId(NEWYEAR);
@@ -65,77 +66,81 @@ public class Q123_TheLeaderAndTheFollower extends Quest
 		if (st == null)
 			return htmltext;
 		
-		if (event.equalsIgnoreCase("31961-02.htm"))
+		if (event.equalsIgnoreCase("31961-03.htm"))
 		{
 			st.setState(STATE_STARTED);
 			st.set("cond", "1");
+			st.set("state", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
 		}
-		else if (event.equalsIgnoreCase("31961-05a.htm"))
+		else if (event.equalsIgnoreCase("31961-05d.htm"))
 		{
-			if (st.getQuestItemsCount(BLOOD) >= 10)
+			if (st.getQuestItemsCount(BRUIN_LIZARDMAN_BLOOD) > 9)
 			{
 				st.set("cond", "3");
-				st.set("settype", "1");
+				st.set("state", "2");
+				st.set("stateEx", "1");
 				st.playSound(QuestState.SOUND_MIDDLE);
-				st.takeItems(BLOOD, -1);
+				st.takeItems(BRUIN_LIZARDMAN_BLOOD, -1);
 			}
-			else
-				htmltext = "Incorrect item count";
 		}
-		else if (event.equalsIgnoreCase("31961-05b.htm"))
+		else if (event.equalsIgnoreCase("31961-05e.htm"))
 		{
-			if (st.getQuestItemsCount(BLOOD) >= 10)
+			if (st.getQuestItemsCount(BRUIN_LIZARDMAN_BLOOD) > 9)
 			{
 				st.set("cond", "4");
-				st.set("settype", "2");
+				st.set("state", "2");
+				st.set("stateEx", "2");
 				st.playSound(QuestState.SOUND_MIDDLE);
-				st.takeItems(BLOOD, -1);
+				st.takeItems(BRUIN_LIZARDMAN_BLOOD, -1);
 			}
-			else
-				htmltext = "Incorrect item count";
 		}
-		else if (event.equalsIgnoreCase("31961-05c.htm"))
+		else if (event.equalsIgnoreCase("31961-05f.htm"))
 		{
-			if (st.getQuestItemsCount(BLOOD) >= 10)
+			if (st.getQuestItemsCount(BRUIN_LIZARDMAN_BLOOD) > 9)
 			{
 				st.set("cond", "5");
-				st.set("settype", "3");
+				st.set("state", "2");
+				st.set("stateEx", "3");
 				st.playSound(QuestState.SOUND_MIDDLE);
-				st.takeItems(BLOOD, -1);
+				st.takeItems(BRUIN_LIZARDMAN_BLOOD, -1);
 			}
-			else
-				htmltext = "Incorrect item count";
 		}
-		else if (event.equalsIgnoreCase("31961-09.htm"))
+		else if (event.equalsIgnoreCase("31961-10.htm"))
 		{
-			L2ClanMember cm_apprentice = player.getClan().getClanMember(player.getApprentice());
-			if (cm_apprentice.isOnline())
+			final L2PcInstance academic = getApprentice(player);
+			if (academic != null)
 			{
-				L2PcInstance apprentice = cm_apprentice.getPlayerInstance();
-				if (apprentice != null)
+				final QuestState st2 = academic.getQuestState(qn);
+				if (st2 != null && st2.getInt("state") == 2)
 				{
-					QuestState apQuest = apprentice.getQuestState(qn);
-					if (apQuest != null)
+					final int stateEx = st2.getInt("stateEx");
+					if (stateEx == 1)
 					{
-						int crystals = (apQuest.getInt("cond") == 3) ? 922 : 771;
-						
-						if (st.getQuestItemsCount(1458) >= crystals)
+						if (st.getQuestItemsCount(CRYSTAL_D) > 921)
 						{
-							htmltext = "31961-10.htm";
-							
-							// Finish sponsor's quest.
-							st.takeItems(1458, crystals);
-							st.playSound(QuestState.SOUND_FINISH);
-							
-							// Update academian's quest.
-							apQuest.set("cond", "6");
-							apQuest.playSound(QuestState.SOUND_MIDDLE);
+							st.takeItems(CRYSTAL_D, 922);
+							st2.set("cond", "6");
+							st2.set("state", "3");
+							st2.playSound(QuestState.SOUND_MIDDLE);
 						}
+						else
+							htmltext = "31961-11.htm";
+					}
+					else
+					{
+						if (st.getQuestItemsCount(CRYSTAL_D) > 770)
+						{
+							st.takeItems(CRYSTAL_D, 771);
+							st2.set("cond", "6");
+							st2.set("state", "3");
+							st2.playSound(QuestState.SOUND_MIDDLE);
+						}
+						else
+							htmltext = "31961-11a.htm";
 					}
 				}
 			}
-			st.exitQuest(true);
 		}
 		
 		return htmltext;
@@ -152,96 +157,109 @@ public class Q123_TheLeaderAndTheFollower extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				// Case of academian.
 				if (player.getSponsor() > 0)
 				{
-					if (player.getLevel() > 19 && player.getPledgeType() == -1)
-						return "31961-01.htm";
+					QuestState st2 = player.getQuestState(qn2);
+					if (st2 != null)
+						htmltext = (st2.isCompleted()) ? "31961-02a.htm" : "31961-02b.htm";
+					else
+						htmltext = (player.getLevel() > 18) ? "31961-01.htm" : "31961-02.htm";
 				}
-				// Case of sponsor.
 				else if (player.getApprentice() > 0)
 				{
-					L2ClanMember cm = player.getClan().getClanMember(player.getApprentice());
-					if (cm != null && cm.isOnline())
+					final L2PcInstance academic = getApprentice(player);
+					if (academic != null)
 					{
-						L2PcInstance apprentice = cm.getPlayerInstance();
-						if (apprentice != null)
+						final QuestState st3 = academic.getQuestState(qn);
+						if (st3 != null)
 						{
-							QuestState apQuest = apprentice.getQuestState(qn);
-							if (apQuest != null)
-							{
-								int apCond = apQuest.getInt("cond");
-								if (apCond == 3)
-									return "31961-09a.htm";
-								else if (apCond == 4)
-									return "31961-09b.htm";
-								else if (apCond == 5)
-									return "31961-09c.htm";
-							}
+							final int state = st3.getInt("state");
+							if (state == 2)
+								htmltext = "31961-08.htm";
+							else if (state == 3)
+								htmltext = "31961-12.htm";
+							else
+								htmltext = "31961-14.htm";
 						}
 					}
+					else
+						htmltext = "31961-09.htm";
 				}
-				
-				htmltext = "31961-00.htm";
 				break;
 			
 			case STATE_STARTED:
-				int cond = st.getInt("cond");
-				// Case of academian.
-				if (player.getSponsor() > 0)
+				final int state = st.getInt("state");
+				if (state == 1)
+					htmltext = (st.getQuestItemsCount(BRUIN_LIZARDMAN_BLOOD) < 10) ? "31961-04.htm" : "31961-05.htm";
+				else if (state == 2)
 				{
-					if (cond == 1)
-						htmltext = "31961-03.htm";
-					else if (cond == 2)
-						htmltext = "31961-04.htm";
-					else if (cond == 3)
-						htmltext = "31961-05d.htm";
-					else if (cond == 4)
-						htmltext = "31961-05e.htm";
-					else if (cond == 5)
-						htmltext = "31961-05f.htm";
-					else if (cond == 6)
+					final int stateEx = st.getInt("stateEx");
+					if (player.getSponsor() == 0)
 					{
-						htmltext = "31961-06.htm";
-						st.set("cond", "7");
-						st.playSound(QuestState.SOUND_MIDDLE);
+						if (stateEx == 1)
+							htmltext = "31961-06a.htm";
+						else if (stateEx == 2)
+							htmltext = "31961-06b.htm";
+						else if (stateEx == 3)
+							htmltext = "31961-06c.htm";
 					}
-					else if (cond == 7)
-						htmltext = "31961-07.htm";
-					else if (cond == 8)
+					else
 					{
-						if (st.getQuestItemsCount(LEG) == 8)
+						if (!getSponsor(player))
 						{
-							htmltext = "31961-08.htm";
-							
-							st.takeItems(LEG, -1);
-							st.giveItems(CLAN_OATH_HELM, 1);
-							
-							switch (st.getInt("settype"))
-							{
-								case 1:
-									st.giveItems(CLAN_OATH_ARMOR, 1);
-									st.giveItems(CLAN_OATH_GAUNTLETS, 1);
-									st.giveItems(CLAN_OATH_SABATON, 1);
-									break;
-								
-								case 2:
-									st.giveItems(CLAN_OATH_BRIGANDINE, 1);
-									st.giveItems(CLAN_OATH_LEATHER_GLOVES, 1);
-									st.giveItems(CLAN_OATH_BOOTS, 1);
-									break;
-								
-								case 3:
-									st.giveItems(CLAN_OATH_AKETON, 1);
-									st.giveItems(CLAN_OATH_PADDED_GLOVES, 1);
-									st.giveItems(CLAN_OATH_SANDALS, 1);
-									break;
-							}
-							
-							st.playSound(QuestState.SOUND_FINISH);
-							st.exitQuest(false);
+							if (stateEx == 1)
+								htmltext = "31961-06.htm";
+							else if (stateEx == 2)
+								htmltext = "31961-06d.htm";
+							else if (stateEx == 3)
+								htmltext = "31961-06e.htm";
 						}
+						else
+							htmltext = "31961-07.htm";
 					}
+				}
+				else if (state == 3)
+				{
+					st.set("cond", "7");
+					st.set("state", "4");
+					st.playSound(QuestState.SOUND_MIDDLE);
+					htmltext = "31961-15.htm";
+				}
+				else if (state == 4)
+				{
+					if (st.getQuestItemsCount(PICOT_ARANEID_LEG) > 7)
+					{
+						htmltext = "31961-17.htm";
+						
+						st.takeItems(PICOT_ARANEID_LEG, -1);
+						st.giveItems(CLAN_OATH_HELM, 1);
+						
+						switch (st.getInt("stateEx"))
+						{
+							case 1:
+								st.giveItems(CLAN_OATH_ARMOR, 1);
+								st.giveItems(CLAN_OATH_GAUNTLETS, 1);
+								st.giveItems(CLAN_OATH_SABATON, 1);
+								break;
+							
+							case 2:
+								st.giveItems(CLAN_OATH_BRIGANDINE, 1);
+								st.giveItems(CLAN_OATH_LEATHER_GLOVES, 1);
+								st.giveItems(CLAN_OATH_BOOTS, 1);
+								break;
+							
+							case 3:
+								st.giveItems(CLAN_OATH_AKETON, 1);
+								st.giveItems(CLAN_OATH_PADDED_GLOVES, 1);
+								st.giveItems(CLAN_OATH_SANDALS, 1);
+								break;
+						}
+						
+						st.playSound(QuestState.SOUND_FINISH);
+						st.exitQuest(false);
+					}
+					else
+						htmltext = "31961-16.htm";
 				}
 				break;
 			
@@ -260,31 +278,23 @@ public class Q123_TheLeaderAndTheFollower extends Quest
 		if (st == null)
 			return null;
 		
-		int sponsor = player.getSponsor();
-		if (sponsor == 0)
+		if (player.getSponsor() == 0)
 		{
 			st.exitQuest(true);
 			return null;
 		}
 		
+		final int cond = st.getInt("cond");
 		switch (npc.getNpcId())
 		{
 			case BRUIN_LIZARDMAN:
-				if (st.getInt("cond") == 1 && st.dropItems(BLOOD, 1, 10, 600000))
+				if (cond == 1 && st.dropItems(BRUIN_LIZARDMAN_BLOOD, 1, 10, 700000))
 					st.set("cond", "2");
 				break;
 			
 			case PICOT_ARENEID:
-				L2ClanMember cmSponsor = player.getClan().getClanMember(sponsor);
-				if (cmSponsor != null && cmSponsor.isOnline())
-				{
-					L2PcInstance sponsorHelper = cmSponsor.getPlayerInstance();
-					if (sponsorHelper != null && player.isInsideRadius(sponsorHelper, 1100, true, false))
-					{
-						if (st.getInt("cond") == 7 && st.dropItems(LEG, 1, 8, 700000))
-							st.set("cond", "8");
-					}
-				}
+				if (cond == 7 && getSponsor(player) && st.dropItems(PICOT_ARANEID_LEG, 1, 8, 700000))
+					st.set("cond", "8");
 				break;
 		}
 		

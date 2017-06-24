@@ -14,7 +14,8 @@
  */
 package net.sf.l2j.gameserver.util;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -26,7 +27,7 @@ public final class Util
 {
 	public static void handleIllegalPlayerAction(L2PcInstance actor, String message, int punishment)
 	{
-		ThreadPoolManager.getInstance().scheduleGeneral(new IllegalPlayerAction(actor, message, punishment), 5000);
+		ThreadPool.schedule(new IllegalPlayerAction(actor, message, punishment), 5000);
 	}
 	
 	/**
@@ -163,12 +164,12 @@ public final class Util
 		if (range == -1)
 			return true; // not limited
 			
-		int rad = 0;
+		double rad = 0;
 		if (obj1 instanceof L2Character)
-			rad += ((L2Character) obj1).getTemplate().getCollisionRadius();
+			rad += ((L2Character) obj1).getCollisionRadius();
 		
 		if (obj2 instanceof L2Character)
-			rad += ((L2Character) obj2).getTemplate().getCollisionRadius();
+			rad += ((L2Character) obj2).getCollisionRadius();
 		
 		double dx = obj1.getX() - obj2.getX();
 		double dy = obj1.getY() - obj2.getY();
@@ -200,63 +201,5 @@ public final class Util
 		float exponent = (float) Math.pow(10, numPlaces);
 		
 		return (Math.round(val * exponent) / exponent);
-	}
-	
-	/**
-	 * @param <T> The Object type.
-	 * @param array - the array to look into.
-	 * @param obj - the object to search for.
-	 * @return {@code true} if the array contains the object, {@code false} otherwise.
-	 */
-	public static <T> boolean contains(T[] array, T obj)
-	{
-		if (array == null || array.length == 0)
-			return false;
-		
-		for (T element : array)
-			if (element.equals(obj))
-				return true;
-		
-		return false;
-	}
-	
-	/**
-	 * @param <T> The Object type.
-	 * @param array1 - the array to look into.
-	 * @param array2 - the array to search for.
-	 * @return {@code true} if both arrays contains a similar value.
-	 */
-	public static <T> boolean contains(T[] array1, T[] array2)
-	{
-		if (array1 == null || array1.length == 0)
-			return false;
-		
-		if (array2 == null || array2.length == 0)
-			return false;
-		
-		for (T element1 : array1)
-		{
-			for (T element2 : array2)
-				if (element2.equals(element1))
-					return true;
-		}
-		return false;
-	}
-	
-	/**
-	 * @param array - the array to look into.
-	 * @param obj - the integer to search for.
-	 * @return {@code true} if the array contains the integer, {@code false} otherwise.
-	 */
-	public static boolean contains(int[] array, int obj)
-	{
-		if (array == null || array.length == 0)
-			return false;
-		
-		for (int element : array)
-			if (element == obj)
-				return true;
-		
-		return false;
 	}
 }

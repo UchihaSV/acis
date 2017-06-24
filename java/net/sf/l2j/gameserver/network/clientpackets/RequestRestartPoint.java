@@ -14,8 +14,10 @@
  */
 package net.sf.l2j.gameserver.network.clientpackets;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
+import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.instancemanager.CastleManager;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
@@ -66,7 +68,7 @@ public final class RequestRestartPoint extends L2GameClientPacket
 						return;
 					}
 					
-					loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.ClanHall);
+					loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, TeleportWhereType.CLAN_HALL);
 					
 					if (ClanHallManager.getInstance().getClanHallByOwner(activeChar.getClan()) != null && ClanHallManager.getInstance().getClanHallByOwner(activeChar.getClan()).getFunction(ClanHall.FUNC_RESTORE_EXP) != null)
 					{
@@ -81,10 +83,10 @@ public final class RequestRestartPoint extends L2GameClientPacket
 					{
 						// Siege in progress
 						if (castle.getSiege().checkIsDefender(activeChar.getClan()))
-							loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.Castle);
+							loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, TeleportWhereType.CASTLE);
 						// Just in case you lost castle while being dead.. Port to nearest Town.
 						else if (castle.getSiege().checkIsAttacker(activeChar.getClan()))
-							loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.Town);
+							loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, TeleportWhereType.TOWN);
 						else
 						{
 							_log.warning(activeChar.getName() + " called RestartPointPacket - To Castle while he doesn't have Castle.");
@@ -96,7 +98,7 @@ public final class RequestRestartPoint extends L2GameClientPacket
 						if (activeChar.getClan() == null || !activeChar.getClan().hasCastle())
 							return;
 						
-						loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.Castle);
+						loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, TeleportWhereType.CASTLE);
 					}
 					break;
 				
@@ -117,9 +119,9 @@ public final class RequestRestartPoint extends L2GameClientPacket
 					// If a player was waiting with flag option and then the flag dies before the
 					// player pushes the button, he is send back to closest/second closest town.
 					if (siegeClan.getFlags().isEmpty())
-						loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.Town);
+						loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, TeleportWhereType.TOWN);
 					else
-						loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.SiegeFlag);
+						loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, TeleportWhereType.SIEGE_FLAG);
 					break;
 				
 				case 4: // Fixed or player is a festival participant
@@ -138,7 +140,7 @@ public final class RequestRestartPoint extends L2GameClientPacket
 					break;
 				
 				default:
-					loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, MapRegionTable.TeleportWhereType.Town);
+					loc = MapRegionTable.getInstance().getTeleToLocation(activeChar, TeleportWhereType.TOWN);
 					break;
 			}
 			
@@ -177,7 +179,7 @@ public final class RequestRestartPoint extends L2GameClientPacket
 			if (activeChar.getClan() != null && castle.getSiege().checkIsAttacker(activeChar.getClan()))
 			{
 				// Schedule respawn delay for attacker
-				ThreadPoolManager.getInstance().scheduleGeneral(new DeathTask(activeChar), SiegeManager.ATTACKERS_RESPAWN_DELAY);
+				ThreadPool.schedule(new DeathTask(activeChar), SiegeManager.ATTACKERS_RESPAWN_DELAY);
 				
 				if (SiegeManager.ATTACKERS_RESPAWN_DELAY > 0)
 					activeChar.sendMessage("You will be teleported in " + SiegeManager.ATTACKERS_RESPAWN_DELAY / 1000 + " seconds.");

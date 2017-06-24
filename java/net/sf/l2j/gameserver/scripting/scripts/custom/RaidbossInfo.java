@@ -18,22 +18,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.l2j.commons.lang.StringUtil;
-import net.sf.l2j.gameserver.datatables.NpcTable;
+
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
 
-/**
- * @authors: Kerberos (python), Nyaran (java)
- */
 public class RaidbossInfo extends Quest
 {
 	private static final String qn = "RaidbossInfo";
+	private static final String BOSS_CLASS_TYPE = "L2RaidBoss";
 	
 	private static final Map<Integer, Location> RADARS = new HashMap<>();
 	
@@ -128,17 +125,11 @@ public class RaidbossInfo extends Quest
 			addTalkId(npcId);
 		}
 		
-		// Add all Raid Bosses to RAIDS list
-		for (NpcTemplate raid : NpcTable.getInstance().getTemplates(t -> t.isType("L2RaidBoss")))
+		// Add all Raid Bosses locations.
+		for (L2Spawn spawn : SpawnTable.getInstance().getSpawnTable())
 		{
-			for (L2Spawn spawn : SpawnTable.getInstance().getSpawnTable())
-			{
-				if (spawn.getNpcId() == raid.getNpcId())
-				{
-					RADARS.put(raid.getNpcId(), new Location(spawn.getLocx(), spawn.getLocy(), spawn.getLocz()));
-					break;
-				}
-			}
+			if (spawn.getTemplate().isType(BOSS_CLASS_TYPE))
+				RADARS.put(spawn.getNpcId(), spawn.getLoc());
 		}
 	}
 	

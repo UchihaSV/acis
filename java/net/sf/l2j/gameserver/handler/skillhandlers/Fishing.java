@@ -14,10 +14,9 @@
  */
 package net.sf.l2j.gameserver.handler.skillhandlers;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.geoengine.GeoData;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.handler.ISkillHandler;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Object;
@@ -52,15 +51,6 @@ public class Fishing implements ISkillHandler
 			return;
 		
 		L2PcInstance player = (L2PcInstance) activeChar;
-		
-		/*
-		 * If fishing is disabled, there isn't much point in doing anything else, unless you are GM. so this got moved up here, before anything else.
-		 */
-		if (!Config.ALLOWFISHING)
-		{
-			player.sendMessage("Fishing feature is disabled on this server.");
-			return;
-		}
 		
 		if (player.isFishing())
 		{
@@ -106,7 +96,7 @@ public class Fishing implements ISkillHandler
 			return;
 		}
 		
-		if (player.isInCraftMode() || player.isInStoreMode())
+		if (player.isCrafting() || player.isInStoreMode())
 		{
 			player.sendPacket(SystemMessageId.CANNOT_FISH_WHILE_USING_RECIPE_BOOK);
 			return;
@@ -150,44 +140,30 @@ public class Fishing implements ISkillHandler
 		
 		if (aimingTo != null)
 		{
-			// fishing zone found, we can fish here
-			if (Config.GEODATA > 0)
+			// geodata enabled, checking if we can see end of the pole
+			if (GeoEngine.getInstance().canSeeTarget(player, new Location(x, y, z)))
 			{
-				// geodata enabled, checking if we can see end of the pole
-				if (PathFinding.getInstance().canSeeTarget(player, new Location(x, y, z)))
+				// finding z level for hook
+				if (water != null)
 				{
-					// finding z level for hook
-					if (water != null)
+					// water zone exist
+					if (GeoEngine.getInstance().getHeight(x, y, z) < water.getWaterZ())
 					{
-						// water zone exist
-						if (GeoData.getInstance().getHeight(x, y, z) < water.getWaterZ())
-						{
-							// water Z is higher than geo Z
-							z = water.getWaterZ() + 10;
-							canFish = true;
-						}
-					}
-					else
-					{
-						// no water zone, using fishing zone
-						if (GeoData.getInstance().getHeight(x, y, z) < aimingTo.getWaterZ())
-						{
-							// fishing Z is higher than geo Z
-							z = aimingTo.getWaterZ() + 10;
-							canFish = true;
-						}
+						// water Z is higher than geo Z
+						z = water.getWaterZ() + 10;
+						canFish = true;
 					}
 				}
-			}
-			// geodata disabled
-			else
-			{
-				// if water zone exist using it, if not - using fishing zone
-				if (water != null)
-					z = water.getWaterZ() + 10;
 				else
-					z = aimingTo.getWaterZ() + 10;
-				canFish = true;
+				{
+					// no water zone, using fishing zone
+					if (GeoEngine.getInstance().getHeight(x, y, z) < aimingTo.getWaterZ())
+					{
+						// fishing Z is higher than geo Z
+						z = aimingTo.getWaterZ() + 10;
+						canFish = true;
+					}
+				}
 			}
 		}
 		

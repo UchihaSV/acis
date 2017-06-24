@@ -15,21 +15,20 @@
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
 /**
  * Frozen Labyrinth<br>
  * Those mobs split if you use physical attacks on them.
- * @author malyelfik
  */
-public final class FrozenLabyrinth extends AbstractNpcAI
+public final class FrozenLabyrinth extends L2AttackableAIScript
 {
-	// Monsters
 	private static final int PRONGHORN_SPIRIT = 22087;
 	private static final int PRONGHORN = 22088;
 	private static final int LOST_BUFFALO = 22093;
@@ -38,7 +37,11 @@ public final class FrozenLabyrinth extends AbstractNpcAI
 	public FrozenLabyrinth()
 	{
 		super("ai/group");
-		
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
 		addSkillSeeId(PRONGHORN, FROST_BUFFALO);
 	}
 	

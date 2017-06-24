@@ -14,12 +14,13 @@ package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.commons.random.Rnd;
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.instancemanager.FourSepulchersManager;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
-import net.sf.l2j.gameserver.util.Util;
 
 public class Q620_FourGoblets extends Quest
 {
@@ -188,7 +189,7 @@ public class Q620_FourGoblets extends Quest
 		else if (StringUtil.isDigit(event))
 		{
 			final int id = Integer.parseInt(event);
-			if (Util.contains(RCP_REWARDS, id) && st.getQuestItemsCount(RELIC) >= 1000)
+			if (ArraysUtil.contains(RCP_REWARDS, id) && st.getQuestItemsCount(RELIC) >= 1000)
 			{
 				st.takeItems(RELIC, 1000);
 				st.giveItems(id, 1);

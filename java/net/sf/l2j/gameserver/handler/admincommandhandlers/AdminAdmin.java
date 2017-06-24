@@ -16,8 +16,9 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import java.util.StringTokenizer;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.lang.StringUtil;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.cache.CrestCache;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.datatables.AdminCommandAccessRights;
@@ -182,77 +183,87 @@ public class AdminAdmin implements IAdminCommandHandler
 			st.nextToken();
 			try
 			{
-				String type = st.nextToken();
-				if (type.startsWith("acar"))
+				do
 				{
-					AdminCommandAccessRights.getInstance().reload();
-					activeChar.sendMessage("Admin commands rights have been reloaded.");
+					String type = st.nextToken();
+					if (type.startsWith("acar"))
+					{
+						AdminCommandAccessRights.getInstance().reload();
+						activeChar.sendMessage("Admin commands rights have been reloaded.");
+					}
+					else if (type.startsWith("announcement"))
+					{
+						AnnouncementTable.getInstance().reload();
+						activeChar.sendMessage("The content of announcements.xml has been reloaded.");
+					}
+					else if (type.startsWith("config"))
+					{
+						Config.loadGameServer();
+						activeChar.sendMessage("Configs files have been reloaded.");
+					}
+					else if (type.startsWith("crest"))
+					{
+						CrestCache.getInstance().reload();
+						activeChar.sendMessage("Crests have been reloaded.");
+					}
+					else if (type.startsWith("cw"))
+					{
+						CursedWeaponsManager.getInstance().reload();
+						activeChar.sendMessage("Cursed weapons have been reloaded.");
+					}
+					else if (type.startsWith("door"))
+					{
+						DoorTable.getInstance().reload();
+						activeChar.sendMessage("Doors instance has been reloaded.");
+					}
+					else if (type.startsWith("htm"))
+					{
+						HtmCache.getInstance().reload();
+						activeChar.sendMessage("The HTM cache has been reloaded.");
+					}
+					else if (type.startsWith("item"))
+					{
+						ItemTable.getInstance().reload();
+						activeChar.sendMessage("Items' templates have been reloaded.");
+					}
+					else if (type.equals("multisell"))
+					{
+						MultisellData.getInstance().reload();
+						activeChar.sendMessage("The multisell instance has been reloaded.");
+					}
+					else if (type.equals("npc"))
+					{
+						NpcTable.getInstance().reloadAllNpc();
+						activeChar.sendMessage("NPCs templates have been reloaded.");
+					}
+					else if (type.startsWith("npcwalker"))
+					{
+						NpcWalkerRoutesTable.getInstance().reload();
+						activeChar.sendMessage("NPCwalkers' routes have been reloaded.");
+					}
+					else if (type.startsWith("skill"))
+					{
+						SkillTable.getInstance().reload();
+						activeChar.sendMessage("Skills' XMLs have been reloaded.");
+					}
+					else if (type.startsWith("teleport"))
+					{
+						TeleportLocationTable.getInstance().reload();
+						activeChar.sendMessage("The teleport location table has been reloaded.");
+					}
+					else if (type.startsWith("zone"))
+					{
+						ZoneManager.getInstance().reload();
+						activeChar.sendMessage("Zones have been reloaded.");
+					}
+					else
+					{
+						activeChar.sendMessage("Usage : //reload <acar|announcement|config|crest|door>");
+						activeChar.sendMessage("Usage : //reload <htm|item|multisell|npc|npcwalker>");
+						activeChar.sendMessage("Usage : //reload <skill|teleport|zone>");
+					}
 				}
-				else if (type.startsWith("announcement"))
-				{
-					AnnouncementTable.getInstance().reload();
-					activeChar.sendMessage("The content of announcements.xml has been reloaded.");
-				}
-				else if (type.startsWith("config"))
-				{
-					Config.load();
-					activeChar.sendMessage("Configs files have been reloaded.");
-				}
-				else if (type.startsWith("crest"))
-				{
-					CrestCache.getInstance().reload();
-					activeChar.sendMessage("Crests have been reloaded.");
-				}
-				else if (type.startsWith("cw"))
-				{
-					CursedWeaponsManager.getInstance().reload();
-					activeChar.sendMessage("Cursed weapons have been reloaded.");
-				}
-				else if (type.startsWith("door"))
-				{
-					DoorTable.getInstance().reload();
-					activeChar.sendMessage("Doors instance has been reloaded.");
-				}
-				else if (type.startsWith("htm"))
-				{
-					HtmCache.getInstance().reload();
-					activeChar.sendMessage("The HTM cache has been reloaded.");
-				}
-				else if (type.startsWith("item"))
-				{
-					ItemTable.getInstance().reload();
-					activeChar.sendMessage("Items' templates have been reloaded.");
-				}
-				else if (type.equals("multisell"))
-				{
-					MultisellData.getInstance().reload();
-					activeChar.sendMessage("The multisell instance has been reloaded.");
-				}
-				else if (type.equals("npc"))
-				{
-					NpcTable.getInstance().reloadAllNpc();
-					activeChar.sendMessage("NPCs templates have been reloaded.");
-				}
-				else if (type.startsWith("npcwalker"))
-				{
-					NpcWalkerRoutesTable.getInstance().reload();
-					activeChar.sendMessage("NPCwalkers' routes have been reloaded.");
-				}
-				else if (type.startsWith("skill"))
-				{
-					SkillTable.getInstance().reload();
-					activeChar.sendMessage("Skills' XMLs have been reloaded.");
-				}
-				else if (type.startsWith("teleport"))
-				{
-					TeleportLocationTable.getInstance().reload();
-					activeChar.sendMessage("The teleport location table has been reloaded.");
-				}
-				else if (type.startsWith("zone"))
-				{
-					ZoneManager.getInstance().reload();
-					activeChar.sendMessage("Zones have been reloaded.");
-				}
+				while (st.hasMoreTokens());
 			}
 			catch (Exception e)
 			{

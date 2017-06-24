@@ -16,13 +16,14 @@ package net.sf.l2j.gameserver.ai.model;
 
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.IntentionCommand;
-import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Skill.SkillTargetType;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2StaticObjectInstance;
+import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 
 public class L2PlayerAI extends L2PlayableAI
 {
@@ -32,6 +33,12 @@ public class L2PlayerAI extends L2PlayableAI
 	public L2PlayerAI(L2PcInstance player)
 	{
 		super(player);
+	}
+	
+	@Override
+	protected void clientActionFailed()
+	{
+		_actor.sendPacket(ActionFailed.STATIC_PACKET);
 	}
 	
 	void setNextIntention(CtrlIntention intention, Object arg0, Object arg1)
@@ -145,7 +152,7 @@ public class L2PlayerAI extends L2PlayableAI
 	 * <BR>
 	 */
 	@Override
-	protected void onIntentionMoveTo(L2CharPosition pos)
+	protected void onIntentionMoveTo(Location loc)
 	{
 		if (getIntention() == CtrlIntention.REST)
 		{
@@ -157,12 +164,12 @@ public class L2PlayerAI extends L2PlayableAI
 		if (_actor.isAllSkillsDisabled() || _actor.isCastingNow() || _actor.isAttackingNow())
 		{
 			clientActionFailed();
-			setNextIntention(CtrlIntention.MOVE_TO, pos, null);
+			setNextIntention(CtrlIntention.MOVE_TO, loc, null);
 			return;
 		}
 		
 		// Set the Intention of this AbstractAI to MOVE_TO
-		changeIntention(CtrlIntention.MOVE_TO, pos, null);
+		changeIntention(CtrlIntention.MOVE_TO, loc, null);
 		
 		// Stop the actor auto-attack client side by sending Server->Client packet AutoAttackStop (broadcast)
 		clientStopAutoAttack();
@@ -171,12 +178,13 @@ public class L2PlayerAI extends L2PlayableAI
 		_actor.abortAttack();
 		
 		// Move the actor to Location (x,y,z) server side AND client side by sending Server->Client packet MoveToLocation (broadcast)
-		moveTo(pos.x, pos.y, pos.z);
+		moveTo(loc.getX(), loc.getY(), loc.getZ());
 	}
 	
 	@Override
 	protected void clientNotifyDead()
 	{
+		_clientMovingToPawnOffset = 0;
 		_clientMoving = false;
 		
 		super.clientNotifyDead();
@@ -184,19 +192,27 @@ public class L2PlayerAI extends L2PlayableAI
 	
 	private void thinkAttack()
 	{
-		L2Character target = (L2Character) getTarget();
+		final L2Character target = (L2Character) getTarget();
 		if (target == null)
-			return;
-		
-		if (checkTargetLostOrDead(target))
 		{
-			// Notify the target
 			setTarget(null);
+			setIntention(CtrlIntention.ACTIVE);
 			return;
 		}
 		
 		if (maybeMoveToPawn(target, _actor.getPhysicalAttackRange()))
 			return;
+		
+		if (target.isAlikeDead())
+		{
+			if (target instanceof L2PcInstance && ((L2PcInstance) target).isFakeDeath())
+				target.stopFakeDeath(true);
+			else
+			{
+				setIntention(CtrlIntention.ACTIVE);
+				return;
+			}
+		}
 		
 		clientStopMoving(null);
 		_actor.doAttack(target);
@@ -233,21 +249,10 @@ public class L2PlayerAI extends L2PlayableAI
 			}
 		}
 		
-		if (!_skill.isToggle())
+		if (_skill.getHitTime() > 50 && !_skill.isSimultaneousCast())
 			clientStopMoving(null);
 		
-		L2Object oldTarget = _actor.getTarget();
-		if (oldTarget != null && target != null && oldTarget != target)
-		{
-			// Replace the current target by the cast target
-			_actor.setTarget(getTarget());
-			// Launch the Cast of the skill
-			_actor.doCast(_skill);
-			// Restore the initial target
-			_actor.setTarget(oldTarget);
-		}
-		else
-			_actor.doCast(_skill);
+		_actor.doCast(_skill);
 	}
 	
 	private void thinkPickUp()

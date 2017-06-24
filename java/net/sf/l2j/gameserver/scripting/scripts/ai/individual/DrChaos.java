@@ -15,16 +15,17 @@
 package net.sf.l2j.gameserver.scripting.scripts.ai.individual;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2GrandBossInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.network.serverpackets.SpecialCamera;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 import net.sf.l2j.gameserver.templates.StatsSet;
 
 /**
@@ -36,9 +37,8 @@ import net.sf.l2j.gameserver.templates.StatsSet;
  * <li>The status of the RB is saved under GBs table, in order to retrieve the state if server restarts.</li>
  * <li>The spawn of the different NPCs (Dr. Chaos / War golem) is handled by that script aswell.</li>
  * </ul>
- * @author Kerberos, Tryskell.
  */
-public class DrChaos extends AbstractNpcAI
+public class DrChaos extends L2AttackableAIScript
 {
 	private static final int DOCTOR_CHAOS = 32033;
 	private static final int CHAOS_GOLEM = 25512;
@@ -46,6 +46,13 @@ public class DrChaos extends AbstractNpcAI
 	private static final byte NORMAL = 0; // Dr. Chaos is in NPC form.
 	private static final byte CRAZY = 1; // Dr. Chaos entered on golem form.
 	private static final byte DEAD = 2; // Dr. Chaos has been killed and has not yet spawned.
+	
+	private static final String[] SHOUTS =
+	{
+		"Bwah-ha-ha! Your doom is at hand! Behold the Ultra Secret Super Weapon!",
+		"Foolish, insignificant creatures! How dare you challenge me!",
+		"I see that none will challenge me now!"
+	};
 	
 	private long _lastAttackTime = 0;
 	private int _pissedOffTimer;
@@ -56,9 +63,6 @@ public class DrChaos extends AbstractNpcAI
 		
 		addFirstTalkId(DOCTOR_CHAOS); // Different HTMs following actual humor.
 		addSpawnId(DOCTOR_CHAOS); // Timer activation at 30sec + paranoia activity.
-		
-		addKillId(CHAOS_GOLEM); // Message + despawn.
-		addAttackActId(CHAOS_GOLEM); // Random messages when he attacks.
 		
 		StatsSet info = GrandBossManager.getInstance().getStatsSet(CHAOS_GOLEM);
 		int status = GrandBossManager.getInstance().getBossStatus(CHAOS_GOLEM);
@@ -105,6 +109,13 @@ public class DrChaos extends AbstractNpcAI
 	}
 	
 	@Override
+	protected void registerNpcs()
+	{
+		addKillId(CHAOS_GOLEM); // Message + despawn.
+		addAttackActId(CHAOS_GOLEM); // Random messages when he attacks.
+	}
+	
+	@Override
 	public String onAdvEvent(String event, L2Npc npc, L2PcInstance player)
 	{
 		if (event.equalsIgnoreCase("reset_drchaos"))
@@ -140,7 +151,7 @@ public class DrChaos extends AbstractNpcAI
 		else if (event.equalsIgnoreCase("4"))
 		{
 			npc.broadcastPacket(new SpecialCamera(npc.getObjectId(), 1, -150, 10, 3500, 5000, 0, 0, 1, 0));
-			npc.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(95928, -110671, -3340, 0));
+			npc.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(95928, -110671, -3340));
 		}
 		else if (event.equalsIgnoreCase("5"))
 		{
@@ -174,10 +185,12 @@ public class DrChaos extends AbstractNpcAI
 					// Make him speak.
 					if (_pissedOffTimer == 15)
 						npc.broadcastNpcSay("How dare you trespass into my territory! Have you no fear?");
-					
 					// That was "too much" for that time.
-					if (_pissedOffTimer <= 0)
+					else if (_pissedOffTimer <= 0)
 						crazyMidgetBecomesAngry(npc);
+					
+					// Break it here, as we already found a valid player.
+					break;
 				}
 			}
 		}
@@ -192,9 +205,9 @@ public class DrChaos extends AbstractNpcAI
 		
 		if (GrandBossManager.getInstance().getBossStatus(CHAOS_GOLEM) == NORMAL)
 		{
-			_pissedOffTimer -= 1 + Rnd.get(5); // remove 1-5 secs.
+			_pissedOffTimer -= Rnd.get(1, 5); // remove 1-5 secs.
 			
-			if (_pissedOffTimer > 20 && _pissedOffTimer <= 30)
+			if (_pissedOffTimer > 20)
 				htmltext = "<html><body>Doctor Chaos:<br>What?! Who are you? How did you come here?<br>You really look suspicious... Aren't those filthy members of Black Anvil guild send you? No? Mhhhhh... I don't trust you!</body></html>";
 			else if (_pissedOffTimer > 10 && _pissedOffTimer <= 20)
 				htmltext = "<html><body>Doctor Chaos:<br>Why are you standing here? Don't you see it's a private propertie? Don't look at him with those eyes... Did you smile?! Don't make fun of me! He will ... destroy ... you ... if you continue!</body></html>";
@@ -242,28 +255,11 @@ public class DrChaos extends AbstractNpcAI
 	@Override
 	public String onAttackAct(L2Npc npc, L2PcInstance victim)
 	{
-		int chance = Rnd.get(300);
-		
-		// Choose a message from 3 choices (1/100)
+		// Choose a message from 3 choices (1/100), and make him speak.
+		final int chance = Rnd.get(300);
 		if (chance < 3)
-		{
-			String message = "";
-			switch (chance)
-			{
-				case 0:
-					message = "Bwah-ha-ha! Your doom is at hand! Behold the Ultra Secret Super Weapon!";
-					break;
-				case 1:
-					message = "Foolish, insignificant creatures! How dare you challenge me!";
-					break;
-				default:
-					message = "I see that none will challenge me now!";
-					break;
-			}
-			
-			// Make him speak.
-			npc.broadcastNpcSay(message);
-		}
+			npc.broadcastNpcSay(SHOUTS[chance]);
+		
 		return null;
 	}
 	
@@ -273,24 +269,24 @@ public class DrChaos extends AbstractNpcAI
 	 */
 	private void crazyMidgetBecomesAngry(L2Npc npc)
 	{
-		if (GrandBossManager.getInstance().getBossStatus(CHAOS_GOLEM) == NORMAL)
-		{
-			// Set the status to "crazy".
-			GrandBossManager.getInstance().setBossStatus(CHAOS_GOLEM, CRAZY);
-			
-			// Cancels the paranoia timer.
-			cancelQuestTimer("paranoia_activity", npc, null);
-			
-			// Makes the NPC moves near the Strange Box speaking.
-			npc.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(96323, -110914, -3328, 0));
-			npc.broadcastNpcSay("Fools! Why haven't you fled yet? Prepare to learn a lesson!");
-			
-			// Delayed animation timers.
-			startQuestTimer("1", 2000, npc, null, false); // 2 secs, time to launch dr.C anim 2. Cam 1 on.
-			startQuestTimer("2", 4000, npc, null, false); // 2,5 secs, time to launch dr.C anim 3.
-			startQuestTimer("3", 6500, npc, null, false); // 6 secs, time to launch dr.C anim 1.
-			startQuestTimer("4", 12500, npc, null, false); // 4,5 secs to make the NPC moves to the grotto. Cam 2 on.
-			startQuestTimer("5", 17000, npc, null, false); // 4 secs for golem spawn, and golem anim. Cam 3 on.
-		}
+		if (GrandBossManager.getInstance().getBossStatus(CHAOS_GOLEM) != NORMAL)
+			return;
+		
+		// Set the status to "crazy".
+		GrandBossManager.getInstance().setBossStatus(CHAOS_GOLEM, CRAZY);
+		
+		// Cancels the paranoia timer.
+		cancelQuestTimer("paranoia_activity", npc, null);
+		
+		// Makes the NPC moves near the Strange Box speaking.
+		npc.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(96323, -110914, -3328));
+		npc.broadcastNpcSay("Fools! Why haven't you fled yet? Prepare to learn a lesson!");
+		
+		// Delayed animation timers.
+		startQuestTimer("1", 2000, npc, null, false); // 2 secs, time to launch dr.C anim 2. Cam 1 on.
+		startQuestTimer("2", 4000, npc, null, false); // 2,5 secs, time to launch dr.C anim 3.
+		startQuestTimer("3", 6500, npc, null, false); // 6 secs, time to launch dr.C anim 1.
+		startQuestTimer("4", 12500, npc, null, false); // 4,5 secs to make the NPC moves to the grotto. Cam 2 on.
+		startQuestTimer("5", 17000, npc, null, false); // 4 secs for golem spawn, and golem anim. Cam 3 on.
 	}
 }

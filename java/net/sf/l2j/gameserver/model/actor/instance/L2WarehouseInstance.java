@@ -121,7 +121,7 @@ public class L2WarehouseInstance extends L2NpcInstance
 				if (Config.ALT_GAME_FREIGHTS)
 					freight.setActiveLocation(0);
 				else
-					freight.setActiveLocation(getWorldRegion().hashCode());
+					freight.setActiveLocation(getRegion().hashCode());
 				
 				player.setActiveWarehouse(freight);
 				player.sendPacket(new WarehouseWithdrawList(player, WarehouseWithdrawList.FREIGHT));
@@ -160,7 +160,7 @@ public class L2WarehouseInstance extends L2NpcInstance
 		if (Config.ALT_GAME_FREIGHTS)
 			freight.setActiveLocation(0);
 		else
-			freight.setActiveLocation(getWorldRegion().hashCode());
+			freight.setActiveLocation(getRegion().hashCode());
 		
 		player.setActiveWarehouse(freight);
 		player.tempInventoryDisable();

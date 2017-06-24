@@ -16,8 +16,9 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.concurrent.Future;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Skill.SkillTargetType;
@@ -115,7 +116,7 @@ public final class L2BabyPetInstance extends L2PetInstance
 	private final void startCastTask()
 	{
 		if (_majorHeal != null && _castTask == null && !isDead()) // cast task is not yet started and not dead (will start on revive)
-			_castTask = ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(new CastTask(this), 3000, 1000);
+			_castTask = ThreadPool.scheduleAtFixedRate(new CastTask(this), 3000, 1000);
 	}
 	
 	private final void stopCastTask()

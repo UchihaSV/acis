@@ -17,22 +17,20 @@ package net.sf.l2j.gameserver.scripting.scripts.ai.individual;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2GrandBossInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 import net.sf.l2j.gameserver.templates.StatsSet;
 
-/**
- * Core AI
- * @author DrLecter Revised By Emperorc
- */
-public class Core extends AbstractNpcAI
+public class Core extends L2AttackableAIScript
 {
 	private static final int CORE = 29006;
 	private static final int DEATH_KNIGHT = 29007;
@@ -47,9 +45,6 @@ public class Core extends AbstractNpcAI
 	public Core()
 	{
 		super("ai/individual");
-		
-		addAttackId(CORE);
-		addKillId(CORE, DEATH_KNIGHT, DOOM_WRAITH, SUSCEPTOR);
 		
 		final StatsSet info = GrandBossManager.getInstance().getStatsSet(CORE);
 		final int status = GrandBossManager.getInstance().getBossStatus(CORE);
@@ -83,6 +78,13 @@ public class Core extends AbstractNpcAI
 			core.setCurrentHpMp(hp, mp);
 			spawnBoss(core);
 		}
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addAttackId(CORE);
+		addKillId(CORE, DEATH_KNIGHT, DOOM_WRAITH, SUSCEPTOR);
 	}
 	
 	public void spawnBoss(L2GrandBossInstance npc)
@@ -145,7 +147,7 @@ public class Core extends AbstractNpcAI
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (npc.isScriptValue(1))
 		{
@@ -158,7 +160,7 @@ public class Core extends AbstractNpcAI
 			npc.broadcastNpcSay("A non-permitted target has been discovered.");
 			npc.broadcastNpcSay("Starting intruder removal system.");
 		}
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 	
 	@Override

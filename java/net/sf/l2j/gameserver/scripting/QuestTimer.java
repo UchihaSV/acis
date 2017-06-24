@@ -17,7 +17,8 @@ package net.sf.l2j.gameserver.scripting;
 import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
@@ -42,9 +43,9 @@ public class QuestTimer
 		_isRepeating = repeating;
 		
 		if (repeating)
-			_schedular = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new ScheduleTimerTask(), time, time);
+			_schedular = ThreadPool.scheduleAtFixedRate(new ScheduleTimerTask(), time, time);
 		else
-			_schedular = ThreadPoolManager.getInstance().scheduleGeneral(new ScheduleTimerTask(), time);
+			_schedular = ThreadPool.schedule(new ScheduleTimerTask(), time);
 	}
 	
 	@Override

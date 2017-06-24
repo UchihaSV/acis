@@ -145,7 +145,7 @@ public class SiegeGuardManager
 		{
 			int hiredCount = 0;
 			int hiredMax = MercTicketManager.getInstance().getMaxAllowedMerc(_castle.getCastleId());
-			boolean isHired = (_castle.getOwnerId() > 0) ? true : false;
+			boolean isHired = _castle.getOwnerId() > 0;
 			
 			loadSiegeGuard();
 			
@@ -153,10 +153,11 @@ public class SiegeGuardManager
 			{
 				if (spawn != null)
 				{
-					spawn.init();
+					spawn.setRespawnState(true);
+					spawn.doSpawn(false);
 					if (isHired)
 					{
-						spawn.stopRespawn();
+						spawn.setRespawnState(false);
 						if (++hiredCount > hiredMax)
 							return;
 					}
@@ -179,8 +180,8 @@ public class SiegeGuardManager
 			if (spawn == null)
 				continue;
 			
-			spawn.stopRespawn();
-			spawn.getLastSpawn().doDie(spawn.getLastSpawn());
+			spawn.setRespawnState(false);
+			spawn.getNpc().doDie(spawn.getNpc());
 		}
 		
 		_siegeGuardSpawn.clear();
@@ -204,11 +205,8 @@ public class SiegeGuardManager
 				NpcTemplate template = NpcTable.getInstance().getTemplate(rs.getInt("npcId"));
 				if (template != null)
 				{
-					L2Spawn spawn = new L2Spawn(template);
-					spawn.setLocx(rs.getInt("x"));
-					spawn.setLocy(rs.getInt("y"));
-					spawn.setLocz(rs.getInt("z"));
-					spawn.setHeading(rs.getInt("heading"));
+					final L2Spawn spawn = new L2Spawn(template);
+					spawn.setLoc(rs.getInt("x"), rs.getInt("y"), rs.getInt("z"), rs.getInt("heading"));
 					spawn.setRespawnDelay(rs.getInt("respawnDelay"));
 					
 					_siegeGuardSpawn.add(spawn);

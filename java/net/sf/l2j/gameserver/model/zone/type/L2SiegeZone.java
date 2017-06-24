@@ -15,7 +15,7 @@
 package net.sf.l2j.gameserver.model.zone.type;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.datatables.MapRegionTable;
+import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -198,7 +198,7 @@ public class L2SiegeZone extends L2ZoneType
 			if (player.getClan() == owningClan || player.isGM())
 				continue;
 			
-			player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+			player.teleToLocation(TeleportWhereType.TOWN);
 		}
 	}
 }

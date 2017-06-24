@@ -15,29 +15,23 @@
 package net.sf.l2j.gameserver.network.serverpackets;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.instancemanager.CursedWeaponsManager;
+import net.sf.l2j.gameserver.model.L2Object.PolyType;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.itemcontainer.Inventory;
 import net.sf.l2j.gameserver.skills.AbnormalEffect;
 
 public class UserInfo extends L2GameServerPacket
 {
 	private final L2PcInstance _activeChar;
-	private final int _runSpd, _walkSpd;
 	private int _relation;
-	private final float _moveMultiplier;
 	
 	public UserInfo(L2PcInstance character)
 	{
 		_activeChar = character;
 		
-		_moveMultiplier = _activeChar.getMovementSpeedMultiplier();
-		_runSpd = (int) (_activeChar.getRunSpeed() / _moveMultiplier);
-		_walkSpd = (int) (_activeChar.getWalkSpeed() / _moveMultiplier);
 		_relation = _activeChar.isClanLeader() ? 0x40 : 0;
 		
 		if (_activeChar.getSiegeState() == 1)
@@ -57,17 +51,10 @@ public class UserInfo extends L2GameServerPacket
 		writeD(_activeChar.getHeading());
 		writeD(_activeChar.getObjectId());
 		
-		String name = _activeChar.getName();
-		if (_activeChar.getPoly().isMorphed())
-		{
-			NpcTemplate polyObj = NpcTable.getInstance().getTemplate(_activeChar.getPoly().getPolyId());
-			if (polyObj != null)
-				name = polyObj.getName();
-		}
-		writeS(name);
+		writeS((_activeChar.getPolyTemplate() != null) ? _activeChar.getPolyTemplate().getName() : _activeChar.getName());
 		
 		writeD(_activeChar.getRace().ordinal());
-		writeD(_activeChar.getAppearance().getSex() ? 1 : 0);
+		writeD(_activeChar.getAppearance().getSex().ordinal());
 		
 		if (_activeChar.getClassIndex() == 0)
 			writeD(_activeChar.getClassId().getId());
@@ -179,27 +166,30 @@ public class UserInfo extends L2GameServerPacket
 		writeD(_activeChar.getPvpFlag()); // 0-non-pvp 1-pvp = violett name
 		writeD(_activeChar.getKarma());
 		
-		writeD(_runSpd);
-		writeD(_walkSpd);
-		writeD(_runSpd); // swim run speed
-		writeD(_walkSpd); // swim walk speed
+		int _runSpd = _activeChar.getStat().getBaseRunSpeed();
+		int _walkSpd = _activeChar.getStat().getBaseWalkSpeed();
+		int _swimSpd = _activeChar.getStat().getBaseSwimSpeed();
+		writeD(_runSpd); // base run speed
+		writeD(_walkSpd); // base walk speed
+		writeD(_swimSpd); // swim run speed
+		writeD(_swimSpd); // swim walk speed
 		writeD(0);
 		writeD(0);
-		writeD(_activeChar.isFlying() ? _runSpd : 0); // fly speed
-		writeD(_activeChar.isFlying() ? _walkSpd : 0); // fly speed
-		writeF(_moveMultiplier);
-		writeF(_activeChar.getAttackSpeedMultiplier());
+		writeD(_activeChar.isFlying() ? _runSpd : 0); // fly run speed
+		writeD(_activeChar.isFlying() ? _walkSpd : 0); // fly walk speed
+		writeF(_activeChar.getStat().getMovementSpeedMultiplier()); // run speed multiplier
+		writeF(_activeChar.getStat().getAttackSpeedMultiplier()); // attack speed multiplier
 		
 		L2Summon pet = _activeChar.getPet();
 		if (_activeChar.getMountType() != 0 && pet != null)
 		{
-			writeF(pet.getTemplate().getCollisionRadius());
-			writeF(pet.getTemplate().getCollisionHeight());
+			writeF(pet.getCollisionRadius());
+			writeF(pet.getCollisionHeight());
 		}
 		else
 		{
-			writeF(_activeChar.getBaseTemplate().getCollisionRadius());
-			writeF(_activeChar.getBaseTemplate().getCollisionHeight());
+			writeF(_activeChar.getCollisionRadius());
+			writeF(_activeChar.getCollisionHeight());
 		}
 		
 		writeD(_activeChar.getAppearance().getHairStyle());
@@ -207,7 +197,7 @@ public class UserInfo extends L2GameServerPacket
 		writeD(_activeChar.getAppearance().getFace());
 		writeD(_activeChar.isGM() ? 1 : 0); // builder level
 		
-		writeS(_activeChar.getPoly().isMorphed() ? "Morphed" : _activeChar.getTitle());
+		writeS((_activeChar.getPolyType() != PolyType.DEFAULT) ? "Morphed" : _activeChar.getTitle());
 		
 		writeD(_activeChar.getClanId());
 		writeD(_activeChar.getClanCrestId());
@@ -217,7 +207,7 @@ public class UserInfo extends L2GameServerPacket
 		// siege flags: attacker - 0x180 sword over name, defender - 0x80 shield, 0xC0 crown (|leader), 0x1C0 flag (|leader)
 		writeD(_relation);
 		writeC(_activeChar.getMountType()); // mount type
-		writeC(_activeChar.getPrivateStoreType().getId());
+		writeC(_activeChar.getStoreType().getId());
 		writeC(_activeChar.hasDwarvenCraft() ? 1 : 0);
 		writeD(_activeChar.getPkKills());
 		writeD(_activeChar.getPvpKills());

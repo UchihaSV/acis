@@ -14,10 +14,11 @@
  */
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
 /**
  * Speaking NPCs implementation.<br>
@@ -26,9 +27,8 @@ import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
  * It sends back the good string following the action and the npcId.<br>
  * <br>
  * <font color="red"><b><u>TODO:</b></u> Replace the system of switch by an XML, once a decent amount of NPCs is mapped.</font>
- * @author Tryskell
  */
-public class SpeakingNPCs extends AbstractNpcAI
+public class SpeakingNPCs extends L2AttackableAIScript
 {
 	private static final int[] NPC_IDS =
 	{
@@ -80,15 +80,19 @@ public class SpeakingNPCs extends AbstractNpcAI
 	public SpeakingNPCs()
 	{
 		super("ai/group");
-		
-		registerMobs(NPC_IDS, EventType.ON_ATTACK, EventType.ON_KILL);
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	protected void registerNpcs()
+	{
+		addEventIds(NPC_IDS, EventType.ON_ATTACK, EventType.ON_KILL);
+	}
+	
+	@Override
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (npc.isScriptValue(1))
-			return super.onAttack(npc, attacker, damage, isPet);
+			return super.onAttack(npc, attacker, damage, isPet, skill);
 		
 		String message = "";
 		
@@ -151,7 +155,7 @@ public class SpeakingNPCs extends AbstractNpcAI
 		npc.broadcastNpcSay(message);
 		npc.setScriptValue(1); // Make the mob speaks only once, else he will spam.
 		
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 	
 	@Override

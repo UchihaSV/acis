@@ -67,7 +67,7 @@ public class MonsterKnownList extends AttackableKnownList
 		
 		// clear agro list
 		if (monster.isVisible() && getKnownType(L2PcInstance.class).isEmpty())
-			monster.clearAggroList();
+			monster.getAggroList().clear();
 		
 		return true;
 	}

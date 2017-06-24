@@ -73,7 +73,7 @@ public class L2MonsterInstance extends L2Attackable
 	@Override
 	public boolean isAggressive()
 	{
-		return (getAggroRange() > 0);
+		return getTemplate().getAggroRange() > 0;
 	}
 	
 	@Override
@@ -123,7 +123,7 @@ public class L2MonsterInstance extends L2Attackable
 			return false;
 		
 		if (_master != null)
-			_master.getMinionList().onMinionDie(this, _master.getSpawn().getRespawnDelay() / 2);
+			_master.getMinionList().onMinionDie(this, _master.getSpawn().getRespawnDelay() * 1000 / 2);
 		
 		return true;
 	}

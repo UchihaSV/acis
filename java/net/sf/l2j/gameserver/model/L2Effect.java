@@ -22,7 +22,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2SummonInstance;
@@ -273,9 +274,9 @@ public abstract class L2Effect
 			stopEffectTask();
 			final int initialDelay = Math.max((_period - _periodFirstTime) * 1000, 5);
 			if (_count > 1)
-				_currentFuture = ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(new EffectTask(), initialDelay, _period * 1000);
+				_currentFuture = ThreadPool.scheduleAtFixedRate(new EffectTask(), initialDelay, _period * 1000);
 			else
-				_currentFuture = ThreadPoolManager.getInstance().scheduleEffect(new EffectTask(), initialDelay);
+				_currentFuture = ThreadPool.schedule(new EffectTask(), initialDelay);
 		}
 		if (_state == EffectState.ACTING)
 		{

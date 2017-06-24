@@ -28,7 +28,7 @@ public class Q331_ArrowOfVengeance extends Quest
 	
 	public Q331_ArrowOfVengeance()
 	{
-		super(331, "Arrow Of Vengeance");
+		super(331, "Arrow of Vengeance");
 		
 		setItemsIds(HARPY_FEATHER, MEDUSA_VENOM, WYRM_TOOTH);
 		

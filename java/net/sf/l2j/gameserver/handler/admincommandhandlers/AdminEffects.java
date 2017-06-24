@@ -32,7 +32,7 @@ import net.sf.l2j.gameserver.network.serverpackets.ExRedSky;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
-import net.sf.l2j.gameserver.network.serverpackets.SignsSky;
+import net.sf.l2j.gameserver.network.serverpackets.SSQInfo;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.network.serverpackets.StopMove;
 import net.sf.l2j.gameserver.network.serverpackets.SunRise;
@@ -128,12 +128,16 @@ public class AdminEffects implements IAdminCommandHandler
 				
 				L2GameServerPacket packet = null;
 				
-				if (type.equals("signsky"))
+				if (type.equals("ssqinfo"))
 				{
 					if (state.equals("dawn"))
-						packet = new SignsSky(2);
+						packet = SSQInfo.DAWN_SKY_PACKET;
 					else if (state.equals("dusk"))
-						packet = new SignsSky(1);
+						packet = SSQInfo.DUSK_SKY_PACKET;
+					else if (state.equals("red"))
+						packet = SSQInfo.RED_SKY_PACKET;
+					else if (state.equals("regular"))
+						packet = SSQInfo.REGULAR_SKY_PACKET;
 				}
 				else if (type.equals("sky"))
 				{
@@ -145,14 +149,18 @@ public class AdminEffects implements IAdminCommandHandler
 						packet = new ExRedSky(10);
 				}
 				else
-					activeChar.sendMessage("Usage: //atmosphere <signsky dawn|dusk> <sky day|night|red>");
+				{
+					activeChar.sendMessage("Usage: //atmosphere <ssqinfo dawn|dusk|red|regular>");
+					activeChar.sendMessage("Usage: //atmosphere <sky day|night|red>");
+				}
 				
 				if (packet != null)
 					Broadcast.toAllOnlinePlayers(packet);
 			}
 			catch (Exception ex)
 			{
-				activeChar.sendMessage("Usage: //atmosphere <signsky dawn|dusk> <sky day|night|red>");
+				activeChar.sendMessage("Usage: //atmosphere <ssqinfo dawn|dusk|red|regular>");
+				activeChar.sendMessage("Usage: //atmosphere <sky day|night|red>");
 			}
 		}
 		else if (command.startsWith("admin_jukebox"))

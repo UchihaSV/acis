@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
+import net.sf.l2j.gameserver.model.base.Sex;
 
 public class L2ClanMember
 {
@@ -32,7 +33,7 @@ public class L2ClanMember
 	private int _powerGrade;
 	private int _level;
 	private int _classId;
-	private boolean _sex;
+	private Sex _sex;
 	private int _raceOrdinal;
 	private L2PcInstance _player;
 	private int _pledgeType;
@@ -60,7 +61,7 @@ public class L2ClanMember
 		_powerGrade = clanMember.getInt("power_grade");
 		_apprentice = clanMember.getInt("apprentice");
 		_sponsor = clanMember.getInt("sponsor");
-		_sex = clanMember.getInt("sex") != 0;
+		_sex = Sex.values()[clanMember.getInt("sex")];
 		_raceOrdinal = clanMember.getInt("race");
 	}
 	
@@ -130,14 +131,7 @@ public class L2ClanMember
 	
 	public boolean isOnline()
 	{
-		if (_player == null)
-			return false;
-		if (_player.getClient() == null)
-			return false;
-		if (_player.getClient().isDetached())
-			return false;
-		
-		return true;
+		return _player != null && _player.getClient() != null && !_player.getClient().isDetached();
 	}
 	
 	public int getClassId()
@@ -239,7 +233,7 @@ public class L2ClanMember
 		return (_player != null) ? _player.getRace().ordinal() : _raceOrdinal;
 	}
 	
-	public boolean getSex()
+	public Sex getSex()
 	{
 		return (_player != null) ? _player.getAppearance().getSex() : _sex;
 	}

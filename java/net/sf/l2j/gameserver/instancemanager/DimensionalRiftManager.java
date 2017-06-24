@@ -24,8 +24,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.model.L2Party;
@@ -132,10 +133,7 @@ public class DimensionalRiftManager
 												if (template != null && _rooms.containsKey(type) && _rooms.get(type).containsKey(roomId))
 												{
 													L2Spawn spawnDat = new L2Spawn(template);
-													spawnDat.setLocx(x);
-													spawnDat.setLocy(y);
-													spawnDat.setLocz(z);
-													spawnDat.setHeading(-1);
+													spawnDat.setLoc(x, y, z, -1);
 													spawnDat.setRespawnDelay(delay);
 													SpawnTable.getInstance().addNewSpawn(spawnDat, false);
 													_rooms.get(type).get(roomId).getSpawns().add(spawnDat);
@@ -408,8 +406,8 @@ public class DimensionalRiftManager
 		{
 			for (L2Spawn spawn : _roomSpawns)
 			{
-				spawn.doSpawn();
-				spawn.startRespawn();
+				spawn.doSpawn(false);
+				spawn.setRespawnState(true);
 			}
 		}
 		
@@ -417,9 +415,9 @@ public class DimensionalRiftManager
 		{
 			for (L2Spawn spawn : _roomSpawns)
 			{
-				spawn.stopRespawn();
-				if (spawn.getLastSpawn() != null)
-					spawn.getLastSpawn().deleteMe();
+				spawn.setRespawnState(false);
+				if (spawn.getNpc() != null)
+					spawn.getNpc().deleteMe();
 			}
 			return this;
 		}

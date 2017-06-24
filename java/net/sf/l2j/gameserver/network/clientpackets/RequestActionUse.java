@@ -15,11 +15,13 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.commons.random.Rnd;
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.model.L2SummonAI;
-import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Summon;
 import net.sf.l2j.gameserver.model.actor.instance.L2DoorInstance;
@@ -121,6 +123,10 @@ public final class RequestActionUse extends L2GameClientPacket
 				break;
 			
 			case 1:
+				// Player is mounted, do not allow to change movement type.
+				if (activeChar.isMounted())
+					return;
+				
 				if (activeChar.isRunning())
 					activeChar.setWalking();
 				else
@@ -159,7 +165,7 @@ public final class RequestActionUse extends L2GameClientPacket
 					return;
 				
 				// Sin eater, Big Boom, Wyvern can't attack with attack button.
-				if (Util.contains(PASSIVE_SUMMONS, pet.getNpcId()))
+				if (ArraysUtil.contains(PASSIVE_SUMMONS, pet.getNpcId()))
 					return;
 				
 				if (pet.isOutOfControl())
@@ -198,7 +204,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				
 				if (target instanceof L2DoorInstance)
 				{
-					if (((L2DoorInstance) target).isAttackable(activeChar) && pet.getNpcId() != L2SiegeSummonInstance.SWOOP_CANNON_ID)
+					if (((L2DoorInstance) target).isAutoAttackable(activeChar) && pet.getNpcId() != L2SiegeSummonInstance.SWOOP_CANNON_ID)
 						pet.getAI().setIntention(CtrlIntention.ATTACK, target);
 				}
 				// siege golem AI doesn't support attacking other than doors at the moment
@@ -238,7 +244,7 @@ public final class RequestActionUse extends L2GameClientPacket
 					activeChar.sendPacket(SystemMessageId.PET_REFUSING_ORDER);
 				else if (pet.isAttackingNow() || pet.isInCombat())
 					activeChar.sendPacket(SystemMessageId.PET_CANNOT_SENT_BACK_DURING_BATTLE);
-				else if (((L2PetInstance) pet).isHungry())
+				else if (((L2PetInstance) pet).checkUnsummonState())
 					activeChar.sendPacket(SystemMessageId.YOU_CANNOT_RESTORE_HUNGRY_PETS);
 				else
 					pet.unSummon(activeChar);
@@ -332,7 +338,7 @@ public final class RequestActionUse extends L2GameClientPacket
 				}
 				
 				pet.setFollowStatus(false);
-				pet.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(target.getX(), target.getY(), target.getZ(), 0));
+				pet.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(target.getX(), target.getY(), target.getZ()));
 				break;
 			
 			case 61: // Private Store Package Sell

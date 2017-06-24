@@ -15,11 +15,13 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
+import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.EnchantResult;
+import net.sf.l2j.gameserver.util.Util;
 
 public final class RequestGiveItemToPet extends L2GameClientPacket
 {
@@ -43,19 +45,22 @@ public final class RequestGiveItemToPet extends L2GameClientPacket
 		if (player == null || !player.hasPet())
 			return;
 		
-		if (player.isProcessingTransaction())
-		{
-			player.sendPacket(SystemMessageId.ALREADY_TRADING);
-			return;
-		}
-		
 		// Alt game - Karma punishment
 		if (!Config.KARMA_PLAYER_CAN_TRADE && player.getKarma() > 0)
+		{
+			player.sendMessage("You cannot trade in a chaotic state.");
 			return;
+		}
 		
 		if (player.isInStoreMode())
 		{
 			player.sendPacket(SystemMessageId.CANNOT_PICKUP_OR_USE_ITEM_WHILE_TRADING);
+			return;
+		}
+		
+		if (player.isProcessingTransaction())
+		{
+			player.sendPacket(SystemMessageId.ALREADY_TRADING);
 			return;
 		}
 		
@@ -73,6 +78,12 @@ public final class RequestGiveItemToPet extends L2GameClientPacket
 		if (pet.isDead())
 		{
 			player.sendPacket(SystemMessageId.CANNOT_GIVE_ITEMS_TO_DEAD_PET);
+			return;
+		}
+		
+		if (Util.calculateDistance(player, pet, true) > L2Npc.INTERACTION_DISTANCE)
+		{
+			player.sendPacket(SystemMessageId.TARGET_TOO_FAR);
 			return;
 		}
 		

@@ -31,15 +31,15 @@ public final class NewCharacter extends L2GameClientPacket
 		CharTemplates ct = new CharTemplates();
 		
 		ct.addChar(CharTemplateTable.getInstance().getTemplate(0));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.fighter));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.mage));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.elvenFighter));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.elvenMage));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.darkFighter));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.darkMage));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.orcFighter));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.orcMage));
-		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.dwarvenFighter));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.HUMAN_FIGHTER));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.HUMAN_MYSTIC));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.ELVEN_FIGHTER));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.ELVEN_MYSTIC));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.DARK_FIGHTER));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.DARK_MYSTIC));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.ORC_FIGHTER));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.ORC_MYSTIC));
+		ct.addChar(CharTemplateTable.getInstance().getTemplate(ClassId.DWARVEN_FIGHTER));
 		
 		sendPacket(ct);
 	}

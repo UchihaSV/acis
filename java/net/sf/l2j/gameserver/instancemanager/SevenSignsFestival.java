@@ -25,30 +25,31 @@ import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
-import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.lang.StringUtil;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
+import net.sf.l2j.Config;
+import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.CharNameTable;
 import net.sf.l2j.gameserver.datatables.ClanTable;
-import net.sf.l2j.gameserver.datatables.MapRegionTable;
+import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
-import net.sf.l2j.gameserver.model.L2CharPosition;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2Party;
 import net.sf.l2j.gameserver.model.L2Party.MessageType;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.L2World;
-import net.sf.l2j.gameserver.model.SpawnListener;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2FestivalMonsterInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.base.Experience;
 import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
+import net.sf.l2j.gameserver.model.zone.type.L2PeaceZone;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.clientpackets.Say2;
 import net.sf.l2j.gameserver.network.serverpackets.CreatureSay;
@@ -60,7 +61,7 @@ import net.sf.l2j.gameserver.templates.StatsSet;
  * Seven Signs Festival of Darkness Engine
  * @author Tempy
  */
-public class SevenSignsFestival implements SpawnListener
+public class SevenSignsFestival
 {
 	protected static final Logger _log = Logger.getLogger(SevenSignsFestival.class.getName());
 	
@@ -3148,8 +3149,8 @@ public class SevenSignsFestival implements SpawnListener
 	protected List<Integer> _accumulatedBonuses; // The total bonus available (in Ancient Adena)
 	
 	boolean _noPartyRegister;
-	private L2Npc _dawnChatGuide;
-	private L2Npc _duskChatGuide;
+	private List<L2PeaceZone> _dawnPeace;
+	private List<L2PeaceZone> _duskPeace;
 	
 	protected Map<Integer, List<Integer>> _dawnFestivalParticipants;
 	protected Map<Integer, List<Integer>> _duskFestivalParticipants;
@@ -3189,7 +3190,6 @@ public class SevenSignsFestival implements SpawnListener
 			return;
 		}
 		
-		L2Spawn.addSpawnListener(this);
 		startFestivalManager();
 	}
 	
@@ -3309,7 +3309,7 @@ public class SevenSignsFestival implements SpawnListener
 		// at the specified time, then invoke it automatically after every cycle.
 		FestivalManager fm = new FestivalManager();
 		setNextFestivalStart(Config.ALT_FESTIVAL_MANAGER_START + FESTIVAL_SIGNUP_TIME);
-		_managerScheduledTask = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(fm, Config.ALT_FESTIVAL_MANAGER_START, Config.ALT_FESTIVAL_CYCLE_LENGTH);
+		_managerScheduledTask = ThreadPool.scheduleAtFixedRate(fm, Config.ALT_FESTIVAL_MANAGER_START, Config.ALT_FESTIVAL_CYCLE_LENGTH);
 		
 		_log.info("SevenSignsFestival: The first Festival of Darkness cycle begins in " + (Config.ALT_FESTIVAL_MANAGER_START / 60000) + " minute(s).");
 	}
@@ -3926,7 +3926,7 @@ public class SevenSignsFestival implements SpawnListener
 			
 			final List<String> partyMembers = new ArrayList<>();
 			for (int partyMember : getPreviousParticipants(oracle, festivalId))
-				partyMembers.add(CharNameTable.getInstance().getNameById(partyMember));
+				partyMembers.add(CharNameTable.getInstance().getPlayerName(partyMember));
 			
 			// Update the highest scores and party list.
 			currFestData.set("date", String.valueOf(System.currentTimeMillis()));
@@ -4025,23 +4025,6 @@ public class SevenSignsFestival implements SpawnListener
 	}
 	
 	/**
-	 * Used to send a "shout" message to all players currently present in an Oracle. Primarily used for Festival Guide and Witch related speech.
-	 * @param senderName
-	 * @param message
-	 */
-	public void sendMessageToAll(String senderName, String message)
-	{
-		if (_dawnChatGuide == null || _duskChatGuide == null)
-			return;
-		
-		CreatureSay cs = new CreatureSay(_dawnChatGuide.getObjectId(), 1, senderName, message);
-		_dawnChatGuide.broadcastPacket(cs);
-		
-		cs = new CreatureSay(_duskChatGuide.getObjectId(), 1, senderName, message);
-		_duskChatGuide.broadcastPacket(cs);
-	}
-	
-	/**
 	 * Basically a wrapper-call to signal to increase the challenge of the specified festival.
 	 * @param oracle
 	 * @param festivalId
@@ -4055,32 +4038,46 @@ public class SevenSignsFestival implements SpawnListener
 	}
 	
 	/**
-	 * Used with the SpawnListener, to update the required "chat guide" instances, for use with announcements in the oracles.
-	 * @param npc
+	 * Add zone for use with announcements in the oracles.
+	 * @param zone : Zone to be added.
+	 * @param dawn : Is dawn zone.
 	 */
-	@Override
-	public void npcSpawned(L2Npc npc)
+	public void addPeaceZone(L2PeaceZone zone, boolean dawn)
 	{
-		if (npc == null)
-			return;
-		
-		int npcId = npc.getNpcId();
-		
-		// If the spawned NPC ID matches the ones we need, assign their instances.
-		if (npcId == 31127)
+		if (dawn)
 		{
-			if (Config.DEBUG)
-				_log.config("SevenSignsFestival: Instance found for NPC ID 31127 (" + npc.getObjectId() + ").");
+			if (_dawnPeace == null)
+				_dawnPeace = new ArrayList<>(2);
 			
-			_dawnChatGuide = npc;
+			if (!_dawnPeace.contains(zone))
+				_dawnPeace.add(zone);
 		}
-		else if (npcId == 31137)
+		else
 		{
-			if (Config.DEBUG)
-				_log.config("SevenSignsFestival: Instance found for NPC ID 31137 (" + npc.getObjectId() + ").");
+			if (_duskPeace == null)
+				_duskPeace = new ArrayList<>(2);
 			
-			_duskChatGuide = npc;
+			if (!_duskPeace.contains(zone))
+				_duskPeace.add(zone);
 		}
+	}
+	
+	/**
+	 * Used to send a "shout" message to all players currently present in an Oracle. Primarily used for Festival Guide and Witch related speech.
+	 * @param senderName
+	 * @param message
+	 */
+	public void sendMessageToAll(String senderName, String message)
+	{
+		final CreatureSay cs = new CreatureSay(0, Say2.SHOUT, senderName, message);
+		
+		if (_dawnPeace != null)
+			for (L2PeaceZone zone : _dawnPeace)
+				zone.broadcastPacket(cs);
+		
+		if (_duskPeace != null)
+			for (L2PeaceZone zone : _duskPeace)
+				zone.broadcastPacket(cs);
 	}
 	
 	/**
@@ -4441,17 +4438,14 @@ public class SevenSignsFestival implements SpawnListener
 			{
 				L2Spawn npcSpawn = new L2Spawn(witchTemplate);
 				
-				npcSpawn.setLocx(_witchSpawn._x);
-				npcSpawn.setLocy(_witchSpawn._y);
-				npcSpawn.setLocz(_witchSpawn._z);
-				npcSpawn.setHeading(_witchSpawn._heading);
+				npcSpawn.setLoc(_witchSpawn._x, _witchSpawn._y, _witchSpawn._z, _witchSpawn._heading);
 				npcSpawn.setRespawnDelay(1);
 				
 				// Needed as doSpawn() is required to be called also for the NpcInstance it returns.
-				npcSpawn.startRespawn();
+				npcSpawn.setRespawnState(true);
 				
 				SpawnTable.getInstance().addNewSpawn(npcSpawn, false);
-				_witchInst = npcSpawn.doSpawn();
+				_witchInst = npcSpawn.doSpawn(false);
 				
 				if (Config.DEBUG)
 					_log.fine("SevenSignsFestival: Spawned the Festival Witch " + npcSpawn.getNpcId() + " at " + _witchSpawn._x + " " + _witchSpawn._y + " " + _witchSpawn._z);
@@ -4518,10 +4512,8 @@ public class SevenSignsFestival implements SpawnListener
 					y -= Rnd.get(FESTIVAL_MAX_OFFSET_Y);
 				}
 				
-				L2CharPosition moveTo = new L2CharPosition(x, y, _startLocation._z, Rnd.get(65536));
-				
 				festivalMob.setRunning();
-				festivalMob.getAI().setIntention(CtrlIntention.MOVE_TO, moveTo);
+				festivalMob.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(x, y, _startLocation._z));
 			}
 		}
 		
@@ -4567,19 +4559,13 @@ public class SevenSignsFestival implements SpawnListener
 					
 					try
 					{
-						L2Spawn npcSpawn = new L2Spawn(npcTemplate);
-						
-						npcSpawn.setLocx(currSpawn._x);
-						npcSpawn.setLocy(currSpawn._y);
-						npcSpawn.setLocz(currSpawn._z);
-						npcSpawn.setHeading(Rnd.get(65536));
+						final L2Spawn npcSpawn = new L2Spawn(npcTemplate);
+						npcSpawn.setLoc(currSpawn._x, currSpawn._y, currSpawn._z, Rnd.get(65536));
 						npcSpawn.setRespawnDelay(respawnDelay);
-						
-						// Needed as doSpawn() is required to be called also for the NpcInstance it returns.
-						npcSpawn.startRespawn();
+						npcSpawn.setRespawnState(true);
 						
 						SpawnTable.getInstance().addNewSpawn(npcSpawn, false);
-						L2FestivalMonsterInstance festivalMob = (L2FestivalMonsterInstance) npcSpawn.doSpawn();
+						L2FestivalMonsterInstance festivalMob = (L2FestivalMonsterInstance) npcSpawn.doSpawn(false);
 						
 						// Set the offering bonus to 2x or 5x the amount per kill,
 						// if this spawn is part of an increased challenge or is a festival chest.
@@ -4652,7 +4638,7 @@ public class SevenSignsFestival implements SpawnListener
 			// Delete all the NPCs in the current festival arena.
 			if (_witchInst != null)
 			{
-				_witchInst.getSpawn().stopRespawn();
+				_witchInst.getSpawn().setRespawnState(false);
 				_witchInst.deleteMe();
 				SpawnTable.getInstance().deleteSpawn(_witchInst.getSpawn(), false);
 			}
@@ -4661,7 +4647,7 @@ public class SevenSignsFestival implements SpawnListener
 				for (L2FestivalMonsterInstance monsterInst : _npcInsts)
 					if (monsterInst != null)
 					{
-						monsterInst.getSpawn().stopRespawn();
+						monsterInst.getSpawn().setRespawnState(false);
 						monsterInst.deleteMe();
 						SpawnTable.getInstance().deleteSpawn(monsterInst.getSpawn(), false);
 					}
@@ -4686,7 +4672,7 @@ public class SevenSignsFestival implements SpawnListener
 			catch (Exception e)
 			{
 				// If an exception occurs, just move the player to the nearest town.
-				participant.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+				participant.teleToLocation(TeleportWhereType.TOWN);
 				participant.sendMessage("You have been removed from the festival arena.");
 			}
 		}

@@ -15,7 +15,6 @@
 package net.sf.l2j.gameserver.handler.itemhandlers;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.datatables.PetDataTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.handler.IItemHandler;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -26,7 +25,6 @@ import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.MagicSkillUse;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.util.Util;
 
 /**
  * @author Kerberos
@@ -77,7 +75,7 @@ public class PetFood implements IItemHandler
 					pet.setCurrentFed(pet.getCurrentFed() + (skill.getFeed() * Config.PET_FOOD_RATE));
 					
 					// If pet is still hungry, send an alert.
-					if (pet.getCurrentFed() < (55 / 100f * pet.getPetLevelData().getPetMaxFeed()))
+					if (pet.checkAutoFeedState())
 						pet.getOwner().sendPacket(SystemMessageId.YOUR_PET_ATE_A_LITTLE_BUT_IS_STILL_HUNGRY);
 					
 					return true;
@@ -85,23 +83,17 @@ public class PetFood implements IItemHandler
 			}
 			else if (activeChar instanceof L2PcInstance)
 			{
-				L2PcInstance player = ((L2PcInstance) activeChar);
-				int itemId = item.getItemId();
-				if (player.isMounted())
+				final L2PcInstance player = ((L2PcInstance) activeChar);
+				final int itemId = item.getItemId();
+				
+				if (player.isMounted() && player.getPetTemplate().canEatFood(itemId))
 				{
-					int food[] = PetDataTable.getInstance().getPetData(player.getMountNpcId()).getFood();
-					if (Util.contains(food, itemId))
+					if (player.destroyItem("Consume", item.getObjectId(), 1, null, false))
 					{
-						if (player.destroyItem("Consume", item.getObjectId(), 1, null, false))
-						{
-							player.broadcastPacket(new MagicSkillUse(activeChar, activeChar, magicId, 1, 0, 0));
-							player.setCurrentFeed(player.getCurrentFeed() + (skill.getFeed() * Config.PET_FOOD_RATE));
-						}
-						return true;
+						player.broadcastPacket(new MagicSkillUse(activeChar, activeChar, magicId, 1, 0, 0));
+						player.setCurrentFeed(player.getCurrentFeed() + (skill.getFeed() * Config.PET_FOOD_RATE));
 					}
-					
-					activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_CANNOT_BE_USED).addItemName(itemId));
-					return false;
+					return true;
 				}
 				
 				activeChar.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_CANNOT_BE_USED).addItemName(itemId));

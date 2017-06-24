@@ -15,9 +15,9 @@
 package net.sf.l2j.gameserver.model.actor.instance;
 
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
+import net.sf.l2j.gameserver.model.base.ClassId;
+import net.sf.l2j.gameserver.model.base.ClassRace;
 import net.sf.l2j.gameserver.model.base.ClassType;
-import net.sf.l2j.gameserver.model.base.PlayerClass;
-import net.sf.l2j.gameserver.model.base.Race;
 
 public final class L2VillageMasterPriestInstance extends L2VillageMasterInstance
 {
@@ -27,20 +27,20 @@ public final class L2VillageMasterPriestInstance extends L2VillageMasterInstance
 	}
 	
 	@Override
-	protected final boolean checkVillageMasterRace(PlayerClass pclass)
+	protected final boolean checkVillageMasterRace(ClassId pclass)
 	{
 		if (pclass == null)
 			return false;
 		
-		return pclass.isOfRace(Race.Human) || pclass.isOfRace(Race.Elf);
+		return pclass.getRace() == ClassRace.HUMAN || pclass.getRace() == ClassRace.ELF;
 	}
 	
 	@Override
-	protected final boolean checkVillageMasterTeachType(PlayerClass pclass)
+	protected final boolean checkVillageMasterTeachType(ClassId pclass)
 	{
 		if (pclass == null)
 			return false;
 		
-		return pclass.isOfType(ClassType.Priest);
+		return pclass.getType() == ClassType.PRIEST;
 	}
 }

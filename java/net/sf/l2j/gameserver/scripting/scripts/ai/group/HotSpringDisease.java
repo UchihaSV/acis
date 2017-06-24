@@ -15,18 +15,14 @@
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
-/**
- * Hot Spring Disease AI
- * @author devO, Sandro, Tryskell
- */
-public class HotSpringDisease extends AbstractNpcAI
+public class HotSpringDisease extends L2AttackableAIScript
 {
 	// Diseases
 	private static final int MALARIA = 4554;
@@ -58,8 +54,12 @@ public class HotSpringDisease extends AbstractNpcAI
 	public HotSpringDisease()
 	{
 		super("ai/group");
-		
-		registerMobs(MONSTERS_DISEASES[0], EventType.ON_ATTACK_ACT);
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addAttackActId(MONSTERS_DISEASES[0]);
 	}
 	
 	@Override

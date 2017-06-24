@@ -14,14 +14,16 @@
  */
 package net.sf.l2j.gameserver.scripting.scripts.ai.individual;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.datatables.SkillTable;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
@@ -31,13 +33,14 @@ import net.sf.l2j.gameserver.model.zone.type.L2BossZone;
 import net.sf.l2j.gameserver.network.serverpackets.PlaySound;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
 import net.sf.l2j.gameserver.network.serverpackets.SpecialCamera;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.EventType;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.util.Util;
 
-public class Valakas extends AbstractNpcAI
+public class Valakas extends L2AttackableAIScript
 {
-	private static final L2BossZone VALAKAS_LAIR = GrandBossManager.getInstance().getZoneById(110010);
+	private static final L2BossZone VALAKAS_LAIR = ZoneManager.getInstance().getZoneById(110010, L2BossZone.class);
 	
 	private static final byte DORMANT = 0; // Valakas is spawned and no one has entered yet. Entry is unlocked.
 	private static final byte WAITING = 1; // Valakas is spawned and someone has entered, triggering a 30 minute window for additional people to enter. Entry is unlocked.
@@ -90,12 +93,6 @@ public class Valakas extends AbstractNpcAI
 	public Valakas()
 	{
 		super("ai/individual");
-		
-		int[] mob =
-		{
-			VALAKAS
-		};
-		registerMobs(mob);
 		
 		final StatsSet info = GrandBossManager.getInstance().getStatsSet(VALAKAS);
 		final int status = GrandBossManager.getInstance().getBossStatus(VALAKAS);
@@ -156,6 +153,12 @@ public class Valakas extends AbstractNpcAI
 					startQuestTimer("beginning", Config.WAIT_TIME_VALAKAS, valakas, null, false);
 			}
 		}
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addEventIds(VALAKAS, EventType.ON_ATTACK, EventType.ON_KILL, EventType.ON_SPAWN, EventType.ON_AGGRO);
 	}
 	
 	@Override
@@ -311,7 +314,7 @@ public class Valakas extends AbstractNpcAI
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (!VALAKAS_LAIR.isInsideZone(attacker))
 		{
@@ -331,16 +334,16 @@ public class Valakas extends AbstractNpcAI
 		// Debuff strider-mounted players.
 		if (attacker.getMountType() == 1)
 		{
-			final L2Skill skill = SkillTable.getInstance().getInfo(4258, 1);
-			if (attacker.getFirstEffect(skill) == null)
+			final L2Skill debuff = SkillTable.getInstance().getInfo(4258, 1);
+			if (attacker.getFirstEffect(debuff) == null)
 			{
 				npc.setTarget(attacker);
-				npc.doCast(skill);
+				npc.doCast(debuff);
 			}
 		}
 		_timeTracker = System.currentTimeMillis();
 		
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 	
 	@Override
@@ -404,8 +407,8 @@ public class Valakas extends AbstractNpcAI
 				int posX = x + Rnd.get(-1400, 1400);
 				int posY = y + Rnd.get(-1400, 1400);
 				
-				if (PathFinding.getInstance().canMoveToTarget(x, y, z, posX, posY, z))
-					npc.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(posX, posY, z, 0));
+				if (GeoEngine.getInstance().canMoveToTarget(x, y, z, posX, posY, z))
+					npc.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(posX, posY, z));
 			}
 			return;
 		}

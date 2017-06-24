@@ -14,23 +14,24 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
-import net.sf.l2j.gameserver.model.actor.instance.L2BoatInstance;
+import net.sf.l2j.gameserver.model.actor.L2Vehicle;
 
-/**
- * @author Maktakien
- */
 public class VehicleDeparture extends L2GameServerPacket
 {
-	// Store parameters because they can be changed during broadcast
-	private final int _objId, _x, _y, _z, _moveSpeed, _rotationSpeed;
+	private final int _objectId;
+	private final int _x;
+	private final int _y;
+	private final int _z;
+	private final int _moveSpeed;
+	private final int _rotationSpeed;
 	
-	public VehicleDeparture(L2BoatInstance boat)
+	public VehicleDeparture(L2Vehicle boat)
 	{
-		_objId = boat.getObjectId();
+		_objectId = boat.getObjectId();
 		_x = boat.getXdestination();
 		_y = boat.getYdestination();
 		_z = boat.getZdestination();
-		_moveSpeed = boat.getStat().getMoveSpeed();
+		_moveSpeed = (int) boat.getStat().getMoveSpeed();
 		_rotationSpeed = boat.getStat().getRotationSpeed();
 	}
 	
@@ -38,7 +39,7 @@ public class VehicleDeparture extends L2GameServerPacket
 	protected void writeImpl()
 	{
 		writeC(0x5A);
-		writeD(_objId);
+		writeD(_objectId);
 		writeD(_moveSpeed);
 		writeD(_rotationSpeed);
 		writeD(_x);

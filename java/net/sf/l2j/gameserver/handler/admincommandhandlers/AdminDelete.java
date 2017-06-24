@@ -54,18 +54,18 @@ public class AdminDelete implements IAdminCommandHandler
 		if (obj != null && obj instanceof L2Npc)
 		{
 			L2Npc target = (L2Npc) obj;
-			target.deleteMe();
 			
 			L2Spawn spawn = target.getSpawn();
 			if (spawn != null)
 			{
-				spawn.stopRespawn();
+				spawn.setRespawnState(false);
 				
 				if (RaidBossSpawnManager.getInstance().isDefined(spawn.getNpcId()))
 					RaidBossSpawnManager.getInstance().deleteSpawn(spawn, true);
 				else
 					SpawnTable.getInstance().deleteSpawn(spawn, true);
 			}
+			target.deleteMe();
 			
 			activeChar.sendMessage("Deleted " + target.getName() + " from " + target.getObjectId() + ".");
 		}

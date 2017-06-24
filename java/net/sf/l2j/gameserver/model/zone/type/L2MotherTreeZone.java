@@ -14,12 +14,13 @@
  */
 package net.sf.l2j.gameserver.model.zone.type;
 
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.zone.L2ZoneType;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
-import net.sf.l2j.gameserver.util.Util;
 
 /**
  * A mother-trees zone
@@ -68,7 +69,7 @@ public class L2MotherTreeZone extends L2ZoneType
 	{
 		if (character instanceof L2PcInstance && _race != null)
 		{
-			if (!Util.contains(_race, ((L2PcInstance) character).getRace().ordinal()))
+			if (!ArraysUtil.contains(_race, ((L2PcInstance) character).getRace().ordinal()))
 				return false;
 		}
 		return true;

@@ -70,7 +70,7 @@ public class GuardKnownList extends AttackableKnownList
 		final L2GuardInstance guard = (L2GuardInstance) _activeObject;
 		
 		// If the _aggroList of the L2GuardInstance is empty, set to IDLE
-		if (guard.gotNoTarget())
+		if (guard.getAggroList().isEmpty())
 		{
 			if (guard.hasAI())
 				guard.getAI().setIntention(CtrlIntention.IDLE, null);

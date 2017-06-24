@@ -13,8 +13,9 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.model.L2CharPosition;
+import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -75,7 +76,7 @@ public class Q652_AnAgedExAdventurer extends Quest
 				st.playSound(QuestState.SOUND_ACCEPT);
 				st.takeItems(SOULSHOT_C, 100);
 				
-				npc.getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(85326, 7869, -3620, 0));
+				npc.getAI().setIntention(CtrlIntention.MOVE_TO, new Location(85326, 7869, -3620));
 				startQuestTimer("apparition_npc", 6000, npc, player, false);
 			}
 			else

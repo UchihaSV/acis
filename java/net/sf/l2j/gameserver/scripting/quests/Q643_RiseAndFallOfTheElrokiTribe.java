@@ -13,6 +13,7 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.Quest;
@@ -93,7 +94,7 @@ public class Q643_RiseAndFallOfTheElrokiTribe extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				htmltext = (player.getLevel() < 75) ? "31147-00.htm" : "32106-01.htm";
+				htmltext = (player.getLevel() < 75) ? "32106-00.htm" : "32106-01.htm";
 				break;
 			
 			case STATE_STARTED:

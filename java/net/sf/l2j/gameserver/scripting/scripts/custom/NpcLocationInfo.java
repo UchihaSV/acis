@@ -15,13 +15,14 @@
 package net.sf.l2j.gameserver.scripting.scripts.custom;
 
 import net.sf.l2j.commons.lang.StringUtil;
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.datatables.SpawnTable;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
-import net.sf.l2j.gameserver.util.Util;
 
 /**
  * @authors L2Emu Team (python), Nyaran (java)
@@ -226,20 +227,16 @@ public class NpcLocationInfo extends Quest
 			htmltext = null;
 			int npcId = Integer.parseInt(event);
 			
-			if (Util.contains(RADARS, npcId))
+			if (ArraysUtil.contains(RADARS, npcId))
 			{
-				int x = 0, y = 0, z = 0;
 				for (L2Spawn spawn : SpawnTable.getInstance().getSpawnTable())
 				{
 					if (npcId == spawn.getNpcId())
 					{
-						x = spawn.getLocx();
-						y = spawn.getLocy();
-						z = spawn.getLocz();
+						st.addRadar(spawn.getLocX(), spawn.getLocY(), spawn.getLocZ());
 						break;
 					}
 				}
-				st.addRadar(x, y, z);
 				htmltext = "MoveToLoc.htm";
 			}
 			st.exitQuest(true);

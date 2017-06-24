@@ -20,16 +20,13 @@ import java.util.stream.Collectors;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.TimeStamp;
 
-/**
- * @author KenM
- */
 public class SkillCoolTime extends L2GameServerPacket
 {
 	public List<TimeStamp> _reuseTimeStamps;
 	
 	public SkillCoolTime(L2PcInstance cha)
 	{
-		_reuseTimeStamps = cha.getReuseTimeStamps().stream().filter(r -> !r.hasNotPassed()).collect(Collectors.toList());
+		_reuseTimeStamps = cha.getReuseTimeStamps().stream().filter(r -> r.hasNotPassed()).collect(Collectors.toList());
 	}
 	
 	@Override

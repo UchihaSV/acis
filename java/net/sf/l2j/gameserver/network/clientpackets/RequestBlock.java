@@ -50,25 +50,20 @@ public final class RequestBlock extends L2GameClientPacket
 		{
 			case BLOCK:
 			case UNBLOCK:
-				final int targetId = CharNameTable.getInstance().getIdByName(_name);
-				final int targetAL = CharNameTable.getInstance().getAccessLevelById(targetId);
-				
-				// Can't block/unblock to locate invisible characters.
-				if (targetId <= 0)
+				// Can't block/unblock inexisting or self.
+				final int targetId = CharNameTable.getInstance().getPlayerObjectId(_name);
+				if (targetId <= 0 || activeChar.getObjectId() == targetId)
 				{
 					activeChar.sendPacket(SystemMessageId.FAILED_TO_REGISTER_TO_IGNORE_LIST);
 					return;
 				}
 				
 				// Can't block a GM character.
-				if (targetAL > 0)
+				if (CharNameTable.getInstance().getPlayerAccessLevel(targetId) > 0)
 				{
 					activeChar.sendPacket(SystemMessageId.YOU_MAY_NOT_IMPOSE_A_BLOCK_ON_GM);
 					return;
 				}
-				
-				if (activeChar.getObjectId() == targetId)
-					return;
 				
 				if (_type == BLOCK)
 					BlockList.addToBlockList(activeChar, targetId);

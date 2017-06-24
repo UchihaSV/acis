@@ -16,7 +16,8 @@ package net.sf.l2j.gameserver.model.actor.instance;
 
 import java.util.concurrent.Future;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.instancemanager.FourSepulchersManager;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -68,10 +69,10 @@ public class L2SepulcherMonsterInstance extends L2MonsterInstance
 			case 18157:
 				if (_victimSpawnKeyBoxTask != null)
 					_victimSpawnKeyBoxTask.cancel(true);
-				_victimSpawnKeyBoxTask = ThreadPoolManager.getInstance().scheduleEffect(new VictimSpawnKeyBox(this), 300000);
+				_victimSpawnKeyBoxTask = ThreadPool.schedule(new VictimSpawnKeyBox(this), 300000);
 				if (_victimShout != null)
 					_victimShout.cancel(true);
-				_victimShout = ThreadPoolManager.getInstance().scheduleEffect(new VictimShout(this), 5000);
+				_victimShout = ThreadPool.schedule(new VictimShout(this), 5000);
 				break;
 			
 			case 18196:
@@ -107,7 +108,7 @@ public class L2SepulcherMonsterInstance extends L2MonsterInstance
 			case 18243:
 				if (_changeImmortalTask != null)
 					_changeImmortalTask.cancel(true);
-				_changeImmortalTask = ThreadPoolManager.getInstance().scheduleEffect(new ChangeImmortal(this), 1600);
+				_changeImmortalTask = ThreadPool.schedule(new ChangeImmortal(this), 1600);
 				break;
 			
 			case 18256:
@@ -164,7 +165,7 @@ public class L2SepulcherMonsterInstance extends L2MonsterInstance
 			case 18219:
 				if (_onDeadEventTask != null)
 					_onDeadEventTask.cancel(true);
-				_onDeadEventTask = ThreadPoolManager.getInstance().scheduleEffect(new OnDeadEvent(this), 3500);
+				_onDeadEventTask = ThreadPool.schedule(new OnDeadEvent(this), 3500);
 				break;
 			
 			case 18150:
@@ -187,7 +188,7 @@ public class L2SepulcherMonsterInstance extends L2MonsterInstance
 				}
 				if (_onDeadEventTask != null)
 					_onDeadEventTask.cancel(true);
-				_onDeadEventTask = ThreadPoolManager.getInstance().scheduleEffect(new OnDeadEvent(this), 3500);
+				_onDeadEventTask = ThreadPool.schedule(new OnDeadEvent(this), 3500);
 				break;
 			
 			case 18141:
@@ -202,7 +203,7 @@ public class L2SepulcherMonsterInstance extends L2MonsterInstance
 				{
 					if (_onDeadEventTask != null)
 						_onDeadEventTask.cancel(true);
-					_onDeadEventTask = ThreadPoolManager.getInstance().scheduleEffect(new OnDeadEvent(this), 3500);
+					_onDeadEventTask = ThreadPool.schedule(new OnDeadEvent(this), 3500);
 				}
 				break;
 			
@@ -231,7 +232,7 @@ public class L2SepulcherMonsterInstance extends L2MonsterInstance
 				{
 					if (_onDeadEventTask != null)
 						_onDeadEventTask.cancel(true);
-					_onDeadEventTask = ThreadPoolManager.getInstance().scheduleEffect(new OnDeadEvent(this), 3500);
+					_onDeadEventTask = ThreadPool.schedule(new OnDeadEvent(this), 3500);
 				}
 				break;
 			
@@ -242,7 +243,7 @@ public class L2SepulcherMonsterInstance extends L2MonsterInstance
 				giveCup(killer);
 				if (_onDeadEventTask != null)
 					_onDeadEventTask.cancel(true);
-				_onDeadEventTask = ThreadPoolManager.getInstance().scheduleEffect(new OnDeadEvent(this), 8500);
+				_onDeadEventTask = ThreadPool.schedule(new OnDeadEvent(this), 8500);
 				break;
 		}
 		return true;

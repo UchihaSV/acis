@@ -34,6 +34,12 @@ public class DoorInfo extends L2GameServerPacket
 		writeC(0x4c);
 		writeD(_door.getObjectId());
 		writeD(_door.getDoorId());
-		writeD(_door.isAutoAttackable(_activeChar) ? 0 : 1);
+		writeD(_door.isAutoAttackable(_activeChar) ? 0 : 1); // ??? (can attack)
+		writeD(1); // ??? (can target)
+		writeD(_door.isOpened() ? 0 : 1);
+		writeD(_door.getMaxHp());
+		writeD((int) _door.getCurrentHp());
+		writeD(0); // ??? (show HP)
+		writeD(0); // ??? (Damage)
 	}
 }

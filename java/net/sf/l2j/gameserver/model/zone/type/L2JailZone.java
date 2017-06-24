@@ -14,7 +14,8 @@
  */
 package net.sf.l2j.gameserver.model.zone.type;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.zone.L2ZoneType;
@@ -55,7 +56,7 @@ public class L2JailZone extends L2ZoneType
 			if (player.isInJail() && !player.isInsideZone(ZoneId.JAIL))
 			{
 				// when a player wants to exit jail even if he is still jailed, teleport him back to jail
-				ThreadPoolManager.getInstance().scheduleGeneral(new BackToJail(character), 2000);
+				ThreadPool.schedule(new BackToJail(character), 2000);
 				player.sendMessage("You cannot cheat your way out of here. You must wait until your jail time is over.");
 			}
 		}

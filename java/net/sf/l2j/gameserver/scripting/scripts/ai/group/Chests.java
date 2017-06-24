@@ -15,6 +15,8 @@
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
 import net.sf.l2j.commons.random.Rnd;
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
@@ -22,14 +24,9 @@ import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2ChestInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
-import net.sf.l2j.gameserver.util.Util;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
-/**
- * Chest AI implementation.
- * @author Fulminus
- */
-public class Chests extends AbstractNpcAI
+public class Chests extends L2AttackableAIScript
 {
 	private static final int SKILL_DELUXE_KEY = 2229;
 	private static final int SKILL_BOX_KEY = 2065;
@@ -103,8 +100,12 @@ public class Chests extends AbstractNpcAI
 	public Chests()
 	{
 		super("ai/group");
-		
-		registerMobs(NPC_IDS, EventType.ON_ATTACK, EventType.ON_SKILL_SEE);
+	}
+	
+	@Override
+	protected void registerNpcs()
+	{
+		addEventIds(NPC_IDS, EventType.ON_ATTACK, EventType.ON_SKILL_SEE);
 	}
 	
 	@Override
@@ -113,7 +114,7 @@ public class Chests extends AbstractNpcAI
 		if (npc instanceof L2ChestInstance)
 		{
 			// This behavior is only run when the target of skill is the passed npc.
-			if (!Util.contains(targets, npc))
+			if (!ArraysUtil.contains(targets, npc))
 				return super.onSkillSee(npc, caster, skill, targets, isPet);
 			
 			final L2ChestInstance chest = ((L2ChestInstance) npc);
@@ -163,7 +164,7 @@ public class Chests extends AbstractNpcAI
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		if (npc instanceof L2ChestInstance)
 		{
@@ -182,6 +183,6 @@ public class Chests extends AbstractNpcAI
 					attack(chest, ((isPet) ? attacker.getPet() : attacker), ((damage * 100) / (chest.getLevel() + 7)));
 			}
 		}
-		return super.onAttack(npc, attacker, damage, isPet);
+		return super.onAttack(npc, attacker, damage, isPet, skill);
 	}
 }

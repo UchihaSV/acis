@@ -18,188 +18,184 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
-public class CharNameTable
+/**
+ * This table caches players informations. It keeps a link between objectId and a private DataHolder holding players name, account name and access level informations.
+ * <p>
+ * It is notably used for any offline character check, such as friendlist, existing character name, etc.
+ * </p>
+ */
+public final class CharNameTable
 {
-	private static Logger _log = Logger.getLogger(CharNameTable.class.getName());
+	private static final Logger LOG = Logger.getLogger(CharNameTable.class.getName());
 	
-	private final Map<Integer, String> _chars;
-	private final Map<Integer, Integer> _accessLevels;
+	private static final String LOAD_DATA = "SELECT account_name, obj_Id, char_name, accesslevel FROM characters";
+	
+	private final Map<Integer, DataHolder> _players = new ConcurrentHashMap<>();
 	
 	protected CharNameTable()
 	{
-		_chars = new HashMap<>();
-		_accessLevels = new HashMap<>();
-	}
-	
-	public static CharNameTable getInstance()
-	{
-		return SingletonHolder._instance;
-	}
-	
-	public final void addName(L2PcInstance player)
-	{
-		if (player != null)
+		try (Connection con = L2DatabaseFactory.getInstance().getConnection(); PreparedStatement ps = con.prepareStatement(LOAD_DATA); ResultSet rs = ps.executeQuery())
 		{
-			addName(player.getObjectId(), player.getName());
-			_accessLevels.put(player.getObjectId(), player.getAccessLevel().getLevel());
+			while (rs.next())
+				_players.put(rs.getInt("obj_Id"), new DataHolder(rs.getString("account_name"), rs.getString("char_name"), rs.getInt("accesslevel")));
+		}
+		catch (SQLException e)
+		{
+			LOG.warning("CharNameTable: Can't load data, error: " + e);
+		}
+		
+		LOG.info("CharNameTable: Loaded " + _players.size() + " players data.");
+	}
+	
+	/**
+	 * Caches player informations, but only if not already existing.
+	 * @param objectId : The player's objectId.
+	 * @param accountName : The player's account name.
+	 * @param playerName : The player's name.
+	 * @param accessLevel : The player's access level.
+	 */
+	public final void addPlayer(int objectId, String accountName, String playerName, int accessLevel)
+	{
+		_players.putIfAbsent(objectId, new DataHolder(accountName, playerName, accessLevel));
+	}
+	
+	/**
+	 * Update the player data. The informations must already exist. Used for name and access level edition.
+	 * @param player : The player to update.
+	 * @param onlyAccessLevel : If true, it will update the access level, otherwise, it will update the player name.
+	 */
+	public final void updatePlayerData(L2PcInstance player, boolean onlyAccessLevel)
+	{
+		if (player == null)
+			return;
+		
+		final DataHolder data = _players.get(player.getObjectId());
+		if (data != null)
+		{
+			if (onlyAccessLevel)
+				data.setAccessLevel(player.getAccessLevel().getLevel());
+			else
+			{
+				final String playerName = player.getName();
+				if (!data.getPlayerName().equalsIgnoreCase(playerName))
+					data.setPlayerName(playerName);
+			}
 		}
 	}
 	
-	private final void addName(int objId, String name)
+	/**
+	 * Remove a player entry.
+	 * @param objId : The objectId to check.
+	 */
+	public final void removePlayer(int objId)
 	{
-		if (name != null)
-		{
-			if (!name.equalsIgnoreCase(_chars.get(objId)))
-				_chars.put(objId, name);
-		}
+		if (_players.containsKey(objId))
+			_players.remove(objId);
 	}
 	
-	public final void removeName(int objId)
+	/**
+	 * Get player objectId by name (reversing call).
+	 * @param playerName : The name to check.
+	 * @return the player objectId.
+	 */
+	public final int getPlayerObjectId(String playerName)
 	{
-		_chars.remove(objId);
-		_accessLevels.remove(objId);
-	}
-	
-	public final int getIdByName(String name)
-	{
-		if (name == null || name.isEmpty())
+		if (playerName == null || playerName.isEmpty())
 			return -1;
 		
-		for (Map.Entry<Integer, String> entry : _chars.entrySet())
-		{
-			if (entry.getValue().equalsIgnoreCase(name))
-				return entry.getKey();
-		}
-		
-		int id = -1;
-		int accessLevel = 0;
-		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
-		{
-			PreparedStatement statement = con.prepareStatement("SELECT obj_Id,accesslevel FROM characters WHERE char_name=?");
-			statement.setString(1, name);
-			ResultSet rset = statement.executeQuery();
-			
-			while (rset.next())
-			{
-				id = rset.getInt(1);
-				accessLevel = rset.getInt(2);
-			}
-			rset.close();
-			statement.close();
-		}
-		catch (SQLException e)
-		{
-			_log.log(Level.WARNING, "Could not check existing char name: " + e.getMessage(), e);
-		}
-		
-		if (id > 0)
-		{
-			_chars.put(id, name);
-			_accessLevels.put(id, accessLevel);
-			return id;
-		}
-		
-		return -1; // not found
+		final Optional<Map.Entry<Integer, DataHolder>> opt = _players.entrySet().stream().filter(m -> m.getValue().getPlayerName().equalsIgnoreCase(playerName)).findFirst();
+		return (opt.isPresent()) ? opt.get().getKey() : -1;
 	}
 	
-	public final String getNameById(int id)
+	/**
+	 * Get player name by object id.
+	 * @param objId : The objectId to check.
+	 * @return the player name.
+	 */
+	public final String getPlayerName(int objId)
 	{
-		if (id <= 0)
-			return null;
-		
-		String name = _chars.get(id);
-		if (name != null)
-			return name;
-		
-		int accessLevel = 0;
-		
-		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
-		{
-			PreparedStatement statement = con.prepareStatement("SELECT char_name,accesslevel FROM characters WHERE obj_Id=?");
-			statement.setInt(1, id);
-			ResultSet rset = statement.executeQuery();
-			while (rset.next())
-			{
-				name = rset.getString(1);
-				accessLevel = rset.getInt(2);
-			}
-			rset.close();
-			statement.close();
-		}
-		catch (SQLException e)
-		{
-			_log.log(Level.WARNING, "Could not check existing char id: " + e.getMessage(), e);
-		}
-		
-		if (name != null && !name.isEmpty())
-		{
-			_chars.put(id, name);
-			_accessLevels.put(id, accessLevel);
-			return name;
-		}
-		
-		return null; // not found
+		final DataHolder data = _players.get(objId);
+		return (data != null) ? data.getPlayerName() : null;
 	}
 	
-	public final int getAccessLevelById(int objectId)
+	/**
+	 * Get player access level by object id.
+	 * @param objId : The objectId to check.
+	 * @return the access level.
+	 */
+	public final int getPlayerAccessLevel(int objId)
 	{
-		if (getNameById(objectId) != null)
-			return _accessLevels.get(objectId);
+		final DataHolder data = _players.get(objId);
+		return (data != null) ? data.getAccessLevel() : 0;
+	}
+	
+	/**
+	 * Retrieve characters amount from any account, by account name.
+	 * @param accountName : The account name to check.
+	 * @return the number of characters stored into this account.
+	 */
+	public final int getCharactersInAcc(String accountName)
+	{
+		return (int) _players.entrySet().stream().filter(m -> m.getValue().getAccountName().equalsIgnoreCase(accountName)).count();
+	}
+	
+	/**
+	 * DataHolder in Map for account name / player name / access level
+	 */
+	private final class DataHolder
+	{
+		private final String _accountName;
+		private String _playerName;
+		private int _accessLevel;
 		
-		return 0;
+		public DataHolder(String accountName, String playerName, int accessLevel)
+		{
+			_accountName = accountName;
+			_playerName = playerName;
+			_accessLevel = accessLevel;
+		}
+		
+		public final String getAccountName()
+		{
+			return _accountName;
+		}
+		
+		public final String getPlayerName()
+		{
+			return _playerName;
+		}
+		
+		public final int getAccessLevel()
+		{
+			return _accessLevel;
+		}
+		
+		public final void setPlayerName(String playerName)
+		{
+			_playerName = playerName;
+		}
+		
+		public final void setAccessLevel(int accessLevel)
+		{
+			_accessLevel = accessLevel;
+		}
 	}
 	
-	public synchronized static boolean doesCharNameExist(String name)
+	public static final CharNameTable getInstance()
 	{
-		boolean result = true;
-		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
-		{
-			PreparedStatement statement = con.prepareStatement("SELECT account_name FROM characters WHERE char_name=?");
-			statement.setString(1, name);
-			ResultSet rset = statement.executeQuery();
-			result = rset.next();
-			rset.close();
-			statement.close();
-		}
-		catch (SQLException e)
-		{
-			_log.log(Level.WARNING, "Could not check existing charname: " + e.getMessage(), e);
-		}
-		return result;
+		return SingletonHolder.INSTANCE;
 	}
 	
-	public static int accountCharNumber(String account)
+	private static final class SingletonHolder
 	{
-		int number = 0;
-		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
-		{
-			PreparedStatement statement = con.prepareStatement("SELECT COUNT(char_name) FROM characters WHERE account_name=?");
-			statement.setString(1, account);
-			ResultSet rset = statement.executeQuery();
-			while (rset.next())
-			{
-				number = rset.getInt(1);
-			}
-			rset.close();
-			statement.close();
-		}
-		catch (SQLException e)
-		{
-			_log.log(Level.WARNING, "Could not check existing char number: " + e.getMessage(), e);
-		}
-		return number;
-	}
-	
-	private static class SingletonHolder
-	{
-		protected static final CharNameTable _instance = new CharNameTable();
+		protected static final CharNameTable INSTANCE = new CharNameTable();
 	}
 }

@@ -19,24 +19,42 @@ import java.util.List;
 
 public class Entry
 {
-	private int _entryId;
+	protected int _id;
+	protected boolean _stackable = true;
 	
-	private final List<Ingredient> _products = new ArrayList<>();
-	private final List<Ingredient> _ingredients = new ArrayList<>();
+	protected List<Ingredient> _products;
+	protected List<Ingredient> _ingredients;
 	
-	public void setEntryId(int entryId)
+	public Entry(int id)
 	{
-		_entryId = entryId;
+		_id = id;
+		_products = new ArrayList<>();
+		_ingredients = new ArrayList<>();
 	}
 	
-	public int getEntryId()
+	/**
+	 * This constructor used in PreparedEntry only, ArrayLists not created.
+	 */
+	protected Entry()
 	{
-		return _entryId;
+	}
+	
+	public int getId()
+	{
+		return _id;
+	}
+	
+	public void setId(int id)
+	{
+		_id = id;
 	}
 	
 	public void addProduct(Ingredient product)
 	{
 		_products.add(product);
+		
+		if (!product.isStackable())
+			_stackable = false;
 	}
 	
 	public List<Ingredient> getProducts()
@@ -52,5 +70,15 @@ public class Entry
 	public List<Ingredient> getIngredients()
 	{
 		return _ingredients;
+	}
+	
+	public boolean isStackable()
+	{
+		return _stackable;
+	}
+	
+	public int getTaxAmount()
+	{
+		return 0;
 	}
 }

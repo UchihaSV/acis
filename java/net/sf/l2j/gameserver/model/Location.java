@@ -19,7 +19,11 @@ package net.sf.l2j.gameserver.model;
  */
 public class Location
 {
-	protected volatile int _x, _y, _z;
+	public static final Location DUMMY_LOC = new Location(0, 0, 0);
+	
+	protected volatile int _x;
+	protected volatile int _y;
+	protected volatile int _z;
 	
 	public Location(int x, int y, int z)
 	{
@@ -28,10 +32,17 @@ public class Location
 		_z = z;
 	}
 	
+	public Location(Location loc)
+	{
+		_x = loc.getX();
+		_y = loc.getY();
+		_z = loc.getZ();
+	}
+	
 	@Override
 	public String toString()
 	{
-		return "(" + _x + ", " + _y + ", " + _z + ")";
+		return _x + ", " + _y + ", " + _z;
 	}
 	
 	@Override
@@ -45,16 +56,11 @@ public class Location
 	{
 		if (o instanceof Location)
 		{
-			Location point3D = (Location) o;
-			return (point3D._x == _x && point3D._y == _y && point3D._z == _z);
+			Location loc = (Location) o;
+			return (loc.getX() == _x && loc.getY() == _y && loc.getZ() == _z);
 		}
 		
 		return false;
-	}
-	
-	public boolean equals(int x, int y, int z)
-	{
-		return _x == x && _y == y && _z == z;
 	}
 	
 	public int getX()
@@ -72,10 +78,24 @@ public class Location
 		return _z;
 	}
 	
-	public void setXYZ(int x, int y, int z)
+	public void set(int x, int y, int z)
 	{
 		_x = x;
 		_y = y;
 		_z = z;
+	}
+	
+	public void set(Location loc)
+	{
+		_x = loc.getX();
+		_y = loc.getY();
+		_z = loc.getZ();
+	}
+	
+	public void clean()
+	{
+		_x = 0;
+		_y = 0;
+		_z = 0;
 	}
 }

@@ -17,12 +17,8 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.List;
 
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
-import net.sf.l2j.gameserver.ai.model.L2AttackableAI;
-import net.sf.l2j.gameserver.model.L2CharPosition;
-import net.sf.l2j.gameserver.model.L2World;
-import net.sf.l2j.gameserver.model.L2WorldRegion;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
@@ -43,22 +39,9 @@ import net.sf.l2j.gameserver.scripting.Quest;
  */
 public final class L2GuardInstance extends L2Attackable
 {
-	private static final int RETURN_INTERVAL = 60000;
-	
-	public class ReturnTask implements Runnable
-	{
-		@Override
-		public void run()
-		{
-			if (getAI().getIntention() == CtrlIntention.IDLE)
-				returnHome();
-		}
-	}
-	
 	public L2GuardInstance(int objectId, NpcTemplate template)
 	{
 		super(objectId, template);
-		ThreadPoolManager.getInstance().scheduleAiAtFixedRate(new ReturnTask(), RETURN_INTERVAL, RETURN_INTERVAL + Rnd.get(60000));
 	}
 	
 	@Override
@@ -79,30 +62,11 @@ public final class L2GuardInstance extends L2Attackable
 		return attacker instanceof L2MonsterInstance;
 	}
 	
-	/**
-	 * Notify the L2GuardInstance to return to its home location (MOVE_TO) and clear its _aggroList.<BR>
-	 * <BR>
-	 */
-	@Override
-	public void returnHome()
-	{
-		if (!isInsideRadius(getSpawn().getLocx(), getSpawn().getLocy(), L2Npc.INTERACTION_DISTANCE, false))
-		{
-			clearAggroList();
-			getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(getSpawn().getLocx(), getSpawn().getLocy(), getSpawn().getLocz(), 0));
-		}
-	}
-	
 	@Override
 	public void onSpawn()
 	{
 		setIsNoRndWalk(true);
 		super.onSpawn();
-		
-		// check the region where this mob is, do not activate the AI if region is inactive.
-		L2WorldRegion region = L2World.getInstance().getRegion(getX(), getY());
-		if (region != null && !region.isActive())
-			((L2AttackableAI) getAI()).stopAITask();
 	}
 	
 	@Override
@@ -168,5 +132,20 @@ public final class L2GuardInstance extends L2Attackable
 	public boolean isGuard()
 	{
 		return true;
+	}
+	
+	@Override
+	public boolean returnHome()
+	{
+		getAggroList().clear();
+		
+		if (getMoveSpeed() > 0 && hasAI() && getSpawn() != null && !isInsideRadius(getSpawn().getLocX(), getSpawn().getLocY(), 20, false))
+		{
+			setIsReturningToSpawnPoint(true);
+			setWalking();
+			getAI().setIntention(CtrlIntention.MOVE_TO, getSpawn().getLoc());
+			return true;
+		}
+		return false;
 	}
 }

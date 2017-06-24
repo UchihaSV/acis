@@ -16,16 +16,16 @@ package net.sf.l2j.gameserver.model.actor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.ai.model.L2CharacterAI;
+import net.sf.l2j.gameserver.ai.model.L2VehicleAI;
 import net.sf.l2j.gameserver.datatables.MapRegionTable;
-import net.sf.l2j.gameserver.model.L2CharPosition;
-import net.sf.l2j.gameserver.model.L2World;
-import net.sf.l2j.gameserver.model.L2WorldRegion;
+import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.model.Location;
+import net.sf.l2j.gameserver.model.SpawnLocation;
 import net.sf.l2j.gameserver.model.VehiclePathPoint;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.knownlist.VehicleKnownList;
@@ -35,38 +35,35 @@ import net.sf.l2j.gameserver.model.item.instance.ItemInstance;
 import net.sf.l2j.gameserver.model.item.kind.Weapon;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.network.serverpackets.InventoryUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.L2GameServerPacket;
+import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
+import net.sf.l2j.gameserver.network.serverpackets.VehicleDeparture;
+import net.sf.l2j.gameserver.network.serverpackets.VehicleInfo;
+import net.sf.l2j.gameserver.network.serverpackets.VehicleStarted;
 import net.sf.l2j.gameserver.taskmanager.MovementTaskManager;
 import net.sf.l2j.gameserver.util.Util;
 
-/**
- * @author DS
- */
-public abstract class L2Vehicle extends L2Character
+public class L2Vehicle extends L2Character
 {
-	protected int _dockId = 0;
-	protected final List<L2PcInstance> _passengers = new ArrayList<>();
-	protected Location _oustLoc = null;
-	private Runnable _engine = null;
+	private Runnable _engine;
 	
-	protected VehiclePathPoint[] _currentPath = null;
-	protected int _runState = 0;
+	protected final List<L2PcInstance> _passengers = new ArrayList<>();
+	
+	protected int _dockId;
+	protected VehiclePathPoint[] _currentPath;
+	protected int _runState;
 	
 	public L2Vehicle(int objectId, CharTemplate template)
 	{
 		super(objectId, template);
+		
+		setAI(new L2VehicleAI(this));
 	}
 	
 	@Override
 	public boolean isFlying()
 	{
 		return true;
-	}
-	
-	public boolean isBoat()
-	{
-		return false;
 	}
 	
 	public boolean canBeControlled()
@@ -82,7 +79,7 @@ public abstract class L2Vehicle extends L2Character
 	public void runEngine(int delay)
 	{
 		if (_engine != null)
-			ThreadPoolManager.getInstance().scheduleGeneral(_engine, delay);
+			ThreadPool.schedule(_engine, delay);
 	}
 	
 	public void executePath(VehiclePathPoint[] path)
@@ -98,7 +95,7 @@ public abstract class L2Vehicle extends L2Character
 			if (point.rotationSpeed > 0)
 				getStat().setRotationSpeed(point.rotationSpeed);
 			
-			getAI().setIntention(CtrlIntention.MOVE_TO, new L2CharPosition(point.x, point.y, point.z, 0));
+			getAI().setIntention(CtrlIntention.MOVE_TO, new Location(point.x, point.y, point.z));
 			return;
 		}
 		getAI().setIntention(CtrlIntention.ACTIVE);
@@ -147,6 +144,7 @@ public abstract class L2Vehicle extends L2Character
 						_move = m;
 						
 						MovementTaskManager.getInstance().add(this);
+						broadcastPacket(new VehicleDeparture(this));
 						return true;
 					}
 				}
@@ -192,34 +190,29 @@ public abstract class L2Vehicle extends L2Character
 		_dockId = d;
 	}
 	
-	public void setOustLoc(Location loc)
-	{
-		_oustLoc = loc;
-	}
-	
-	public Location getOustLoc()
-	{
-		return _oustLoc != null ? _oustLoc : MapRegionTable.getInstance().getTeleToLocation(this, MapRegionTable.TeleportWhereType.Town);
-	}
-	
 	public void oustPlayers()
 	{
 		for (L2PcInstance player : _passengers)
-			oustPlayer(player, false);
+			oustPlayer(player, false, Location.DUMMY_LOC);
 		
 		_passengers.clear();
 	}
 	
-	public void oustPlayer(L2PcInstance player, boolean removeFromList)
+	public void oustPlayer(L2PcInstance player, boolean removeFromList, Location location)
 	{
 		player.setVehicle(null);
-		player.setInVehiclePosition(null);
 		
 		if (removeFromList)
 			removePassenger(player);
 		
 		player.setInsideZone(ZoneId.PEACE, false);
 		player.sendPacket(SystemMessageId.EXIT_PEACEFUL_ZONE);
+		
+		final Location loc = (location.equals(Location.DUMMY_LOC)) ? MapRegionTable.getInstance().getTeleToLocation(this, TeleportWhereType.TOWN) : location;
+		if (player.isOnline())
+			player.teleToLocation(loc.getX(), loc.getY(), loc.getZ(), 0);
+		else
+			player.setXYZInvisible(loc.getX(), loc.getY(), loc.getZ()); // disconnects handling
 	}
 	
 	public boolean addPassenger(L2PcInstance player)
@@ -267,11 +260,9 @@ public abstract class L2Vehicle extends L2Character
 	 * Consume ticket(s) and teleport player from boat if no correct ticket
 	 * @param itemId Ticket itemId
 	 * @param count Ticket count
-	 * @param oustX
-	 * @param oustY
-	 * @param oustZ
+	 * @param loc The location to port player in case he can't pay.
 	 */
-	public void payForRide(int itemId, int count, int oustX, int oustY, int oustZ)
+	public void payForRide(int itemId, int count, Location loc)
 	{
 		for (L2PcInstance player : getKnownList().getKnownTypeInRadius(L2PcInstance.class, 1000))
 		{
@@ -279,21 +270,17 @@ public abstract class L2Vehicle extends L2Character
 			{
 				if (itemId > 0)
 				{
-					final ItemInstance ticket = player.getInventory().getItemByItemId(itemId);
-					if (ticket == null || player.getInventory().destroyItem("Boat", ticket, count, player, this) == null)
+					if (!player.destroyItemByItemId("Boat", itemId, count, this, false))
 					{
+						oustPlayer(player, true, loc);
 						player.sendPacket(SystemMessageId.NOT_CORRECT_BOAT_TICKET);
-						player.teleToLocation(oustX, oustY, oustZ, 20);
 						continue;
 					}
 					
-					final InventoryUpdate iu = new InventoryUpdate();
-					if (ticket.getCount() == 0)
-						iu.addRemovedItem(ticket);
+					if (count > 1)
+						player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S2_S1_DISAPPEARED).addItemName(itemId).addItemNumber(count));
 					else
-						iu.addModifiedItem(ticket);
-					
-					player.sendPacket(iu);
+						player.sendPacket(SystemMessage.getSystemMessage(SystemMessageId.S1_DISAPPEARED).addItemName(itemId));
 				}
 				addPassenger(player);
 			}
@@ -309,7 +296,7 @@ public abstract class L2Vehicle extends L2Character
 		{
 			if (player != null && player.getVehicle() == this)
 			{
-				player.getPosition().setXYZ(getX(), getY(), getZ());
+				player.setXYZ(getX(), getY(), getZ());
 				player.revalidateZone(false);
 			}
 		}
@@ -340,15 +327,19 @@ public abstract class L2Vehicle extends L2Character
 	}
 	
 	@Override
-	public void stopMove(L2CharPosition pos)
+	public void stopMove(SpawnLocation loc)
 	{
 		_move = null;
-		if (pos != null)
+		
+		if (loc != null)
 		{
-			setXYZ(pos.x, pos.y, pos.z);
-			setHeading(pos.heading);
+			setXYZ(loc.getX(), loc.getY(), loc.getZ());
+			setHeading(loc.getHeading());
 			revalidateZone(true);
 		}
+		
+		broadcastPacket(new VehicleStarted(this, 0));
+		broadcastPacket(new VehicleInfo(this));
 	}
 	
 	@Override
@@ -356,50 +347,17 @@ public abstract class L2Vehicle extends L2Character
 	{
 		_engine = null;
 		
-		try
-		{
-			if (isMoving())
-				stopMove(null);
-		}
-		catch (Exception e)
-		{
-			_log.log(Level.SEVERE, "Failed stopMove().", e);
-		}
+		if (isMoving())
+			stopMove(null);
 		
-		try
-		{
-			oustPlayers();
-		}
-		catch (Exception e)
-		{
-			_log.log(Level.SEVERE, "Failed oustPlayers().", e);
-		}
+		// Oust all players.
+		oustPlayers();
 		
-		final L2WorldRegion oldRegion = getWorldRegion();
+		// Decay the vehicle.
+		decayMe();
 		
-		try
-		{
-			decayMe();
-		}
-		catch (Exception e)
-		{
-			_log.log(Level.SEVERE, "Failed decayMe().", e);
-		}
-		
-		if (oldRegion != null)
-			oldRegion.removeFromZones(this);
-		
-		try
-		{
-			getKnownList().removeAllKnownObjects();
-		}
-		catch (Exception e)
-		{
-			_log.log(Level.SEVERE, "Failed cleaning knownlist.", e);
-		}
-		
-		// Remove L2Object object from _allObjects of L2World
-		L2World.getInstance().removeObject(this);
+		// Remove from knownlist.
+		getKnownList().removeAllKnownObjects();
 		
 		super.deleteMe();
 	}
@@ -455,5 +413,11 @@ public abstract class L2Vehicle extends L2Character
 	@Override
 	public void detachAI()
 	{
+	}
+	
+	@Override
+	public void sendInfo(L2PcInstance activeChar)
+	{
+		activeChar.sendPacket(new VehicleInfo(this));
 	}
 }

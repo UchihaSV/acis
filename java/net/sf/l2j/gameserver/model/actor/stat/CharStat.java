@@ -393,27 +393,7 @@ public class CharStat
 	 */
 	public int getPhysicalAttackRange()
 	{
-		return _activeChar.getTemplate().getBaseAtkRange();
-	}
-	
-	/**
-	 * @return the WalkSpeed (base+modifier) of the L2Character.
-	 */
-	public int getWalkSpeed()
-	{
-		final double baseWalkSpd = _activeChar.getTemplate().getBaseWalkSpd();
-		if (baseWalkSpd == 0)
-			return 0;
-		
-		return (int) calcStat(Stats.WALK_SPEED, baseWalkSpd, null, null);
-	}
-	
-	/**
-	 * @return the RunSpeed (base+modifier) of the L2Character in function of the Armour Expertise Penalty.
-	 */
-	public int getRunSpeed()
-	{
-		return (int) calcStat(Stats.RUN_SPEED, _activeChar.getTemplate().getBaseRunSpd(), null, null);
+		return getActiveChar().getAttackType().getRange();
 	}
 	
 	/**
@@ -511,13 +491,48 @@ public class CharStat
 		}
 	}
 	
-	public float getMovementSpeedMultiplier()
+	/**
+	 * Returns base running speed, given by owner template.<br>
+	 * L2PcInstance is affected by mount type.
+	 * @return int : Base running speed.
+	 */
+	public int getBaseRunSpeed()
 	{
-		return getRunSpeed() / (float) _activeChar.getTemplate().getBaseRunSpd();
+		return _activeChar.getTemplate().getBaseRunSpeed();
 	}
 	
 	/**
-	 * @return the Attack Speed multiplier (base+modifier) of the L2Character to get proper animations.
+	 * Returns base walking speed, given by owner template.<br>
+	 * L2PcInstance is affected by mount type.
+	 * @return int : Base walking speed.
+	 */
+	public int getBaseWalkSpeed()
+	{
+		return _activeChar.getTemplate().getBaseWalkSpeed();
+	}
+	
+	/**
+	 * Returns base movement speed, given by owner template and owner movement status.<br>
+	 * L2PcInstance is affected by mount type and by being in L2WaterZone.
+	 * @return int : Base walking speed.
+	 */
+	protected final int getBaseMoveSpeed()
+	{
+		return _activeChar.isRunning() ? getBaseRunSpeed() : getBaseWalkSpeed();
+	}
+	
+	/**
+	 * Returns movement speed multiplier, which is used by client to set correct character/object movement speed.
+	 * @return float : Movement speed multiplier.
+	 */
+	public final float getMovementSpeedMultiplier()
+	{
+		return getMoveSpeed() / getBaseMoveSpeed();
+	}
+	
+	/**
+	 * Returns attack speed multiplier, which is used by client to set correct character/object attack speed.
+	 * @return float : Attack speed multiplier.
 	 */
 	public final float getAttackSpeedMultiplier()
 	{
@@ -525,11 +540,14 @@ public class CharStat
 	}
 	
 	/**
-	 * @return the RunSpeed (base+modifier) or WalkSpeed (base+modifier) of the L2Character in function of the movement type.
+	 * Returns final movement speed, given by owner template, owner status and effects.<br>
+	 * L2Playable is affected by L2SwampZone.<br>
+	 * L2PcInstance is affected by L2SwampZone and armor grade penalty.
+	 * @return float : Final movement speed.
 	 */
-	public int getMoveSpeed()
+	public float getMoveSpeed()
 	{
-		return (_activeChar.isRunning()) ? getRunSpeed() : getWalkSpeed();
+		return (float) calcStat(Stats.RUN_SPEED, getBaseMoveSpeed(), null, null);
 	}
 	
 	public long getExp()

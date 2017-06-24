@@ -16,7 +16,8 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 
 import java.util.StringTokenizer;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.datatables.AccessLevels;
 import net.sf.l2j.gameserver.datatables.GmListTable;
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
@@ -65,7 +66,7 @@ public class AdminGm implements IAdminCommandHandler
 				activeChar.setAccessLevel(AccessLevels.USER_ACCESS_LEVEL_NUMBER);
 				activeChar.sendMessage("You no longer have GM status, but will be rehabilitated after " + numberOfMinutes + " minutes.");
 				
-				ThreadPoolManager.getInstance().scheduleGeneral(new GiveBackAccess(activeChar, previousAccessLevel), numberOfMinutes * 60000);
+				ThreadPool.schedule(new GiveBackAccess(activeChar, previousAccessLevel), numberOfMinutes * 60000);
 			}
 		}
 		return true;

@@ -52,7 +52,7 @@ public final class RequestCrystallizeItem extends L2GameClientPacket
 			return;
 		}
 		
-		if (activeChar.isInStoreMode() || activeChar.isInCrystallize())
+		if (activeChar.isInStoreMode() || activeChar.isCrystallizing())
 		{
 			activeChar.sendPacket(SystemMessageId.CANNOT_TRADE_DISCARD_DROP_ITEM_WHILE_IN_SHOPMODE);
 			return;
@@ -126,7 +126,7 @@ public final class RequestCrystallizeItem extends L2GameClientPacket
 			return;
 		}
 		
-		activeChar.setInCrystallize(true);
+		activeChar.setCrystallizing(true);
 		
 		// unequip if needed
 		if (itemToRemove.isEquipped())
@@ -170,6 +170,6 @@ public final class RequestCrystallizeItem extends L2GameClientPacket
 		
 		activeChar.broadcastUserInfo();
 		L2World.getInstance().removeObject(removedItem);
-		activeChar.setInCrystallize(false);
+		activeChar.setCrystallizing(false);
 	}
 }

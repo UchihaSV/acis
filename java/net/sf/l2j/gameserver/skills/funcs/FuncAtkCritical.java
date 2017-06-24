@@ -38,7 +38,7 @@ public class FuncAtkCritical extends Func
 	public void calc(Env env)
 	{
 		if (!(env.getCharacter() instanceof L2Summon))
-			env.mulValue(Formulas.DEXbonus[env.getCharacter().getDEX()]);
+			env.mulValue(Formulas.DEX_BONUS[env.getCharacter().getDEX()]);
 		
 		env.mulValue(10);
 		

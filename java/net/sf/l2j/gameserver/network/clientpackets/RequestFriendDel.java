@@ -43,7 +43,7 @@ public final class RequestFriendDel extends L2GameClientPacket
 		if (activeChar == null)
 			return;
 		
-		int id = CharNameTable.getInstance().getIdByName(_name);
+		int id = CharNameTable.getInstance().getPlayerObjectId(_name);
 		
 		if (id == -1 || !activeChar.getFriendList().contains(id))
 		{

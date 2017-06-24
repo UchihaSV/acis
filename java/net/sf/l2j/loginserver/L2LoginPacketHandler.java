@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 
 import net.sf.l2j.commons.mmocore.IPacketHandler;
 import net.sf.l2j.commons.mmocore.ReceivablePacket;
+
 import net.sf.l2j.loginserver.L2LoginClient.LoginClientState;
 import net.sf.l2j.loginserver.network.clientpackets.AuthGameGuard;
 import net.sf.l2j.loginserver.network.clientpackets.RequestAuthLogin;

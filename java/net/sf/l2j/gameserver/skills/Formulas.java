@@ -16,8 +16,9 @@ package net.sf.l2j.gameserver.skills;
 
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.instancemanager.ClanHallManager;
 import net.sf.l2j.gameserver.instancemanager.SevenSigns;
 import net.sf.l2j.gameserver.instancemanager.SevenSignsFestival;
@@ -67,67 +68,72 @@ public final class Formulas
 	
 	public static final int MAX_STAT_VALUE = 100;
 	
-	private static final double[] STRCompute = new double[]
+	private static final double[] STR_COMPUTE = new double[]
 	{
 		1.036,
 		34.845
 	};
-	private static final double[] INTCompute = new double[]
+	private static final double[] INT_COMPUTE = new double[]
 	{
 		1.020,
 		31.375
 	};
-	private static final double[] DEXCompute = new double[]
+	private static final double[] DEX_COMPUTE = new double[]
 	{
 		1.009,
 		19.360
 	};
-	private static final double[] WITCompute = new double[]
+	private static final double[] WIT_COMPUTE = new double[]
 	{
 		1.050,
 		20.000
 	};
-	private static final double[] CONCompute = new double[]
+	private static final double[] CON_COMPUTE = new double[]
 	{
 		1.030,
 		27.632
 	};
-	private static final double[] MENCompute = new double[]
+	private static final double[] MEN_COMPUTE = new double[]
 	{
 		1.010,
 		-0.060
 	};
 	
-	public static final double[] WITbonus = new double[MAX_STAT_VALUE];
-	public static final double[] MENbonus = new double[MAX_STAT_VALUE];
-	public static final double[] INTbonus = new double[MAX_STAT_VALUE];
-	public static final double[] STRbonus = new double[MAX_STAT_VALUE];
-	public static final double[] DEXbonus = new double[MAX_STAT_VALUE];
-	public static final double[] CONbonus = new double[MAX_STAT_VALUE];
+	public static final double[] WIT_BONUS = new double[MAX_STAT_VALUE];
+	public static final double[] MEN_BONUS = new double[MAX_STAT_VALUE];
+	public static final double[] INT_BONUS = new double[MAX_STAT_VALUE];
+	public static final double[] STR_BONUS = new double[MAX_STAT_VALUE];
+	public static final double[] DEX_BONUS = new double[MAX_STAT_VALUE];
+	public static final double[] CON_BONUS = new double[MAX_STAT_VALUE];
 	
-	protected static final double[] sqrtMENbonus = new double[MAX_STAT_VALUE];
-	protected static final double[] sqrtCONbonus = new double[MAX_STAT_VALUE];
+	public static final double[] BASE_EVASION_ACCURACY = new double[MAX_STAT_VALUE];
+	
+	protected static final double[] SQRT_MEN_BONUS = new double[MAX_STAT_VALUE];
+	protected static final double[] SQRT_CON_BONUS = new double[MAX_STAT_VALUE];
 	
 	static
 	{
-		for (int i = 0; i < STRbonus.length; i++)
-			STRbonus[i] = Math.floor(Math.pow(STRCompute[0], i - STRCompute[1]) * 100 + .5d) / 100;
-		for (int i = 0; i < INTbonus.length; i++)
-			INTbonus[i] = Math.floor(Math.pow(INTCompute[0], i - INTCompute[1]) * 100 + .5d) / 100;
-		for (int i = 0; i < DEXbonus.length; i++)
-			DEXbonus[i] = Math.floor(Math.pow(DEXCompute[0], i - DEXCompute[1]) * 100 + .5d) / 100;
-		for (int i = 0; i < WITbonus.length; i++)
-			WITbonus[i] = Math.floor(Math.pow(WITCompute[0], i - WITCompute[1]) * 100 + .5d) / 100;
-		for (int i = 0; i < CONbonus.length; i++)
-			CONbonus[i] = Math.floor(Math.pow(CONCompute[0], i - CONCompute[1]) * 100 + .5d) / 100;
-		for (int i = 0; i < MENbonus.length; i++)
-			MENbonus[i] = Math.floor(Math.pow(MENCompute[0], i - MENCompute[1]) * 100 + .5d) / 100;
+		for (int i = 0; i < STR_BONUS.length; i++)
+			STR_BONUS[i] = Math.floor(Math.pow(STR_COMPUTE[0], i - STR_COMPUTE[1]) * 100 + .5d) / 100;
+		for (int i = 0; i < INT_BONUS.length; i++)
+			INT_BONUS[i] = Math.floor(Math.pow(INT_COMPUTE[0], i - INT_COMPUTE[1]) * 100 + .5d) / 100;
+		for (int i = 0; i < DEX_BONUS.length; i++)
+			DEX_BONUS[i] = Math.floor(Math.pow(DEX_COMPUTE[0], i - DEX_COMPUTE[1]) * 100 + .5d) / 100;
+		for (int i = 0; i < WIT_BONUS.length; i++)
+			WIT_BONUS[i] = Math.floor(Math.pow(WIT_COMPUTE[0], i - WIT_COMPUTE[1]) * 100 + .5d) / 100;
+		for (int i = 0; i < CON_BONUS.length; i++)
+			CON_BONUS[i] = Math.floor(Math.pow(CON_COMPUTE[0], i - CON_COMPUTE[1]) * 100 + .5d) / 100;
+		for (int i = 0; i < MEN_BONUS.length; i++)
+			MEN_BONUS[i] = Math.floor(Math.pow(MEN_COMPUTE[0], i - MEN_COMPUTE[1]) * 100 + .5d) / 100;
+		
+		for (int i = 0; i < BASE_EVASION_ACCURACY.length; i++)
+			BASE_EVASION_ACCURACY[i] = Math.sqrt(i) * 6;
 		
 		// Precompute square root values
-		for (int i = 0; i < sqrtCONbonus.length; i++)
-			sqrtCONbonus[i] = Math.sqrt(CONbonus[i]);
-		for (int i = 0; i < sqrtMENbonus.length; i++)
-			sqrtMENbonus[i] = Math.sqrt(MENbonus[i]);
+		for (int i = 0; i < SQRT_CON_BONUS.length; i++)
+			SQRT_CON_BONUS[i] = Math.sqrt(CON_BONUS[i]);
+		for (int i = 0; i < SQRT_MEN_BONUS.length; i++)
+			SQRT_MEN_BONUS[i] = Math.sqrt(MEN_BONUS[i]);
 	}
 	
 	private static final double[] karmaMods =
@@ -282,7 +288,7 @@ public final class Formulas
 				hpRegenMultiplier *= 0.7; // Running
 		}
 		// Add CON bonus
-		init *= cha.getLevelMod() * CONbonus[cha.getCON()];
+		init *= cha.getLevelMod() * CON_BONUS[cha.getCON()];
 		
 		if (init < 1)
 			init = 1;
@@ -340,7 +346,7 @@ public final class Formulas
 				mpRegenMultiplier *= 0.7; // Running
 		}
 		// Add MEN bonus
-		init *= cha.getLevelMod() * MENbonus[cha.getMEN()];
+		init *= cha.getLevelMod() * MEN_BONUS[cha.getMEN()];
 		
 		if (init < 1)
 			init = 1;
@@ -367,7 +373,7 @@ public final class Formulas
 			cpRegenMultiplier *= 0.7; // Running
 			
 		// Apply CON bonus
-		init *= player.getLevelMod() * CONbonus[player.getCON()];
+		init *= player.getLevelMod() * CON_BONUS[player.getCON()];
 		
 		if (init < 1)
 			init = 1;
@@ -929,7 +935,7 @@ public final class Formulas
 			return;
 		
 		// Calculate all modifiers for ATTACK_CANCEL ; chance to break is higher with higher dmg, and is affected by target MEN.
-		double rate = target.calcStat(Stats.ATTACK_CANCEL, 15 + Math.sqrt(13 * dmg) - (MENbonus[target.getMEN()] * 100 - 100), null, null);
+		double rate = target.calcStat(Stats.ATTACK_CANCEL, 15 + Math.sqrt(13 * dmg) - (MEN_BONUS[target.getMEN()] * 100 - 100), null, null);
 		
 		// Adjust the rate to be between 1 and 99
 		if (rate > 99)
@@ -1029,7 +1035,7 @@ public final class Formulas
 		if (item == null || !(item instanceof Armor))
 			return 0;
 		
-		double shldRate = target.calcStat(Stats.SHIELD_RATE, 0, attacker, null) * DEXbonus[target.getDEX()];
+		double shldRate = target.calcStat(Stats.SHIELD_RATE, 0, attacker, null) * DEX_BONUS[target.getDEX()];
 		if (shldRate == 0.0)
 			return 0;
 		
@@ -1151,7 +1157,7 @@ public final class Formulas
 			case STUN:
 			case BLEED:
 			case POISON:
-				multiplier = 2 - sqrtCONbonus[target.getStat().getCON()];
+				multiplier = 2 - SQRT_CON_BONUS[target.getStat().getCON()];
 				break;
 			
 			case SLEEP:
@@ -1165,7 +1171,7 @@ public final class Formulas
 			case CONFUSION:
 			case AGGREDUCE_CHAR:
 			case PARALYZE:
-				multiplier = 2 - sqrtMENbonus[target.getStat().getMEN()];
+				multiplier = 2 - SQRT_MEN_BONUS[target.getStat().getMEN()];
 				break;
 		}
 		
@@ -1174,7 +1180,7 @@ public final class Formulas
 	
 	public static double getSTRBonus(L2Character activeChar)
 	{
-		return STRbonus[activeChar.getSTR()];
+		return STR_BONUS[activeChar.getSTR()];
 	}
 	
 	private static double getLevelModifier(L2Character attacker, L2Character target, L2Skill skill)
@@ -1337,7 +1343,7 @@ public final class Formulas
 		if (baseRestorePercent == 0 || baseRestorePercent == 100)
 			return baseRestorePercent;
 		
-		double restorePercent = baseRestorePercent * WITbonus[caster.getWIT()];
+		double restorePercent = baseRestorePercent * WIT_BONUS[caster.getWIT()];
 		if (restorePercent - baseRestorePercent > 20.0)
 			restorePercent += 20.0;
 		
@@ -1367,9 +1373,9 @@ public final class Formulas
 		double val = actor.getStat().calcStat(Stats.SKILL_MASTERY, 0, null, null);
 		
 		if (((L2PcInstance) actor).isMageClass())
-			val *= INTbonus[actor.getINT()];
+			val *= INT_BONUS[actor.getINT()];
 		else
-			val *= STRbonus[actor.getSTR()];
+			val *= STR_BONUS[actor.getSTR()];
 		
 		return Rnd.get(100) < val;
 	}

@@ -19,12 +19,12 @@ import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.GetOffVehicle;
 import net.sf.l2j.gameserver.network.serverpackets.StopMoveInVehicle;
 
-/**
- * @author Maktakien
- */
 public final class RequestGetOffVehicle extends L2GameClientPacket
 {
-	private int _boatId, _x, _y, _z;
+	private int _boatId;
+	private int _x;
+	private int _y;
+	private int _z;
 	
 	@Override
 	protected void readImpl()
@@ -50,7 +50,6 @@ public final class RequestGetOffVehicle extends L2GameClientPacket
 		
 		activeChar.broadcastPacket(new StopMoveInVehicle(activeChar, _boatId));
 		activeChar.setVehicle(null);
-		activeChar.setInVehiclePosition(null);
 		sendPacket(ActionFailed.STATIC_PACKET);
 		activeChar.broadcastPacket(new GetOffVehicle(activeChar.getObjectId(), _boatId, _x, _y, _z));
 		activeChar.setXYZ(_x, _y, _z + 50);

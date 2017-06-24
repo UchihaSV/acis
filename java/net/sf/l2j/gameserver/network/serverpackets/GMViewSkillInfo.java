@@ -14,20 +14,20 @@
  */
 package net.sf.l2j.gameserver.network.serverpackets;
 
+import java.util.Collection;
+
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 
 public class GMViewSkillInfo extends L2GameServerPacket
 {
 	private final L2PcInstance _activeChar;
-	private L2Skill[] _skills;
+	private Collection<L2Skill> _skills;
 	
 	public GMViewSkillInfo(L2PcInstance cha)
 	{
 		_activeChar = cha;
-		_skills = _activeChar.getAllSkills();
-		if (_skills.length == 0)
-			_skills = new L2Skill[0];
+		_skills = _activeChar.getSkills().values();
 	}
 	
 	@Override
@@ -35,7 +35,7 @@ public class GMViewSkillInfo extends L2GameServerPacket
 	{
 		writeC(0x91);
 		writeS(_activeChar.getName());
-		writeD(_skills.length);
+		writeD(_skills.size());
 		
 		boolean isDisabled = false;
 		if (_activeChar.getClan() != null)

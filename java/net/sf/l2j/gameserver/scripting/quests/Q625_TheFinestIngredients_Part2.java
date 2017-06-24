@@ -15,8 +15,10 @@ package net.sf.l2j.gameserver.scripting.quests;
 import java.util.logging.Level;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.instancemanager.RaidBossSpawnManager;
 import net.sf.l2j.gameserver.instancemanager.RaidBossSpawnManager.StatusEnum;
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2RaidBossInstance;
@@ -51,8 +53,9 @@ public class Q625_TheFinestIngredients_Part2 extends Quest
 	// Other
 	private static final int CHECK_INTERVAL = 600000; // 10 minutes
 	private static final int IDLE_INTERVAL = 3; // (X * CHECK_INTERVAL) = 30 minutes
-	private static L2Npc _npc = null;
-	private static int _status = -1;
+	
+	private L2Npc _npc = null;
+	private int _status = -1;
 	
 	public Q625_TheFinestIngredients_Part2()
 	{
@@ -194,7 +197,7 @@ public class Q625_TheFinestIngredients_Part2 extends Quest
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		_status = IDLE_INTERVAL;
 		return null;
@@ -211,6 +214,8 @@ public class Q625_TheFinestIngredients_Part2 extends Quest
 			st.playSound(QuestState.SOUND_MIDDLE);
 			st.giveItems(SPECIAL_YETI_MEAT, 1);
 		}
+		
+		npc.broadcastNpcSay("Oooh!");
 		
 		// despawn raid (reset info)
 		despawnRaid(npc);
@@ -232,19 +237,17 @@ public class Q625_TheFinestIngredients_Part2 extends Quest
 			_npc = addSpawn(YETI_TABLE, 157136, -121456, -2363, 40000, false, 0, false);
 	}
 	
-	private static boolean spawnRaid()
+	private boolean spawnRaid()
 	{
 		L2RaidBossInstance raid = RaidBossSpawnManager.getInstance().getBosses().get(ICICLE_EMPEROR_BUMBALUMP);
-		if (raid.getRaidStatus() == StatusEnum.ALIVE)
+		if (raid != null && raid.getRaidStatus() == StatusEnum.ALIVE)
 		{
 			// set temporarily spawn location (to provide correct behavior of L2RaidBossInstance.checkAndReturnToSpawn())
-			raid.getSpawn().setLocx(157117);
-			raid.getSpawn().setLocy(-121939);
-			raid.getSpawn().setLocz(-2397);
+			raid.getSpawn().setLoc(157117, -121939, -2397, Rnd.get(65536));
 			
 			// teleport raid from secret place
 			raid.teleToLocation(157117, -121939, -2397, 100);
-			raid.broadcastNpcSay("Hmmm, what do I smell over here?"); // FIXME missing retail message
+			raid.broadcastNpcSay("I smell something delicious...");
 			
 			// set raid status
 			_status = IDLE_INTERVAL;
@@ -255,12 +258,10 @@ public class Q625_TheFinestIngredients_Part2 extends Quest
 		return false;
 	}
 	
-	private static void despawnRaid(L2Npc raid)
+	private void despawnRaid(L2Npc raid)
 	{
 		// reset spawn location
-		raid.getSpawn().setLocx(-104700);
-		raid.getSpawn().setLocy(-252700);
-		raid.getSpawn().setLocz(-15542);
+		raid.getSpawn().setLoc(-104700, -252700, -15542, 0);
 		
 		// teleport raid back to secret place
 		if (!raid.isDead())

@@ -16,12 +16,14 @@ package net.sf.l2j.gameserver.model;
 
 import java.util.logging.Logger;
 
+import net.sf.l2j.gameserver.datatables.ItemTable;
+import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.model.actor.L2Character;
+import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.knownlist.ObjectKnownList;
-import net.sf.l2j.gameserver.model.actor.poly.ObjectPoly;
-import net.sf.l2j.gameserver.model.actor.position.ObjectPosition;
+import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 
@@ -30,20 +32,32 @@ import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
  */
 public abstract class L2Object
 {
+	public enum PolyType
+	{
+		ITEM,
+		NPC,
+		DEFAULT;
+	}
+	
 	public static final Logger _log = Logger.getLogger(L2Object.class.getName());
 	
 	private String _name;
 	private int _objectId;
 	
-	private ObjectPoly _poly;
-	private ObjectPosition _position;
+	private NpcTemplate _polyTemplate;
+	private PolyType _polyType = PolyType.DEFAULT;
+	private int _polyId;
+	
+	private SpawnLocation _position = new SpawnLocation(0, 0, 0, 0);
+	private L2WorldRegion _region;
 	
 	private boolean _isVisible;
 	
 	public L2Object(int objectId)
 	{
 		_objectId = objectId;
-		initPosition();
+		
+		setRegion(L2World.getInstance().getRegion(_position));
 	}
 	
 	public void onAction(L2PcInstance player)
@@ -61,44 +75,8 @@ public abstract class L2Object
 		player.sendPacket(ActionFailed.STATIC_PACKET);
 	}
 	
-	/**
-	 * Do Nothing.<BR>
-	 * <BR>
-	 * <B><U> Overriden in </U> :</B><BR>
-	 * <BR>
-	 * <li>L2GuardInstance : Set the home location of its L2GuardInstance</li> <li>L2Attackable : Reset the Spoiled flag</li><BR>
-	 * <BR>
-	 */
 	public void onSpawn()
 	{
-	}
-	
-	public final void setXYZ(int x, int y, int z)
-	{
-		getPosition().setXYZ(x, y, z);
-	}
-	
-	public final void setXYZInvisible(int x, int y, int z)
-	{
-		getPosition().setXYZInvisible(x, y, z);
-	}
-	
-	public final int getX()
-	{
-		assert getPosition().getWorldRegion() != null || _isVisible;
-		return getPosition().getX();
-	}
-	
-	public final int getY()
-	{
-		assert getPosition().getWorldRegion() != null || _isVisible;
-		return getPosition().getY();
-	}
-	
-	public final int getZ()
-	{
-		assert getPosition().getWorldRegion() != null || _isVisible;
-		return getPosition().getZ();
 	}
 	
 	/**
@@ -106,18 +84,18 @@ public abstract class L2Object
 	 */
 	public void decayMe()
 	{
-		assert getPosition().getWorldRegion() != null;
+		assert _region != null;
 		
-		L2WorldRegion reg = getPosition().getWorldRegion();
+		final L2WorldRegion region = _region;
 		
 		synchronized (this)
 		{
 			_isVisible = false;
-			getPosition().setWorldRegion(null);
+			setRegion(null);
 		}
 		
-		// Remove the L2Object from the world -- Out of synchronized to avoid deadlocks
-		L2World.getInstance().removeVisibleObject(this, reg);
+		// Out of synchronized to avoid deadlocks
+		L2World.getInstance().removeVisibleObject(this, region);
 		L2World.getInstance().removeObject(this);
 	}
 	
@@ -129,46 +107,34 @@ public abstract class L2Object
 	}
 	
 	/**
-	 * Init the position of a L2Object spawn and add it in the world as a visible object.<BR>
-	 * <BR>
-	 * <B><U> Actions</U> :</B><BR>
-	 * <BR>
-	 * <li>Set the x,y,z position of the L2Object spawn and update its _worldregion</li> <li>Add the L2Object spawn in the _allobjects of L2World</li> <li>Add the L2Object spawn to _visibleObjects of its L2WorldRegion</li> <li>Add the L2Object spawn in the world as a <B>visible</B> object</li><BR>
-	 * <BR>
-	 * <B><U> Assert </U> :</B><BR>
-	 * <BR>
-	 * <li>_worldRegion == null <I>(L2Object is invisible at the beginning)</I></li><BR>
-	 * <BR>
-	 * <B><U> Example of use </U> :</B><BR>
-	 * <BR>
-	 * <li>Create Door</li> <li>Spawn : Monster, Minion, CTs, Summon...</li><BR>
+	 * Init the position of a L2Object spawn and add it in the world as a visible object.
 	 */
 	public final void spawnMe()
 	{
-		assert getPosition().getWorldRegion() == null && getPosition().getWorldPosition().getX() != 0 && getPosition().getWorldPosition().getY() != 0 && getPosition().getWorldPosition().getZ() != 0;
+		assert _region == null;
 		
 		synchronized (this)
 		{
 			// Set the x,y,z position of the L2Object spawn and update its _worldregion
 			_isVisible = true;
-			getPosition().setWorldRegion(L2World.getInstance().getRegion(getPosition().getWorldPosition()));
-			
-			// Add the L2Object spawn in the _allobjects of L2World
-			L2World.getInstance().addObject(this);
-			
-			// Add the L2Object spawn to _visibleObjects and if necessary to _allplayers of its L2WorldRegion
-			getPosition().getWorldRegion().addVisibleObject(this);
+			setRegion(L2World.getInstance().getRegion(_position));
 		}
 		
+		// Add the L2Object spawn in the _allobjects of L2World
+		L2World.getInstance().addObject(this);
+		
+		// Add the L2Object spawn to _visibleObjects and if necessary to _allplayers of its L2WorldRegion
+		_region.addVisibleObject(this);
+		
 		// Add the L2Object spawn in the world as a visible object -- out of synchronized to avoid deadlocks
-		L2World.getInstance().addVisibleObject(this, getPosition().getWorldRegion());
+		L2World.getInstance().addVisibleObject(this, _region);
 		
 		onSpawn();
 	}
 	
 	public final void spawnMe(int x, int y, int z)
 	{
-		assert getPosition().getWorldRegion() == null;
+		assert _region == null;
 		
 		synchronized (this)
 		{
@@ -184,18 +150,18 @@ public abstract class L2Object
 			if (y < L2World.WORLD_Y_MIN)
 				y = L2World.WORLD_Y_MIN + 5000;
 			
-			getPosition().setWorldPosition(x, y, z);
-			getPosition().setWorldRegion(L2World.getInstance().getRegion(getPosition().getWorldPosition()));
+			_position.set(x, y, z);
+			setRegion(L2World.getInstance().getRegion(_position));
 		}
 		
 		// Add the L2Object spawn in the _allobjects of L2World
 		L2World.getInstance().addObject(this);
 		
 		// Add the L2Object spawn to _visibleObjects and if necessary to _allplayers of its L2WorldRegion
-		getPosition().getWorldRegion().addVisibleObject(this);
+		_region.addVisibleObject(this);
 		
 		// Add the L2Object spawn in the world as a visible object
-		L2World.getInstance().addVisibleObject(this, getPosition().getWorldRegion());
+		L2World.getInstance().addVisibleObject(this, _region);
 		
 		onSpawn();
 	}
@@ -219,18 +185,13 @@ public abstract class L2Object
 	 */
 	public abstract boolean isAutoAttackable(L2Character attacker);
 	
-	public boolean isMarker()
-	{
-		return false;
-	}
-	
 	/**
 	 * A L2Object is visible if <B>_isVisible</B> = true and <B>_worldregion</B> != null.
 	 * @return the visibilty state of the L2Object.
 	 */
 	public final boolean isVisible()
 	{
-		return getPosition().getWorldRegion() != null && _isVisible;
+		return _region != null && _isVisible;
 	}
 	
 	public final void setIsVisible(boolean value)
@@ -238,7 +199,7 @@ public abstract class L2Object
 		_isVisible = value;
 		
 		if (!_isVisible)
-			getPosition().setWorldRegion(null);
+			setRegion(null);
 	}
 	
 	public ObjectKnownList getKnownList()
@@ -261,40 +222,64 @@ public abstract class L2Object
 		return _objectId;
 	}
 	
-	public final ObjectPoly getPoly()
+	public final NpcTemplate getPolyTemplate()
 	{
-		if (_poly == null)
-			_poly = new ObjectPoly(this);
+		return _polyTemplate;
+	}
+	
+	public final PolyType getPolyType()
+	{
+		return _polyType;
+	}
+	
+	public final int getPolyId()
+	{
+		return _polyId;
+	}
+	
+	public boolean polymorph(PolyType type, int id)
+	{
+		if (!(this instanceof L2Npc) && !(this instanceof L2PcInstance))
+			return false;
 		
-		return _poly;
+		if (type == PolyType.NPC)
+		{
+			final NpcTemplate template = NpcTable.getInstance().getTemplate(id);
+			if (template == null)
+				return false;
+			
+			_polyTemplate = template;
+		}
+		else if (type == PolyType.ITEM)
+		{
+			if (ItemTable.getInstance().getTemplate(id) == null)
+				return false;
+		}
+		else if (type == PolyType.DEFAULT)
+			return false;
+		
+		_polyType = type;
+		_polyId = id;
+		
+		decayMe();
+		spawnMe();
+		
+		return true;
 	}
 	
-	public void initPosition()
+	public void unpolymorph()
 	{
-		_position = new ObjectPosition(this);
-	}
-	
-	public ObjectPosition getPosition()
-	{
-		return _position;
-	}
-	
-	public final void setObjectPosition(ObjectPosition value)
-	{
-		_position = value;
+		_polyTemplate = null;
+		_polyType = PolyType.DEFAULT;
+		_polyId = 0;
+		
+		decayMe();
+		spawnMe();
 	}
 	
 	public L2PcInstance getActingPlayer()
 	{
 		return null;
-	}
-	
-	/**
-	 * @return a reference to the region this object is located.
-	 */
-	public L2WorldRegion getWorldRegion()
-	{
-		return getPosition().getWorldRegion();
 	}
 	
 	/**
@@ -348,5 +333,115 @@ public abstract class L2Object
 	public boolean isInsideZone(ZoneId zone)
 	{
 		return false;
+	}
+	
+	/**
+	 * Set the x,y,z position of the L2Object and if necessary modify its _worldRegion.
+	 * @param x
+	 * @param y
+	 * @param z
+	 */
+	public final void setXYZ(int x, int y, int z)
+	{
+		assert _region != null;
+		
+		_position.set(x, y, z);
+		
+		try
+		{
+			if (!isVisible())
+				return;
+			
+			final L2WorldRegion region = L2World.getInstance().getRegion(_position);
+			if (region != _region)
+			{
+				_region.removeVisibleObject(this);
+				
+				setRegion(region);
+				
+				// Add the L2Oject spawn to _visibleObjects and if necessary to _allplayers of its L2WorldRegion
+				_region.addVisibleObject(this);
+			}
+		}
+		catch (Exception e)
+		{
+			_log.warning("Object Id at bad coords: (x: " + getX() + ", y: " + getY() + ", z: " + getZ() + ").");
+			badCoords();
+		}
+	}
+	
+	/**
+	 * Called on setXYZ exception.
+	 */
+	protected void badCoords()
+	{
+	}
+	
+	/**
+	 * Set the x,y,z position of the L2Object and make it invisible. A L2Object is invisble if <B>_hidden</B>=true or <B>_worldregion</B>==null
+	 * @param x
+	 * @param y
+	 * @param z
+	 */
+	public final void setXYZInvisible(int x, int y, int z)
+	{
+		assert _region == null;
+		
+		if (x > L2World.WORLD_X_MAX)
+			x = L2World.WORLD_X_MAX - 5000;
+		if (x < L2World.WORLD_X_MIN)
+			x = L2World.WORLD_X_MIN + 5000;
+		if (y > L2World.WORLD_Y_MAX)
+			y = L2World.WORLD_Y_MAX - 5000;
+		if (y < L2World.WORLD_Y_MIN)
+			y = L2World.WORLD_Y_MIN + 5000;
+		
+		_position.set(x, y, z);
+		setIsVisible(false);
+	}
+	
+	/**
+	 * @return the x position of the L2Object.
+	 */
+	public final int getX()
+	{
+		assert _region != null || _isVisible;
+		
+		return _position.getX();
+	}
+	
+	/**
+	 * @return the y position of the L2Object.
+	 */
+	public final int getY()
+	{
+		assert _region != null || _isVisible;
+		
+		return _position.getY();
+	}
+	
+	/**
+	 * @return the z position of the L2Object.
+	 */
+	public final int getZ()
+	{
+		assert _region != null || _isVisible;
+		
+		return _position.getZ();
+	}
+	
+	public final SpawnLocation getPosition()
+	{
+		return _position;
+	}
+	
+	public final L2WorldRegion getRegion()
+	{
+		return _region;
+	}
+	
+	public void setRegion(L2WorldRegion value)
+	{
+		_region = value;
 	}
 }

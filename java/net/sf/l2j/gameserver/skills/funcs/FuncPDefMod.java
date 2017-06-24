@@ -40,14 +40,14 @@ public class FuncPDefMod extends Func
 		if (env.getCharacter() instanceof L2PcInstance)
 		{
 			final L2PcInstance player = env.getPlayer();
-			final boolean hasMagePDef = (player.getClassId().isMage() || player.getClassId().getId() == 0x31); // orc mystics are a special case
+			final boolean isMage = player.isMageClass();
 			
 			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_HEAD) != null)
 				env.subValue(12);
 			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_CHEST) != null)
-				env.subValue((hasMagePDef) ? 15 : 31);
+				env.subValue((isMage) ? 15 : 31);
 			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_LEGS) != null)
-				env.subValue((hasMagePDef) ? 8 : 18);
+				env.subValue((isMage) ? 8 : 18);
 			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_GLOVES) != null)
 				env.subValue(8);
 			if (player.getInventory().getPaperdollItem(Inventory.PAPERDOLL_FEET) != null)

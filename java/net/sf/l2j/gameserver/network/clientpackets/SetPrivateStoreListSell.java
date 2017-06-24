@@ -16,7 +16,7 @@ package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.PrivateStoreType;
+import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance.StoreType;
 import net.sf.l2j.gameserver.model.tradelist.TradeList;
 import net.sf.l2j.gameserver.model.zone.ZoneId;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -65,7 +65,7 @@ public final class SetPrivateStoreListSell extends L2GameClientPacket
 		if (_items == null)
 		{
 			player.sendPacket(SystemMessageId.NOT_ENOUGH_ITEMS);
-			player.setPrivateStoreType(PrivateStoreType.NONE);
+			player.setStoreType(StoreType.NONE);
 			player.broadcastUserInfo();
 			player.sendPacket(new PrivateStoreManageListSell(player, _packageSale));
 			return;
@@ -123,7 +123,7 @@ public final class SetPrivateStoreListSell extends L2GameClientPacket
 		}
 		
 		player.sitDown();
-		player.setPrivateStoreType((_packageSale) ? PrivateStoreType.PACKAGE_SELL : PrivateStoreType.SELL);
+		player.setStoreType((_packageSale) ? StoreType.PACKAGE_SELL : StoreType.SELL);
 		player.broadcastUserInfo();
 		player.broadcastPacket(new PrivateStoreMsgSell(player));
 	}

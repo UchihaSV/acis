@@ -3,8 +3,9 @@ package net.sf.l2j.gameserver.instancemanager;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.lang.StringUtil;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 import net.sf.l2j.gameserver.network.serverpackets.SpecialCamera;
@@ -182,7 +183,7 @@ public class MovieMakerManager
 	public void playMovie(int broadcast, L2PcInstance player)
 	{
 		if (!_sequence.isEmpty())
-			ThreadPoolManager.getInstance().scheduleGeneral(new Play(1, broadcast, player), 500);
+			ThreadPool.schedule(new Play(1, broadcast, player), 500);
 		else
 		{
 			player.sendMessage("There is nothing to play.");
@@ -215,7 +216,7 @@ public class MovieMakerManager
 				else
 					_player.sendPacket(new SpecialCamera(sec._objid, sec._dist, sec._yaw, sec._pitch, sec._time, sec._duration, sec._turn, sec._rise, sec._widescreen, 0));
 				
-				ThreadPoolManager.getInstance().scheduleGeneral(new Play(_id + 1, _broad, _player), (sec._duration - 100));
+				ThreadPool.schedule(new Play(_id + 1, _broad, _player), (sec._duration - 100));
 			}
 			else
 			{

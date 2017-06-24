@@ -23,8 +23,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.AuctionManager;
@@ -219,7 +220,7 @@ public class Auction
 		else
 			taskDelay = _endDate - currentTime;
 		
-		ThreadPoolManager.getInstance().scheduleGeneral(new AutoEndTask(), taskDelay);
+		ThreadPool.schedule(new AutoEndTask(), taskDelay);
 	}
 	
 	/** Save Auction Data End */
@@ -444,7 +445,7 @@ public class Auction
 		}
 		// Task waiting ClanHallManager is loaded every 3s
 		else
-			ThreadPoolManager.getInstance().scheduleGeneral(new AutoEndTask(), 3000);
+			ThreadPool.schedule(new AutoEndTask(), 3000);
 	}
 	
 	/**

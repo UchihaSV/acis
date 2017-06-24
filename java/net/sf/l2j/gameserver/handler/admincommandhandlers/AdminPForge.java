@@ -17,10 +17,12 @@ package net.sf.l2j.gameserver.handler.admincommandhandlers;
 import java.util.StringTokenizer;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.gameserver.handler.IAdminCommandHandler;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.serverpackets.AdminForgePacket;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 
 /**
  * This class handles commands for gm to forge packets
@@ -32,7 +34,8 @@ public class AdminPForge implements IAdminCommandHandler
 	{
 		"admin_forge",
 		"admin_forge2",
-		"admin_forge3"
+		"admin_forge3",
+		"admin_msg"
 	};
 	
 	@Override
@@ -150,6 +153,19 @@ public class AdminPForge implements IAdminCommandHandler
 			catch (Exception ex)
 			{
 				activeChar.sendMessage("Usage: //forge or //forge2 format");
+			}
+		}
+		else if (command.startsWith("admin_msg"))
+		{
+			try
+			{
+				// Used for testing SystemMessage IDs - Use //msg <ID>
+				activeChar.sendPacket(SystemMessage.getSystemMessage(Integer.parseInt(command.substring(10).trim())));
+			}
+			catch (Exception e)
+			{
+				activeChar.sendMessage("Command format: //msg <SYSTEM_MSG_ID>");
+				return false;
 			}
 		}
 		return true;

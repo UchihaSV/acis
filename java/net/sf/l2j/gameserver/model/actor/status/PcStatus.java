@@ -14,8 +14,9 @@
  */
 package net.sf.l2j.gameserver.model.actor.status;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.random.Rnd;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.instancemanager.DuelManager;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -105,14 +106,12 @@ public class PcStatus extends PlayableStatus
 				
 				if (getActiveChar().isInDuel())
 				{
-					if (getActiveChar().getDuelState() == DuelState.DEAD)
+					final DuelState playerState = getActiveChar().getDuelState();
+					if (playerState == DuelState.DEAD || playerState == DuelState.WINNER)
 						return;
 					
-					if (getActiveChar().getDuelState() == DuelState.WINNER)
-						return;
-					
-					// cancel duel if player got hit by another player, that is not part of the duel
-					if (attackerPlayer.getDuelId() != getActiveChar().getDuelId())
+					// Cancel duel if player got hit by another player that is not part of the duel or if player isn't in duel state.
+					if (attackerPlayer.getDuelId() != getActiveChar().getDuelId() || playerState != DuelState.DUELLING)
 						getActiveChar().setDuelState(DuelState.INTERRUPTED);
 				}
 			}
@@ -181,17 +180,20 @@ public class PcStatus extends PlayableStatus
 			{
 				if (getActiveChar().isInDuel())
 				{
-					getActiveChar().disableAllSkills();
-					stopHpMpRegeneration();
-					
-					if (attacker != null)
+					if (getActiveChar().getDuelState() == DuelState.DUELLING)
 					{
-						attacker.getAI().setIntention(CtrlIntention.ACTIVE);
-						attacker.sendPacket(ActionFailed.STATIC_PACKET);
+						getActiveChar().disableAllSkills();
+						stopHpMpRegeneration();
+						
+						if (attacker != null)
+						{
+							attacker.getAI().setIntention(CtrlIntention.ACTIVE);
+							attacker.sendPacket(ActionFailed.STATIC_PACKET);
+						}
+						
+						// let the DuelManager know of his defeat
+						DuelManager.getInstance().onPlayerDefeat(getActiveChar());
 					}
-					
-					// let the DuelManager know of his defeat
-					DuelManager.getInstance().onPlayerDefeat(getActiveChar());
 					value = 1;
 				}
 				else

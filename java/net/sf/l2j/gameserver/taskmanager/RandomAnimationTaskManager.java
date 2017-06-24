@@ -17,9 +17,10 @@ package net.sf.l2j.gameserver.taskmanager;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.sf.l2j.Config;
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.ai.CtrlIntention;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 
@@ -38,7 +39,7 @@ public final class RandomAnimationTaskManager implements Runnable
 	protected RandomAnimationTaskManager()
 	{
 		// Run task each second.
-		ThreadPoolManager.getInstance().scheduleAiAtFixedRate(this, 1000, 1000);
+		ThreadPool.scheduleAtFixedRate(this, 1000, 1000);
 	}
 	
 	/**

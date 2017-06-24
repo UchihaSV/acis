@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Map;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.handler.IUserCommandHandler;
 import net.sf.l2j.gameserver.model.L2Clan;

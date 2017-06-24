@@ -80,7 +80,7 @@ public final class AddTradeItem extends L2GameClientPacket
 			return;
 		}
 		
-		if (!player.validateItemManipulation(_objectId))
+		if (player.validateItemManipulation(_objectId) == null)
 		{
 			player.sendPacket(SystemMessageId.NOTHING_HAPPENED);
 			return;

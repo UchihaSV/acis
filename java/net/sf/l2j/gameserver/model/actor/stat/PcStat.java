@@ -15,12 +15,14 @@
 package net.sf.l2j.gameserver.model.actor.stat;
 
 import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.datatables.NpcTable;
-import net.sf.l2j.gameserver.datatables.PetDataTable;
+import net.sf.l2j.gameserver.instancemanager.ZoneManager;
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PetInstance;
 import net.sf.l2j.gameserver.model.base.Experience;
+import net.sf.l2j.gameserver.model.zone.ZoneId;
+import net.sf.l2j.gameserver.model.zone.type.L2SwampZone;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.PledgeShowMemberListUpdate;
 import net.sf.l2j.gameserver.network.serverpackets.SocialAction;
@@ -80,21 +82,20 @@ public class PcStat extends PlayableStat
 		if (getActiveChar().hasPet())
 		{
 			final L2PetInstance pet = (L2PetInstance) getActiveChar().getPet();
-			if (pet.getStat().getExp() <= (PetDataTable.getInstance().getPetLevelData(pet.getNpcId(), 81).getPetMaxExp() + 10000))
+			if (pet.getStat().getExp() <= (pet.getTemplate().getPetDataEntry(81).getMaxExp() + 10000))
 			{
 				if (Util.checkIfInShortRadius(Config.ALT_PARTY_RANGE, pet, getActiveChar(), true))
 				{
-					float ratioTakenByPet = pet.getPetLevelData().getOwnerExpTaken();
-					
-					if (ratioTakenByPet > 0 && !pet.isDead())
-						pet.addExpAndSp((long) (addToExp * ratioTakenByPet), (int) (addToSp * ratioTakenByPet));
+					int ratio = pet.getPetData().getExpType(); // FIXME
+					if (ratio > 0 && !pet.isDead())
+						pet.addExpAndSp(addToExp * ratio / 100, addToSp * ratio / 100);
 					
 					// now adjust the max ratio to avoid the owner earning negative exp/sp
-					if (ratioTakenByPet > 1)
-						ratioTakenByPet = 1;
+					if (ratio > 1)
+						ratio = 1;
 					
-					addToExp = (long) (addToExp * (1 - ratioTakenByPet));
-					addToSp = (int) (addToSp * (1 - ratioTakenByPet));
+					addToExp = addToExp * (1 - ratio / 100);
+					addToSp = addToSp * (1 - ratio / 100);
 				}
 			}
 		}
@@ -176,13 +177,6 @@ public class PcStat extends PlayableStat
 		if (getActiveChar().isInParty())
 			getActiveChar().getParty().recalculatePartyLevel(); // Recalculate the party level
 			
-		StatusUpdate su = new StatusUpdate(getActiveChar());
-		su.addAttribute(StatusUpdate.LEVEL, getLevel());
-		su.addAttribute(StatusUpdate.MAX_CP, getMaxCp());
-		su.addAttribute(StatusUpdate.MAX_HP, getMaxHp());
-		su.addAttribute(StatusUpdate.MAX_MP, getMaxMp());
-		getActiveChar().sendPacket(su);
-		
 		// Update the overloaded status of the L2PcInstance
 		getActiveChar().refreshOverloaded();
 		// Update the expertise status of the L2PcInstance
@@ -318,35 +312,129 @@ public class PcStat extends PlayableStat
 	}
 	
 	@Override
-	public int getRunSpeed()
+	public int getBaseRunSpeed()
 	{
-		int val;
-		
 		if (getActiveChar().isMounted())
 		{
-			int baseRunSpd = NpcTable.getInstance().getTemplate(getActiveChar().getMountNpcId()).getBaseRunSpd();
-			val = (int) (calcStat(Stats.RUN_SPEED, baseRunSpd, null, null));
+			int base = (getActiveChar().isFlying()) ? getActiveChar().getPetDataEntry().getMountFlySpeed() : getActiveChar().getPetDataEntry().getMountBaseSpeed();
+			
+			if (getActiveChar().getLevel() < getActiveChar().getMountLevel())
+				base /= 2;
+			
+			if (getActiveChar().checkFoodState(getActiveChar().getPetTemplate().getHungryLimit()))
+				base /= 2;
+			
+			return base;
 		}
-		else
-			val = super.getRunSpeed();
 		
+		return super.getBaseRunSpeed();
+	}
+	
+	public int getBaseSwimSpeed()
+	{
+		if (getActiveChar().isMounted())
+		{
+			int base = getActiveChar().getPetDataEntry().getMountSwimSpeed();
+			
+			if (getActiveChar().getLevel() < getActiveChar().getMountLevel())
+				base /= 2;
+			
+			if (getActiveChar().checkFoodState(getActiveChar().getPetTemplate().getHungryLimit()))
+				base /= 2;
+			
+			return base;
+		}
+		
+		return getActiveChar().getTemplate().getBaseSwimSpeed();
+	}
+	
+	@Override
+	public float getMoveSpeed()
+	{
+		// get base value, use swimming speed in water
+		float baseValue = getActiveChar().isInsideZone(ZoneId.WATER) ? getBaseSwimSpeed() : getBaseMoveSpeed();
+		
+		// apply zone modifier before final calculation
+		if (getActiveChar().isInsideZone(ZoneId.SWAMP))
+		{
+			final L2SwampZone zone = ZoneManager.getInstance().getZone(getActiveChar(), L2SwampZone.class);
+			if (zone != null)
+				baseValue *= (100 + zone.getMoveBonus()) / 100.0;
+		}
+		
+		// apply armor grade penalty before final calculation
 		final int penalty = getActiveChar().getExpertiseArmorPenalty();
 		if (penalty > 0)
-			val *= Math.pow(0.84, penalty);
+			baseValue *= Math.pow(0.84, penalty);
 		
-		return val;
+		// calculate speed
+		return (float) calcStat(Stats.RUN_SPEED, baseValue, null, null);
+	}
+	
+	@Override
+	public int getMAtk(L2Character target, L2Skill skill)
+	{
+		if (getActiveChar().isMounted())
+		{
+			double base = getActiveChar().getPetDataEntry().getMountMAtk();
+			
+			if (getActiveChar().getLevel() < getActiveChar().getMountLevel())
+				base /= 2;
+			
+			return (int) calcStat(Stats.MAGIC_ATTACK, base, null, null);
+		}
+		
+		return super.getMAtk(target, skill);
 	}
 	
 	@Override
 	public int getMAtkSpd()
 	{
-		int val = super.getMAtkSpd();
+		double base = 333;
+		
+		if (getActiveChar().isMounted())
+		{
+			if (getActiveChar().checkFoodState(getActiveChar().getPetTemplate().getHungryLimit()))
+				base /= 2;
+		}
 		
 		final int penalty = getActiveChar().getExpertiseArmorPenalty();
 		if (penalty > 0)
-			val *= Math.pow(0.84, penalty);
+			base *= Math.pow(0.84, penalty);
 		
-		return val;
+		return (int) calcStat(Stats.MAGIC_ATTACK_SPEED, base, null, null);
+	}
+	
+	@Override
+	public int getPAtk(L2Character target)
+	{
+		if (getActiveChar().isMounted())
+		{
+			double base = getActiveChar().getPetDataEntry().getMountPAtk();
+			
+			if (getActiveChar().getLevel() < getActiveChar().getMountLevel())
+				base /= 2;
+			
+			return (int) calcStat(Stats.POWER_ATTACK, base, null, null);
+		}
+		
+		return super.getPAtk(target);
+	}
+	
+	@Override
+	public int getPAtkSpd()
+	{
+		if (getActiveChar().isMounted())
+		{
+			int base = getActiveChar().getPetDataEntry().getMountAtkSpd();
+			
+			if (getActiveChar().checkFoodState(getActiveChar().getPetTemplate().getHungryLimit()))
+				base /= 2;
+			
+			return (int) calcStat(Stats.POWER_ATTACK_SPEED, base, null, null);
+		}
+		
+		return super.getPAtkSpd();
 	}
 	
 	@Override
@@ -373,23 +461,8 @@ public class PcStat extends PlayableStat
 	}
 	
 	@Override
-	public float getMovementSpeedMultiplier()
-	{
-		if (getActiveChar().isMounted())
-			return getRunSpeed() * 1f / NpcTable.getInstance().getTemplate(getActiveChar().getMountNpcId()).getBaseRunSpd();
-		
-		return super.getMovementSpeedMultiplier();
-	}
-	
-	@Override
 	public int getPhysicalAttackRange()
 	{
 		return (int) calcStat(Stats.POWER_ATTACK_RANGE, getActiveChar().getAttackType().getRange(), null, null);
-	}
-	
-	@Override
-	public int getWalkSpeed()
-	{
-		return (getRunSpeed() * 70) / 100;
 	}
 }

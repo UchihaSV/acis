@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.datatables;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -24,11 +25,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import net.sf.l2j.gameserver.model.L2MinionData;
-import net.sf.l2j.gameserver.model.L2NpcAIData;
 import net.sf.l2j.gameserver.model.L2Skill;
+import net.sf.l2j.gameserver.model.MinionData;
+import net.sf.l2j.gameserver.model.PetDataEntry;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
-import net.sf.l2j.gameserver.model.base.ClassId;
+import net.sf.l2j.gameserver.model.actor.template.PetTemplate;
+import net.sf.l2j.gameserver.model.item.DropCategory;
 import net.sf.l2j.gameserver.model.item.DropData;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.xmlfactory.XMLDocumentFactory;
@@ -39,14 +41,9 @@ import org.w3c.dom.Node;
 
 public class NpcTable
 {
-	private static Logger _log = Logger.getLogger(NpcTable.class.getName());
+	private static final Logger _log = Logger.getLogger(NpcTable.class.getName());
 	
 	private final Map<Integer, NpcTemplate> _npcs = new HashMap<>();
-	
-	public static NpcTable getInstance()
-	{
-		return SingletonHolder._instance;
-	}
 	
 	protected NpcTable()
 	{
@@ -59,19 +56,13 @@ public class NpcTable
 		load();
 	}
 	
-	/**
-	 * Load NPCs templates.<br>
-	 * As some categories need an existing template in order to write infos, there are 2 loops :
-	 * <ul>
-	 * <li>The first loop creates the L2NpcTemplate with stats coming from "set" category.</li>
-	 * <li>The second loop considers categories : skills, drops, teach, minions, ai.</li>
-	 * </ul>
-	 */
 	private void load()
 	{
 		try
 		{
 			final File dir = new File("./data/xml/npcs");
+			final StatsSet set = new StatsSet();
+			final StatsSet petSet = new StatsSet();
 			
 			for (File file : dir.listFiles())
 			{
@@ -84,106 +75,57 @@ public class NpcTable
 					{
 						NamedNodeMap attrs = npc.getAttributes();
 						
-						int npcId = Integer.parseInt(attrs.getNamedItem("id").getNodeValue());
-						int templateId = attrs.getNamedItem("idTemplate") == null ? npcId : Integer.parseInt(attrs.getNamedItem("idTemplate").getNodeValue());
+						boolean mustUsePetTemplate = false; // Used to define template type.
 						
-						StatsSet set = new StatsSet();
+						final int npcId = Integer.parseInt(attrs.getNamedItem("id").getNodeValue());
+						final int templateId = attrs.getNamedItem("idTemplate") == null ? npcId : Integer.parseInt(attrs.getNamedItem("idTemplate").getNodeValue());
+						
 						set.set("id", npcId);
 						set.set("idTemplate", templateId);
 						set.set("name", attrs.getNamedItem("name").getNodeValue());
 						set.set("title", attrs.getNamedItem("title").getNodeValue());
 						
-						// Categories : only "set" is read and stored. Others categories will come in second loop.
-						for (Node cat = npc.getFirstChild(); cat != null; cat = cat.getNextSibling())
-						{
-							if ("set".equalsIgnoreCase(cat.getNodeName()))
-							{
-								attrs = cat.getAttributes();
-								set.set(attrs.getNamedItem("name").getNodeValue(), attrs.getNamedItem("val").getNodeValue());
-							}
-						}
-						
-						// Create the template with basic infos.
-						NpcTemplate template = new NpcTemplate(set);
-						
-						// Categories : add missing categories.
 						for (Node cat = npc.getFirstChild(); cat != null; cat = cat.getNextSibling())
 						{
 							if ("ai".equalsIgnoreCase(cat.getNodeName()))
 							{
 								attrs = cat.getAttributes();
 								
-								L2NpcAIData npcAIDat = new L2NpcAIData();
-								npcAIDat.setAi(attrs.getNamedItem("type").getNodeValue());
-								npcAIDat.setSsCount(Integer.parseInt(attrs.getNamedItem("ssCount").getNodeValue()));
-								npcAIDat.setSsRate(Integer.parseInt(attrs.getNamedItem("ssRate").getNodeValue()));
-								npcAIDat.setSpsCount(Integer.parseInt(attrs.getNamedItem("spsCount").getNodeValue()));
-								npcAIDat.setSpsRate(Integer.parseInt(attrs.getNamedItem("spsRate").getNodeValue()));
-								npcAIDat.setAggro(Integer.parseInt(attrs.getNamedItem("aggro").getNodeValue()));
+								set.set("aiType", attrs.getNamedItem("type").getNodeValue());
+								set.set("ssCount", Integer.parseInt(attrs.getNamedItem("ssCount").getNodeValue()));
+								set.set("ssRate", Integer.parseInt(attrs.getNamedItem("ssRate").getNodeValue()));
+								set.set("spsCount", Integer.parseInt(attrs.getNamedItem("spsCount").getNodeValue()));
+								set.set("spsRate", Integer.parseInt(attrs.getNamedItem("spsRate").getNodeValue()));
+								set.set("aggro", Integer.parseInt(attrs.getNamedItem("aggro").getNodeValue()));
 								
 								// Verify if the parameter exists.
 								if (attrs.getNamedItem("clan") != null)
 								{
-									npcAIDat.setClans(attrs.getNamedItem("clan").getNodeValue().split(";"));
-									npcAIDat.setClanRange(Integer.parseInt(attrs.getNamedItem("clanRange").getNodeValue()));
+									set.set("clan", attrs.getNamedItem("clan").getNodeValue().split(";"));
+									set.set("clanRange", Integer.parseInt(attrs.getNamedItem("clanRange").getNodeValue()));
 									
 									// Verify if the parameter exists.
 									if (attrs.getNamedItem("ignoredIds") != null)
-									{
-										// Parse it under String array.
-										String[] idsToIgnore = attrs.getNamedItem("ignoredIds").getNodeValue().split(";");
-										if (idsToIgnore.length != 0)
-										{
-											// Parse it under int array, and then fill L2NpcAIData's _clanIgnore.
-											int[] values = new int[idsToIgnore.length];
-											for (int i = 0; i < idsToIgnore.length; i++)
-												values[i] = Integer.parseInt(idsToIgnore[i]);
-											
-											npcAIDat.setIgnoredIds(values);
-										}
-									}
+										set.set("ignoredIds", attrs.getNamedItem("ignoredIds").getNodeValue());
 								}
 								
-								npcAIDat.setCanMove(Boolean.parseBoolean(attrs.getNamedItem("canMove").getNodeValue()));
-								npcAIDat.setSeedable(Boolean.parseBoolean(attrs.getNamedItem("seedable").getNodeValue()));
-								
-								template.setAIData(npcAIDat);
-							}
-							else if ("skills".equalsIgnoreCase(cat.getNodeName()))
-							{
-								for (Node skillCat = cat.getFirstChild(); skillCat != null; skillCat = skillCat.getNextSibling())
-								{
-									if ("skill".equalsIgnoreCase(skillCat.getNodeName()))
-									{
-										attrs = skillCat.getAttributes();
-										
-										int skillId = Integer.parseInt(attrs.getNamedItem("id").getNodeValue());
-										int level = Integer.parseInt(attrs.getNamedItem("level").getNodeValue());
-										
-										// Setup the npc's race. Don't register the skill.
-										if (skillId == L2Skill.SKILL_NPC_RACE)
-										{
-											template.setRace(level);
-											continue;
-										}
-										
-										L2Skill npcSkill = SkillTable.getInstance().getInfo(skillId, level);
-										if (npcSkill == null)
-											continue;
-										
-										template.addSkill(npcSkill);
-									}
-								}
+								set.set("canMove", Boolean.parseBoolean(attrs.getNamedItem("canMove").getNodeValue()));
+								set.set("seedable", Boolean.parseBoolean(attrs.getNamedItem("seedable").getNodeValue()));
 							}
 							else if ("drops".equalsIgnoreCase(cat.getNodeName()))
 							{
+								final String type = set.getString("type");
+								final boolean isRaid = type.equalsIgnoreCase("L2RaidBoss") || type.equalsIgnoreCase("L2GrandBoss");
+								
+								final List<DropCategory> drops = new ArrayList<>();
+								
 								for (Node dropCat = cat.getFirstChild(); dropCat != null; dropCat = dropCat.getNextSibling())
 								{
 									if ("category".equalsIgnoreCase(dropCat.getNodeName()))
 									{
 										attrs = dropCat.getAttributes();
 										
-										int category = Integer.parseInt(attrs.getNamedItem("id").getNodeValue());
+										final DropCategory category = new DropCategory(Integer.parseInt(attrs.getNamedItem("id").getNodeValue()));
 										
 										for (Node item = dropCat.getFirstChild(); item != null; item = item.getNextSibling())
 										{
@@ -191,51 +133,122 @@ public class NpcTable
 											{
 												attrs = item.getAttributes();
 												
-												DropData dropDat = new DropData();
-												dropDat.setItemId(Integer.parseInt(attrs.getNamedItem("itemid").getNodeValue()));
-												dropDat.setMinDrop(Integer.parseInt(attrs.getNamedItem("min").getNodeValue()));
-												dropDat.setMaxDrop(Integer.parseInt(attrs.getNamedItem("max").getNodeValue()));
-												dropDat.setChance(Integer.parseInt(attrs.getNamedItem("chance").getNodeValue()));
+												final DropData data = new DropData();
+												data.setItemId(Integer.parseInt(attrs.getNamedItem("itemid").getNodeValue()));
+												data.setMinDrop(Integer.parseInt(attrs.getNamedItem("min").getNodeValue()));
+												data.setMaxDrop(Integer.parseInt(attrs.getNamedItem("max").getNodeValue()));
+												data.setChance(Integer.parseInt(attrs.getNamedItem("chance").getNodeValue()));
 												
-												if (ItemTable.getInstance().getTemplate(dropDat.getItemId()) == null)
+												if (ItemTable.getInstance().getTemplate(data.getItemId()) == null)
 												{
-													_log.warning("Droplist data for undefined itemId: " + dropDat.getItemId());
+													_log.warning("Droplist data for undefined itemId: " + data.getItemId());
 													continue;
 												}
-												template.addDropData(dropDat, category);
+												category.addDropData(data, isRaid);
 											}
 										}
+										drops.add(category);
 									}
 								}
+								set.set("drops", drops);
 							}
 							else if ("minions".equalsIgnoreCase(cat.getNodeName()))
 							{
+								final List<MinionData> minions = new ArrayList<>();
+								
 								for (Node minion = cat.getFirstChild(); minion != null; minion = minion.getNextSibling())
 								{
 									if ("minion".equalsIgnoreCase(minion.getNodeName()))
 									{
 										attrs = minion.getAttributes();
 										
-										L2MinionData minionDat = new L2MinionData();
-										minionDat.setMinionId(Integer.parseInt(attrs.getNamedItem("id").getNodeValue()));
-										minionDat.setAmountMin(Integer.parseInt(attrs.getNamedItem("min").getNodeValue()));
-										minionDat.setAmountMax(Integer.parseInt(attrs.getNamedItem("max").getNodeValue()));
+										final MinionData data = new MinionData();
+										data.setMinionId(Integer.parseInt(attrs.getNamedItem("id").getNodeValue()));
+										data.setAmountMin(Integer.parseInt(attrs.getNamedItem("min").getNodeValue()));
+										data.setAmountMax(Integer.parseInt(attrs.getNamedItem("max").getNodeValue()));
 										
-										template.addRaidData(minionDat);
+										minions.add(data);
 									}
 								}
+								set.set("minions", minions);
+							}
+							else if ("petdata".equalsIgnoreCase(cat.getNodeName()))
+							{
+								mustUsePetTemplate = true;
+								
+								attrs = cat.getAttributes();
+								
+								set.set("food1", Integer.parseInt(attrs.getNamedItem("food1").getNodeValue()));
+								set.set("food2", Integer.parseInt(attrs.getNamedItem("food2").getNodeValue()));
+								
+								set.set("autoFeedLimit", Double.parseDouble(attrs.getNamedItem("autoFeedLimit").getNodeValue()));
+								set.set("hungryLimit", Double.parseDouble(attrs.getNamedItem("hungryLimit").getNodeValue()));
+								set.set("unsummonLimit", Double.parseDouble(attrs.getNamedItem("unsummonLimit").getNodeValue()));
+								
+								final Map<Integer, PetDataEntry> entries = new HashMap<>();
+								
+								for (Node petCat = cat.getFirstChild(); petCat != null; petCat = petCat.getNextSibling())
+								{
+									if ("stat".equalsIgnoreCase(petCat.getNodeName()))
+									{
+										attrs = petCat.getAttributes();
+										
+										// Get all nodes.
+										for (int i = 0; i < attrs.getLength(); i++)
+										{
+											// Add them to stats by node name and node value.
+											Node node = attrs.item(i);
+											petSet.set(node.getNodeName(), node.getNodeValue());
+										}
+										
+										entries.put(petSet.getInteger("level"), new PetDataEntry(petSet));
+										petSet.clear();
+									}
+								}
+								set.set("petData", entries);
+							}
+							else if ("set".equalsIgnoreCase(cat.getNodeName()))
+							{
+								attrs = cat.getAttributes();
+								
+								set.set(attrs.getNamedItem("name").getNodeValue(), attrs.getNamedItem("val").getNodeValue());
+							}
+							else if ("skills".equalsIgnoreCase(cat.getNodeName()))
+							{
+								final List<L2Skill> skills = new ArrayList<>();
+								
+								for (Node skillCat = cat.getFirstChild(); skillCat != null; skillCat = skillCat.getNextSibling())
+								{
+									if ("skill".equalsIgnoreCase(skillCat.getNodeName()))
+									{
+										attrs = skillCat.getAttributes();
+										
+										final int skillId = Integer.parseInt(attrs.getNamedItem("id").getNodeValue());
+										final int level = Integer.parseInt(attrs.getNamedItem("level").getNodeValue());
+										
+										// Setup the npc's race. Don't register the skill.
+										if (skillId == L2Skill.SKILL_NPC_RACE)
+										{
+											set.set("raceId", level);
+											continue;
+										}
+										
+										final L2Skill data = SkillTable.getInstance().getInfo(skillId, level);
+										if (data == null)
+											continue;
+										
+										skills.add(data);
+									}
+								}
+								set.set("skills", skills);
 							}
 							else if ("teachTo".equalsIgnoreCase(cat.getNodeName()))
-							{
-								String[] classIds = cat.getAttributes().getNamedItem("classes").getNodeValue().split(";");
-								
-								for (String classId : classIds)
-									template.addTeachInfo(ClassId.values()[Integer.parseInt(classId)]);
-							}
+								set.set("teachTo", cat.getAttributes().getNamedItem("classes").getNodeValue());
 						}
 						
-						_npcs.put(npcId, template);
+						_npcs.put(npcId, (mustUsePetTemplate) ? new PetTemplate(set) : new NpcTemplate(set));
 					}
+					set.clear();
 				}
 			}
 		}
@@ -278,6 +291,11 @@ public class NpcTable
 	public Collection<NpcTemplate> getAllNpcs()
 	{
 		return _npcs.values();
+	}
+	
+	public static NpcTable getInstance()
+	{
+		return SingletonHolder._instance;
 	}
 	
 	private static class SingletonHolder

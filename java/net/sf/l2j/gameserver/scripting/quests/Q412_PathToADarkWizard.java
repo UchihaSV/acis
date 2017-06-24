@@ -65,8 +65,8 @@ public class Q412_PathToADarkWizard extends Quest
 		
 		if (event.equalsIgnoreCase("30421-05.htm"))
 		{
-			if (player.getClassId() != ClassId.darkMage)
-				htmltext = (player.getClassId() == ClassId.darkWizard) ? "30421-02a.htm" : "30421-03.htm";
+			if (player.getClassId() != ClassId.DARK_MYSTIC)
+				htmltext = (player.getClassId() == ClassId.DARK_WIZARD) ? "30421-02a.htm" : "30421-03.htm";
 			else if (player.getLevel() < 19)
 				htmltext = "30421-02.htm";
 			else if (st.hasQuestItems(JEWEL_OF_DARKNESS))

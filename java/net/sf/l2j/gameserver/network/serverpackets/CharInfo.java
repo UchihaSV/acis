@@ -26,27 +26,11 @@ public class CharInfo extends L2GameServerPacket
 {
 	private final L2PcInstance _activeChar;
 	private final Inventory _inv;
-	private final int _x, _y, _z, _heading;
-	private final int _mAtkSpd, _pAtkSpd;
-	private final int _runSpd, _walkSpd;
-	private final float _moveMultiplier;
 	
 	public CharInfo(L2PcInstance cha)
 	{
 		_activeChar = cha;
 		_inv = _activeChar.getInventory();
-		
-		_x = _activeChar.getX();
-		_y = _activeChar.getY();
-		_z = _activeChar.getZ();
-		_heading = _activeChar.getHeading();
-		
-		_mAtkSpd = _activeChar.getMAtkSpd();
-		_pAtkSpd = _activeChar.getPAtkSpd();
-		
-		_moveMultiplier = _activeChar.getMovementSpeedMultiplier();
-		_runSpd = (int) (_activeChar.getRunSpeed() / _moveMultiplier);
-		_walkSpd = (int) (_activeChar.getWalkSpeed() / _moveMultiplier);
 	}
 	
 	@Override
@@ -62,14 +46,14 @@ public class CharInfo extends L2GameServerPacket
 		}
 		
 		writeC(0x03);
-		writeD(_x);
-		writeD(_y);
-		writeD(_z);
-		writeD(_heading);
+		writeD(_activeChar.getX());
+		writeD(_activeChar.getY());
+		writeD(_activeChar.getZ());
+		writeD(_activeChar.getHeading());
 		writeD(_activeChar.getObjectId());
 		writeS(_activeChar.getName());
 		writeD(_activeChar.getRace().ordinal());
-		writeD(_activeChar.getAppearance().getSex() ? 1 : 0);
+		writeD(_activeChar.getAppearance().getSex().ordinal());
 		
 		if (_activeChar.getClassIndex() == 0)
 			writeD(_activeChar.getClassId().getId());
@@ -116,22 +100,25 @@ public class CharInfo extends L2GameServerPacket
 		writeD(_activeChar.getPvpFlag());
 		writeD(_activeChar.getKarma());
 		
-		writeD(_mAtkSpd);
-		writeD(_pAtkSpd);
+		writeD(_activeChar.getMAtkSpd());
+		writeD(_activeChar.getPAtkSpd());
 		
 		writeD(_activeChar.getPvpFlag());
 		writeD(_activeChar.getKarma());
 		
+		int _runSpd = _activeChar.getStat().getBaseRunSpeed();
+		int _walkSpd = _activeChar.getStat().getBaseWalkSpeed();
+		int _swimSpd = _activeChar.getStat().getBaseSwimSpeed();
+		writeD(_runSpd); // base run speed
+		writeD(_walkSpd); // base walk speed
+		writeD(_swimSpd); // swim run speed
+		writeD(_swimSpd); // swim walk speed
 		writeD(_runSpd);
 		writeD(_walkSpd);
-		writeD(_runSpd); // swim run speed
-		writeD(_walkSpd); // swim walk speed
-		writeD(_runSpd); // fl run speed
-		writeD(_walkSpd); // fl walk speed
-		writeD(_runSpd); // fly run speed
-		writeD(_walkSpd); // fly walk speed
-		writeF(_activeChar.getMovementSpeedMultiplier());
-		writeF(_activeChar.getAttackSpeedMultiplier());
+		writeD(_activeChar.isFlying() ? _runSpd : 0); // fly run speed
+		writeD(_activeChar.isFlying() ? _walkSpd : 0); // fly walk speed
+		writeF(_activeChar.getStat().getMovementSpeedMultiplier()); // run speed multiplier
+		writeF(_activeChar.getStat().getAttackSpeedMultiplier()); // attack speed multiplier
 		
 		if (_activeChar.getMountType() != 0)
 		{
@@ -140,8 +127,8 @@ public class CharInfo extends L2GameServerPacket
 		}
 		else
 		{
-			writeF(_activeChar.getBaseTemplate().getCollisionRadius());
-			writeF(_activeChar.getBaseTemplate().getCollisionHeight());
+			writeF(_activeChar.getCollisionRadius());
+			writeF(_activeChar.getCollisionHeight());
 		}
 		
 		writeD(_activeChar.getAppearance().getHairStyle());
@@ -171,7 +158,7 @@ public class CharInfo extends L2GameServerPacket
 			writeC(_activeChar.getAppearance().getInvisible() ? 1 : 0); // invisible = 1 visible =0
 			
 		writeC(_activeChar.getMountType()); // 1 on strider 2 on wyvern 0 no mount
-		writeC(_activeChar.getPrivateStoreType().getId()); // 1 - sellshop
+		writeC(_activeChar.getStoreType().getId()); // 1 - sellshop
 		
 		writeH(_activeChar.getCubics().size());
 		for (int id : _activeChar.getCubics().keySet())

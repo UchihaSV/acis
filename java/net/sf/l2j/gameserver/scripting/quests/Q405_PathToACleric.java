@@ -90,8 +90,8 @@ public class Q405_PathToACleric extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				if (player.getClassId() != ClassId.mage)
-					htmltext = (player.getClassId() == ClassId.cleric) ? "30022-02a.htm" : "30022-02.htm";
+				if (player.getClassId() != ClassId.HUMAN_MYSTIC)
+					htmltext = (player.getClassId() == ClassId.CLERIC) ? "30022-02a.htm" : "30022-02.htm";
 				else if (player.getLevel() < 19)
 					htmltext = "30022-03.htm";
 				else if (st.hasQuestItems(MARK_OF_FATE))

@@ -22,8 +22,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.model.item.kind.Item;
 
 /**
@@ -106,7 +107,7 @@ public class Product
 			return false;
 		
 		if (_restockTask == null || _restockTask.isDone())
-			_restockTask = ThreadPoolManager.getInstance().scheduleGeneral(new RestockTask(), getRestockDelay());
+			_restockTask = ThreadPool.schedule(new RestockTask(), getRestockDelay());
 		
 		boolean result = _count.addAndGet(-val) >= 0;
 		save();
@@ -122,7 +123,7 @@ public class Product
 	{
 		final long remainingTime = nextRestockTime - System.currentTimeMillis();
 		if (remainingTime > 0)
-			_restockTask = ThreadPoolManager.getInstance().scheduleGeneral(new RestockTask(), remainingTime);
+			_restockTask = ThreadPool.schedule(new RestockTask(), remainingTime);
 		else
 			restock();
 	}

@@ -136,15 +136,7 @@ public class SoulCrystalsTable
 									String str[] = att.getNodeValue().split(",");
 									levelList = new int[str.length];
 									for (int i = 0; i < str.length; i++)
-									{
-										Integer value = Integer.parseInt(str[i].trim());
-										if (value == null)
-										{
-											_log.severe("SoulCrystalsTable: Bad level value for npcId=" + npcId + ", token=" + str[i]);
-											continue;
-										}
-										levelList[i] = value;
-									}
+										levelList[i] = Integer.parseInt(str[i].trim());
 								}
 								
 								_npcLevelingInfos.put(npcId, new LevelingInfo(absorbType, skillRequired, chanceStage, chanceBreak, levelList));

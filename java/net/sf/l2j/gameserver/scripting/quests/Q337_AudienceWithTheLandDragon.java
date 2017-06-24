@@ -13,7 +13,9 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.ai.CtrlIntention;
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -461,11 +463,11 @@ public class Q337_AudienceWithTheLandDragon extends Quest
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		QuestState st = checkPlayerState(attacker, npc, STATE_STARTED);
 		if (st == null)
-			return super.onAttack(npc, attacker, damage, isPet);
+			return null;
 		
 		final int npcId = npc.getNpcId();
 		
@@ -538,7 +540,7 @@ public class Q337_AudienceWithTheLandDragon extends Quest
 			break;
 		}
 		
-		return super.onAttack(npc, attacker, damage, isPet);
+		return null;
 	}
 	
 	@Override

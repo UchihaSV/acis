@@ -14,10 +14,8 @@
  */
 package net.sf.l2j.gameserver.scripting;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,15 +23,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
-import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.cache.HtmCache;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.instancemanager.ZoneManager;
 import net.sf.l2j.gameserver.model.L2Clan;
+import net.sf.l2j.gameserver.model.L2ClanMember;
 import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2Spawn;
@@ -47,17 +46,11 @@ import net.sf.l2j.gameserver.model.item.kind.Item;
 import net.sf.l2j.gameserver.model.zone.L2ZoneType;
 import net.sf.l2j.gameserver.network.serverpackets.ActionFailed;
 import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
-/**
- * @author Luis Arias, Hasha
- */
 public class Quest
 {
 	protected static final Logger _log = Logger.getLogger(Quest.class.getName());
-	
-	private static final String LOAD_QUEST_STATES = "SELECT name,value FROM character_quests WHERE charId=? AND var='<state>'";
-	private static final String LOAD_QUEST_VARIABLES = "SELECT name,var,value FROM character_quests WHERE charId=? AND var<>'<state>'";
-	private static final String DELETE_INVALID_QUEST = "DELETE FROM character_quests WHERE name=?";
 	
 	private static final String HTML_NONE_AVAILABLE = "<html><body>You are either not on a quest that involves this NPC, or you don't meet this NPC's minimum quest requirements.</body></html>";
 	private static final String HTML_ALREADY_COMPLETED = "<html><body>This quest has already been completed.</body></html>";
@@ -73,6 +66,62 @@ public class Quest
 	private final String _descr;
 	private boolean _onEnterWorld;
 	private int[] _itemsIds;
+	
+	// Dimensional Diamond Rewards by Class for 2nd class transfer quest (35)
+	protected static final Map<Integer, Integer> DF_REWARD_35 = new HashMap<>();
+	{
+		DF_REWARD_35.put(1, 61);
+		DF_REWARD_35.put(4, 45);
+		DF_REWARD_35.put(7, 128);
+		DF_REWARD_35.put(11, 168);
+		DF_REWARD_35.put(15, 49);
+		DF_REWARD_35.put(19, 61);
+		DF_REWARD_35.put(22, 128);
+		DF_REWARD_35.put(26, 168);
+		DF_REWARD_35.put(29, 49);
+		DF_REWARD_35.put(32, 61);
+		DF_REWARD_35.put(35, 128);
+		DF_REWARD_35.put(39, 168);
+		DF_REWARD_35.put(42, 49);
+		DF_REWARD_35.put(45, 61);
+		DF_REWARD_35.put(47, 61);
+		DF_REWARD_35.put(50, 49);
+		DF_REWARD_35.put(54, 85);
+		DF_REWARD_35.put(56, 85);
+	}
+	
+	// Dimensional Diamond Rewards by Race for 2nd class transfer quest (37)
+	protected static final Map<Integer, Integer> DF_REWARD_37 = new HashMap<>();
+	{
+		DF_REWARD_37.put(0, 96);
+		DF_REWARD_37.put(1, 102);
+		DF_REWARD_37.put(2, 98);
+		DF_REWARD_37.put(3, 109);
+		DF_REWARD_37.put(4, 50);
+	}
+	
+	// Dimensional Diamond Rewards by Class for 2nd class transfer quest (39)
+	protected static final Map<Integer, Integer> DF_REWARD_39 = new HashMap<>();
+	{
+		DF_REWARD_39.put(1, 72);
+		DF_REWARD_39.put(4, 104);
+		DF_REWARD_39.put(7, 96);
+		DF_REWARD_39.put(11, 122);
+		DF_REWARD_39.put(15, 60);
+		DF_REWARD_39.put(19, 72);
+		DF_REWARD_39.put(22, 96);
+		DF_REWARD_39.put(26, 122);
+		DF_REWARD_39.put(29, 45);
+		DF_REWARD_39.put(32, 104);
+		DF_REWARD_39.put(35, 96);
+		DF_REWARD_39.put(39, 122);
+		DF_REWARD_39.put(42, 60);
+		DF_REWARD_39.put(45, 64);
+		DF_REWARD_39.put(47, 72);
+		DF_REWARD_39.put(50, 92);
+		DF_REWARD_39.put(54, 82);
+		DF_REWARD_39.put(56, 23);
+	}
 	
 	/**
 	 * (Constructor)Add values to class variables and put the quest in HashMaps.
@@ -160,108 +209,6 @@ public class Quest
 	}
 	
 	/**
-	 * Add quests to the L2PCInstance of the player.<BR>
-	 * <BR>
-	 * <U><I>Action : </U></I><BR>
-	 * Add state of quests, drops and variables for quests in the HashMap _quest of L2PcInstance
-	 * @param player : Player who is entering the world
-	 */
-	public final static void playerEnter(L2PcInstance player)
-	{
-		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
-		{
-			PreparedStatement invalidQuest = con.prepareStatement(DELETE_INVALID_QUEST);
-			
-			PreparedStatement statement = con.prepareStatement(LOAD_QUEST_STATES);
-			statement.setInt(1, player.getObjectId());
-			ResultSet rs = statement.executeQuery();
-			while (rs.next())
-			{
-				String questId = rs.getString("name");
-				
-				Quest q = ScriptManager.getInstance().getQuest(questId);
-				if (q == null)
-				{
-					if (Config.AUTODELETE_INVALID_QUEST_DATA)
-					{
-						invalidQuest.setString(1, questId);
-						invalidQuest.executeUpdate();
-					}
-					
-					_log.finer("Unknown  quest " + questId + " for player " + player.getName());
-					continue;
-				}
-				
-				new QuestState(player, q, rs.getByte("value"));
-			}
-			rs.close();
-			statement.close();
-			
-			statement = con.prepareStatement(LOAD_QUEST_VARIABLES);
-			statement.setInt(1, player.getObjectId());
-			rs = statement.executeQuery();
-			while (rs.next())
-			{
-				String questId = rs.getString("name");
-				
-				QuestState qs = player.getQuestState(questId);
-				if (qs == null)
-				{
-					if (Config.AUTODELETE_INVALID_QUEST_DATA)
-					{
-						invalidQuest.setString(1, questId);
-						invalidQuest.executeUpdate();
-					}
-					
-					_log.finer("Unknown quest " + questId + " for player " + player.getName());
-					continue;
-				}
-				
-				qs.setInternal(rs.getString("var"), rs.getString("value"));
-			}
-			rs.close();
-			statement.close();
-			
-			invalidQuest.close();
-		}
-		catch (Exception e)
-		{
-			_log.log(Level.WARNING, "could not insert char quest:", e);
-		}
-	}
-	
-	/**
-	 * @param player : The player to make checks on.
-	 * @param object : to take range reference from
-	 * @return A random party member or the passed player if he has no party.
-	 */
-	public L2PcInstance getRandomPartyMember(L2PcInstance player, L2Object object)
-	{
-		// No valid player instance is passed, there is nothing to check.
-		if (player == null)
-			return null;
-		
-		// No party or no object, return player.
-		if (object == null || !player.isInParty())
-			return player;
-		
-		// Player's party.
-		List<L2PcInstance> members = new ArrayList<>();
-		for (L2PcInstance member : player.getParty().getPartyMembers())
-		{
-			if (member.isInsideRadius(object, Config.ALT_PARTY_RANGE, true, false))
-				members.add(member);
-		}
-		
-		// No party members, return. (note: player is party member too, in most cases he is included in members too)
-		if (members.isEmpty())
-			return null;
-		
-		// Random party member.
-		return members.get(Rnd.get(members.size()));
-	}
-	
-	/**
 	 * Auxiliary function for party quests. Checks the player's condition. Player member must be within Config.ALT_PARTY_RANGE distance from the npc. If npc is null, distance condition is ignored.
 	 * @param player : the instance of a player whose party is to be searched
 	 * @param npc : the instance of a L2Npc to compare distance
@@ -271,21 +218,17 @@ public class Quest
 	 */
 	public QuestState checkPlayerCondition(L2PcInstance player, L2Npc npc, String var, String value)
 	{
-		// No valid player instance is passed, there is nothing to check.
-		if (player == null)
+		// No valid player or npc instance is passed, there is nothing to check.
+		if (player == null || npc == null)
 			return null;
 		
 		// Check player's quest conditions.
-		QuestState st = player.getQuestState(getName());
+		final QuestState st = player.getQuestState(getName());
 		if (st == null)
 			return null;
 		
 		// Condition exists? Condition has correct value?
 		if (st.get(var) == null || !value.equalsIgnoreCase(st.get(var)))
-			return null;
-		
-		// Invalid npc instance?
-		if (npc == null)
 			return null;
 		
 		// Player is in range?
@@ -307,7 +250,7 @@ public class Quest
 	public List<L2PcInstance> getPartyMembers(L2PcInstance player, L2Npc npc, String var, String value)
 	{
 		// Output list.
-		List<L2PcInstance> candidates = new ArrayList<>();
+		final List<L2PcInstance> candidates = new ArrayList<>();
 		
 		// Valid player instance is passed and player is in a party? Check party.
 		if (player != null && player.isInParty())
@@ -345,15 +288,8 @@ public class Quest
 		if (player == null)
 			return null;
 		
-		// Get all candidates fulfilling the condition.
-		final List<L2PcInstance> candidates = getPartyMembers(player, npc, var, value);
-		
-		// No candidate, return.
-		if (candidates.isEmpty())
-			return null;
-		
 		// Return random candidate.
-		return candidates.get(Rnd.get(candidates.size()));
+		return Rnd.get(getPartyMembers(player, npc, var, value));
 	}
 	
 	/**
@@ -377,21 +313,17 @@ public class Quest
 	 */
 	public QuestState checkPlayerState(L2PcInstance player, L2Npc npc, byte state)
 	{
-		// No valid player instance is passed, there is nothing to check.
-		if (player == null)
+		// No valid player or npc instance is passed, there is nothing to check.
+		if (player == null || npc == null)
 			return null;
 		
 		// Check player's quest conditions.
-		QuestState st = player.getQuestState(getName());
+		final QuestState st = player.getQuestState(getName());
 		if (st == null)
 			return null;
 		
 		// State correct?
 		if (st.getState() != state)
-			return null;
-		
-		// Invalid npc instance?
-		if (npc == null)
 			return null;
 		
 		// Player is in range?
@@ -411,7 +343,7 @@ public class Quest
 	public List<L2PcInstance> getPartyMembersState(L2PcInstance player, L2Npc npc, byte state)
 	{
 		// Output list.
-		List<L2PcInstance> candidates = new ArrayList<>();
+		final List<L2PcInstance> candidates = new ArrayList<>();
 		
 		// Valid player instance is passed and player is in a party? Check party.
 		if (player != null && player.isInParty())
@@ -447,15 +379,8 @@ public class Quest
 		if (player == null)
 			return null;
 		
-		// Get all candidates fulfilling the condition.
-		final List<L2PcInstance> candidates = getPartyMembersState(player, npc, state);
-		
-		// No candidate, return.
-		if (candidates.isEmpty())
-			return null;
-		
 		// Return random candidate.
-		return candidates.get(Rnd.get(candidates.size()));
+		return Rnd.get(getPartyMembersState(player, npc, state));
 	}
 	
 	/**
@@ -471,18 +396,76 @@ public class Quest
 			return player.getQuestState(getName());
 		
 		// Verify if the player got a clan
-		L2Clan clan = player.getClan();
+		final L2Clan clan = player.getClan();
 		if (clan == null)
 			return null;
 		
 		// Verify if the leader is online
-		L2PcInstance leader = clan.getLeader().getPlayerInstance();
+		final L2PcInstance leader = clan.getLeader().getPlayerInstance();
 		if (leader == null)
 			return null;
 		
 		// Verify if the player is on the radius of the leader. If true, send leader's quest state.
 		if (leader.isInsideRadius(npc, Config.ALT_PARTY_RANGE, true, false))
 			return leader.getQuestState(getName());
+		
+		return null;
+	}
+	
+	/**
+	 * @param player : The player instance to check.
+	 * @return true if the given player got an online clan member sponsor in a 1500 radius range.
+	 */
+	public static boolean getSponsor(L2PcInstance player)
+	{
+		// Player hasn't a sponsor.
+		final int sponsorId = player.getSponsor();
+		if (sponsorId == 0)
+			return false;
+		
+		// Player hasn't a clan.
+		final L2Clan clan = player.getClan();
+		if (clan == null)
+			return false;
+		
+		// Retrieve sponsor clan member object.
+		final L2ClanMember member = clan.getClanMember(sponsorId);
+		if (member != null && member.isOnline())
+		{
+			// The sponsor is online, retrieve player instance and check distance.
+			final L2PcInstance sponsor = member.getPlayerInstance();
+			if (sponsor != null && player.isInsideRadius(sponsor, 1500, true, false))
+				return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * @param player : The player instance to check.
+	 * @return the apprentice of the given player. He must be online, and in a 1500 radius range.
+	 */
+	public static L2PcInstance getApprentice(L2PcInstance player)
+	{
+		// Player hasn't an apprentice.
+		final int apprenticeId = player.getApprentice();
+		if (apprenticeId == 0)
+			return null;
+		
+		// Player hasn't a clan.
+		final L2Clan clan = player.getClan();
+		if (clan == null)
+			return null;
+		
+		// Retrieve apprentice clan member object.
+		final L2ClanMember member = clan.getClanMember(apprenticeId);
+		if (member != null && member.isOnline())
+		{
+			// The apprentice is online, retrieve player instance and check distance.
+			final L2PcInstance academic = member.getPlayerInstance();
+			if (academic != null && player.isInsideRadius(academic, 1500, true, false))
+				return academic;
+		}
 		
 		return null;
 	}
@@ -633,49 +616,33 @@ public class Quest
 	 */
 	public L2Npc addSpawn(int npcId, int x, int y, int z, int heading, boolean randomOffset, long despawnDelay, boolean isSummonSpawn)
 	{
-		L2Npc result = null;
 		try
 		{
-			NpcTemplate template = NpcTable.getInstance().getTemplate(npcId);
-			if (template != null)
+			final NpcTemplate template = NpcTable.getInstance().getTemplate(npcId);
+			if (template == null)
+				return null;
+			
+			if (randomOffset)
 			{
-				// Sometimes, even if the quest script specifies some xyz (for example npc.getX() etc) by the time the code
-				// reaches here, xyz have become 0! Also, a questdev might have purposely set xy to 0,0...however,
-				// the spawn code is coded such that if x=y=0, it looks into location for the spawn loc! This will NOT work
-				// with quest spawns! For both of the above cases, we need a fail-safe spawn. For this, we use the
-				// default spawn location, which is at the player's loc.
-				if ((x == 0) && (y == 0))
-				{
-					_log.log(Level.SEVERE, "Failed to adjust bad locks for quest spawn!  Spawn aborted!");
-					return null;
-				}
-				
-				if (randomOffset)
-				{
-					x += Rnd.get(-100, 100);
-					y += Rnd.get(-100, 100);
-				}
-				
-				L2Spawn spawn = new L2Spawn(template);
-				spawn.setHeading(heading);
-				spawn.setLocx(x);
-				spawn.setLocy(y);
-				spawn.setLocz(z + 20);
-				spawn.stopRespawn();
-				result = spawn.doSpawn(isSummonSpawn);
-				
-				if (despawnDelay > 0)
-					result.scheduleDespawn(despawnDelay);
-				
-				return result;
+				x += Rnd.get(-100, 100);
+				y += Rnd.get(-100, 100);
 			}
+			
+			final L2Spawn spawn = new L2Spawn(template);
+			spawn.setLoc(x, y, z + 20, heading);
+			spawn.setRespawnState(false);
+			
+			final L2Npc npc = spawn.doSpawn(isSummonSpawn);
+			if (despawnDelay > 0)
+				npc.scheduleDespawn(despawnDelay);
+			
+			return npc;
 		}
 		catch (Exception e1)
 		{
 			_log.warning("Could not spawn Npc " + npcId);
+			return null;
 		}
-		
-		return null;
 	}
 	
 	/**
@@ -715,12 +682,11 @@ public class Quest
 	 * @param npc : which launches the dialog, null in case of random scripts
 	 * @param player : the player.
 	 * @param result : String pointing out the message to show at the player
-	 * @return boolean
 	 */
-	public boolean showResult(L2Npc npc, L2PcInstance player, String result)
+	public void showResult(L2Npc npc, L2PcInstance player, String result)
 	{
 		if (player == null || result == null || result.isEmpty())
-			return false;
+			return;
 		
 		if (result.endsWith(".htm") || result.endsWith(".html"))
 		{
@@ -749,17 +715,14 @@ public class Quest
 		}
 		else
 			player.sendMessage(result);
-		
-		return true;
 	}
 	
 	/**
 	 * Show message error to player who has an access level greater than 0
 	 * @param player : L2PcInstance
 	 * @param e : Throwable
-	 * @return boolean
 	 */
-	public boolean showError(L2PcInstance player, Throwable e)
+	public void showError(L2PcInstance player, Throwable e)
 	{
 		_log.log(Level.WARNING, getClass().getName(), e);
 		
@@ -772,9 +735,7 @@ public class Quest
 			npcReply.setHtml("<html><body><title>Script error</title>" + e.getMessage() + "</body></html>");
 			player.sendPacket(npcReply);
 			player.sendPacket(ActionFailed.STATIC_PACKET);
-			return true;
 		}
-		return false;
 	}
 	
 	/**
@@ -810,6 +771,48 @@ public class Quest
 	}
 	
 	/**
+	 * Add this script to the list of script that the passed mob will respond to for the specified Event type.
+	 * @param npcId : id of the NPC to register
+	 * @param eventTypes : types of events being registered
+	 */
+	public void addEventIds(int npcId, EventType... eventTypes)
+	{
+		try
+		{
+			final NpcTemplate t = NpcTable.getInstance().getTemplate(npcId);
+			if (t != null)
+				for (EventType eventType : eventTypes)
+					t.addQuestEvent(eventType, this);
+		}
+		catch (Exception e)
+		{
+			_log.log(Level.WARNING, "Exception on addEventIds(): " + e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * Register monsters on particular event types.
+	 * @param npcIds An array of mobs.
+	 * @param eventTypes Types of event to register mobs on.
+	 */
+	public void addEventIds(int[] npcIds, EventType... eventTypes)
+	{
+		for (int id : npcIds)
+			addEventIds(id, eventTypes);
+	}
+	
+	/**
+	 * Register monsters on particular event types.
+	 * @param npcIds An array of mobs.
+	 * @param eventTypes Types of event to register mobs on.
+	 */
+	public void addEventIds(Iterable<Integer> npcIds, EventType... eventTypes)
+	{
+		for (int id : npcIds)
+			addEventIds(id, eventTypes);
+	}
+	
+	/**
 	 * Add the quest to the NPC's startQuest
 	 * @param npcIds A serie of ids.
 	 */
@@ -835,23 +838,24 @@ public class Quest
 	 * @param attacker Attacker or pet owner.
 	 * @param damage Given damage.
 	 * @param isPet Player summon attacked?
-	 * @return boolean
+	 * @param skill the skill used to attack the NPC (can be null)
 	 */
-	public final boolean notifyAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public final void notifyAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		String res = null;
 		try
 		{
-			res = onAttack(npc, attacker, damage, isPet);
+			res = onAttack(npc, attacker, damage, isPet, skill);
 		}
 		catch (Exception e)
 		{
-			return showError(attacker, e);
+			showError(attacker, e);
+			return;
 		}
-		return showResult(npc, attacker, res);
+		showResult(npc, attacker, res);
 	}
 	
-	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet)
+	public String onAttack(L2Npc npc, L2PcInstance attacker, int damage, boolean isPet, L2Skill skill)
 	{
 		return null;
 	}
@@ -870,9 +874,8 @@ public class Quest
 	 * Quest event notifycator for player being attacked by NPC.
 	 * @param npc Npc providing attack.
 	 * @param victim Attacked npc player.
-	 * @return boolean
 	 */
-	public final boolean notifyAttackAct(L2Npc npc, L2PcInstance victim)
+	public final void notifyAttackAct(L2Npc npc, L2PcInstance victim)
 	{
 		String res = null;
 		try
@@ -881,9 +884,10 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(victim, e);
+			showError(victim, e);
+			return;
 		}
-		return showResult(npc, victim, res);
+		showResult(npc, victim, res);
 	}
 	
 	public String onAttackAct(L2Npc npc, L2PcInstance victim)
@@ -931,10 +935,9 @@ public class Quest
 		}
 	}
 	
-	public final boolean notifyAggro(L2Npc npc, L2PcInstance player, boolean isPet)
+	public final void notifyAggro(L2Npc npc, L2PcInstance player, boolean isPet)
 	{
-		ThreadPoolManager.getInstance().executeAi(new OnAggroEnter(npc, player, isPet));
-		return true;
+		ThreadPool.execute(new OnAggroEnter(npc, player, isPet));
 	}
 	
 	public String onAggro(L2Npc npc, L2PcInstance player, boolean isPet)
@@ -942,7 +945,7 @@ public class Quest
 		return null;
 	}
 	
-	public final boolean notifyDeath(L2Character killer, L2PcInstance player)
+	public final void notifyDeath(L2Character killer, L2PcInstance player)
 	{
 		String res = null;
 		try
@@ -951,23 +954,18 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(player, e);
+			showError(player, e);
+			return;
 		}
-		if (killer instanceof L2Npc)
-			return showResult((L2Npc) killer, player, res);
-		
-		return showResult(null, player, res);
+		showResult((killer instanceof L2Npc) ? (L2Npc) killer : null, player, res);
 	}
 	
 	public String onDeath(L2Character killer, L2PcInstance player)
 	{
-		if (killer instanceof L2Npc)
-			return onAdvEvent("", (L2Npc) killer, player);
-		
-		return onAdvEvent("", null, player);
+		return onAdvEvent("", (killer instanceof L2Npc) ? (L2Npc) killer : null, player);
 	}
 	
-	public final boolean notifyEvent(String event, L2Npc npc, L2PcInstance player)
+	public final void notifyEvent(String event, L2Npc npc, L2PcInstance player)
 	{
 		String res = null;
 		try
@@ -976,9 +974,10 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(player, e);
+			showError(player, e);
+			return;
 		}
-		return showResult(npc, player, res);
+		showResult(npc, player, res);
 	}
 	
 	public String onAdvEvent(String event, L2Npc npc, L2PcInstance player)
@@ -999,7 +998,7 @@ public class Quest
 		return null;
 	}
 	
-	public final boolean notifyEnterWorld(L2PcInstance player)
+	public final void notifyEnterWorld(L2PcInstance player)
 	{
 		String res = null;
 		try
@@ -1008,9 +1007,10 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(player, e);
+			showError(player, e);
+			return;
 		}
-		return showResult(null, player, res);
+		showResult(null, player, res);
 	}
 	
 	public String onEnterWorld(L2PcInstance player)
@@ -1032,7 +1032,7 @@ public class Quest
 		}
 	}
 	
-	public final boolean notifyEnterZone(L2Character character, L2ZoneType zone)
+	public final void notifyEnterZone(L2Character character, L2ZoneType zone)
 	{
 		L2PcInstance player = character.getActingPlayer();
 		String res = null;
@@ -1043,11 +1043,13 @@ public class Quest
 		catch (Exception e)
 		{
 			if (player != null)
-				return showError(player, e);
+			{
+				showError(player, e);
+				return;
+			}
 		}
 		if (player != null)
-			return showResult(null, player, res);
-		return true;
+			showResult(null, player, res);
 	}
 	
 	public String onEnterZone(L2Character character, L2ZoneType zone)
@@ -1069,7 +1071,7 @@ public class Quest
 		}
 	}
 	
-	public final boolean notifyExitZone(L2Character character, L2ZoneType zone)
+	public final void notifyExitZone(L2Character character, L2ZoneType zone)
 	{
 		L2PcInstance player = character.getActingPlayer();
 		String res = null;
@@ -1080,11 +1082,13 @@ public class Quest
 		catch (Exception e)
 		{
 			if (player != null)
-				return showError(player, e);
+			{
+				showError(player, e);
+				return;
+			}
 		}
 		if (player != null)
-			return showResult(null, player, res);
-		return true;
+			showResult(null, player, res);
 	}
 	
 	public String onExitZone(L2Character character, L2ZoneType zone)
@@ -1102,7 +1106,7 @@ public class Quest
 			addEventId(npcId, EventType.ON_FACTION_CALL);
 	}
 	
-	public final boolean notifyFactionCall(L2Npc npc, L2Npc caller, L2PcInstance attacker, boolean isPet)
+	public final void notifyFactionCall(L2Npc npc, L2Npc caller, L2PcInstance attacker, boolean isPet)
 	{
 		String res = null;
 		try
@@ -1111,9 +1115,10 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(attacker, e);
+			showError(attacker, e);
+			return;
 		}
-		return showResult(npc, attacker, res);
+		showResult(npc, attacker, res);
 	}
 	
 	public String onFactionCall(L2Npc npc, L2Npc caller, L2PcInstance attacker, boolean isPet)
@@ -1131,7 +1136,7 @@ public class Quest
 			addEventId(npcId, EventType.ON_FIRST_TALK);
 	}
 	
-	public final boolean notifyFirstTalk(L2Npc npc, L2PcInstance player)
+	public final void notifyFirstTalk(L2Npc npc, L2PcInstance player)
 	{
 		String res = null;
 		try
@@ -1140,15 +1145,15 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(player, e);
+			showError(player, e);
+			return;
 		}
 		
 		// if the quest returns text to display, display it.
 		if (res != null && res.length() > 0)
-			return showResult(npc, player, res);
-		
-		player.sendPacket(ActionFailed.STATIC_PACKET);
-		return true;
+			showResult(npc, player, res);
+		else
+			player.sendPacket(ActionFailed.STATIC_PACKET);
 	}
 	
 	public String onFirstTalk(L2Npc npc, L2PcInstance player)
@@ -1170,7 +1175,7 @@ public class Quest
 		}
 	}
 	
-	public final boolean notifyItemUse(ItemInstance item, L2PcInstance player, L2Object target)
+	public final void notifyItemUse(ItemInstance item, L2PcInstance player, L2Object target)
 	{
 		String res = null;
 		try
@@ -1179,9 +1184,10 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(player, e);
+			showError(player, e);
+			return;
 		}
-		return showResult(null, player, res);
+		showResult(null, player, res);
 	}
 	
 	public String onItemUse(ItemInstance item, L2PcInstance player, L2Object target)
@@ -1199,7 +1205,7 @@ public class Quest
 			addEventId(killId, EventType.ON_KILL);
 	}
 	
-	public final boolean notifyKill(L2Npc npc, L2PcInstance killer, boolean isPet)
+	public final void notifyKill(L2Npc npc, L2PcInstance killer, boolean isPet)
 	{
 		String res = null;
 		try
@@ -1208,9 +1214,10 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(killer, e);
+			showError(killer, e);
+			return;
 		}
-		return showResult(npc, killer, res);
+		showResult(npc, killer, res);
 	}
 	
 	public String onKill(L2Npc npc, L2PcInstance killer, boolean isPet)
@@ -1228,7 +1235,7 @@ public class Quest
 			addEventId(npcId, EventType.ON_SPAWN);
 	}
 	
-	public final boolean notifySpawn(L2Npc npc)
+	public final void notifySpawn(L2Npc npc)
 	{
 		try
 		{
@@ -1237,12 +1244,37 @@ public class Quest
 		catch (Exception e)
 		{
 			_log.log(Level.WARNING, "Exception on onSpawn() in notifySpawn(): " + e.getMessage(), e);
-			return true;
 		}
-		return false;
 	}
 	
 	public String onSpawn(L2Npc npc)
+	{
+		return null;
+	}
+	
+	/**
+	 * Add this quest to the list of quests that the passed npc will respond to for Decay Events.
+	 * @param npcIds : A serie of ids.
+	 */
+	public void addDecayId(int... npcIds)
+	{
+		for (int npcId : npcIds)
+			addEventId(npcId, EventType.ON_DECAY);
+	}
+	
+	public final void notifyDecay(L2Npc npc)
+	{
+		try
+		{
+			onDecay(npc);
+		}
+		catch (Exception e)
+		{
+			_log.log(Level.WARNING, "Exception on onDecay() in notifyDecay(): " + e.getMessage(), e);
+		}
+	}
+	
+	public String onDecay(L2Npc npc)
 	{
 		return null;
 	}
@@ -1291,10 +1323,9 @@ public class Quest
 		}
 	}
 	
-	public final boolean notifySkillSee(L2Npc npc, L2PcInstance caster, L2Skill skill, L2Object[] targets, boolean isPet)
+	public final void notifySkillSee(L2Npc npc, L2PcInstance caster, L2Skill skill, L2Object[] targets, boolean isPet)
 	{
-		ThreadPoolManager.getInstance().executeAi(new OnSkillSee(npc, caster, skill, targets, isPet));
-		return true;
+		ThreadPool.execute(new OnSkillSee(npc, caster, skill, targets, isPet));
 	}
 	
 	public String onSkillSee(L2Npc npc, L2PcInstance caster, L2Skill skill, L2Object[] targets, boolean isPet)
@@ -1312,7 +1343,7 @@ public class Quest
 			addEventId(npcId, EventType.ON_SPELL_FINISHED);
 	}
 	
-	public final boolean notifySpellFinished(L2Npc npc, L2PcInstance player, L2Skill skill)
+	public final void notifySpellFinished(L2Npc npc, L2PcInstance player, L2Skill skill)
 	{
 		String res = null;
 		try
@@ -1321,9 +1352,10 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(player, e);
+			showError(player, e);
+			return;
 		}
-		return showResult(npc, player, res);
+		showResult(npc, player, res);
 	}
 	
 	public String onSpellFinished(L2Npc npc, L2PcInstance player, L2Skill skill)
@@ -1341,7 +1373,7 @@ public class Quest
 			addEventId(talkId, EventType.ON_TALK);
 	}
 	
-	public final boolean notifyTalk(L2Npc npc, L2PcInstance player)
+	public final void notifyTalk(L2Npc npc, L2PcInstance player)
 	{
 		String res = null;
 		try
@@ -1350,10 +1382,11 @@ public class Quest
 		}
 		catch (Exception e)
 		{
-			return showError(player, e);
+			showError(player, e);
+			return;
 		}
 		player.setLastQuestNpcObject(npc.getObjectId());
-		return showResult(npc, player, res);
+		showResult(npc, player, res);
 	}
 	
 	public String onTalk(L2Npc npc, L2PcInstance talker)
@@ -1364,10 +1397,18 @@ public class Quest
 	@Override
 	public boolean equals(Object o)
 	{
+		// core AIs are available only in one instance (in the list of event of NpcTemplate)
+		if (o instanceof L2AttackableAIScript && this instanceof L2AttackableAIScript)
+			return true;
+		
 		if (o instanceof Quest)
 		{
 			Quest q = (Quest) o;
-			return _id == q._id && getName().equals(q.getName());
+			if (_id > 0 && _id == q._id)
+				return getName().equals(q.getName());
+			
+			// Scripts may have same names, while being in different sub-package
+			return getClass().getName().equals(q.getClass().getName());
 		}
 		
 		return false;

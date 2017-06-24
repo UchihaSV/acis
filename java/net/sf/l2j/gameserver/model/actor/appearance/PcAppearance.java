@@ -14,62 +14,64 @@
  */
 package net.sf.l2j.gameserver.model.actor.appearance;
 
-public class PcAppearance
+import net.sf.l2j.gameserver.model.base.Sex;
+
+public final class PcAppearance
 {
 	private byte _face;
 	private byte _hairColor;
 	private byte _hairStyle;
-	private boolean _sex; // Female true
+	private Sex _sex;
 	private boolean _invisible = false;
 	private int _nameColor = 0xFFFFFF;
 	private int _titleColor = 0xFFFF77;
 	
-	public PcAppearance(byte Face, byte HColor, byte HStyle, boolean Sex)
+	public PcAppearance(byte face, byte hColor, byte hStyle, Sex sex)
 	{
-		_face = Face;
-		_hairColor = HColor;
-		_hairStyle = HStyle;
-		_sex = Sex;
+		_face = face;
+		_hairColor = hColor;
+		_hairStyle = hStyle;
+		_sex = sex;
 	}
 	
-	public final byte getFace()
+	public byte getFace()
 	{
 		return _face;
 	}
 	
-	public final void setFace(int value)
+	public void setFace(int value)
 	{
 		_face = (byte) value;
 	}
 	
-	public final byte getHairColor()
+	public byte getHairColor()
 	{
 		return _hairColor;
 	}
 	
-	public final void setHairColor(int value)
+	public void setHairColor(int value)
 	{
 		_hairColor = (byte) value;
 	}
 	
-	public final byte getHairStyle()
+	public byte getHairStyle()
 	{
 		return _hairStyle;
 	}
 	
-	public final void setHairStyle(int value)
+	public void setHairStyle(int value)
 	{
 		_hairStyle = (byte) value;
 	}
 	
-	public final boolean getSex()
+	public Sex getSex()
 	{
 		return _sex;
 	}
 	
-	public final void setSex(boolean isfemale)
+	public void setSex(Sex sex)
 	{
-		_sex = isfemale;
+		_sex = sex;
 	}
 	
 	public boolean getInvisible()

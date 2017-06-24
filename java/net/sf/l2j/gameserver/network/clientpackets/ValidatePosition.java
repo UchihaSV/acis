@@ -65,12 +65,12 @@ public class ValidatePosition extends L2GameClientPacket
 		{
 			if (Config.COORD_SYNCHRONIZE == 2)
 			{
-				dx = _x - activeChar.getInVehiclePosition().getX();
-				dy = _y - activeChar.getInVehiclePosition().getY();
-				dz = _z - activeChar.getInVehiclePosition().getZ();
+				dx = _x - activeChar.getVehiclePosition().getX();
+				dy = _y - activeChar.getVehiclePosition().getY();
+				dz = _z - activeChar.getVehiclePosition().getZ();
 				diffSq = (dx * dx + dy * dy);
 				if (diffSq > 250000)
-					sendPacket(new GetOnVehicle(activeChar.getObjectId(), _data, activeChar.getInVehiclePosition()));
+					sendPacket(new GetOnVehicle(activeChar.getObjectId(), _data, activeChar.getVehiclePosition()));
 			}
 			return;
 		}
@@ -117,7 +117,7 @@ public class ValidatePosition extends L2GameClientPacket
 			// Sync 2 (or other), intended for geodata. Sends a validation packet to client when too far from server calculated real coordinate.
 			// Due to geodata/zone errors, some Z axis checks are made. (maybe a temporary solution)
 			// Important: this code part must work together with L2Character.updatePosition
-			if (Config.GEODATA > 0 && (diffSq > 250000 || Math.abs(dz) > 200))
+			if (diffSq > 250000 || Math.abs(dz) > 200)
 			{
 				if (Math.abs(dz) > 200 && Math.abs(dz) < 1500 && Math.abs(_z - activeChar.getClientZ()) < 800)
 				{

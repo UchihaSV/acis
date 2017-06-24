@@ -23,9 +23,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.L2DatabaseFactory;
 import net.sf.l2j.gameserver.CastleUpdater;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.model.L2Clan;
 import net.sf.l2j.gameserver.model.L2ClanMember;
@@ -131,7 +132,7 @@ public class CastleManager
 							castle.setOwnerId(ownerId);
 							
 							// Schedule owner tasks to start running
-							ThreadPoolManager.getInstance().scheduleGeneral(new CastleUpdater(clan, 1), 3600000);
+							ThreadPool.schedule(new CastleUpdater(clan, 1), 3600000);
 						}
 					}
 				}

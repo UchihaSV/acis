@@ -147,7 +147,7 @@ public class Q242_PossessorOfAPreciousSoul extends Quest
 		// Despawn Pure Unicorn
 		else if (event.equalsIgnoreCase("dspu"))
 		{
-			npc.getSpawn().stopRespawn();
+			npc.getSpawn().setRespawnState(false);
 			npc.deleteMe();
 			startQuestTimer("sfu", 2000, null, player, false);
 			return null;
@@ -156,7 +156,7 @@ public class Q242_PossessorOfAPreciousSoul extends Quest
 		else if (event.equalsIgnoreCase("sfu"))
 		{
 			npc = addSpawn(FALLEN_UNICORN, 85884, -76588, -3470, 0, false, 0, true);
-			npc.getSpawn().startRespawn();
+			npc.getSpawn().setRespawnState(true);
 			return null;
 		}
 		
@@ -318,7 +318,7 @@ public class Q242_PossessorOfAPreciousSoul extends Quest
 							if (!_unicorn) // Global variable check to prevent multiple spawns
 							{
 								_unicorn = true;
-								npc.getSpawn().stopRespawn(); // Despawn fallen unicorn
+								npc.getSpawn().setRespawnState(false); // Despawn fallen unicorn
 								npc.deleteMe();
 								startQuestTimer("spu", 3000, npc, player, false);
 							}

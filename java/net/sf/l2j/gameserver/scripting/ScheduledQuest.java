@@ -15,23 +15,38 @@
 package net.sf.l2j.gameserver.scripting;
 
 import java.util.Calendar;
-import java.util.logging.Logger;
+
+import net.sf.l2j.Config;
 
 /**
  * @author Hasha
  */
 public abstract class ScheduledQuest extends Quest
 {
-	protected static final Logger _log = Logger.getLogger(ScheduledQuest.class.getName());
-	
+	/**
+	 * Period of the script.
+	 */
 	public enum Schedule
 	{
-		DAILY,
-		WEEKLY,
-		MONTHLY_DAY,
-		MONTHLY_WEEK,
-		YEARLY_DAY,
-		YEARLY_WEEK,
+		HOURLY(Calendar.HOUR),
+		DAILY(Calendar.DAY_OF_YEAR),
+		WEEKLY(Calendar.WEEK_OF_YEAR),
+		MONTHLY_DAY(Calendar.MONTH),
+		MONTHLY_WEEK(Calendar.MONTH),
+		YEARLY_DAY(Calendar.YEAR),
+		YEARLY_WEEK(Calendar.YEAR);
+		
+		private final int _period;
+		
+		private Schedule(int period)
+		{
+			_period = period;
+		}
+		
+		public final int getPeriod()
+		{
+			return _period;
+		}
 	}
 	
 	private Schedule _type;
@@ -42,6 +57,15 @@ public abstract class ScheduledQuest extends Quest
 	public ScheduledQuest(int questId, String descr)
 	{
 		super(questId, descr);
+	}
+	
+	/**
+	 * Return true, when a {@link ScheduledQuest} is started.
+	 * @return boolean : True, when started.
+	 */
+	public final boolean isStarted()
+	{
+		return _started;
 	}
 	
 	/**
@@ -56,150 +80,152 @@ public abstract class ScheduledQuest extends Quest
 		try
 		{
 			_type = Enum.valueOf(Schedule.class, type);
-			_start = Calendar.getInstance();
-			_end = Calendar.getInstance();
+			_start = parseTimeStamp(start);
+			_end = parseTimeStamp(end);
+			_started = false;
 			
-			String[] startTimestamp;
-			String[] endTimestamp;
-			
-			switch (_type)
-			{
-				case DAILY:
-					// DAILY, "16:20:10", "17:20:00"
-					startTimestamp = start.split(":");
-					endTimestamp = end.split(":");
-					break;
-				
-				case WEEKLY:
-					// WEEKLY, "MON 6:20:10", "FRI 17:20:00"
-					String[] params = start.split(" ");
-					startTimestamp = params[1].split(":");
-					_start.set(Calendar.DAY_OF_WEEK, getDayOfWeek(params[0]));
-					
-					params = end.split(" ");
-					endTimestamp = params[1].split(":");
-					_end.set(Calendar.DAY_OF_WEEK, getDayOfWeek(params[0]));
-					break;
-				
-				case MONTHLY_DAY:
-					// MONTHLY_DAY, "1 6:20:10", "2 17:20:00"
-					params = start.split(" ");
-					startTimestamp = params[1].split(":");
-					_start.set(Calendar.DAY_OF_MONTH, Integer.valueOf(params[0]));
-					
-					params = end.split(" ");
-					endTimestamp = params[1].split(":");
-					_end.set(Calendar.DAY_OF_MONTH, Integer.valueOf(params[0]));
-					break;
-				
-				case MONTHLY_WEEK:
-					// MONTHLY_WEEK, "MON-1 6:20:10", "FRI-2 17:20:00"
-					params = start.split(" ");
-					String[] date = params[0].split("-");
-					startTimestamp = params[1].split(":");
-					_start.set(Calendar.DAY_OF_WEEK, getDayOfWeek(date[0]));
-					_start.set(Calendar.WEEK_OF_MONTH, Integer.valueOf(date[1]));
-					
-					params = end.split(" ");
-					date = params[0].split("-");
-					endTimestamp = params[1].split(":");
-					_end.set(Calendar.DAY_OF_WEEK, getDayOfWeek(date[0]));
-					_end.set(Calendar.WEEK_OF_MONTH, Integer.valueOf(date[1]));
-					break;
-				
-				case YEARLY_DAY:
-					// YEARLY_DAY, "23-02 6:20:10", "25-03 17:20:00"
-					params = start.split(" ");
-					date = params[0].split("-");
-					startTimestamp = params[1].split(":");
-					_start.set(Calendar.DAY_OF_MONTH, Integer.valueOf(date[0]));
-					_start.set(Calendar.MONTH, Integer.valueOf(date[1]) - 1);
-					
-					params = end.split(" ");
-					date = params[0].split("-");
-					endTimestamp = params[1].split(":");
-					_end.set(Calendar.DAY_OF_MONTH, Integer.valueOf(date[0]));
-					_end.set(Calendar.MONTH, Integer.valueOf(date[1]) - 1);
-					break;
-				
-				case YEARLY_WEEK:
-					// YEARLY_WEEK, "1 6:20:10", "2 17:20:00"
-					params = start.split(" ");
-					date = params[0].split("-");
-					startTimestamp = params[1].split(":");
-					_start.set(Calendar.DAY_OF_WEEK, getDayOfWeek(date[0]));
-					_start.set(Calendar.WEEK_OF_YEAR, Integer.valueOf(date[1]));
-					
-					params = end.split(" ");
-					date = params[0].split("-");
-					endTimestamp = params[1].split(":");
-					_end.set(Calendar.DAY_OF_WEEK, getDayOfWeek(date[0]));
-					_end.set(Calendar.WEEK_OF_YEAR, Integer.valueOf(date[1]));
-					break;
-				
-				default:
-					// unknown Schedule type
-					_type = null;
-					_start = null;
-					_end = null;
-					return false;
-			}
-			
-			// set hour, minute and second
-			_start.set(Calendar.HOUR_OF_DAY, Integer.valueOf(startTimestamp[0]));
-			_start.set(Calendar.MINUTE, Integer.valueOf(startTimestamp[1]));
-			_start.set(Calendar.SECOND, Integer.valueOf(startTimestamp[2]));
-			_start.set(Calendar.MILLISECOND, 0);
-			_end.set(Calendar.HOUR_OF_DAY, Integer.valueOf(endTimestamp[0]));
-			_end.set(Calendar.MINUTE, Integer.valueOf(endTimestamp[1]));
-			_end.set(Calendar.SECOND, Integer.valueOf(endTimestamp[2]));
-			_end.set(Calendar.MILLISECOND, 0);
-			
-			// check correct data
-			if (_end.getTimeInMillis() > _start.getTimeInMillis())
-			{
-				_log.warning(getName() + ": Start is scheduled after the end, script is not scheduled.");
-				return false;
-			}
-			
-			// schedule start/end
+			final long st = _start.getTimeInMillis();
 			final long now = System.currentTimeMillis();
-			if (_end.getTimeInMillis() < now)
+			if (_end == null || _end.getTimeInMillis() == st)
 			{
-				// last schedule had passed, schedule next start
-				_started = false;
-				notifyEndScheduleStart();
-			}
-			else if (_start.getTimeInMillis() < now)
-			{
-				// last schedule is running, schedule end
-				_started = true;
-				notifyStartScheduleEnd();
+				// start and end events are at same time, consider as one-event script
+				_end = null;
+				
+				// schedule next start
+				if (st < now)
+					_start.add(_type.getPeriod(), 1);
 			}
 			else
 			{
-				// last schedule has not started yet, schedule start
-				_started = false;
+				// normal schedule, both events are in same period
+				final long en = _end.getTimeInMillis();
+				if (st < en)
+				{
+					// last schedule had passed, schedule next start
+					if (en < now)
+						_start.add(_type.getPeriod(), 1);
+					// last schedule is running, start script
+					else if (st < now)
+						_started = true;
+					// last schedule has not started yet, shift end by 1 period backwards (is updated in notifyAndSchedule() when starting schedule)
+					else
+						_end.add(_type.getPeriod(), -1);
+				}
+				// reverse schedule, each event is in different period (e.g. different day for DAILY - start = 23:00, end = 01:00)
+				else
+				{
+					// last schedule is running, schedule next end and start script
+					if (st < now)
+					{
+						_end.add(_type.getPeriod(), 1);
+						_started = true;
+					}
+					// last schedule is running, shift start by 1 period backwards (is updated in notifyAndSchedule() when starting schedule) and start script
+					else if (now < en)
+					{
+						_start.add(_type.getPeriod(), -1);
+						_started = true;
+					}
+					// last schedule has not started yet, do nothing
+				}
 			}
 			
-			// everything went fine, return
-			return true;
+			// initialize script and return
+			return init();
 		}
 		catch (Exception e)
 		{
-			_log.warning(getName() + ": Error while loading schedule data.");
+			_log.warning(getName() + ": Error while loading schedule data: " + e);
 			_type = null;
 			_start = null;
 			_end = null;
+			_started = false;
 			return false;
 		}
 	}
 	
+	private final Calendar parseTimeStamp(String value) throws Exception
+	{
+		if (value == null)
+			return null;
+		
+		final Calendar calendar = Calendar.getInstance();
+		String[] timeStamp;
+		
+		switch (_type)
+		{
+			case HOURLY:
+				// HOURLY, "20:10", "50:00"
+				timeStamp = value.split(":");
+				calendar.set(Calendar.MINUTE, Integer.valueOf(timeStamp[0]));
+				calendar.set(Calendar.SECOND, Integer.valueOf(timeStamp[1]));
+				calendar.set(Calendar.MILLISECOND, 0);
+				return calendar;
+				
+			case DAILY:
+				// DAILY, "16:20:10", "17:20:00"
+				timeStamp = value.split(":");
+				break;
+			
+			case WEEKLY:
+				// WEEKLY, "MON 6:20:10", "FRI 17:20:00"
+				String[] params = value.split(" ");
+				timeStamp = params[1].split(":");
+				calendar.set(Calendar.DAY_OF_WEEK, getDayOfWeek(params[0]));
+				break;
+			
+			case MONTHLY_DAY:
+				// MONTHLY_DAY, "1 6:20:10", "2 17:20:00"
+				params = value.split(" ");
+				timeStamp = params[1].split(":");
+				calendar.set(Calendar.DAY_OF_MONTH, Integer.valueOf(params[0]));
+				break;
+			
+			case MONTHLY_WEEK:
+				// MONTHLY_WEEK, "MON-1 6:20:10", "FRI-2 17:20:00"
+				params = value.split(" ");
+				String[] date = params[0].split("-");
+				timeStamp = params[1].split(":");
+				calendar.set(Calendar.DAY_OF_WEEK, getDayOfWeek(date[0]));
+				calendar.set(Calendar.WEEK_OF_MONTH, Integer.valueOf(date[1]));
+				break;
+			
+			case YEARLY_DAY:
+				// YEARLY_DAY, "23-02 6:20:10", "25-03 17:20:00"
+				params = value.split(" ");
+				date = params[0].split("-");
+				timeStamp = params[1].split(":");
+				calendar.set(Calendar.DAY_OF_MONTH, Integer.valueOf(date[0]));
+				calendar.set(Calendar.MONTH, Integer.valueOf(date[1]) - 1);
+				break;
+			
+			case YEARLY_WEEK:
+				// YEARLY_WEEK, "MON-1 6:20:10", "FRI-2 17:20:00"
+				params = value.split(" ");
+				date = params[0].split("-");
+				timeStamp = params[1].split(":");
+				calendar.set(Calendar.DAY_OF_WEEK, getDayOfWeek(date[0]));
+				calendar.set(Calendar.WEEK_OF_YEAR, Integer.valueOf(date[1]));
+				break;
+			
+			default:
+				return null;
+		}
+		
+		// set hour, minute and second
+		calendar.set(Calendar.HOUR_OF_DAY, Integer.valueOf(timeStamp[0]));
+		calendar.set(Calendar.MINUTE, Integer.valueOf(timeStamp[1]));
+		calendar.set(Calendar.SECOND, Integer.valueOf(timeStamp[2]));
+		calendar.set(Calendar.MILLISECOND, 0);
+		
+		return calendar;
+	}
+	
 	/**
-	 * Returns time left till next action of the script.
+	 * Returns time of next action of the script.
 	 * @return long : Time in milliseconds.
 	 */
-	public final long getTimeLeft()
+	public final long getTimeNext()
 	{
 		if (_type == null)
 			return 0;
@@ -215,95 +241,84 @@ public abstract class ScheduledQuest extends Quest
 		if (_type == null)
 			return;
 		
+		// notify one-action script
+		if (_end == null)
+		{
+			// notify start
+			try
+			{
+				onStart();
+			}
+			catch (Exception e)
+			{
+				_log.warning(getName() + ": Error while starting the script: " + e.getMessage());
+			}
+			
+			// schedule next start
+			_start.add(_type.getPeriod(), 1);
+			print(_start);
+			return;
+		}
+		
+		// notify two-action script
 		if (_started)
-			notifyEndScheduleStart();
+		{
+			// notify end
+			try
+			{
+				onEnd();
+				_started = false;
+			}
+			catch (Exception e)
+			{
+				_log.warning(getName() + ": Error while ending the script: " + e.getMessage());
+			}
+			
+			// schedule start
+			_start.add(_type.getPeriod(), 1);
+			print(_start);
+		}
 		else
-			notifyStartScheduleEnd();
+		{
+			// notify start
+			try
+			{
+				onStart();
+				_started = true;
+			}
+			catch (Exception e)
+			{
+				_log.warning(getName() + ": Error while starting the script: " + e.getMessage());
+			}
+			
+			// schedule end
+			_end.add(_type.getPeriod(), 1);
+			print(_end);
+		}
 	}
 	
 	/**
-	 * Launches onStart() method and schedule end of the script.
+	 * Initializes a script and returns information about script to be scheduled or not. Set internal values, parameters, etc...
+	 * @return boolean : True, when script was initialized and can be scheduled.
 	 */
-	private final void notifyStartScheduleEnd()
+	protected boolean init()
 	{
-		// notify start
-		onStart();
+		// the script was initialized as started, run start event
+		if (_started)
+			onStart();
 		
-		// schedule end
-		switch (_type)
-		{
-			case DAILY:
-				_end.add(Calendar.DAY_OF_WEEK, 1);
-				break;
-			
-			case WEEKLY:
-				_end.add(Calendar.WEEK_OF_YEAR, 1);
-				break;
-			
-			case MONTHLY_DAY:
-				_end.add(Calendar.DAY_OF_MONTH, 1);
-				break;
-			
-			case MONTHLY_WEEK:
-				_end.add(Calendar.WEEK_OF_MONTH, 1);
-				break;
-			
-			case YEARLY_DAY:
-				_end.add(Calendar.DAY_OF_YEAR, 1);
-				break;
-			
-			case YEARLY_WEEK:
-				_end.add(Calendar.WEEK_OF_YEAR, 1);
-				break;
-		}
+		return true;
 	}
 	
 	/**
 	 * Starts a script. Handles spawns, announcements, loads variables, etc...
 	 */
-	public abstract void onStart();
+	protected abstract void onStart();
 	
 	/**
-	 * Launches onEnd() method and schedule next start of the script.
+	 * Ends a script. Handles spawns, announcements, saves variables, etc...
 	 */
-	private final void notifyEndScheduleStart()
-	{
-		// notify end
-		onEnd();
-		
-		// schedule start
-		switch (_type)
-		{
-			case DAILY:
-				_start.add(Calendar.DAY_OF_WEEK, 1);
-				break;
-			
-			case WEEKLY:
-				_start.add(Calendar.WEEK_OF_YEAR, 1);
-				break;
-			
-			case MONTHLY_DAY:
-				_start.add(Calendar.DAY_OF_MONTH, 1);
-				break;
-			
-			case MONTHLY_WEEK:
-				_start.add(Calendar.WEEK_OF_MONTH, 1);
-				break;
-			
-			case YEARLY_DAY:
-				_start.add(Calendar.DAY_OF_YEAR, 1);
-				break;
-			
-			case YEARLY_WEEK:
-				_start.add(Calendar.WEEK_OF_YEAR, 1);
-				break;
-		}
-	}
-	
-	/**
-	 * Starts a script. Handles spawns, announcements, saves variables, etc...
-	 */
-	public abstract void onEnd();
+	protected abstract void onEnd();
 	
 	/**
 	 * Convert text representation of day {@link Calendar} day.
@@ -329,5 +344,13 @@ public abstract class ScheduledQuest extends Quest
 			return Calendar.SUNDAY;
 		else
 			throw new Exception();
+	}
+	
+	private final void print(Calendar c)
+	{
+		if (!Config.DEBUG)
+			return;
+		
+		_log.info(getName() + (c == _start ? ": Next start = " : ": Next end = ") + String.format("%d.%d.%d %d:%02d:%02d", c.get(Calendar.DAY_OF_MONTH), c.get(Calendar.MONTH) + 1, c.get(Calendar.YEAR), c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND)));
 	}
 }

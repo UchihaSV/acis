@@ -24,10 +24,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+import net.sf.l2j.commons.lang.StringUtil;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.commons.lang.StringUtil;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.idfactory.IdFactory;
 import net.sf.l2j.gameserver.instancemanager.SiegeManager;
 import net.sf.l2j.gameserver.model.L2Clan;
@@ -280,7 +281,7 @@ public class ClanTable
 		if (clan == null)
 			return;
 		
-		ThreadPoolManager.getInstance().scheduleGeneral(new Runnable()
+		ThreadPool.schedule(new Runnable()
 		{
 			@Override
 			public void run()

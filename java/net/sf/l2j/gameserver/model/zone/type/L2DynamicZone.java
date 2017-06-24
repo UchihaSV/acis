@@ -16,7 +16,8 @@ package net.sf.l2j.gameserver.model.zone.type;
 
 import java.util.concurrent.Future;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2WorldRegion;
 import net.sf.l2j.gameserver.model.actor.L2Character;
@@ -34,11 +35,6 @@ public class L2DynamicZone extends L2ZoneType
 	private Future<?> _task;
 	private final L2Skill _skill;
 	
-	protected void setTask(Future<?> task)
-	{
-		_task = task;
-	}
-	
 	public L2DynamicZone(L2WorldRegion region, L2Character owner, L2Skill skill)
 	{
 		super(-1);
@@ -54,7 +50,7 @@ public class L2DynamicZone extends L2ZoneType
 				remove();
 			}
 		};
-		setTask(ThreadPoolManager.getInstance().scheduleGeneral(r, skill.getBuffDuration()));
+		_task = ThreadPool.schedule(r, skill.getBuffDuration());
 	}
 	
 	@Override

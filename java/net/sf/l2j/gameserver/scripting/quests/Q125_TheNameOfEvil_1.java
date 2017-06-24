@@ -14,12 +14,13 @@
  */
 package net.sf.l2j.gameserver.scripting.quests;
 
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
-import net.sf.l2j.gameserver.util.Util;
 
 public final class Q125_TheNameOfEvil_1 extends Quest
 {
@@ -240,13 +241,13 @@ public final class Q125_TheNameOfEvil_1 extends Quest
 			return null;
 		
 		final int npcId = npc.getNpcId();
-		if (Util.contains(ORNITHOMIMUS, npcId))
+		if (ArraysUtil.contains(ORNITHOMIMUS, npcId))
 		{
 			if (st.dropItems(ORNITHOMIMUS_CLAW, 1, 2, 50000))
 				if (st.getQuestItemsCount(DEINONYCHUS_BONE) == 2)
 					st.set("cond", "4");
 		}
-		else if (Util.contains(DEINONYCHUS, npcId))
+		else if (ArraysUtil.contains(DEINONYCHUS, npcId))
 		{
 			if (st.dropItems(DEINONYCHUS_BONE, 1, 2, 50000))
 				if (st.getQuestItemsCount(ORNITHOMIMUS_CLAW) == 2)

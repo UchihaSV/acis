@@ -13,6 +13,7 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
@@ -100,13 +101,19 @@ public class Q224_TestOfSagittarius extends Quest
 			return htmltext;
 		
 		// BERNARD
-		if (event.equalsIgnoreCase("30702-04a.htm"))
+		if (event.equalsIgnoreCase("30702-04.htm"))
 		{
 			st.setState(STATE_STARTED);
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
 			st.giveItems(BERNARD_INTRODUCTION, 1);
-			st.giveItems(DIMENSIONAL_DIAMOND, 96);
+			
+			if (!player.getMemos().getBool("secondClassChange39", false))
+			{
+				htmltext = "30702-04a.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_39.get(player.getClassId().getId()));
+				player.getMemos().set("secondClassChange39", true);
+			}
 		}
 		// HAMIL
 		else if (event.equalsIgnoreCase("30626-03.htm"))
@@ -152,7 +159,7 @@ public class Q224_TestOfSagittarius extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				if (player.getClassId() != ClassId.rogue && player.getClassId() != ClassId.elvenScout && player.getClassId() != ClassId.assassin)
+				if (player.getClassId() != ClassId.ROGUE && player.getClassId() != ClassId.ELVEN_SCOUT && player.getClassId() != ClassId.ASSASSIN)
 					htmltext = "30702-02.htm";
 				else if (player.getLevel() < 39)
 					htmltext = "30702-01.htm";

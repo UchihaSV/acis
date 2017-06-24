@@ -21,6 +21,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.sf.l2j.commons.lang.StringUtil;
+
+import net.sf.l2j.gameserver.datatables.FenceTable;
 import net.sf.l2j.gameserver.datatables.GmListTable;
 import net.sf.l2j.gameserver.datatables.NpcTable;
 import net.sf.l2j.gameserver.datatables.SpawnTable;
@@ -32,6 +34,7 @@ import net.sf.l2j.gameserver.model.L2Object;
 import net.sf.l2j.gameserver.model.L2Spawn;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
+import net.sf.l2j.gameserver.model.actor.instance.L2FenceInstance;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -60,7 +63,10 @@ public class AdminSpawn implements IAdminCommandHandler
 		"admin_spawn_once",
 		"admin_show_npcs",
 		"admin_spawnnight",
-		"admin_spawnday"
+		"admin_spawnday",
+		"admin_spawnfence",
+		"admin_deletefence",
+		"admin_listfence"
 	};
 	
 	@Override
@@ -109,7 +115,7 @@ public class AdminSpawn implements IAdminCommandHandler
 					index++;
 					name = spawn.getTemplate().getName();
 					
-					final L2Npc _npc = spawn.getLastSpawn();
+					final L2Npc _npc = spawn.getNpc();
 					if (_npc != null)
 					{
 						x = _npc.getX();
@@ -118,9 +124,9 @@ public class AdminSpawn implements IAdminCommandHandler
 					}
 					else
 					{
-						x = spawn.getLocx();
-						y = spawn.getLocy();
-						z = spawn.getLocz();
+						x = spawn.getLocX();
+						y = spawn.getLocY();
+						z = spawn.getLocZ();
 					}
 					StringUtil.append(sb, "<tr><td><a action=\"bypass -h admin_move_to ", x, " ", y, " ", z, "\">", index, " - (", x, " ", y, " ", z, ")", "</a></td></tr>");
 				}
@@ -187,25 +193,6 @@ public class AdminSpawn implements IAdminCommandHandler
 				AdminHelpPage.showHelpPage(activeChar, "npcs.htm");
 			}
 		}
-		else if (command.startsWith("admin_spawn"))
-		{
-			StringTokenizer st = new StringTokenizer(command, " ");
-			try
-			{
-				String cmd = st.nextToken();
-				String id = st.nextToken();
-				int respawnTime = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : 0;
-				
-				if (cmd.equalsIgnoreCase("admin_spawn_once"))
-					spawn(activeChar, id, respawnTime, false);
-				else
-					spawn(activeChar, id, respawnTime, true);
-			}
-			catch (Exception e)
-			{
-				AdminHelpPage.showHelpPage(activeChar, "spawns.htm");
-			}
-		}
 		else if (command.startsWith("admin_unspawnall"))
 		{
 			Broadcast.toAllOnlinePlayers(SystemMessage.getSystemMessage(SystemMessageId.NPC_SERVER_NOT_OPERATING));
@@ -230,6 +217,71 @@ public class AdminSpawn implements IAdminCommandHandler
 			RaidBossSpawnManager.getInstance().reloadBosses();
 			SevenSigns.getInstance().spawnSevenSignsNPC();
 			GmListTable.broadcastMessageToGMs("NPCs' respawn is now complete.");
+		}
+		else if (command.startsWith("admin_spawnfence"))
+		{
+			StringTokenizer st = new StringTokenizer(command, " ");
+			try
+			{
+				st.nextToken();
+				int type = Integer.parseInt(st.nextToken());
+				int sizeX = (Integer.parseInt(st.nextToken()) / 100) * 100;
+				int sizeY = (Integer.parseInt(st.nextToken()) / 100) * 100;
+				int height = 1;
+				if (st.hasMoreTokens())
+					height = Math.min(Integer.parseInt(st.nextToken()), 3);
+				
+				FenceTable.getInstance().addFence(activeChar.getX(), activeChar.getY(), activeChar.getZ(), type, sizeX, sizeY, height);
+				
+				listFences(activeChar);
+			}
+			catch (Exception e)
+			{
+				activeChar.sendMessage("Usage: //spawnfence <type> <width> <length> [height]");
+			}
+		}
+		else if (command.startsWith("admin_deletefence"))
+		{
+			StringTokenizer st = new StringTokenizer(command, " ");
+			st.nextToken();
+			try
+			{
+				L2Object object = L2World.getInstance().getObject(Integer.parseInt(st.nextToken()));
+				if (object instanceof L2FenceInstance)
+				{
+					FenceTable.getInstance().removeFence((L2FenceInstance) object);
+					
+					if (st.hasMoreTokens())
+						listFences(activeChar);
+				}
+				else
+					activeChar.sendPacket(SystemMessageId.INCORRECT_TARGET);
+			}
+			catch (Exception e)
+			{
+				activeChar.sendMessage("Usage: //deletefence <objectId>");
+			}
+		}
+		else if (command.startsWith("admin_listfence"))
+			listFences(activeChar);
+		else if (command.startsWith("admin_spawn"))
+		{
+			StringTokenizer st = new StringTokenizer(command, " ");
+			try
+			{
+				String cmd = st.nextToken();
+				String id = st.nextToken();
+				int respawnTime = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : 0;
+				
+				if (cmd.equalsIgnoreCase("admin_spawn_once"))
+					spawn(activeChar, id, respawnTime, false);
+				else
+					spawn(activeChar, id, respawnTime, true);
+			}
+			catch (Exception e)
+			{
+				AdminHelpPage.showHelpPage(activeChar, "spawns.htm");
+			}
 		}
 		return true;
 	}
@@ -260,10 +312,7 @@ public class AdminSpawn implements IAdminCommandHandler
 		try
 		{
 			L2Spawn spawn = new L2Spawn(template);
-			spawn.setLocx(target.getX());
-			spawn.setLocy(target.getY());
-			spawn.setLocz(target.getZ());
-			spawn.setHeading(activeChar.getHeading());
+			spawn.setLoc(target.getX(), target.getY(), target.getZ(), activeChar.getHeading());
 			spawn.setRespawnDelay(respawnTime);
 			
 			if (RaidBossSpawnManager.getInstance().getValidTemplate(spawn.getNpcId()) != null)
@@ -281,11 +330,13 @@ public class AdminSpawn implements IAdminCommandHandler
 			else
 			{
 				SpawnTable.getInstance().addNewSpawn(spawn, permanent);
-				spawn.init();
+				spawn.doSpawn(false);
+				if (permanent)
+					spawn.setRespawnState(true);
 			}
 			
 			if (!permanent)
-				spawn.stopRespawn();
+				spawn.setRespawnState(false);
 			
 			activeChar.sendMessage("Spawned " + template.getName() + ".");
 			
@@ -334,6 +385,21 @@ public class AdminSpawn implements IAdminCommandHandler
 			StringUtil.append(sb, "<br><center><button value=\"Next\" action=\"bypass -h admin_npc_index ", starting, " ", i, "\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"><button value=\"Back\" action=\"bypass -h admin_show_npcs\" width=40 height=15 back=\"sek.cbui94\" fore=\"sek.cbui92\"></center></body></html>");
 		
 		final NpcHtmlMessage html = new NpcHtmlMessage(0);
+		html.setHtml(sb.toString());
+		activeChar.sendPacket(html);
+	}
+	
+	private static void listFences(L2PcInstance activeChar)
+	{
+		final List<L2FenceInstance> fences = FenceTable.getInstance().getFences();
+		final StringBuilder sb = new StringBuilder();
+		
+		sb.append("<html><body>Total Fences: " + fences.size() + "<br><br>");
+		for (L2FenceInstance fence : fences)
+			sb.append("<a action=\"bypass -h admin_deletefence " + fence.getObjectId() + " 1\">Fence: " + fence.getObjectId() + " [" + fence.getX() + " " + fence.getY() + " " + fence.getZ() + "]</a><br>");
+		sb.append("</body></html>");
+		
+		NpcHtmlMessage html = new NpcHtmlMessage(0);
 		html.setHtml(sb.toString());
 		activeChar.sendPacket(html);
 	}

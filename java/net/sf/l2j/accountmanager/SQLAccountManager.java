@@ -24,7 +24,6 @@ import java.util.Scanner;
 
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.Server;
 
 public class SQLAccountManager
 {
@@ -35,8 +34,7 @@ public class SQLAccountManager
 	
 	public static void main(String[] args)
 	{
-		Server.serverMode = Server.MODE_LOGINSERVER;
-		Config.load();
+		Config.loadAccountManager();
 		
 		try (Scanner _scn = new Scanner(System.in))
 		{

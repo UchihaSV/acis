@@ -16,7 +16,8 @@ package net.sf.l2j.gameserver.model.zone.type;
 
 import java.util.concurrent.Future;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.zone.L2CastleZoneType;
@@ -96,7 +97,7 @@ public class L2DamageZone extends L2CastleZoneType
 			{
 				if (_task == null)
 				{
-					_task = ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new ApplyDamage(this), _startTask, _reuseTask);
+					_task = ThreadPool.scheduleAtFixedRate(new ApplyDamage(this), _startTask, _reuseTask);
 					
 					// Message for castle traps.
 					if (getCastle() != null)

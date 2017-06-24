@@ -54,8 +54,8 @@ public final class RequestDropItem extends L2GameClientPacket
 		if (activeChar == null || activeChar.isDead())
 			return;
 		
-		final ItemInstance item = activeChar.getInventory().getItemByObjectId(_objectId);
-		if (item == null || _count == 0 || !activeChar.validateItemManipulation(_objectId) || (!Config.ALLOW_DISCARDITEM && !activeChar.isGM()) || !item.isDropable())
+		final ItemInstance item = activeChar.validateItemManipulation(_objectId);
+		if (item == null || _count == 0 || (!Config.ALLOW_DISCARDITEM && !activeChar.isGM()) || !item.isDropable())
 		{
 			activeChar.sendPacket(SystemMessageId.CANNOT_DISCARD_THIS_ITEM);
 			return;
@@ -151,6 +151,6 @@ public final class RequestDropItem extends L2GameClientPacket
 			activeChar.sendPacket(new ItemList(activeChar, true));
 		}
 		
-		activeChar.dropItem("Drop", _objectId, _count, _x, _y, _z, null, false, false);
+		activeChar.dropItem("Drop", _objectId, _count, _x, _y, _z, null, false);
 	}
 }

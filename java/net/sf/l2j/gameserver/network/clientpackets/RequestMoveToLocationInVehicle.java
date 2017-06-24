@@ -15,8 +15,7 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.instancemanager.BoatManager;
-import net.sf.l2j.gameserver.model.Location;
-import net.sf.l2j.gameserver.model.actor.instance.L2BoatInstance;
+import net.sf.l2j.gameserver.model.actor.L2Vehicle;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.item.type.WeaponType;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -27,13 +26,17 @@ import net.sf.l2j.gameserver.network.serverpackets.StopMoveInVehicle;
 public final class RequestMoveToLocationInVehicle extends L2GameClientPacket
 {
 	private int _boatId;
-	private int _targetX, _targetY, _targetZ;
-	private int _originX, _originY, _originZ;
+	private int _targetX;
+	private int _targetY;
+	private int _targetZ;
+	private int _originX;
+	private int _originY;
+	private int _originZ;
 	
 	@Override
 	protected void readImpl()
 	{
-		_boatId = readD(); // objectId of boat
+		_boatId = readD();
 		_targetX = readD();
 		_targetY = readD();
 		_targetZ = readD();
@@ -74,7 +77,7 @@ public final class RequestMoveToLocationInVehicle extends L2GameClientPacket
 			return;
 		}
 		
-		final L2BoatInstance boat;
+		final L2Vehicle boat;
 		if (activeChar.isInBoat())
 		{
 			boat = activeChar.getBoat();
@@ -95,9 +98,7 @@ public final class RequestMoveToLocationInVehicle extends L2GameClientPacket
 			activeChar.setVehicle(boat);
 		}
 		
-		final Location pos = new Location(_targetX, _targetY, _targetZ);
-		final Location originPos = new Location(_originX, _originY, _originZ);
-		activeChar.setInVehiclePosition(pos);
-		activeChar.broadcastPacket(new MoveToLocationInVehicle(activeChar, pos, originPos));
+		activeChar.getVehiclePosition().set(_targetX, _targetY, _targetZ);
+		activeChar.broadcastPacket(new MoveToLocationInVehicle(activeChar, _targetX, _targetY, _targetZ, _originX, _originY, _originZ));
 	}
 }

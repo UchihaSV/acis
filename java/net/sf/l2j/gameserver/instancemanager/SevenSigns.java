@@ -24,16 +24,17 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.gameserver.ThreadPoolManager;
-import net.sf.l2j.gameserver.datatables.MapRegionTable;
+import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.datatables.SkillTable;
 import net.sf.l2j.gameserver.instancemanager.AutoSpawnManager.AutoSpawnInstance;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
-import net.sf.l2j.gameserver.network.serverpackets.SignsSky;
+import net.sf.l2j.gameserver.network.serverpackets.SSQInfo;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
 import net.sf.l2j.gameserver.templates.StatsSet;
 import net.sf.l2j.gameserver.util.Broadcast;
@@ -179,7 +180,7 @@ public class SevenSigns
 		}
 		
 		// Schedule a time for the next period change.
-		ThreadPoolManager.getInstance().scheduleGeneral(new SevenSignsPeriodChange(), milliToChange);
+		ThreadPool.schedule(new SevenSignsPeriodChange(), milliToChange);
 		
 		// Thanks to http://rainbow.arch.scriptmania.com/scripts/timezone_countdown.html for help with this.
 		double numSecs = (milliToChange / 1000) % 60;
@@ -1229,7 +1230,7 @@ public class SevenSigns
 			{
 				if (!player.isGM() && player.isIn7sDungeon() && (currPlayer == null || !currPlayer.getString("cabal").equals(compWinner)))
 				{
-					player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+					player.teleToLocation(TeleportWhereType.TOWN);
 					player.setIsIn7sDungeon(false);
 					player.sendMessage("You have been teleported to the nearest town due to the beginning of the Seal Validation period.");
 				}
@@ -1238,7 +1239,7 @@ public class SevenSigns
 			{
 				if (!player.isGM() && player.isIn7sDungeon() && (currPlayer == null || !currPlayer.getString("cabal").isEmpty()))
 				{
-					player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+					player.teleToLocation(TeleportWhereType.TOWN);
 					player.setIsIn7sDungeon(false);
 					player.sendMessage("You have been teleported to the nearest town because you have not signed for any cabal.");
 				}
@@ -1344,14 +1345,14 @@ public class SevenSigns
 			teleLosingCabalFromDungeons(getCabalShortName(getCabalHighestScore()));
 			
 			// Spawns NPCs and change sky color.
-			Broadcast.toAllOnlinePlayers(new SignsSky());
+			Broadcast.toAllOnlinePlayers(SSQInfo.sendSky());
 			spawnSevenSignsNPC();
 			
 			_log.info("SevenSigns: The " + getCurrentPeriodName() + " period has begun!");
 			
 			setCalendarForNextPeriodChange();
 			
-			ThreadPoolManager.getInstance().scheduleGeneral(new SevenSignsPeriodChange(), getMilliToPeriodChange());
+			ThreadPool.schedule(new SevenSignsPeriodChange(), getMilliToPeriodChange());
 		}
 	}
 	

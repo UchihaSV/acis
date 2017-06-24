@@ -17,8 +17,9 @@ package net.sf.l2j.gameserver.model.actor.instance;
 import java.util.Iterator;
 import java.util.Set;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.lang.StringUtil;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.datatables.CharTemplateTable;
 import net.sf.l2j.gameserver.datatables.ClanTable;
 import net.sf.l2j.gameserver.datatables.SkillTable;
@@ -31,7 +32,6 @@ import net.sf.l2j.gameserver.model.L2PledgeSkillLearn;
 import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.template.NpcTemplate;
 import net.sf.l2j.gameserver.model.base.ClassId;
-import net.sf.l2j.gameserver.model.base.PlayerClass;
 import net.sf.l2j.gameserver.model.base.SubClass;
 import net.sf.l2j.gameserver.model.entity.Siege;
 import net.sf.l2j.gameserver.model.olympiad.OlympiadManager;
@@ -200,7 +200,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 			}
 			
 			StringBuilder sb;
-			Set<PlayerClass> subsAvailable;
+			Set<ClassId> subsAvailable;
 			
 			switch (cmdChoice)
 			{
@@ -224,7 +224,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					}
 					
 					// Avoid giving player an option to add a new sub class, if they have three already.
-					if (player.getTotalSubClasses() >= 3)
+					if (player.getSubClasses().size() >= 3)
 					{
 						html.setFile("data/html/villagemaster/SubClass_Fail.htm");
 						break;
@@ -238,8 +238,8 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					}
 					
 					sb = new StringBuilder(300);
-					for (PlayerClass subClass : subsAvailable)
-						StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 4 ", subClass.ordinal(), "\" msg=\"1268;", formatClassForDisplay(subClass), "\">", formatClassForDisplay(subClass), "</a><br>");
+					for (ClassId subClass : subsAvailable)
+						StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 4 ", subClass.getId(), "\" msg=\"1268;", subClass, "\">", subClass, "</a><br>");
 					
 					html.setFile("data/html/villagemaster/SubClass_Add.htm");
 					html.replace("%list%", sb.toString());
@@ -269,11 +269,11 @@ public class L2VillageMasterInstance extends L2NpcInstance
 						if (checkVillageMaster(player.getBaseClass()))
 							StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 5 0\">", CharTemplateTable.getInstance().getClassNameById(player.getBaseClass()), "</a><br>");
 						
-						for (Iterator<SubClass> subList = iterSubClasses(player); subList.hasNext();)
+						for (Iterator<SubClass> subList = player.getSubClasses().values().iterator(); subList.hasNext();)
 						{
 							SubClass subClass = subList.next();
 							if (checkVillageMaster(subClass.getClassDefinition()))
-								StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 5 ", subClass.getClassIndex(), "\">", formatClassForDisplay(subClass.getClassDefinition()), "</a><br>");
+								StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 5 ", subClass.getClassIndex(), "\">", subClass.getClassDefinition(), "</a><br>");
 						}
 						
 						if (sb.length() > 0)
@@ -294,12 +294,12 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					}
 					
 					// custom value
-					if (player.getTotalSubClasses() > 3)
+					if (player.getSubClasses().size() > 3)
 					{
 						sb = new StringBuilder(300);
 						int classIndex = 1;
 						
-						for (Iterator<SubClass> subList = iterSubClasses(player); subList.hasNext();)
+						for (Iterator<SubClass> subList = player.getSubClasses().values().iterator(); subList.hasNext();)
 						{
 							SubClass subClass = subList.next();
 							StringUtil.append(sb, "Sub-class ", classIndex++, "<br>", "<a action=\"bypass -h npc_%objectId%_Subclass 6 ", subClass.getClassIndex(), "\">", CharTemplateTable.getInstance().getClassNameById(subClass.getClassId()), "</a><br>");
@@ -335,7 +335,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					
 					boolean allowAddition = true;
 					
-					if (player.getTotalSubClasses() >= 3)
+					if (player.getSubClasses().size() >= 3)
 						allowAddition = false;
 					
 					if (player.getLevel() < 75)
@@ -345,7 +345,7 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					{
 						if (!player.getSubClasses().isEmpty())
 						{
-							for (Iterator<SubClass> subList = iterSubClasses(player); subList.hasNext();)
+							for (Iterator<SubClass> subList = player.getSubClasses().values().iterator(); subList.hasNext();)
 							{
 								SubClass subClass = subList.next();
 								
@@ -367,10 +367,10 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					
 					if (allowAddition && isValidNewSubClass(player, paramOne))
 					{
-						if (!player.addSubClass(paramOne, player.getTotalSubClasses() + 1))
+						if (!player.addSubClass(paramOne, player.getSubClasses().size() + 1))
 							return;
 						
-						player.setActiveClass(player.getTotalSubClasses());
+						player.setActiveClass(player.getSubClasses().size());
 						
 						html.setFile("data/html/villagemaster/SubClass_AddOk.htm");
 						player.sendPacket(SystemMessageId.ADD_NEW_SUBCLASS); // Subclass added.
@@ -427,8 +427,8 @@ public class L2VillageMasterInstance extends L2NpcInstance
 					}
 					
 					sb = new StringBuilder(300);
-					for (PlayerClass subClass : subsAvailable)
-						StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 7 ", paramOne, " ", subClass.ordinal(), "\" msg=\"1445;", "\">", formatClassForDisplay(subClass), "</a><br>");
+					for (ClassId subClass : subsAvailable)
+						StringUtil.append(sb, "<a action=\"bypass -h npc_%objectId%_Subclass 7 ", paramOne, " ", subClass.getId(), "\" msg=\"1445;", "\">", subClass, "</a><br>");
 					
 					switch (paramOne)
 					{
@@ -504,48 +504,29 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		return true;
 	}
 	
-	private final Set<PlayerClass> getAvailableSubClasses(L2PcInstance player)
+	private final Set<ClassId> getAvailableSubClasses(L2PcInstance player)
 	{
-		// get player base class
-		final int currentBaseId = player.getBaseClass();
-		final ClassId baseCID = ClassId.values()[currentBaseId];
-		
-		// we need 2nd occupation ID
-		final int baseClassId;
-		if (baseCID.level() > 2)
-			baseClassId = baseCID.getParent().ordinal();
-		else
-			baseClassId = currentBaseId;
-		
-		/**
-		 * If the race of your main class is Elf or Dark Elf, you may not select each class as a subclass to the other class, and you may not select Overlord and Warsmith class as a subclass. You may not select a similar class as the subclass. The occupations classified as similar classes are as
-		 * follows: Treasure Hunter, Plainswalker and Abyss Walker Hawkeye, Silver Ranger and Phantom Ranger Paladin, Dark Avenger, Temple Knight and Shillien Knight Warlocks, Elemental Summoner and Phantom Summoner Elder and Shillien Elder Swordsinger and Bladedancer Sorcerer, Spellsinger and
-		 * Spellhowler
-		 */
-		Set<PlayerClass> availSubs = PlayerClass.values()[baseClassId].getAvailableSubclasses(player);
+		Set<ClassId> availSubs = ClassId.getAvailableSubclasses(player);
 		
 		if (availSubs != null && !availSubs.isEmpty())
 		{
-			for (Iterator<PlayerClass> availSub = availSubs.iterator(); availSub.hasNext();)
+			for (Iterator<ClassId> availSub = availSubs.iterator(); availSub.hasNext();)
 			{
-				PlayerClass pclass = availSub.next();
+				ClassId classId = availSub.next();
 				
 				// check for the village master
-				if (!checkVillageMaster(pclass))
+				if (!checkVillageMaster(classId))
 				{
 					availSub.remove();
 					continue;
 				}
 				
 				// scan for already used subclasses
-				int availClassId = pclass.ordinal();
-				ClassId cid = ClassId.values()[availClassId];
-				for (Iterator<SubClass> subList = iterSubClasses(player); subList.hasNext();)
+				for (Iterator<SubClass> subclasses = player.getSubClasses().values().iterator(); subclasses.hasNext();)
 				{
-					SubClass prevSubClass = subList.next();
-					ClassId subClassId = ClassId.values()[prevSubClass.getClassId()];
+					SubClass subclass = subclasses.next();
 					
-					if (subClassId.equalsOrChildOf(cid))
+					if (subclass.getClassDefinition().equalsOrChildOf(classId))
 					{
 						availSub.remove();
 						break;
@@ -565,35 +546,23 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		if (!checkVillageMaster(classId))
 			return false;
 		
-		final ClassId cid = ClassId.values()[classId];
-		for (Iterator<SubClass> subList = iterSubClasses(player); subList.hasNext();)
+		final ClassId cid = ClassId.VALUES[classId];
+		for (Iterator<SubClass> subList = player.getSubClasses().values().iterator(); subList.hasNext();)
 		{
 			SubClass sub = subList.next();
-			ClassId subClassId = ClassId.values()[sub.getClassId()];
 			
-			if (subClassId.equalsOrChildOf(cid))
+			if (sub.getClassDefinition().equalsOrChildOf(cid))
 				return false;
 		}
 		
-		// get player base class
-		final int currentBaseId = player.getBaseClass();
-		final ClassId baseCID = ClassId.values()[currentBaseId];
-		
-		// we need 2nd occupation ID
-		final int baseClassId;
-		if (baseCID.level() > 2)
-			baseClassId = baseCID.getParent().ordinal();
-		else
-			baseClassId = currentBaseId;
-		
-		Set<PlayerClass> availSubs = PlayerClass.values()[baseClassId].getAvailableSubclasses(player);
+		Set<ClassId> availSubs = ClassId.getAvailableSubclasses(player);
 		if (availSubs == null || availSubs.isEmpty())
 			return false;
 		
 		boolean found = false;
-		for (PlayerClass pclass : availSubs)
+		for (ClassId pclass : availSubs)
 		{
-			if (pclass.ordinal() == classId)
+			if (pclass.getId() == classId)
 			{
 				found = true;
 				break;
@@ -603,12 +572,12 @@ public class L2VillageMasterInstance extends L2NpcInstance
 		return found;
 	}
 	
-	protected boolean checkVillageMasterRace(PlayerClass pclass)
+	protected boolean checkVillageMasterRace(ClassId pclass)
 	{
 		return true;
 	}
 	
-	protected boolean checkVillageMasterTeachType(PlayerClass pclass)
+	protected boolean checkVillageMasterTeachType(ClassId pclass)
 	{
 		return true;
 	}
@@ -618,34 +587,15 @@ public class L2VillageMasterInstance extends L2NpcInstance
 	 */
 	public final boolean checkVillageMaster(int classId)
 	{
-		return checkVillageMaster(PlayerClass.values()[classId]);
+		return checkVillageMaster(ClassId.VALUES[classId]);
 	}
 	
 	/*
 	 * Returns true if this PlayerClass is allowed for master
 	 */
-	public final boolean checkVillageMaster(PlayerClass pclass)
+	public final boolean checkVillageMaster(ClassId pclass)
 	{
 		return checkVillageMasterRace(pclass) && checkVillageMasterTeachType(pclass);
-	}
-	
-	private static final String formatClassForDisplay(PlayerClass className)
-	{
-		String classNameStr = className.toString();
-		char[] charArray = classNameStr.toCharArray();
-		
-		for (int i = 1; i < charArray.length; i++)
-		{
-			if (Character.isUpperCase(charArray[i]))
-				classNameStr = classNameStr.substring(0, i) + " " + classNameStr.substring(i);
-		}
-		
-		return classNameStr;
-	}
-	
-	private static final Iterator<SubClass> iterSubClasses(L2PcInstance player)
-	{
-		return player.getSubClasses().values().iterator();
 	}
 	
 	private static final void dissolveClan(L2PcInstance player)

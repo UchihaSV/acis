@@ -101,13 +101,19 @@ public class Q228_TestOfMagus extends Quest
 			return htmltext;
 		
 		// RUKAL
-		if (event.equalsIgnoreCase("30629-04a.htm"))
+		if (event.equalsIgnoreCase("30629-04.htm"))
 		{
 			st.setState(STATE_STARTED);
 			st.set("cond", "1");
 			st.playSound(QuestState.SOUND_ACCEPT);
-			st.giveItems(DIMENSIONAL_DIAMOND, 122);
 			st.giveItems(RUKAL_LETTER, 1);
+			
+			if (!player.getMemos().getBool("secondClassChange39", false))
+			{
+				htmltext = "30629-04a.htm";
+				st.giveItems(DIMENSIONAL_DIAMOND, DF_REWARD_39.get(player.getClassId().getId()));
+				player.getMemos().set("secondClassChange39", true);
+			}
 		}
 		else if (event.equalsIgnoreCase("30629-10.htm"))
 		{
@@ -137,10 +143,16 @@ public class Q228_TestOfMagus extends Quest
 		}
 		// WIND SYLPH
 		else if (event.equalsIgnoreCase("30412-02.htm"))
+		{
+			st.playSound(QuestState.SOUND_ITEMGET);
 			st.giveItems(SYLPH_CHARM, 1);
+		}
 		// EARTH SNAKE
 		else if (event.equalsIgnoreCase("30409-03.htm"))
+		{
+			st.playSound(QuestState.SOUND_ITEMGET);
 			st.giveItems(SERPENT_CHARM, 1);
+		}
 		
 		return htmltext;
 	}
@@ -156,7 +168,7 @@ public class Q228_TestOfMagus extends Quest
 		switch (st.getState())
 		{
 			case STATE_CREATED:
-				if (player.getClassId() != ClassId.wizard && player.getClassId() != ClassId.elvenWizard && player.getClassId() != ClassId.darkWizard)
+				if (player.getClassId() != ClassId.HUMAN_WIZARD && player.getClassId() != ClassId.ELVEN_WIZARD && player.getClassId() != ClassId.DARK_WIZARD)
 					htmltext = "30629-01.htm";
 				else if (player.getLevel() < 39)
 					htmltext = "30629-02.htm";
@@ -230,16 +242,20 @@ public class Q228_TestOfMagus extends Quest
 									st.takeItems(DAZZLING_DROP, 20);
 									st.takeItems(UNDINE_CHARM, 1);
 									st.giveItems(TONE_OF_WATER, 1);
+									
 									if (st.hasQuestItems(TONE_OF_FIRE, TONE_OF_WIND, TONE_OF_EARTH))
 									{
 										st.set("cond", "6");
 										st.playSound(QuestState.SOUND_MIDDLE);
 									}
+									else
+										st.playSound(QuestState.SOUND_ITEMGET);
 								}
 							}
 							else if (!st.hasQuestItems(TONE_OF_WATER))
 							{
 								htmltext = "30413-01.htm";
+								st.playSound(QuestState.SOUND_ITEMGET);
 								st.giveItems(UNDINE_CHARM, 1);
 							}
 							else
@@ -262,11 +278,14 @@ public class Q228_TestOfMagus extends Quest
 									st.takeItems(FLAME_CRYSTAL, 5);
 									st.takeItems(SALAMANDER_CHARM, 1);
 									st.giveItems(TONE_OF_FIRE, 1);
+									
 									if (st.hasQuestItems(TONE_OF_WATER, TONE_OF_WIND, TONE_OF_EARTH))
 									{
 										st.set("cond", "6");
 										st.playSound(QuestState.SOUND_MIDDLE);
 									}
+									else
+										st.playSound(QuestState.SOUND_ITEMGET);
 								}
 							}
 							else if (!st.hasQuestItems(TONE_OF_FIRE))
@@ -296,11 +315,14 @@ public class Q228_TestOfMagus extends Quest
 									st.takeItems(WINDSUS_MANE, 10);
 									st.takeItems(WYRM_WINGBONE, 10);
 									st.giveItems(TONE_OF_WIND, 1);
+									
 									if (st.hasQuestItems(TONE_OF_WATER, TONE_OF_FIRE, TONE_OF_EARTH))
 									{
 										st.set("cond", "6");
 										st.playSound(QuestState.SOUND_MIDDLE);
 									}
+									else
+										st.playSound(QuestState.SOUND_ITEMGET);
 								}
 							}
 							else if (!st.hasQuestItems(TONE_OF_WIND))
@@ -327,11 +349,14 @@ public class Q228_TestOfMagus extends Quest
 									st.takeItems(EN_STONEGOLEM_POWDER, 10);
 									st.takeItems(SERPENT_CHARM, 1);
 									st.giveItems(TONE_OF_EARTH, 1);
+									
 									if (st.hasQuestItems(TONE_OF_WATER, TONE_OF_FIRE, TONE_OF_WIND))
 									{
 										st.set("cond", "6");
 										st.playSound(QuestState.SOUND_MIDDLE);
 									}
+									else
+										st.playSound(QuestState.SOUND_ITEMGET);
 								}
 							}
 							else if (!st.hasQuestItems(TONE_OF_EARTH))

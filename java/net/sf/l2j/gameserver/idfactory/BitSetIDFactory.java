@@ -19,8 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
 import net.sf.l2j.commons.math.PrimeFinder;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 
 public class BitSetIDFactory extends IdFactory
 {
@@ -45,7 +45,7 @@ public class BitSetIDFactory extends IdFactory
 		super();
 		initialize();
 		
-		ThreadPoolManager.getInstance().scheduleGeneralAtFixedRate(new BitSetCapacityCheck(), 30000, 30000);
+		ThreadPool.scheduleAtFixedRate(new BitSetCapacityCheck(), 30000, 30000);
 	}
 	
 	private void initialize()

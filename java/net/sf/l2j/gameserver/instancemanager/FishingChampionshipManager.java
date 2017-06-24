@@ -24,10 +24,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.l2j.commons.concurrent.ThreadPool;
+import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.Config;
 import net.sf.l2j.L2DatabaseFactory;
-import net.sf.l2j.commons.random.Rnd;
-import net.sf.l2j.gameserver.ThreadPoolManager;
 import net.sf.l2j.gameserver.datatables.ItemTable;
 import net.sf.l2j.gameserver.datatables.ServerMemo;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
@@ -65,7 +66,7 @@ public class FishingChampionshipManager
 			new finishChamp().run();
 		}
 		else
-			ThreadPoolManager.getInstance().scheduleGeneral(new finishChamp(), _enddate - System.currentTimeMillis());
+			ThreadPool.schedule(new finishChamp(), _enddate - System.currentTimeMillis());
 	}
 	
 	protected void setEndOfChamp()
@@ -287,7 +288,7 @@ public class FishingChampionshipManager
 			pl.sendPacket(html);
 			
 			refreshResult();
-			ThreadPoolManager.getInstance().scheduleGeneral(new needRefresh(), 60000);
+			ThreadPool.schedule(new needRefresh(), 60000);
 			return;
 		}
 		
@@ -453,7 +454,7 @@ public class FishingChampionshipManager
 			shutdown();
 			
 			_log.info("FishingChampionshipManager : new event period start.");
-			ThreadPoolManager.getInstance().scheduleGeneral(new finishChamp(), _enddate - System.currentTimeMillis());
+			ThreadPool.schedule(new finishChamp(), _enddate - System.currentTimeMillis());
 		}
 	}
 	

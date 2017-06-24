@@ -15,6 +15,7 @@
 package net.sf.l2j.gameserver.scripting.quests;
 
 import net.sf.l2j.commons.random.Rnd;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.model.base.ClassId;
@@ -70,8 +71,8 @@ public class Q414_PathToAnOrcRaider extends Quest
 		// KARUKIA
 		if (event.equalsIgnoreCase("30570-05.htm"))
 		{
-			if (player.getClassId() != ClassId.orcFighter)
-				htmltext = (player.getClassId() == ClassId.orcRaider) ? "30570-02a.htm" : "30570-03.htm";
+			if (player.getClassId() != ClassId.ORC_FIGHTER)
+				htmltext = (player.getClassId() == ClassId.ORC_RAIDER) ? "30570-02a.htm" : "30570-03.htm";
 			else if (player.getLevel() < 19)
 				htmltext = "30570-02.htm";
 			else if (st.hasQuestItems(MARK_OF_RAIDER))

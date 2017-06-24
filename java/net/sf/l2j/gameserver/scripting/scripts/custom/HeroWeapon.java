@@ -14,11 +14,12 @@
  */
 package net.sf.l2j.gameserver.scripting.scripts.custom;
 
+import net.sf.l2j.commons.util.ArraysUtil;
+
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.scripting.Quest;
 import net.sf.l2j.gameserver.scripting.QuestState;
-import net.sf.l2j.gameserver.util.Util;
 
 public class HeroWeapon extends Quest
 {
@@ -51,7 +52,7 @@ public class HeroWeapon extends Quest
 		QuestState st = player.getQuestState(getName());
 		
 		int weaponId = Integer.valueOf(event);
-		if (Util.contains(WEAPON_IDS, weaponId))
+		if (ArraysUtil.contains(WEAPON_IDS, weaponId))
 			st.giveItems(weaponId, 1);
 		
 		st.exitQuest(true);

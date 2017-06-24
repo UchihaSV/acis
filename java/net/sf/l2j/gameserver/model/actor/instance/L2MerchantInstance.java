@@ -99,7 +99,7 @@ public class L2MerchantInstance extends L2NpcInstance
 			if (st.countTokens() < 1)
 				return;
 			
-			MultisellData.getInstance().separateAndSend(Integer.parseInt(st.nextToken()), player, false, getCastle().getTaxRate());
+			MultisellData.getInstance().separateAndSend(st.nextToken(), player, this, false);
 		}
 		else if (actualCommand.equalsIgnoreCase("Multisell_Shadow"))
 		{
@@ -122,7 +122,7 @@ public class L2MerchantInstance extends L2NpcInstance
 			if (st.countTokens() < 1)
 				return;
 			
-			MultisellData.getInstance().separateAndSend(Integer.parseInt(st.nextToken()), player, true, getCastle().getTaxRate());
+			MultisellData.getInstance().separateAndSend(st.nextToken(), player, this, true);
 		}
 		else if (actualCommand.equalsIgnoreCase("Newbie_Exc_Multisell"))
 		{
@@ -130,7 +130,7 @@ public class L2MerchantInstance extends L2NpcInstance
 				return;
 			
 			if (player.isNewbie())
-				MultisellData.getInstance().separateAndSend(Integer.parseInt(st.nextToken()), player, true, getCastle().getTaxRate());
+				MultisellData.getInstance().separateAndSend(st.nextToken(), player, this, true);
 			else
 				showChatWindow(player, "data/html/exchangelvlimit.htm");
 		}

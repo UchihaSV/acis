@@ -14,15 +14,15 @@
  */
 package net.sf.l2j.gameserver.scripting.scripts.ai.group;
 
+import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Npc;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
-import net.sf.l2j.gameserver.scripting.EventType;
-import net.sf.l2j.gameserver.scripting.scripts.ai.AbstractNpcAI;
+import net.sf.l2j.gameserver.scripting.scripts.ai.L2AttackableAIScript;
 
-public class SearchingMaster extends AbstractNpcAI
+public class SearchingMaster extends L2AttackableAIScript
 {
-	private static final int[] mobs =
+	private static final int[] MOBS =
 	{
 		20965,
 		20966,
@@ -38,17 +38,21 @@ public class SearchingMaster extends AbstractNpcAI
 	public SearchingMaster()
 	{
 		super("ai/group");
-		
-		registerMobs(mobs, EventType.ON_ATTACK);
 	}
 	
 	@Override
-	public String onAttack(L2Npc npc, L2PcInstance player, int damage, boolean isPet)
+	protected void registerNpcs()
+	{
+		addAttackId(MOBS);
+	}
+	
+	@Override
+	public String onAttack(L2Npc npc, L2PcInstance player, int damage, boolean isPet, L2Skill skill)
 	{
 		if (player == null)
 			return null;
 		
 		attack(((L2Attackable) npc), player);
-		return super.onAttack(npc, player, damage, isPet);
+		return super.onAttack(npc, player, damage, isPet, skill);
 	}
 }

@@ -15,7 +15,6 @@
 package net.sf.l2j.gameserver.network.clientpackets;
 
 import net.sf.l2j.gameserver.model.L2Party;
-import net.sf.l2j.gameserver.model.L2Skill;
 import net.sf.l2j.gameserver.model.L2World;
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
@@ -106,18 +105,8 @@ public final class RequestExAskJoinMPCC extends L2GameClientPacket
 			hasRight = true;
 		else if (requestor.getInventory().getItemByItemId(8871) != null) // 8871 Strategy Guide. Should destroyed after sucessfull invite?
 			hasRight = true;
-		else if (requestor.getPledgeClass() >= 5) // At least Baron or higher
-		{
-			for (L2Skill skill : requestor.getAllSkills())
-			{
-				// Skill Clan Imperium
-				if (skill.getId() == 391)
-				{
-					hasRight = true;
-					break;
-				}
-			}
-		}
+		else if (requestor.getPledgeClass() >= 5) // At least Baron or higher, check skill Clan Imperium
+			hasRight = requestor.getSkill(391) != null;
 		
 		if (!hasRight)
 		{

@@ -14,13 +14,17 @@
  */
 package net.sf.l2j.gameserver.model.zone.type;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
 
-import net.sf.l2j.gameserver.datatables.MapRegionTable;
-import net.sf.l2j.gameserver.instancemanager.GrandBossManager;
+import net.sf.l2j.L2DatabaseFactory;
+import net.sf.l2j.gameserver.datatables.MapRegionTable.TeleportWhereType;
 import net.sf.l2j.gameserver.model.actor.L2Attackable;
 import net.sf.l2j.gameserver.model.actor.L2Character;
 import net.sf.l2j.gameserver.model.actor.L2Playable;
@@ -34,6 +38,8 @@ import net.sf.l2j.gameserver.model.zone.ZoneId;
  */
 public class L2BossZone extends L2ZoneType
 {
+	private static final String SELECT_GRAND_BOSS_LIST = "SELECT * FROM grandboss_list WHERE zone = ?";
+	
 	// Track the times that players got disconnected. Players are allowed to log back into the zone as long as their log-out was within _timeInvade time...
 	private final Map<Integer, Long> _playerAllowEntry = new ConcurrentHashMap<>();
 	
@@ -48,7 +54,24 @@ public class L2BossZone extends L2ZoneType
 	{
 		super(id);
 		
-		GrandBossManager.getInstance().addZone(this);
+		try (Connection con = L2DatabaseFactory.getInstance().getConnection())
+		{
+			PreparedStatement statement = con.prepareStatement(SELECT_GRAND_BOSS_LIST);
+			statement.setInt(1, id);
+			ResultSet rset = statement.executeQuery();
+			
+			while (rset.next())
+			{
+				allowPlayerEntry(rset.getInt("player_id"));
+			}
+			
+			rset.close();
+			statement.close();
+		}
+		catch (Exception e)
+		{
+			_log.log(Level.WARNING, "L2BossZone: Could not load grandboss zone id=" + id + ": " + e.getMessage(), e);
+		}
 	}
 	
 	@Override
@@ -101,7 +124,7 @@ public class L2BossZone extends L2ZoneType
 				if (_oustLoc[0] != 0 && _oustLoc[1] != 0 && _oustLoc[2] != 0)
 					player.teleToLocation(_oustLoc[0], _oustLoc[1], _oustLoc[2], 0);
 				else
-					player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+					player.teleToLocation(TeleportWhereType.TOWN);
 			}
 			else if (character instanceof L2Summon)
 			{
@@ -115,7 +138,7 @@ public class L2BossZone extends L2ZoneType
 					if (_oustLoc[0] != 0 && _oustLoc[1] != 0 && _oustLoc[2] != 0)
 						player.teleToLocation(_oustLoc[0], _oustLoc[1], _oustLoc[2], 0);
 					else
-						player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+						player.teleToLocation(TeleportWhereType.TOWN);
 				}
 				
 				// Remove summon.
@@ -174,7 +197,7 @@ public class L2BossZone extends L2ZoneType
 						if (raid.getSpawn() == null || raid.isDead())
 							continue;
 						
-						if (!raid.isInsideRadius(raid.getSpawn().getLocx(), raid.getSpawn().getLocy(), 150, false))
+						if (!raid.isInsideRadius(raid.getSpawn().getLocX(), raid.getSpawn().getLocY(), 150, false))
 							raid.returnHome();
 					}
 				}
@@ -274,7 +297,7 @@ public class L2BossZone extends L2ZoneType
 				if (_oustLoc[0] != 0 && _oustLoc[1] != 0 && _oustLoc[2] != 0)
 					player.teleToLocation(_oustLoc[0], _oustLoc[1], _oustLoc[2], 0);
 				else
-					player.teleToLocation(MapRegionTable.TeleportWhereType.Town);
+					player.teleToLocation(TeleportWhereType.TOWN);
 			}
 		}
 		_playerAllowEntry.clear();

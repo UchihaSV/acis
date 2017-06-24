@@ -17,13 +17,14 @@ package net.sf.l2j.gameserver.network;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
-import net.sf.l2j.Config;
 import net.sf.l2j.commons.lang.HexUtil;
 import net.sf.l2j.commons.mmocore.IClientFactory;
 import net.sf.l2j.commons.mmocore.IMMOExecutor;
 import net.sf.l2j.commons.mmocore.IPacketHandler;
 import net.sf.l2j.commons.mmocore.MMOConnection;
 import net.sf.l2j.commons.mmocore.ReceivablePacket;
+
+import net.sf.l2j.Config;
 import net.sf.l2j.gameserver.network.L2GameClient.GameClientState;
 import net.sf.l2j.gameserver.network.clientpackets.*;
 

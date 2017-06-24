@@ -14,8 +14,7 @@
  */
 package net.sf.l2j.gameserver.skills.effects;
 
-import net.sf.l2j.Config;
-import net.sf.l2j.gameserver.geoengine.PathFinding;
+import net.sf.l2j.gameserver.geoengine.GeoEngine;
 import net.sf.l2j.gameserver.model.L2Effect;
 import net.sf.l2j.gameserver.model.Location;
 import net.sf.l2j.gameserver.network.serverpackets.FlyToLocation;
@@ -76,12 +75,9 @@ public class EffectThrowUp extends L2Effect
 		_y = getEffector().getY() - (int) (offset * sin);
 		_z = getEffected().getZ();
 		
-		if (Config.GEODATA > 0)
-		{
-			Location destiny = PathFinding.getInstance().canMoveToTargetLoc(getEffected().getX(), getEffected().getY(), getEffected().getZ(), _x, _y, _z);
-			_x = destiny.getX();
-			_y = destiny.getY();
-		}
+		Location destiny = GeoEngine.getInstance().canMoveToTargetLoc(getEffected().getX(), getEffected().getY(), getEffected().getZ(), _x, _y, _z);
+		_x = destiny.getX();
+		_y = destiny.getY();
 		
 		getEffected().startStunning();
 		getEffected().broadcastPacket(new FlyToLocation(getEffected(), _x, _y, _z, FlyType.THROW_UP));

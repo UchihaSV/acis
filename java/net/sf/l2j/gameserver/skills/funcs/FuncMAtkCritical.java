@@ -42,9 +42,9 @@ public class FuncMAtkCritical extends Func
 		if (player instanceof L2PcInstance)
 		{
 			if (player.getActiveWeaponInstance() != null)
-				env.mulValue(Formulas.WITbonus[player.getWIT()]);
+				env.mulValue(Formulas.WIT_BONUS[player.getWIT()]);
 		}
 		else
-			env.mulValue(Formulas.WITbonus[player.getWIT()]);
+			env.mulValue(Formulas.WIT_BONUS[player.getWIT()]);
 	}
 }

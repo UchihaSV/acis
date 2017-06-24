@@ -17,7 +17,8 @@ package net.sf.l2j.gameserver.taskmanager;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.sf.l2j.gameserver.ThreadPoolManager;
+import net.sf.l2j.commons.concurrent.ThreadPool;
+
 import net.sf.l2j.gameserver.model.actor.instance.L2PcInstance;
 import net.sf.l2j.gameserver.network.SystemMessageId;
 import net.sf.l2j.gameserver.network.serverpackets.SystemMessage;
@@ -38,7 +39,7 @@ public final class WaterTaskManager implements Runnable
 	protected WaterTaskManager()
 	{
 		// Run task each second.
-		ThreadPoolManager.getInstance().scheduleEffectAtFixedRate(this, 1000, 1000);
+		ThreadPool.scheduleAtFixedRate(this, 1000, 1000);
 	}
 	
 	/**

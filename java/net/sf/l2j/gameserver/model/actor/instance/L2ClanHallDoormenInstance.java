@@ -24,7 +24,7 @@ import net.sf.l2j.gameserver.network.serverpackets.NpcHtmlMessage;
 
 public class L2ClanHallDoormenInstance extends L2DoormenInstance
 {
-	private ClanHall _clanHall = null;
+	private ClanHall _clanHall;
 	
 	public L2ClanHallDoormenInstance(int objectID, NpcTemplate template)
 	{
@@ -36,12 +36,12 @@ public class L2ClanHallDoormenInstance extends L2DoormenInstance
 	{
 		player.sendPacket(ActionFailed.STATIC_PACKET);
 		
-		if (getClanHall() == null)
+		if (_clanHall == null)
 			return;
 		
 		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		
-		final L2Clan owner = ClanTable.getInstance().getClan(getClanHall().getOwnerId());
+		final L2Clan owner = ClanTable.getInstance().getClan(_clanHall.getOwnerId());
 		if (isOwnerClan(player))
 		{
 			html.setFile("data/html/clanHallDoormen/doormen.htm");
@@ -58,7 +58,7 @@ public class L2ClanHallDoormenInstance extends L2DoormenInstance
 			else
 			{
 				html.setFile("data/html/clanHallDoormen/emptyowner.htm");
-				html.replace("%hallname%", getClanHall().getName());
+				html.replace("%hallname%", _clanHall.getName());
 			}
 		}
 		html.replace("%objectId%", getObjectId());
@@ -68,7 +68,7 @@ public class L2ClanHallDoormenInstance extends L2DoormenInstance
 	@Override
 	protected final void openDoors(L2PcInstance player, String command)
 	{
-		getClanHall().openCloseDoors(true);
+		_clanHall.openCloseDoors(true);
 		
 		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile("data/html/clanHallDoormen/doormen-opened.htm");
@@ -79,7 +79,7 @@ public class L2ClanHallDoormenInstance extends L2DoormenInstance
 	@Override
 	protected final void closeDoors(L2PcInstance player, String command)
 	{
-		getClanHall().openCloseDoors(false);
+		_clanHall.openCloseDoors(false);
 		
 		final NpcHtmlMessage html = new NpcHtmlMessage(getObjectId());
 		html.setFile("data/html/clanHallDoormen/doormen-closed.htm");
@@ -87,22 +87,16 @@ public class L2ClanHallDoormenInstance extends L2DoormenInstance
 		player.sendPacket(html);
 	}
 	
-	private final ClanHall getClanHall()
-	{
-		if (_clanHall == null)
-			_clanHall = ClanHallManager.getInstance().getNearbyClanHall(getX(), getY(), 500);
-		
-		return _clanHall;
-	}
-	
 	@Override
 	protected final boolean isOwnerClan(L2PcInstance player)
 	{
-		if (player.getClan() != null && getClanHall() != null)
-		{
-			if (player.getClanId() == getClanHall().getOwnerId())
-				return true;
-		}
-		return false;
+		return _clanHall != null && player.getClan() != null && player.getClanId() == _clanHall.getOwnerId();
+	}
+	
+	@Override
+	public void onSpawn()
+	{
+		_clanHall = ClanHallManager.getInstance().getNearbyClanHall(getX(), getY(), 500);
+		super.onSpawn();
 	}
 }
